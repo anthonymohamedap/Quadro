@@ -1,0 +1,52 @@
+name: Build QuadroApp
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Publish Windows
+        run: dotnet publish QuadroApp.csproj -c Release -r win-x64 --self-contained true
+
+      - name: Zip Windows Build
+        run: Compress-Archive -Path bin/Release/net9.0/win-x64/publish/* -DestinationPath QuadroApp_Windows.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: QuadroApp_Windows
+          path: QuadroApp_Windows.zip
+
+  build-mac-arm:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Publish macOS ARM
+        run: dotnet publish QuadroApp.csproj -c Release -r osx-arm64 --self-contained true
+
+      - name: Zip Mac ARM Build
+        run: zip -r QuadroApp_Mac_ARM.zip bin/Release/net9.0/osx-arm64/publish/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: QuadroApp_Mac_ARM
+          path: QuadroApp_Mac_ARM.zip
