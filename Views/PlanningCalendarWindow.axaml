@@ -1,0 +1,296 @@
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:QuadroApp.ViewModels"
+    x:Class="QuadroApp.Views.PlanningCalendarWindow"
+    x:CompileBindings="False"
+    Width="1600"
+    Height="900"
+    MinWidth="1400"
+    MinHeight="800"
+    WindowState="Maximized"
+    WindowStartupLocation="CenterOwner"
+    Title="WerkBon Planning">
+
+	<Grid RowDefinitions="Auto,*" ColumnDefinitions="300,*,520" Margin="15">
+
+		<!-- HEADER -->
+		<Border Grid.ColumnSpan="3" Background="#444A50" Height="70" Margin="0,0,0,15">
+			<DockPanel Margin="20,0">
+				<StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
+					<Ellipse Width="35" Height="35" Fill="#F5C242"/>
+					<TextBlock Text="QUADRO" Foreground="White" FontWeight="Bold" FontSize="20"/>
+					<TextBlock Text="PLANNING" Foreground="#CCC" FontSize="13" Margin="20,0,0,0"/>
+				</StackPanel>
+
+				<StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+					<Button Content="◀" Command="{Binding PrevMonthCommand}" Classes="IconBtn"/>
+					<TextBlock Text="{Binding MonthTitle}" Foreground="White" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+					<Button Content="▶" Command="{Binding NextMonthCommand}" Classes="IconBtn"/>
+					<Button Content="Vandaag" Command="{Binding TodayCommand}" Classes="MainBtn" Padding="12,6"/>
+				</StackPanel>
+			</DockPanel>
+		</Border>
+
+		<!-- LINKS: DAGLIJST (zoals oud) -->
+		<ListBox Grid.Row="1"
+				 Grid.Column="0"
+			 ItemsSource="{Binding WeekDayRows}"
+				  SelectedItem="{Binding SelectedDayRow}"
+				 BorderThickness="0">
+			<ListBox.ItemTemplate>
+				<DataTemplate>
+					<Border Padding="8" Margin="4" Background="#222" CornerRadius="6">
+						<Grid ColumnDefinitions="50,35,*,70">
+							<TextBlock Text="{Binding WeekNr}" FontWeight="Bold"/>
+							<TextBlock Grid.Column="1" Text="{Binding Dag}"/>
+							<TextBlock Grid.Column="2" Text="{Binding Datum, StringFormat='{}{0:dd/MM/yy}'}"/>
+							<TextBlock Grid.Column="3"
+									   Text="{Binding UurMinText}"
+									   Foreground="{Binding Kleur}"
+									   FontWeight="Bold"
+									   HorizontalAlignment="Right"/>
+						</Grid>
+					</Border>
+				</DataTemplate>
+			</ListBox.ItemTemplate>
+		</ListBox>
+
+		<!-- MIDDEN: HEADER + MAAND GRID -->
+		<StackPanel Grid.Row="1"
+					Grid.Column="1"
+					Spacing="6">
+
+			<!-- WEEKDAY HEADER -->
+			<ItemsControl ItemsSource="{Binding WeekHeaders}">
+				<ItemsControl.ItemsPanel>
+					<ItemsPanelTemplate>
+						<UniformGrid Columns="7"/>
+					</ItemsPanelTemplate>
+				</ItemsControl.ItemsPanel>
+
+				<ItemsControl.ItemTemplate>
+					<DataTemplate>
+						<Border Padding="6"
+								Background="#2A2A2A"
+								CornerRadius="4">
+							<TextBlock Text="{Binding}"
+									   HorizontalAlignment="Center"
+									   FontWeight="SemiBold"
+									   Foreground="#CCCCCC"/>
+						</Border>
+					</DataTemplate>
+				</ItemsControl.ItemTemplate>
+			</ItemsControl>
+
+			<!-- MAAND GRID -->
+			<ListBox ItemsSource="{Binding MonthDays}"
+					 BorderThickness="0">
+
+				<ListBox.ItemsPanel>
+					<ItemsPanelTemplate>
+						<UniformGrid Columns="7" Margin="5"/>
+					</ItemsPanelTemplate>
+				</ListBox.ItemsPanel>
+
+				<ListBox.ItemTemplate>
+					<DataTemplate>
+						<Border Padding="8"
+								Margin="4"
+								Height="140"
+								Background="{Binding Background}"
+								BorderBrush="{Binding Border}"
+								BorderThickness="1"
+								CornerRadius="8"
+								PointerPressed="DayTile_PointerPressed"
+								DoubleTapped="DayTile_DoubleTapped">
+
+							<StackPanel Spacing="6">
+
+								<!-- DAGNUMMER -->
+								<TextBlock Text="{Binding DayNumber}"
+										   FontWeight="Bold"
+										   FontSize="14"/>
+
+								<!-- CAPACITEIT BAR -->
+								<Rectangle Height="6"
+										   Width="{Binding BusyBarWidth}"
+										   Fill="{Binding BusyColor}"
+										   RadiusX="3"
+										   RadiusY="3"/>
+
+								<!-- UREN LABEL -->
+								<TextBlock Text="{Binding BusyLabel}"
+										   FontSize="11"
+										   Foreground="#BBBBBB"/>
+
+							</StackPanel>
+						</Border>
+					</DataTemplate>
+				</ListBox.ItemTemplate>
+
+			</ListBox>
+
+		</StackPanel>
+			
+		<!-- RECHTS: DETAILS -->
+		<Border Grid.Row="1"
+				Grid.Column="2"
+				Background="#1E1E1E"
+				Padding="20"
+				CornerRadius="10">
+			<ScrollViewer>
+				<StackPanel Spacing="10">
+
+					<!-- Dag details -->
+					<TextBlock Text="Dag details" FontSize="18" FontWeight="Bold"/>
+					<TextBlock Text="{Binding SelectedDate, StringFormat='{}{0:dddd dd MMMM yyyy}'}" FontSize="14"/>
+
+					<ItemsControl ItemsSource="{Binding TakenVanDag}">
+						<ItemsControl.ItemTemplate>
+							<DataTemplate>
+								<Border Background="#333"
+										Padding="10"
+										Margin="0,6,0,0"
+										CornerRadius="6">
+									<StackPanel Spacing="4">
+										<TextBlock Text="{Binding WerkBon.Id, StringFormat='WerkBon #{0}'}"
+												   FontWeight="Bold" FontSize="14"/>
+										<TextBlock Text="{Binding WerkBon.Offerte.Klant.Achternaam}"
+												   FontSize="12" Foreground="LightGray"/>
+										<TextBlock Text="{Binding Omschrijving}" FontSize="13"/>
+										<TextBlock Text="{Binding DuurMinuten, StringFormat='{}{0} min'}"
+												   FontSize="11" Foreground="Gray"/>
+									</StackPanel>
+								</Border>
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+					</ItemsControl>
+
+					<!-- Regels plannen -->
+					<TextBlock Text="Regels van werkbon" FontSize="16" FontWeight="Bold" Margin="0,10,0,4"/>
+
+					<ListBox ItemsSource="{Binding RegelsVanWerkBon}">
+						<ListBox.ItemTemplate>
+							<DataTemplate>
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<CheckBox IsChecked="{Binding IsSelected}"/>
+									<TextBlock Text="{Binding Label}" TextWrapping="Wrap"/>
+								</StackPanel>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
+
+					<Button Content="Plan geselecteerde regels"
+							Command="{Binding PlanGeselecteerdeRegelsCommand}"
+							Margin="0,10,0,0"/>
+
+					<!-- Weekdetail (zoals oud) -->
+					<TextBlock Text="Weekdetail" FontSize="16" FontWeight="Bold" Margin="0,16,0,6"/>
+
+					<Border Background="#2A2A2A" CornerRadius="8" Padding="8">
+						<StackPanel Spacing="6">
+
+							<!-- (optioneel) debug -->
+							<TextBlock Text="{Binding WeekRows.Count, StringFormat='WeekRows: {0}'}"
+									   Foreground="Yellow"
+									   FontWeight="Bold"
+									   Margin="0,0,0,6"/>
+							<Button Content="🖨 Weeklijst"
+									Command="{Binding OpenWeekWerkLijstCommand}"
+									Classes="MainBtn"/>
+							<!-- Header row -->
+							<Grid ColumnDefinitions="55,55,35,55,55,25,28,28,25,25,25,90,120,140,120,120"
+      Margin="0,0,0,6">
+								<TextBlock Text="Bon" FontWeight="Bold"/>
+								<TextBlock Grid.Column="1" Text="Duur" FontWeight="Bold"/>
+								<TextBlock Grid.Column="2" Text="St" FontWeight="Bold"/>
+								<TextBlock Grid.Column="3" Text="B" FontWeight="Bold"/>
+								<TextBlock Grid.Column="4" Text="H" FontWeight="Bold"/>
+								<TextBlock Grid.Column="5" Text="G" FontWeight="Bold"/>
+								<TextBlock Grid.Column="6" Text="P1" FontWeight="Bold"/>
+								<TextBlock Grid.Column="7" Text="P2" FontWeight="Bold"/>
+								<TextBlock Grid.Column="8" Text="D" FontWeight="Bold"/>
+								<TextBlock Grid.Column="9" Text="O" FontWeight="Bold"/>
+								<TextBlock Grid.Column="10" Text="R" FontWeight="Bold"/>
+								<TextBlock Grid.Column="11" Text="Inleg1" FontWeight="Bold"/>
+								<TextBlock Grid.Column="12" Text="Lijst" FontWeight="Bold"/>
+								<TextBlock Grid.Column="13" Text="Lijsttype" FontWeight="Bold"/>
+								<TextBlock Grid.Column="14" Text="Van" FontWeight="Bold"/>
+								<TextBlock Grid.Column="15" Text="Tot" FontWeight="Bold"/>
+							</Grid>
+
+							<ListBox ItemsSource="{Binding WeekRows}"
+									 Height="320"
+									 BorderThickness="0">
+								<ListBox.ItemTemplate>
+									<DataTemplate>
+										<Border Background="#333"
+												CornerRadius="6"
+												Padding="6"
+												Margin="0,0,0,6">
+										<Grid ColumnDefinitions="55,55,35,55,55,25,28,28,25,25,25,90,120,140,120,120">
+  <TextBlock Text="{Binding BonNr}"/>
+  <TextBlock Grid.Column="1" Text="{Binding DuurMin}"/>
+  <TextBlock Grid.Column="2" Text="{Binding Stuks}"/>
+  <TextBlock Grid.Column="3" Text="{Binding Breedte}"/>
+  <TextBlock Grid.Column="4" Text="{Binding Hoogte}"/>
+
+  <TextBlock Grid.Column="5" Text="{Binding G}"/>
+  <TextBlock Grid.Column="6" Text="{Binding P1}"/>
+  <TextBlock Grid.Column="7" Text="{Binding P2}"/>
+  <TextBlock Grid.Column="8" Text="{Binding D}"/>
+  <TextBlock Grid.Column="9" Text="{Binding O}"/>
+  <TextBlock Grid.Column="10" Text="{Binding R}"/>
+
+  <TextBlock Grid.Column="11" Text="{Binding Inleg1}"/>
+  <TextBlock Grid.Column="12" Text="{Binding Lijst}"/>
+  <TextBlock Grid.Column="13" Text="{Binding LijstType}"/>
+
+  <TextBlock Grid.Column="14" Text="{Binding Van, StringFormat='{}{0:dd/MM HH:mm}'}"/>
+  <TextBlock Grid.Column="15" Text="{Binding Tot, StringFormat='{}{0:dd/MM HH:mm}'}"/>
+</Grid>
+										</Border>
+									</DataTemplate>
+								</ListBox.ItemTemplate>
+							</ListBox>
+
+						</StackPanel>
+						
+					</Border>
+			
+				</StackPanel>
+			</ScrollViewer>
+		</Border>
+		<ItemsControl ItemsSource="{Binding ToastMessages}"
+					  HorizontalAlignment="Right"
+					  VerticalAlignment="Top"
+					  Margin="0,90,30,0"
+					  IsHitTestVisible="False"
+					  >
+
+			<ItemsControl.ItemsPanel>
+				<ItemsPanelTemplate>
+					<StackPanel Spacing="10"/>
+				</ItemsPanelTemplate>
+			</ItemsControl.ItemsPanel>
+
+			<ItemsControl.ItemTemplate>
+				<DataTemplate>
+					<Border Padding="14"
+							CornerRadius="10"
+							Background="{Binding BackgroundBrush}"
+							Opacity="0.95"
+							MinWidth="250">
+
+						<TextBlock Text="{Binding Message}"
+								   Foreground="White"
+								   FontWeight="SemiBold"/>
+					</Border>
+				</DataTemplate>
+			</ItemsControl.ItemTemplate>
+
+		</ItemsControl>
+	</Grid>
+	
+</Window>

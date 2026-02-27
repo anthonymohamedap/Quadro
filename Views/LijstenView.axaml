@@ -1,0 +1,497 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:QuadroApp.ViewModels"
+    xmlns:m="using:QuadroApp.Model.DB"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:design="clr-namespace:Avalonia.Markup.Xaml;assembly=Avalonia.Markup"
+    xmlns:conv="using:QuadroApp.Converters"
+    x:Class="QuadroApp.Views.LijstenView"
+    x:DataType="vm:LijstenViewModel"
+    d:DataContext="{d:DesignInstance vm:LijstenViewModel, IsDesignTimeCreatable=True}"
+    Background="#F5F5F5">
+
+	<UserControl.Resources>
+		<conv:BoolToThicknessConverter x:Key="BoolToThicknessSlide"
+                                       WhenTrue="0"
+                                       WhenFalse="520,0,-520,0"/>
+		<conv:BoolToDoubleConverter x:Key="BoolToOpacity"
+                                    WhenTrue="1"
+                                    WhenFalse="0"/>
+	</UserControl.Resources>
+
+	<Grid RowDefinitions="Auto,*">
+
+		<!-- HEADER -->
+		<Border Grid.ColumnSpan="2" Background="#444A50" Height="70">
+			<DockPanel LastChildFill="False" Margin="20,0">
+
+				<StackPanel DockPanel.Dock="Left"
+							Orientation="Horizontal"
+							VerticalAlignment="Center"
+							Spacing="10">
+					<Ellipse Width="35" Height="35" Fill="#F5C242"/>
+					<TextBlock Text="QUADRO"
+							   Foreground="White"
+							   FontWeight="Bold"
+							   FontSize="20"
+							   VerticalAlignment="Center"/>
+					<TextBlock Text="LijstenBeheer"
+							   Foreground="#CCC"
+							   FontSize="13"
+							   Margin="5,0,0,0"
+							   VerticalAlignment="Center"/>
+				</StackPanel>
+
+				<Button Content="⬅️ Terug"
+						Command="{Binding GaTerugCommand}"
+						DockPanel.Dock="Right"
+						VerticalAlignment="Top"
+						HorizontalAlignment="Right"
+						Margin="0,10,10,0"
+						Background="#F5C242"
+						Foreground="#222"
+						FontWeight="Bold"
+						CornerRadius="8"
+						Padding="10,5"
+						Width="100"
+						Height="32"/>
+			</DockPanel>
+		</Border>
+
+		<!-- MAIN -->
+		<Grid Grid.Row="1"
+              Margin="20"
+              ColumnDefinitions="*,Auto"
+              ColumnSpacing="20">
+
+			<!-- LINKER LIJST -->
+			<StackPanel Grid.Column="0" Spacing="14">
+
+				<TextBlock Text="📦 TypeLijsten"
+                           FontSize="22"
+                           FontWeight="Bold"/>
+
+				<Grid ColumnDefinitions="Auto,Auto"
+                      ColumnSpacing="10">
+
+					<TextBox Grid.Column="0"
+                             Width="280"
+                             Height="34"
+                             Watermark="Zoek op artikelnummer of leverancier…"
+                             Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+					<StackPanel Grid.Column="1"
+                                Orientation="Horizontal"
+                                Spacing="6"
+                                VerticalAlignment="Center">
+
+						<Button Content="💾"
+                                Command="{Binding SaveCommand}"
+                                Classes="IconBtn"/>
+
+						<Button Content="🗑️"
+                                Command="{Binding DeleteCommand}"
+                                Classes="IconBtn"/>
+
+						<Button Content="🔄"
+                                Command="{Binding RefreshCommand}"
+                                Classes="IconBtn"/>
+
+						<Button Content="Import Excel"
+                                Command="{Binding ImportExcelCommand}"
+                                IsEnabled="{Binding !IsBusy}"
+                                Classes="IconBtn"/>
+					</StackPanel>
+				</Grid>
+
+				<!-- Paging -->
+				<StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            Spacing="10">
+					<Button Content="◀ Vorige"
+                            Command="{Binding PrevPageCommand}"
+                            Classes="MainBtn"/>
+					<Button Content="Volgende ▶"
+                            Command="{Binding NextPageCommand}"
+                            Classes="MainBtn"/>
+				</StackPanel>
+
+				<!-- List -->
+				<ScrollViewer VerticalScrollBarVisibility="Auto">
+
+					<Border Background="White"
+							BorderBrush="#DDD"
+							BorderThickness="1"
+							CornerRadius="8"
+							Padding="0">
+
+						<StackPanel>
+
+							<!-- ===== KOLOM HEADER ===== -->
+							<Border Background="#F3F4F6"
+									Padding="10,6"
+									BorderBrush="#E5E7EB"
+									BorderThickness="0,0,0,1">
+
+								<Grid ColumnDefinitions="1.2*,1.5*,1*,3*"
+									  ColumnSpacing="12">
+
+									<TextBlock Text="Artikelnummer"
+											   FontWeight="SemiBold"/>
+
+									<TextBlock Grid.Column="1"
+											   Text="Leverancier"
+											   FontWeight="SemiBold"/>
+
+									<TextBlock Grid.Column="2"
+											   Text="Breedte"
+											   FontWeight="SemiBold"/>
+
+									<TextBlock Grid.Column="3"
+											   Text="Opmerking"
+											   FontWeight="SemiBold"/>
+								</Grid>
+							</Border>
+
+							<!-- ===== LISTBOX ===== -->
+							<ListBox ItemsSource="{Binding PagedLijsten}"
+									 SelectedItem="{Binding GeselecteerdeLijst, Mode=TwoWay}"
+									 BorderThickness="0"
+									 Background="Transparent">
+
+								<ListBox.ItemTemplate>
+									<DataTemplate x:DataType="m:TypeLijst">
+
+										<Border Padding="10,6">
+											<Grid ColumnDefinitions="1.2*,1.5*,1*,3*"
+												  ColumnSpacing="12">
+
+												<TextBlock Grid.Column="0"
+														   Text="{Binding Artikelnummer}"
+														   FontWeight="Bold"/>
+
+												<TextBlock Grid.Column="1"
+														   Text="{Binding Leverancier.Naam}"/>
+
+												<TextBlock Grid.Column="2"
+														   Text="{Binding BreedteCm}"/>
+
+												<TextBlock Grid.Column="3"
+														   Text="{Binding Opmerking}"
+														   TextTrimming="CharacterEllipsis"/>
+											</Grid>
+										</Border>
+
+									</DataTemplate>
+								</ListBox.ItemTemplate>
+
+							</ListBox>
+
+						</StackPanel>
+
+					</Border>
+				</ScrollViewer>
+
+				<TextBlock Text="{Binding AantalLijsten, StringFormat='Aantal geladen lijsten: {0}'}"
+                           Foreground="#666"
+                           HorizontalAlignment="Center"/>
+			</StackPanel>
+
+
+
+			<!-- ░░ DETAIL PANEL ░░ -->
+			<Border Grid.Column="1"
+                    Width="520"
+                    Padding="24"
+                    Background="White"
+                    CornerRadius="10"
+                    BorderBrush="#E0E0E0"
+                    BorderThickness="1"
+                    IsHitTestVisible="{Binding IsDetailOpen}">
+
+				<Border.Transitions>
+					<Transitions>
+						<ThicknessTransition Property="Margin" Duration="0:0:0.2"/>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Border.Transitions>
+
+				<Border.Margin>
+					<Binding Path="IsDetailOpen" Converter="{StaticResource BoolToThicknessSlide}"/>
+				</Border.Margin>
+				<Border.Opacity>
+					<Binding Path="IsDetailOpen" Converter="{StaticResource BoolToOpacity}"/>
+				</Border.Opacity>
+
+				<ScrollViewer VerticalScrollBarVisibility="Auto">
+
+					<!-- Als niets geselecteerd is -->
+					<StackPanel Spacing="12">
+						<TextBlock Text="🧾 Lijstdetails"
+								   FontSize="22"
+								   FontWeight="Bold"
+								   Foreground="#222"/>
+
+				<Border Background="#FFF8E1"
+        CornerRadius="8"
+        Padding="10"
+        IsVisible="{Binding GeselecteerdeLijst, FallbackValue=True}">
+    <TextBlock Text="Selecteer links een lijst om details te zien."
+               Foreground="#333"/>
+</Border>
+
+
+						<StackPanel
+					x:DataType="vm:LijstenViewModel"
+					Spacing="18"
+					IsVisible="{Binding IsDetailOpen}">
+
+							<!-- ░░ BASISINFORMATIE ░░ -->
+							<StackPanel>
+								<Border BorderBrush="#F5C242"
+										BorderThickness="0 0 3 0"
+										Margin="0,0,0,8">
+									<TextBlock Text="📘 Basisinformatie"
+											   FontSize="18"
+											   FontWeight="SemiBold"
+											   Foreground="#222"/>
+								</Border>
+
+								<Grid ColumnDefinitions="2*,3*"
+									  RowDefinitions="Auto,Auto,Auto,Auto"
+									  RowSpacing="7"
+									  ColumnSpacing="15">
+
+									<TextBlock Text="Artikelnummer"
+											   Grid.Row="0" Grid.Column="0"
+											   FontWeight="Bold"/>
+
+									<TextBox Text="{Binding GeselecteerdeLijst.Artikelnummer, Mode=TwoWay}"
+											 Grid.Row="0" Grid.Column="1"/>
+
+									<TextBlock Text="Leverancier"
+											   Grid.Row="1" Grid.Column="0"
+											   FontWeight="Bold"/>
+
+									<StackPanel Grid.Row="1" Grid.Column="1" Spacing="6">
+
+										<!-- Huidige leverancier duidelijk zichtbaar -->
+										<Border Background="#EEF2FF"
+												CornerRadius="6"
+												Padding="6">
+											<TextBlock FontWeight="SemiBold"
+													   Foreground="#1E40AF"
+													   Text="{Binding SelectedLeverancier.Code, TargetNullValue='Geen leverancier geselecteerd'}"/>
+										</Border>
+
+										<!-- Zoekbox -->
+										<TextBox Watermark="Zoek leverancier..."
+												 Text="{Binding LeverancierZoekterm, UpdateSourceTrigger=PropertyChanged}"/>
+
+										<!-- Selectie -->
+										<ComboBox ItemsSource="{Binding GefilterdeLeveranciers}"
+												  SelectedItem="{Binding SelectedLeverancier, Mode=TwoWay}"
+												  MaxDropDownHeight="250">
+
+											<ComboBox.ItemTemplate>
+												<DataTemplate x:DataType="m:Leverancier">
+													<TextBlock>
+														<Run Text="{Binding Code}" />
+														<Run Text=" — " />
+														<Run Text="{Binding Naam}" />
+													</TextBlock>
+												</DataTemplate>
+											</ComboBox.ItemTemplate>
+
+										</ComboBox>
+									</StackPanel>
+
+									<TextBlock Text="Soort"
+											   Grid.Row="2" Grid.Column="0"
+											   FontWeight="Bold"/>
+
+									<TextBox Text="{Binding GeselecteerdeLijst.Soort, Mode=TwoWay}"
+											 Grid.Row="2" Grid.Column="1"/>
+
+									<TextBlock Text="Opmerking"
+											   Grid.Row="3" Grid.Column="0"
+											   FontWeight="Bold"/>
+
+									<TextBox Grid.Row="3" Grid.Column="1"
+											 Classes="AutoGrowNote"
+											 Text="{Binding GeselecteerdeLijst.Opmerking, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+								</Grid>
+							</StackPanel>
+
+							<!-- ░░ PRIJSINFORMATIE ░░ -->
+							<StackPanel>
+								<Border BorderBrush="#F5C242"
+										BorderThickness="0 0 3 0"
+										Margin="0,15,0,8">
+									<TextBlock Text="💰 Prijsinformatie"
+											   FontSize="18"
+											   FontWeight="SemiBold"
+											   Foreground="#222"/>
+								</Border>
+
+								<Grid ColumnDefinitions="2*,3*"
+									  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+									  RowSpacing="7"
+									  ColumnSpacing="14">
+
+									<TextBlock Text="Breedte (cm)"
+											   Grid.Row="0" Grid.Column="0"
+											   FontWeight="Bold"/>
+									<TextBox Text="{Binding GeselecteerdeLijst.BreedteCm, Mode=TwoWay}"
+											 Grid.Row="0" Grid.Column="1"/>
+
+									<TextBlock Text="Prijs per meter (€)"
+											   Grid.Row="1" Grid.Column="0"
+											   FontWeight="Bold"/>
+									<TextBox Text="{Binding GeselecteerdeLijst.PrijsPerMeter, Mode=TwoWay}"
+											 Grid.Row="1" Grid.Column="1"/>
+
+									<TextBlock Text="Winstmarge factor"
+											   Grid.Row="2" Grid.Column="0"
+											   FontWeight="Bold"/>
+									<TextBox Text="{Binding GeselecteerdeLijst.WinstMargeFactor, Mode=TwoWay}"
+											 Grid.Row="2" Grid.Column="1"/>
+
+									<TextBlock Text="Afval (%)"
+											   Grid.Row="3" Grid.Column="0"
+											   FontWeight="Bold"/>
+									<TextBox Text="{Binding GeselecteerdeLijst.AfvalPercentage, Mode=TwoWay}"
+											 Grid.Row="3" Grid.Column="1"/>
+
+									<TextBlock Text="Vaste kost (€)"
+											   Grid.Row="4" Grid.Column="0"
+											   FontWeight="Bold"/>
+									<TextBox Text="{Binding GeselecteerdeLijst.VasteKost, Mode=TwoWay}"
+											 Grid.Row="4" Grid.Column="1"/>
+
+									<TextBlock Text="Werkminuten"
+											   Grid.Row="5" Grid.Column="0"
+											   FontWeight="Bold"/>
+									<TextBox Text="{Binding GeselecteerdeLijst.WerkMinuten, Mode=TwoWay}"
+											 Grid.Row="5" Grid.Column="1"/>
+								</Grid>
+							</StackPanel>
+
+							<!-- ░░ PRIJSBEREKENING ░░ -->
+							<StackPanel>
+								<Border BorderBrush="#F5C242"
+										BorderThickness="0 0 3 0"
+										Margin="0,15,0,8">
+									<TextBlock Text="📈 Prijsberekening"
+											   FontSize="18"
+											   FontWeight="SemiBold"
+											   Foreground="#222"/>
+								</Border>
+
+								<Grid ColumnDefinitions="2*,3*"
+									  RowDefinitions="Auto,Auto,Auto,Auto"
+									  RowSpacing="8"
+									  ColumnSpacing="14">
+
+									<TextBlock Text="Breedte (cm)"
+											   Grid.Row="0" Grid.Column="0"
+											   FontWeight="Bold"/>
+									<NumericUpDown Grid.Row="0" Grid.Column="1"
+												   Value="{Binding Breedte, Mode=TwoWay}"
+												   Minimum="1" Maximum="500"/>
+
+									<TextBlock Text="Hoogte (cm)"
+											   Grid.Row="1" Grid.Column="0"
+											   FontWeight="Bold"/>
+									<NumericUpDown Grid.Row="1" Grid.Column="1"
+												   Value="{Binding Hoogte, Mode=TwoWay}"
+												   Minimum="1" Maximum="500"/>
+
+									<TextBlock Text="Werkloon (€)"
+											   Grid.Row="2" Grid.Column="0"
+											   FontWeight="Bold"/>
+									<TextBox Grid.Row="2" Grid.Column="1"
+											 Text="{Binding Werkloon, Mode=TwoWay}"/>
+
+									<TextBlock Text="💰 Geschatte verkoopprijs"
+											   Grid.Row="3" Grid.Column="0"
+											   FontWeight="Bold"/>
+									<TextBlock Grid.Row="3" Grid.Column="1"
+											   Text="{Binding VerkoopPrijsPreview}"
+											   FontWeight="Bold"
+											   FontSize="16"/>
+								</Grid>
+							</StackPanel>
+
+							<!-- OPSLAAN -->
+							<Button Content="💾 Opslaan wijzigingen"
+									Command="{Binding SaveCommand}"
+									Background="#444A50"
+									Foreground="White"
+									CornerRadius="8"
+									Padding="10,6"
+									FontWeight="Bold"
+									Width="220"
+									HorizontalAlignment="Right"
+									Margin="0,10,0,0"/>
+
+						</StackPanel>
+					</StackPanel>
+				</ScrollViewer>
+
+
+			</Border>
+
+		</Grid>
+	</Grid>
+<UserControl.Styles>
+		<!-- MainBtn (kept for consistency) -->
+		<Style Selector="Button.MainBtn">
+			<Setter Property="Background" Value="#444A50"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="FontWeight" Value="Bold"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="BorderBrush" Value="Transparent"/>
+			<Setter Property="FontSize" Value="15"/>
+			<Setter Property="Padding" Value="10,5"/>
+		</Style>
+		<Style Selector="Button.MainBtn:pointerover">
+			<Setter Property="Background" Value="#F5C242"/>
+			<Setter Property="Foreground" Value="#222"/>
+		</Style>
+
+		<!-- Compact icon buttons for tools -->
+		<Style Selector="Button.IconBtn">
+			<Setter Property="Width" Value="40"/>
+			<Setter Property="Height" Value="40"/>
+			<Setter Property="FontSize" Value="18"/>
+			<Setter Property="CornerRadius" Value="6"/>
+			<Setter Property="Background" Value="#444A50"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="FontWeight" Value="Bold"/>
+			<Setter Property="HorizontalAlignment" Value="Center"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
+			<Setter Property="BorderBrush" Value="Transparent"/>
+			<Setter Property="Margin" Value="2"/>
+		</Style>
+		<Style Selector="Button.IconBtn:pointerover">
+			<Setter Property="Background" Value="#F5C242"/>
+			<Setter Property="Foreground" Value="#222"/>
+		</Style>
+<Style Selector="TextBlock">
+    <Setter Property="Foreground" Value="Black"/>
+</Style>
+		<!-- Auto-grow multi-line textbox (inherits standard colors) -->
+		<Style Selector="TextBox.AutoGrowNote">
+			<Setter Property="AcceptsReturn" Value="True"/>
+			<Setter Property="TextWrapping" Value="Wrap"/>
+			<Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled"/>
+			<Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+			<Setter Property="VerticalAlignment" Value="Top"/>
+			<Setter Property="MinHeight" Value="60"/>
+			<Setter Property="MaxHeight" Value="220"/>
+			<Setter Property="Padding" Value="6"/>
+		</Style>
+	</UserControl.Styles>
+</UserControl>

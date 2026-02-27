@@ -1,0 +1,193 @@
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.EntityFrameworkCore;
+using QuadroApp.Data;
+using QuadroApp.Model.DB;
+using QuadroApp.Service.Interfaces;
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace QuadroApp.ViewModels
+{
+    public partial class WerkBonLijstViewModel : ObservableObject
+    {
+        private readonly IDbContextFactory<AppDbContext> _factory;
+        private readonly INavigationService _nav;
+        private readonly IWerkBonWorkflowService _workflow;
+        private readonly IToastService _toast;
+
+        [ObservableProperty] private ObservableCollection<WerkBon> werkBonnen = new();
+        [ObservableProperty] private WerkBon? selectedWerkBon;
+
+        [ObservableProperty] private ObservableCollection<WerkTaak> selectedWerkBonTaken = new();
+
+        [ObservableProperty] private string? zoekterm;
+
+        [ObservableProperty] private bool isDetailOpen;
+
+        // Dropdown data
+        public ObservableCollection<WerkBonStatus> WerkBonStatusOpties { get; } =
+            new ObservableCollection<WerkBonStatus>(Enum.GetValues<WerkBonStatus>());
+
+        public ObservableCollection<OfferteStatus> OfferteStatusOpties { get; } =
+            new ObservableCollection<OfferteStatus>(Enum.GetValues<OfferteStatus>());
+
+        // gekozen statuses in UI
+        [ObservableProperty] private WerkBonStatus? selectedWerkBonStatus;
+        [ObservableProperty] private OfferteStatus? selectedOfferteStatus;
+
+        public WerkBonLijstViewModel(
+            IDbContextFactory<AppDbContext> factory,
+            INavigationService nav,
+            IWerkBonWorkflowService workflow, IToastService toast)
+        {
+            _factory = factory;
+            _nav = nav;
+            _toast = toast;
+            _workflow = workflow;
+        }
+
+        public async Task LoadAsync()
+        {
+            await using var db = await _factory.CreateDbContextAsync();
+
+            var query = db.WerkBonnen
+                .Include(w => w.Offerte).ThenInclude(o => o.Klant)
+                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r.TypeLijst)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(Zoekterm))
+            {
+                var t = Zoekterm.Trim().ToLowerInvariant();
+                query = query.Where(w =>
+                    w.Id.ToString().Contains(t) ||
+                    (w.Offerte != null &&
+                     w.Offerte.Klant != null &&
+                     (w.Offerte.Klant.Achternaam.ToLower().Contains(t) ||
+                      w.Offerte.Klant.Voornaam.ToLower().Contains(t))));
+            }
+
+            var list = await query
+                .OrderByDescending(w => w.AangemaaktOp)
+                .ToListAsync();
+
+            WerkBonnen = new ObservableCollection<WerkBon>(list);
+
+            // behoud selectie als mogelijk
+            if (SelectedWerkBon != null)
+            {
+                SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == SelectedWerkBon.Id);
+            }
+        }
+
+        partial void OnZoektermChanged(string? value)
+        {
+            _ = LoadAsync();
+        }
+
+        partial void OnSelectedWerkBonChanged(WerkBon? value)
+        {
+            if (value is null)
+            {
+                IsDetailOpen = false;
+                SelectedWerkBonTaken = new ObservableCollection<WerkTaak>();
+                SelectedWerkBonStatus = null;
+                SelectedOfferteStatus = null;
+                return;
+            }
+
+            IsDetailOpen = true;
+
+            SelectedWerkBonTaken = new ObservableCollection<WerkTaak>(
+                (value.Taken ?? Enumerable.Empty<WerkTaak>()).OrderBy(t => t.GeplandVan)
+            );
+
+            SelectedWerkBonStatus = value.Status;
+            SelectedOfferteStatus = value.Offerte?.Status;
+        }
+
+        [RelayCommand]
+        private async Task RefreshAsync() => await LoadAsync();
+
+        [RelayCommand]
+        private async Task OpenPlanningAsync()
+        {
+            if (SelectedWerkBon == null)
+                return;
+
+            var vm = new PlanningCalendarViewModel(_factory, _workflow, _toast);
+            await vm.InitializeAsync(SelectedWerkBon.Id);
+
+            var window = new QuadroApp.Views.PlanningCalendarWindow
+            {
+                DataContext = vm
+            };
+
+            if (App.Current?.ApplicationLifetime is
+                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                await window.ShowDialog(desktop.MainWindow);
+            }
+        }
+
+        /// <summary>
+        /// Save status changes:
+        /// - WerkBon.Status aanpassen
+        /// - Offerte.Status aanpassen (belangrijk: als terug naar Nieuw => terug zichtbaar in OffertesLijst)
+        /// </summary>
+        [RelayCommand]
+        private async Task SaveStatusAsync()
+        {
+            if (SelectedWerkBon == null)
+                return;
+
+            await using var db = await _factory.CreateDbContextAsync();
+
+            var wb = await db.WerkBonnen
+                .Include(w => w.Offerte)
+                .FirstOrDefaultAsync(w => w.Id == SelectedWerkBon.Id);
+
+            if (wb == null) return;
+
+            if (SelectedWerkBonStatus.HasValue)
+                wb.Status = SelectedWerkBonStatus.Value;
+
+            if (wb.Offerte != null && SelectedOfferteStatus.HasValue)
+                wb.Offerte.Status = SelectedOfferteStatus.Value;
+
+            wb.BijgewerktOp = DateTime.UtcNow;
+
+            await db.SaveChangesAsync();
+
+            await LoadAsync();
+
+            // reselect
+            SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == wb.Id);
+        }
+
+        /// <summary>
+        /// Shortcut: "Maak offerte terug zichtbaar"
+        /// Zet Offerte.Status terug naar Nieuw.
+        /// (optioneel) zet WerkBon.Status naar Geannuleerd zodat hij niet meer als actieve bon gezien wordt.
+        /// </summary>
+        [RelayCommand]
+        private async Task MaakOfferteTerugZichtbaarAsync()
+        {
+            if (SelectedWerkBon == null)
+                return;
+
+            SelectedOfferteStatus = OfferteStatus.Nieuw;
+            SelectedWerkBonStatus = WerkBonStatus.Geannuleerd; // kies wat je wil
+            await SaveStatusAsync();
+        }
+
+        [RelayCommand]
+        private async Task GaTerugAsync()
+        {
+            // pas aan naar jouw bestemming
+            await _nav.NavigateToAsync<HomeViewModel>();
+        }
+    }
+}

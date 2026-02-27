@@ -1,0 +1,180 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:QuadroApp.ViewModels"
+        x:Class="QuadroApp.Views.WeekWerkLijstWindow"
+        x:DataType="vm:WeekWerkLijstViewModel"
+        Width="1100"
+        Height="850"
+        MinWidth="900"
+        MinHeight="700"
+        WindowStartupLocation="CenterOwner"
+        Title="Weeklijst"
+        Background="#F5F5F5">
+
+	<Grid RowDefinitions="Auto,*">
+
+		<!-- HEADER (zelfde als LijstenView) -->
+		<Border Grid.Row="0" Background="#444A50" Height="70">
+			<DockPanel Margin="20,0">
+				<StackPanel DockPanel.Dock="Left"
+							Orientation="Horizontal"
+							VerticalAlignment="Center"
+							Spacing="10">
+					<Ellipse Width="35" Height="35" Fill="#F5C242"/>
+					<TextBlock Text="QUADRO"
+							   FontSize="20"
+							   FontWeight="Bold"
+							   Foreground="White"/>
+					<TextBlock Text="{Binding Title}"
+							   FontSize="13"
+							   Foreground="#CCC"
+							   Margin="20,0,0,0"
+							   VerticalAlignment="Center"/>
+				</StackPanel>
+
+				<StackPanel DockPanel.Dock="Right"
+							Orientation="Horizontal"
+							Spacing="10"
+							VerticalAlignment="Center">
+					<TextBlock Text="{Binding Year}" Foreground="#EEE" VerticalAlignment="Center"/>
+					<TextBlock Text="{Binding WeekNr, StringFormat='Week {0}'}" Foreground="#EEE" VerticalAlignment="Center"/>
+
+					<Button Content="⬅️ Terug"
+        Click="Close_Click"
+        Background="#F5C242"
+        Foreground="#222"
+        FontWeight="Bold"
+        CornerRadius="8"
+        Padding="10,5"
+        Width="100"
+        Height="32"/>
+				</StackPanel>
+			</DockPanel>
+		</Border>
+
+		<!-- CONTENT -->
+		<Grid Grid.Row="1" Margin="20">
+			<ScrollViewer VerticalScrollBarVisibility="Auto">
+				<StackPanel Spacing="14">
+
+					<TextBlock Text="🖨 Weeklijst (print overzicht)"
+							   FontSize="22"
+							   FontWeight="Bold"
+							   Foreground="#222"/>
+
+					<!-- Blocks per klant -->
+					<ItemsControl ItemsSource="{Binding Blocks}">
+						<ItemsControl.ItemTemplate>
+							<DataTemplate>
+								<StackPanel Spacing="8">
+
+									<!-- Klantnaam -->
+									<Border BorderBrush="#F5C242" BorderThickness="0 0 3 0" Margin="0,10,0,0">
+										<TextBlock Text="{Binding KlantNaam}"
+												   FontSize="18"
+												   FontWeight="Bold"
+												   Foreground="#222"/>
+									</Border>
+
+									<!-- Items -->
+									<ItemsControl ItemsSource="{Binding Items}">
+										<ItemsControl.ItemTemplate>
+											<DataTemplate>
+												<Border Background="White"
+														BorderBrush="#DDD"
+														BorderThickness="1"
+														CornerRadius="8"
+														Padding="12"
+														Margin="0,0,0,10">
+
+													<Grid ColumnDefinitions="*,220"
+														  RowDefinitions="Auto,Auto">
+
+														<!-- Linker info: zoveel mogelijk zoals je foto (plain text) -->
+														<StackPanel Grid.Column="0" Spacing="2">
+															<TextBlock Text="{Binding Stuks, StringFormat='{}{0} stuks in te lijsten:'}"
+																	   FontWeight="Bold"
+																	   Foreground="#222"/>
+															<TextBlock Text="{Binding Omschrijving}" Foreground="#222"/>
+
+															<Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="16" Margin="0,6,0,0">
+																<TextBlock Text="{Binding Breedte, StringFormat='breedte : {0} cm'}" />
+																<TextBlock Grid.Column="1" Text="{Binding Hoogte, StringFormat='hoogte : {0} cm'}" />
+																<TextBlock Grid.Column="2" Text="{Binding Afw, StringFormat='afw. : {0}'}" />
+																<TextBlock Grid.Column="3" Text="{Binding Lijst, StringFormat='lijst : {0}'}" />
+															</Grid>
+
+															<TextBlock Text="{Binding ProductieDatum, StringFormat='productie op {0:dd/MM/yy}'}"
+																	   Margin="0,6,0,0"
+																	   Foreground="#444"/>
+															<TextBlock Text="{Binding BonNr, StringFormat='bonnr. {0}'}"
+																	   Foreground="#444"/>
+														</StackPanel>
+
+														<!-- Rechter kolom: inleg/artikel -->
+														<StackPanel Grid.Column="1" Spacing="4">
+															<TextBlock Text="{Binding Inleg1, StringFormat='inleg 1 : {0}'}"/>
+															<TextBlock Text="{Binding Inleg2, StringFormat='inleg 2 : {0}'}"/>
+															<TextBlock Text="artikel 1 :" Foreground="#444"/>
+															<TextBlock Text="artikel 2 :" Foreground="#444"/>
+														</StackPanel>
+
+														<!-- Notitie -->
+														<StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,10,0,0" Spacing="6">
+															<TextBlock Text="Notitie (blijft bewaard)" FontWeight="Bold" Foreground="#222"/>
+															<TextBox Text="{Binding Notitie, Mode=TwoWay}"
+																	 AcceptsReturn="True"
+																	 TextWrapping="Wrap"
+																	 MinHeight="70"
+																	 MaxHeight="160"
+																	 Padding="8"/>
+
+															<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+																<Button Content="💾 Bewaar"
+																		Command="{Binding $parent[Window].DataContext.SaveNotitieCommand}"
+																		CommandParameter="{Binding}"
+																		Classes="MainBtn"
+																		Padding="12,6"/>
+															</StackPanel>
+														</StackPanel>
+
+													</Grid>
+
+												</Border>
+											</DataTemplate>
+										</ItemsControl.ItemTemplate>
+									</ItemsControl>
+
+								</StackPanel>
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+					</ItemsControl>
+
+				</StackPanel>
+			</ScrollViewer>
+		</Grid>
+
+	</Grid>
+
+	<!-- Styles: zelfde look als LijstenView -->
+	<Window.Styles>
+		<Style Selector="Button.MainBtn">
+			<Setter Property="Background" Value="#444A50"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="FontWeight" Value="Bold"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="BorderBrush" Value="Transparent"/>
+			<Setter Property="FontSize" Value="15"/>
+			<Setter Property="Padding" Value="10,5"/>
+		</Style>
+
+		<Style Selector="Button.MainBtn:pointerover">
+			<Setter Property="Background" Value="#F5C242"/>
+			<Setter Property="Foreground" Value="#222"/>
+		</Style>
+
+		<Style Selector="TextBlock">
+			<Setter Property="Foreground" Value="#222"/>
+		</Style>
+	</Window.Styles>
+</Window>

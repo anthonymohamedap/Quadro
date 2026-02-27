@@ -1,0 +1,88 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:QuadroApp.ViewModels"
+        x:Class="QuadroApp.AfwerkingImportPreviewWindow"
+        x:DataType="vm:AfwerkingExcelPreviewViewModel"
+        Width="900"
+        Height="600"
+        Title="Excel import – Afwerkingen"
+        Background="White"
+        Foreground="Black">
+
+	<DockPanel Margin="10"
+               Background="White"
+               LastChildFill="True">
+
+		<!-- Buttons -->
+		<StackPanel DockPanel.Dock="Bottom"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8"
+                    Background="White">
+
+			<Button Content="Annuleren"
+                    Background="White"
+                    Foreground="Black"
+                    Command="{Binding CancelCommand}" />
+
+			<Button Content="Importeren"
+                    Background="White"
+                    Foreground="Black"
+                    IsEnabled="{Binding CanImport}"
+                    Command="{Binding ConfirmCommand}" />
+		</StackPanel>
+
+		<!-- DataGrid -->
+		<DataGrid ItemsSource="{Binding Rows}"
+          AutoGenerateColumns="False"
+          GridLinesVisibility="All"
+          Background="White"
+          Foreground="Black">
+
+			<!-- Rij styling -->
+			<DataGrid.Styles>
+				<!-- Normale rij -->
+				<Style Selector="DataGridRow">
+					<Setter Property="Background" Value="White"/>
+					<Setter Property="Foreground" Value="Black"/>
+				</Style>
+
+				<!-- Alternating row -->
+				<Style Selector="DataGridRow:nth-child(2n)">
+					<Setter Property="Background" Value="#F2F2F2"/>
+				</Style>
+			</DataGrid.Styles>
+
+			<DataGrid.Columns>
+				<DataGridTextColumn Header="Groep"
+									Binding="{Binding AfwerkingsGroep}" />
+
+				<DataGridTextColumn Header="Naam"
+									Binding="{Binding Naam}" />
+
+				<DataGridTextColumn Header="Volgnummer"
+									Binding="{Binding Volgnummer}" />
+
+				<DataGridTextColumn Header="Kost €/m²"
+									Binding="{Binding KostprijsPerM2}" />
+
+				<DataGridTextColumn Header="Marge"
+									Binding="{Binding WinstMarge}" />
+
+				<DataGridTextColumn Header="Afval %"
+									Binding="{Binding AfvalPercentage}" />
+
+				<DataGridTextColumn Header="Vaste kost"
+									Binding="{Binding VasteKost}" />
+
+				<DataGridTextColumn Header="Werk (min)"
+									Binding="{Binding WerkMinuten}" />
+
+				<DataGridTextColumn Header="Status"
+									Binding="{Binding ValidationMessage}" />
+			</DataGrid.Columns>
+
+		</DataGrid>
+
+	</DockPanel>
+</Window>

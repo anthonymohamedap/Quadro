@@ -1,0 +1,240 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:m="using:QuadroApp.Model.DB"
+        x:Class="QuadroApp.Views.LijstDialog"
+        x:DataType="m:TypeLijst"
+        Width="520"
+        Height="780"
+        Title="🧾 Lijst bewerken"
+        Background="#F5F5F5"
+        WindowStartupLocation="CenterOwner">
+
+	<Border CornerRadius="10"
+            BorderBrush="#DDD"
+            BorderThickness="1"
+            Margin="15"
+            Padding="20"
+            Background="White">
+		<ScrollViewer VerticalScrollBarVisibility="Auto">
+			<StackPanel Spacing="20">
+
+				<!-- ░░ HOOFD TITEL ░░ -->
+				<TextBlock Text="🧾 Lijstgegevens"
+                           FontSize="22"
+                           FontWeight="Bold"
+                           Foreground="#222"
+                           Margin="0,0,0,10"/>
+
+				<!-- ░░ BASISINFORMATIE ░░ -->
+				<StackPanel>
+					<Border BorderBrush="#F5C242"
+                            BorderThickness="0 0 3 0"
+                            Margin="0,0,0,8">
+						<TextBlock Text="📘 Basisinformatie"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="#222"/>
+					</Border>
+
+					<Grid ColumnDefinitions="2*,3*"
+                          RowDefinitions="Auto,Auto,Auto,Auto"
+                          RowSpacing="8"
+                          ColumnSpacing="14">
+
+						<TextBlock Text="Artikelnummer"
+                                   Grid.Row="0"
+                                   Grid.Column="0"
+                                   FontWeight="Bold"
+                                   Foreground="#222"/>
+						<TextBox Text="{Binding Artikelnummer}"
+                                 Grid.Row="0"
+                                 Grid.Column="1"
+                                 Watermark="Bijv. 001085/4N"/>
+
+						<TextBlock Text="Leverancier"
+                                   Grid.Row="1"
+                                   Grid.Column="0"
+                                   FontWeight="Bold"
+                                   Foreground="#222"/>
+						<TextBox Text="{Binding LeverancierCode}"
+                                 Grid.Row="1"
+                                 Grid.Column="1"
+                                 Watermark="Bijv. ICO"/>
+
+						<TextBlock Text="Soort"
+                                   Grid.Row="2"
+                                   Grid.Column="0"
+                                   FontWeight="Bold"
+                                   Foreground="#222"/>
+						<TextBox Text="{Binding Soort}"
+                                 Grid.Row="2"
+                                 Grid.Column="1"
+                                 Watermark="Bijv. HOUT"/>
+
+						<TextBlock Text="Breedte (mm)"
+                                   Grid.Row="3"
+                                   Grid.Column="0"
+                                   FontWeight="Bold"
+                                   Foreground="#222"/>
+						<NumericUpDown Value="{Binding BreedteCm}"
+                                       Grid.Row="3"
+                                       Grid.Column="1"
+                                       Minimum="0"
+                                       Maximum="100"
+                                       Increment="1"/>
+					</Grid>
+				</StackPanel>
+
+				<!-- ░░ PRIJSINSTELLINGEN ░░ -->
+				<StackPanel>
+					<Border BorderBrush="#F5C242"
+                            BorderThickness="0 0 3 0"
+                            Margin="0,10,0,8">
+						<TextBlock Text="💰 Prijsinstellingen"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="#222"/>
+					</Border>
+
+					<Grid ColumnDefinitions="2*,3*"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          ColumnSpacing="14"
+                          RowSpacing="8">
+
+						<TextBlock Text="Prijs per meter (€)"
+                                   Grid.Row="0"
+                                   Grid.Column="0"
+                                   FontWeight="Bold"
+                                   Foreground="#222"/>
+						<NumericUpDown Value="{Binding PrijsPerMeter}"
+                                       Grid.Row="0"
+                                       Grid.Column="1"
+                                       Increment="0.1"/>
+
+						<TextBlock Text="Winstmarge (x)"
+                                   Grid.Row="1"
+                                   Grid.Column="0"
+                                   FontWeight="Bold"
+                                   Foreground="#222"/>
+						<NumericUpDown Value="{Binding WinstMargeFactor}"
+                                       Grid.Row="1"
+                                       Grid.Column="1"
+                                       Increment="0.1"/>
+
+						<TextBlock Text="Afval (%)"
+                                   Grid.Row="2"
+                                   Grid.Column="0"
+                                   FontWeight="Bold"
+                                   Foreground="#222"/>
+						<NumericUpDown Value="{Binding AfvalPercentage}"
+                                       Grid.Row="2"
+                                       Grid.Column="1"
+                                       Increment="1"/>
+
+						<TextBlock Text="Vaste kost (€)"
+                                   Grid.Row="3"
+                                   Grid.Column="0"
+                                   FontWeight="Bold"
+                                   Foreground="#222"/>
+						<NumericUpDown Value="{Binding VasteKost}"
+                                       Grid.Row="3"
+                                       Grid.Column="1"
+                                       Increment="0.5"/>
+
+						<TextBlock Text="Werk (minuten)"
+                                   Grid.Row="4"
+                                   Grid.Column="0"
+                                   FontWeight="Bold"
+                                   Foreground="#222"/>
+						<NumericUpDown Value="{Binding WerkMinuten}"
+                                       Grid.Row="4"
+                                       Grid.Column="1"
+                                       Increment="1"/>
+
+						<TextBlock Text="Machine (minuten)"
+                                   Grid.Row="5"
+                                   Grid.Column="0"
+                                   FontWeight="Bold"
+                                   Foreground="#222"/>
+						
+
+						<TextBlock Text="Serie"
+                                   Grid.Row="6"
+                                   Grid.Column="0"
+                                   FontWeight="Bold"
+                                   Foreground="#222"/>
+						<TextBox Text="{Binding Serie}"
+                                 Grid.Row="6"
+                                 Grid.Column="1"/>
+					</Grid>
+				</StackPanel>
+
+				<!-- ░░ STOCKBEHEER ░░ -->
+				<StackPanel>
+					<Border BorderBrush="#F5C242"
+                            BorderThickness="0 0 3 0"
+                            Margin="0,10,0,8">
+						<TextBlock Text="📦 Stockbeheer"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="#222"/>
+					</Border>
+
+					<Grid ColumnDefinitions="2*,3*"
+                          RowDefinitions="Auto,Auto,Auto,Auto"
+                          ColumnSpacing="14"
+                          RowSpacing="8">
+
+						<TextBlock Text="Voorraad (m)"
+                                   Grid.Row="0"
+                                   Grid.Column="0"
+                                   FontWeight="Bold"
+                                   Foreground="#222"/>
+						<NumericUpDown Value="{Binding VoorraadMeter}"
+                                       Grid.Row="0"
+                                       Grid.Column="1"/>
+
+						<TextBlock Text="Inventariskost (€)"
+                                   Grid.Row="1"
+                                   Grid.Column="0"
+                                   FontWeight="Bold"
+                                   Foreground="#222"/>
+						<NumericUpDown Value="{Binding InventarisKost}"
+                                       Grid.Row="1"
+                                       Grid.Column="1"/>
+
+						<TextBlock Text="Min. voorraad (m)"
+                                   Grid.Row="2"
+                                   Grid.Column="0"
+                                   FontWeight="Bold"
+                                   Foreground="#222"/>
+						<NumericUpDown Value="{Binding MinimumVoorraad}"
+                                       Grid.Row="2"
+                                       Grid.Column="1"/>
+
+						<CheckBox Content="Dealer"
+                                  IsChecked="{Binding IsDealer}"
+                                  Grid.Row="3"
+                                  Grid.Column="1"
+                                  VerticalAlignment="Center"/>
+					</Grid>
+				</StackPanel>
+
+				<!-- ░░ KNOPPEN ░░ -->
+				<StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            Spacing="10"
+                            Margin="0,15,0,0">
+					<Button Content="❌ Annuleren"
+                            Width="120"
+                            Click="Annuleer_Click"/>
+					<Button Content="💾 Opslaan"
+                            Width="120"
+                            Background="#444A50"
+                            Foreground="White"
+                            Click="Opslaan_Click"/>
+				</StackPanel>
+			</StackPanel>
+		</ScrollViewer>
+	</Border>
+</Window>

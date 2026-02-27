@@ -1,0 +1,18 @@
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:QuadroApp.ViewModels"
+    xmlns:views="clr-namespace:QuadroApp.Views"
+    x:Class="QuadroApp.MainWindow"
+    x:DataType="vm:MainWindowViewModel">
+
+	<Grid>
+		<ContentControl Content="{Binding CurrentViewModel}" />
+
+		<views:ToastHost
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top"
+            Margin="20"
+            DataContext="{Binding Toast}" />
+	</Grid>
+</Window>

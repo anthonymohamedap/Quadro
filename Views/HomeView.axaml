@@ -1,0 +1,181 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:QuadroApp.ViewModels"
+             x:Class="QuadroApp.Views.HomeView"
+             x:DataType="vm:HomeViewModel"
+             Background="#F7F8FA">
+
+	<Grid ColumnDefinitions="260,*">
+
+		<!-- SIDEBAR -->
+		<Border Background="#3F464C">
+			<Grid RowDefinitions="Auto,*,Auto" Margin="16">
+
+				<!-- Logo -->
+				<StackPanel Spacing="16" Margin="0,8,0,24">
+					<StackPanel Orientation="Horizontal" Spacing="12">
+						<Image Source="avares://QuadroApp/Assets/Quadro_logo2012_ZW1.jpg"
+                               Width="150"
+                               Stretch="Uniform"/>
+					</StackPanel>
+				</StackPanel>
+
+				<!-- Navigation -->
+				<StackPanel Grid.Row="1" Spacing="8">
+
+					<Button Content="👥 Klanten"
+                            Command="{Binding OpenKlantenCommand}"
+                            Classes="NavButton"/>
+
+					<Button Content="🪟 Lijsten"
+                            Command="{Binding OpenLijstenCommand}"
+                            Classes="NavButton"/>
+
+					<Button Content="🧩 Afwerkingen"
+                            Command="{Binding OpenAfwerkingsOptiesCommand}"
+                            Classes="NavButton"/>
+
+					<Button Content="🧾 Prijsberekening"
+                            Command="{Binding OpenOffertesLijstCommand}"
+                            Classes="NavButton"/>
+
+					<Button Content="📦 Bestellingen"
+                            Command="{Binding OpenWerkBonCommand}"
+                            Classes="NavButton"/>
+
+					<Button Content="📅 Planning"
+                            Command="{Binding OpenPlanningCommand}"
+                            Classes="NavButton"/>
+
+				</StackPanel>
+
+				<!-- Footer -->
+				<StackPanel Grid.Row="2" Spacing="12">
+					<Border Background="#55606A"
+                            CornerRadius="12"
+                            Padding="12">
+						<TextBlock Text="Gebruik filters in elke lijst om sneller te werken."
+                                   Foreground="#E5E7EB"
+                                   FontSize="12"
+                                   TextWrapping="Wrap"/>
+					</Border>
+
+					<TextBlock Text="© 2025 QuadroApp – Anthony Mohamed"
+                               Foreground="#9CA3AF"
+                               FontSize="12"
+                               HorizontalAlignment="Center"/>
+				</StackPanel>
+
+			</Grid>
+		</Border>
+
+		<!-- MAIN CONTENT -->
+		<ScrollViewer Grid.Column="1">
+			<StackPanel Margin="32" Spacing="24">
+
+				<!-- Header -->
+				<StackPanel Spacing="4">
+					<TextBlock Text="Welkom terug"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               Foreground="#1F2933"/>
+
+					<TextBlock Text="Start snel of bekijk de huidige status van je atelier."
+                               FontSize="14"
+                               Foreground="#5F6C7B"/>
+				</StackPanel>
+
+				<!-- Quick Actions -->
+				<UniformGrid Columns="2">
+
+					<Button Classes="CardButton"
+                            Command="{Binding OpenOffertesLijstCommand}">
+						<StackPanel Spacing="6">
+							<TextBlock Text="🧾 Prijsberekening"
+                                       FontSize="16"
+                                       Foreground="Black"
+                                       FontWeight="SemiBold"/>
+							<TextBlock Text="Maak of bewerk offertes"
+                                       FontSize="12"
+                                       Foreground="#5F6C7B"/>
+						</StackPanel>
+					</Button>
+
+					<Button Classes="CardButton"
+                            Command="{Binding OpenKlantenCommand}">
+						<StackPanel Spacing="6">
+							<TextBlock Text="👥 Klanten"
+                                       FontSize="16"
+                                       Foreground="Black"
+                                       FontWeight="SemiBold"/>
+							<TextBlock Text="Beheer klantgegevens"
+                                       FontSize="12"
+                                       Foreground="#5F6C7B"/>
+						</StackPanel>
+					</Button>
+
+					<Button Classes="CardButton"
+                            Command="{Binding OpenLijstenCommand}">
+						<StackPanel Spacing="6">
+							<TextBlock Text="🪟 Lijsten"
+                                       FontSize="16"
+                                       Foreground="Black"
+                                       FontWeight="SemiBold"/>
+							<TextBlock Text="Type-lijsten en prijzen"
+                                       FontSize="12"
+                                       Foreground="#5F6C7B"/>
+						</StackPanel>
+					</Button>
+
+					<Button Classes="CardButton"
+                            Command="{Binding OpenPlanningCommand}">
+						<StackPanel Spacing="6">
+							<TextBlock Text="📅 Planning"
+                                       FontSize="16"
+                                       Foreground="Black"
+                                       FontWeight="SemiBold"/>
+							<TextBlock Text="Bekijk werkbezetting"
+                                       FontSize="12"
+                                       Foreground="#5F6C7B"/>
+						</StackPanel>
+					</Button>
+
+				</UniformGrid>
+
+			</StackPanel>
+		</ScrollViewer>
+
+	</Grid>
+
+	<!-- STYLES -->
+	<UserControl.Styles>
+
+		<Style Selector="Button.NavButton">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="CornerRadius" Value="10"/>
+			<Setter Property="Padding" Value="14,10"/>
+			<Setter Property="HorizontalContentAlignment" Value="Left"/>
+		</Style>
+
+		<Style Selector="Button.NavButton:pointerover">
+			<Setter Property="Background" Value="#55606A"/>
+		</Style>
+
+		<Style Selector="Button.CardButton">
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="BorderBrush" Value="#E6E8EB"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="CornerRadius" Value="16"/>
+			<Setter Property="Padding" Value="20"/>
+			<Setter Property="Margin" Value="0,0,24,24"/>
+		</Style>
+
+		<Style Selector="Button.CardButton:pointerover">
+			<Setter Property="Background" Value="#FFF4CC"/>
+			<Setter Property="BorderBrush" Value="#F5C242"/>
+		</Style>
+
+	</UserControl.Styles>
+
+</UserControl>

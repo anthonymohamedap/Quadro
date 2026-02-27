@@ -1,0 +1,621 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:QuadroApp.ViewModels"
+    xmlns:m="clr-namespace:QuadroApp.Model.DB"
+    x:Class="QuadroApp.Views.OfferteView"
+    x:DataType="vm:OfferteViewModel">
+
+	<Grid RowDefinitions="Auto,*,Auto"
+          Background="#F7F8FA"
+          TextElement.Foreground="Black">
+
+		<!-- ================= HEADER ================= -->
+		<Border Grid.Row="0"
+                Background="#444A50"
+                Height="70"
+                Padding="20,0">
+
+			<Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+
+				<StackPanel>
+					<TextBlock Text="Offertebeheer"
+                               FontSize="20"
+                               FontWeight="Bold"
+                               Foreground="White"/>
+
+					<TextBlock Text="Beheer regels, afwerkingen en prijsberekening"
+                               FontSize="13"
+                               Foreground="#C9D1D9"/>
+				</StackPanel>
+
+				<Button Grid.Column="1"
+                        Content="⬅️ Terug"
+                        Command="{Binding GaTerugCommand}"
+                        Background="#F5C242"
+                        Foreground="Black"
+                        FontWeight="Bold"
+                        Width="110"
+                        Height="36"/>
+			</Grid>
+		</Border>
+
+		<!-- ================= BODY ================= -->
+		<ScrollViewer Grid.Row="1"
+                      Margin="24"
+                      VerticalScrollBarVisibility="Auto">
+
+			<Grid ColumnDefinitions="1.05*,1*"
+                  ColumnSpacing="24">
+
+				<!-- ================= LEFT COLUMN ================= -->
+				<StackPanel Spacing="20">
+
+					<!-- KLANT -->
+					<Border Classes="quadro-card">
+						<Grid RowDefinitions="Auto,Auto"
+                              ColumnDefinitions="*,Auto"
+                              RowSpacing="10"
+                              ColumnSpacing="10">
+
+							<StackPanel Spacing="6">
+
+								<!-- Huidige klant -->
+								<Border Background="#EEF2FF"
+										CornerRadius="6"
+										Padding="6">
+
+									<TextBlock FontWeight="SemiBold"
+											   Foreground="#1E40AF"
+											   Text="{Binding SelectedKlant.Achternaam,
+                                  TargetNullValue='Geen klant geselecteerd'}"/>
+								</Border>
+								<!-- Zoek -->
+								<TextBox Watermark="Zoek klant..."
+										 Text="{Binding KlantZoekterm, UpdateSourceTrigger=PropertyChanged}"/>
+
+								<!-- Selectie -->
+								<ComboBox ItemsSource="{Binding GefilterdeKlanten}"
+										  SelectedItem="{Binding SelectedKlant, Mode=TwoWay}"
+										  MaxDropDownHeight="250">
+
+									<ComboBox.ItemTemplate>
+										<DataTemplate x:DataType="m:Klant">
+											<TextBlock>
+												<Run Text="{Binding Voornaam}" />
+												<Run Text=" " />
+												<Run Text="{Binding Achternaam}" />
+											</TextBlock>
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+
+								</ComboBox>
+
+							</StackPanel>
+
+							<Button Grid.Row="1"
+                                    Grid.Column="1"
+                                    Content="+ Nieuwe klant"
+                                    
+                                    Command="{Binding NieuweKlantCommand}"
+									Background="#F5C242"
+                            Foreground="Black"
+                            FontWeight="Bold"/>
+						</Grid>
+					</Border>
+
+					<!-- REGELS -->
+					<Border Classes="quadro-card">
+						<StackPanel Spacing="12">
+
+							<Grid ColumnDefinitions="*,Auto,Auto,Auto"
+                                  ColumnSpacing="8">
+
+								<TextBlock Text="Regels"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"/>
+
+								<Button Grid.Column="1"
+                                        Content="+ Toevoegen"
+                                        Command="{Binding RegelToevoegenCommand}"
+										Background="#F5C242"
+                            Foreground="Black"
+                            FontWeight="Bold"/>
+
+								<Button Grid.Column="2"
+                                        Content="Dupliceren"
+                                        
+                                        Command="{Binding RegelDuplicerenCommand}"
+										Background="#F5C242"
+                            Foreground="Black"
+                            FontWeight="Bold"/>
+
+								<Button Grid.Column="3"
+                                        Content="– Verwijderen"
+                                        
+                                        Command="{Binding RegelVerwijderenCommand}"
+										Background="#F5C242"
+                            Foreground="Black"
+                            FontWeight="Bold"/>
+							</Grid>
+
+							<!-- TABEL HEADERS -->
+							<Grid ColumnDefinitions="60,80,90,*,110"
+                                  Opacity="0.6">
+								<TextBlock Text="#" />
+								<TextBlock Grid.Column="1" Text="Aantal"/>
+								<TextBlock Grid.Column="2" Text="Breedte"/>
+								<TextBlock Grid.Column="3" Text="Type lijst"/>
+								<TextBlock Grid.Column="4"
+                                           Text="Totaal"
+                                           HorizontalAlignment="Right"/>
+							</Grid>
+
+							<Separator/>
+
+							<ListBox ItemsSource="{Binding Regels}"
+                                     SelectedItem="{Binding SelectedRegel, Mode=TwoWay}"
+                                     Background="Transparent"
+                                     BorderThickness="0">
+
+								<ListBox.ItemTemplate>
+									<DataTemplate x:DataType="m:OfferteRegel">
+										<Border Padding="6">
+											<Grid ColumnDefinitions="60,80,90,*,110">
+												<TextBlock Text="{Binding Id}" Opacity="0.6"/>
+												<TextBlock Grid.Column="1" Text="{Binding AantalStuks}"/>
+												<TextBlock Grid.Column="2"
+                                                           Text="{Binding BreedteCm, StringFormat={}{0} cm}"/>
+												<TextBlock Grid.Column="3"
+                                                           Text="{Binding TypeLijst.Artikelnummer}"
+                                                           TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="4"
+                                                           Text="{Binding TotaalInclBtw, StringFormat=€ {0:N2}}"
+                                                           HorizontalAlignment="Right"
+                                                           FontWeight="SemiBold"/>
+											</Grid>
+										</Border>
+									</DataTemplate>
+								</ListBox.ItemTemplate>
+							</ListBox>
+						</StackPanel>
+					</Border>
+
+				</StackPanel>
+
+				<!-- ================= RIGHT COLUMN ================= -->
+				<StackPanel Grid.Column="1"
+                            Spacing="20">
+
+					<!-- REGEL DETAILS -->
+					<Border Classes="quadro-card">
+						<Grid ColumnDefinitions="220,*"
+                             RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                              RowSpacing="10">
+
+							<TextBlock Text="Regel details"
+                                       Grid.ColumnSpan="2"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"/>
+
+							<TextBlock Grid.Row="1" Text="Aantal stuks"/>
+							<NumericUpDown Grid.Row="1"
+                                           Grid.Column="1"
+                                           Minimum="1"
+                                           Maximum="999"
+                                           Value="{Binding SelectedRegel.AantalStuks, Mode=TwoWay}"/>
+
+							<TextBlock Grid.Row="2" Text="Type lijst"/>
+
+							<StackPanel Grid.Row="2"
+                                        Grid.Column="1"
+                                        Spacing="6">
+								<TextBlock Text="{Binding SelectedRegel.TypeLijst.Artikelnummer}" />
+								<TextBox Watermark="Zoek artikelnummer…"
+                                         Text="{Binding TypeLijstZoekterm, UpdateSourceTrigger=PropertyChanged}"/>
+
+								<ComboBox ItemsSource="{Binding GefilterdeTypeLijsten}"
+                                          SelectedItem="{Binding SelectedRegel.TypeLijst, Mode=TwoWay}"
+                                          MaxDropDownHeight="300">
+									<ComboBox.ItemTemplate>
+										<DataTemplate x:DataType="m:TypeLijst">
+											<TextBlock Text="{Binding Artikelnummer}"/>
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+							</StackPanel>
+
+							<TextBlock Grid.Row="3" Text="Breedte (cm)"/>
+							<NumericUpDown Grid.Row="3"
+                                           Grid.Column="1"
+                                           Value="{Binding SelectedRegel.BreedteCm, Mode=TwoWay}"/>
+
+							<TextBlock Grid.Row="4" Text="Hoogte (cm)"/>
+							<NumericUpDown Grid.Row="4"
+                                           Grid.Column="1"
+                                           Value="{Binding SelectedRegel.HoogteCm, Mode=TwoWay}"/>
+
+							<TextBlock Grid.Row="5" Text="Afgesproken prijs (excl.)"/>
+							<TextBox Grid.Row="5"
+                                     Grid.Column="1"
+                                     Text="{Binding SelectedRegel.AfgesprokenPrijsExcl, Mode=TwoWay}"/>
+
+							<TextBlock Grid.Row="6" Text="Inleg (B × H) cm"/>
+							<Grid Grid.Row="6"
+                                  Grid.Column="1"
+                                  ColumnDefinitions="*,8,*">
+								<NumericUpDown Value="{Binding SelectedRegel.InlegBreedteCm, Mode=TwoWay}"/>
+								<TextBlock Grid.Column="1"
+                                           Text="×"
+                                           HorizontalAlignment="Center"/>
+								<NumericUpDown Grid.Column="2"
+                                               Value="{Binding SelectedRegel.InlegHoogteCm, Mode=TwoWay}"/>
+							</Grid>
+							<TextBlock Grid.Row="7"
+           VerticalAlignment="Top"
+           Text="Opmerking"/>
+
+							<TextBox Grid.Row="7"
+									 Grid.Column="1"
+									 AcceptsReturn="True"
+									 Height="70"
+									 TextWrapping="Wrap"
+									 Text="{Binding SelectedRegel.Opmerking, Mode=TwoWay}"/>
+						</Grid>
+					</Border>
+
+					<!-- AFWERKINGEN -->
+					<Border Classes="quadro-card"
+        Padding="16"
+        Background="White"
+        BorderBrush="#E5E7EB"
+        BorderThickness="1"
+        CornerRadius="10">
+
+						<Grid ColumnDefinitions="Auto,*,Auto,*"
+							  RowDefinitions="Auto,Auto,Auto,Auto"
+							  ColumnSpacing="16"
+							  RowSpacing="12" 
+							  
+							  >
+
+							<!-- Titel -->
+							<StackPanel Grid.Row="0"
+										Grid.ColumnSpan="4"
+										Spacing="2"
+										Margin="0,0,0,6">
+
+								<TextBlock Text="Afwerkingen"
+										   FontSize="16"
+										   FontWeight="SemiBold" Foreground="Black"/>
+
+								<TextBlock Text="Glas – Passe-partout – Diepte – Opkleven – Rug"
+										   FontSize="12"
+										   Opacity="0.6"/>
+							</StackPanel>
+
+							<!-- ================= RIJ 1 ================= -->
+							<TextBlock Grid.Row="1"
+									   Grid.Column="0"
+									   Text="(G)"
+									   VerticalAlignment="Center"
+									   FontWeight="SemiBold"
+									   Opacity="0.8"
+									    Foreground="Black"/>
+
+							<ComboBox Grid.Row="1"
+									  Grid.Column="1"
+									  x:Name="GlasBox"
+									  ItemsSource="{Binding GlasOpties}"
+									  SelectedItem="{Binding SelectedRegel.Glas, Mode=TwoWay}"
+									  MinWidth="200">
+
+								<ComboBox.ItemTemplate>
+									<DataTemplate x:DataType="m:AfwerkingsOptie">
+										<!-- 👇 ZWART ipv white -->
+										<TextBlock Text="{Binding Naam}"
+												   Foreground="White"/>
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
+
+							<TextBlock Grid.Row="1"
+									   Grid.Column="2"
+									   Text="(P)"
+									   VerticalAlignment="Center"
+									   FontWeight="SemiBold"
+									   Opacity="0.8"
+									    Foreground="Black"/>
+
+							<ComboBox Grid.Row="1"
+									  Grid.Column="3"
+									  x:Name="Passe1Box"
+									  ItemsSource="{Binding Passe1Opties}"
+									  SelectedItem="{Binding SelectedRegel.PassePartout1, Mode=TwoWay}"
+									  MinWidth="200"
+									   Foreground="Black">
+
+								<ComboBox.ItemTemplate>
+									<DataTemplate x:DataType="m:AfwerkingsOptie">
+										<TextBlock Text="{Binding Naam}"
+												   Foreground="White"/>
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
+
+							<!-- ================= RIJ 2 ================= -->
+							<TextBlock Grid.Row="2"
+									   Grid.Column="0"
+									   Text="(P)"
+									   VerticalAlignment="Center"
+									   FontWeight="SemiBold"
+									   Opacity="0.8"
+									    Foreground="Black"/>
+
+							<ComboBox Grid.Row="2"
+									  Grid.Column="1"
+									  x:Name="Passe2Box"
+									  ItemsSource="{Binding Passe2Opties}"
+									  SelectedItem="{Binding SelectedRegel.PassePartout2, Mode=TwoWay}"
+									  MinWidth="200">
+
+								<ComboBox.ItemTemplate>
+									<DataTemplate x:DataType="m:AfwerkingsOptie">
+										<TextBlock Text="{Binding Naam}"
+												   Foreground="White"/>
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
+
+							<TextBlock Grid.Row="2"
+									   Grid.Column="2"
+									   Text="(D)"
+									   VerticalAlignment="Center"
+									   FontWeight="SemiBold"
+									   Opacity="0.8"
+									    Foreground="Black"/>
+
+							<ComboBox Grid.Row="2"
+									  Grid.Column="3"
+									  x:Name="DiepteBox"
+									  ItemsSource="{Binding DiepteOpties}"
+									  SelectedItem="{Binding SelectedRegel.DiepteKern, Mode=TwoWay}"
+									  MinWidth="200">
+
+								<ComboBox.ItemTemplate>
+									<DataTemplate x:DataType="m:AfwerkingsOptie">
+										<TextBlock Text="{Binding Naam}"
+												   Foreground="White"/>
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
+
+							<!-- ================= RIJ 3 ================= -->
+							<TextBlock Grid.Row="3"
+									   Grid.Column="0"
+									   Text="(O)"
+									   VerticalAlignment="Center"
+									   FontWeight="SemiBold"
+									   Opacity="0.8"
+									    Foreground="Black"/>
+
+							<ComboBox Grid.Row="3"
+									  Grid.Column="1"
+									  x:Name="OpklevenBox"
+									  ItemsSource="{Binding OpkleefOpties}"
+									  SelectedItem="{Binding SelectedRegel.Opkleven, Mode=TwoWay}"
+									  MinWidth="200">
+
+								<ComboBox.ItemTemplate>
+									<DataTemplate x:DataType="m:AfwerkingsOptie">
+										<TextBlock Text="{Binding Naam}"
+												   Foreground="White"/>
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
+
+							<TextBlock Grid.Row="3"
+									   Grid.Column="2"
+									   Text="(R)"
+									   VerticalAlignment="Center"
+									   FontWeight="SemiBold"
+									   Opacity="0.8"/>
+
+							<ComboBox Grid.Row="3"
+									  Grid.Column="3"
+									  x:Name="RugBox"
+									  ItemsSource="{Binding RugOpties}"
+									  SelectedItem="{Binding SelectedRegel.Rug, Mode=TwoWay}"
+									  MinWidth="200">
+
+								<ComboBox.ItemTemplate>
+									<DataTemplate x:DataType="m:AfwerkingsOptie">
+										<TextBlock Text="{Binding Naam}"
+												   Foreground="White"/>
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
+
+						</Grid>
+					</Border>
+
+					<!-- LEGACY -->
+					<Border Classes="quadro-card">
+						<Grid ColumnDefinitions="Auto,*,Auto,Auto"
+                              ColumnSpacing="8">
+
+							<TextBlock Text="Afwerking (G P P D O R)"
+                                       FontWeight="SemiBold"/>
+
+							<TextBox Grid.Column="1"
+                                     Text="{Binding LegacyCode, Mode=TwoWay}"/>
+
+							<Button Grid.Column="2"
+                                    Content="Toepassen"
+                                    
+                                    Command="{Binding ApplyLegacyCodeCommand}"/>
+
+							<Button Grid.Column="3"
+                                    Content="Genereren"
+                                    
+                                    Command="{Binding GenerateLegacyCodeCommand}"/>
+						</Grid>
+					</Border>
+					<Border Classes="quadro-card">
+
+						<StackPanel Spacing="14">
+
+							<TextBlock Text="Prijsaanpassingen"
+									   FontSize="16"
+									   FontWeight="SemiBold"/>
+
+							<Grid ColumnDefinitions="220,*"
+								  RowDefinitions="Auto,Auto,Auto"
+								  RowSpacing="10">
+
+								<!-- KORTING -->
+								<TextBlock Text="Korting (%)"/>
+								<NumericUpDown Grid.Column="1"
+											   Minimum="0"
+											   Maximum="100"
+											   Value="{Binding Offerte.KortingPct, Mode=TwoWay}"/>
+
+								<!-- MEERPRIJS -->
+								<TextBlock Grid.Row="1" Text="Meerprijs (incl. BTW)"/>
+								<TextBox Grid.Row="1"
+										 Grid.Column="1"
+										 Text="{Binding Offerte.MeerPrijsIncl, Mode=TwoWay}"/>
+
+								<!-- VOORSCHOT -->
+								<TextBlock Grid.Row="2" Text="Voorschot betaald"/>
+								<StackPanel Grid.Row="2"
+											Grid.Column="1"
+											Orientation="Horizontal"
+											Spacing="10">
+
+									<CheckBox IsChecked="{Binding Offerte.IsVoorschotBetaald, Mode=TwoWay}"/>
+
+									<TextBox Width="120"
+											 Watermark="Bedrag"
+											 Text="{Binding Offerte.VoorschotBedrag, Mode=TwoWay}"
+											 IsEnabled="{Binding Offerte.IsVoorschotBetaald}"/>
+								</StackPanel>
+
+							</Grid>
+
+						</StackPanel>
+
+					</Border>
+				</StackPanel>
+			</Grid>
+		</ScrollViewer>
+		<!-- PRIJS AANPASSINGEN -->
+		
+		<!-- ================= STICKY FOOTER ================= -->
+		<Border Grid.Row="2"
+                Background="White"
+                BorderBrush="#DDD"
+                BorderThickness="1"
+                Padding="16">
+			<Grid ColumnDefinitions="Auto,*"
+				  ColumnSpacing="30">
+
+				<!-- LINKS ACTIES -->
+				<StackPanel Orientation="Horizontal"
+							Spacing="12">
+
+					<Button Content="Berekenen"
+							Command="{Binding BerekenCommand}"
+							Background="#F5C242"
+							Foreground="Black"
+							FontWeight="Bold"/>
+
+					<Button Content="Opslaan"
+							Command="{Binding SaveCommand}"
+							Background="#F5C242"
+							Foreground="Black"
+							FontWeight="Bold"/>
+
+					<Button Content="Bevestigen → Bestelling"
+							Command="{Binding BevestigenCommand}"
+							Background="#F5C242"
+							Foreground="Black"
+							FontWeight="Bold"/>
+				</StackPanel>
+
+				<!-- RECHTS PRIJZEN -->
+				<Grid Grid.Column="1"
+					  HorizontalAlignment="Right"
+					  RowDefinitions="Auto,Auto,Auto,Auto"
+					  ColumnDefinitions="Auto,140"
+					  RowSpacing="6">
+
+					<TextBlock Text="Subtotaal"/>
+					<TextBlock Grid.Column="1"
+							   Text="{Binding OfferteEx, StringFormat=€ {0:N2}}"
+							   HorizontalAlignment="Right"/>
+
+					<TextBlock Grid.Row="1" Text="BTW"/>
+					<TextBlock Grid.Row="1"
+							   Grid.Column="1"
+							   Text="{Binding OfferteBtw, StringFormat=€ {0:N2}}"
+							   HorizontalAlignment="Right"/>
+
+					<TextBlock Grid.Row="2"
+							   Text="Totaal incl. BTW"
+							   FontWeight="Bold"/>
+
+					<TextBlock Grid.Row="2"
+							   Grid.Column="1"
+							   Text="{Binding OfferteIncl, StringFormat=€ {0:N2}}"
+							   FontSize="18"
+							   FontWeight="Bold"
+							   HorizontalAlignment="Right"/>
+
+					<TextBlock Grid.Row="3"
+							   Text="Rest te betalen"
+							   Foreground="#C0392B"
+							   FontWeight="SemiBold"/>
+
+					<TextBlock Grid.Row="3"
+							   Grid.Column="1"
+							   Text="{Binding Offerte.RestTeBetalen, StringFormat=€ {0:N2}}"
+							   Foreground="#C0392B"
+							   FontWeight="Bold"
+							   HorizontalAlignment="Right"/>
+
+				</Grid>
+
+			</Grid>
+		</Border>
+
+	</Grid>
+	<UserControl.Styles>
+
+		<Style Selector="ListBoxItem">
+			<Setter Property="Padding" Value="4"/>
+			<Setter Property="Background" Value="#FFF9DB"/>
+		</Style>
+
+		<!-- ZET ALLE TEKST ZWART -->
+		<Style Selector="ListBoxItem TextBlock">
+			<Setter Property="Foreground" Value="Black"/>
+		</Style>
+
+		<!-- ===== HOVER ===== -->
+		<Style Selector="ListBoxItem:pointerover">
+			<Setter Property="Background" Value="#FFE066"/>
+		</Style>
+
+		<!-- ===== GESELECTEERD ===== -->
+		<Style Selector="ListBoxItem:selected">
+			<Setter Property="Background" Value="#F5C242"/>
+		</Style>
+
+		<!-- ===== GESELECTEERD + FOCUS ===== -->
+		<Style Selector="ListBoxItem:selected:focus">
+			<Setter Property="Background" Value="#E0AC00"/>
+		</Style>
+
+	</UserControl.Styles>
+</UserControl>

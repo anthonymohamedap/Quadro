@@ -1,0 +1,65 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:m="using:QuadroApp.Model.DB"
+        x:Class="QuadroApp.Views.KlantDialog"
+        x:DataType="m:Klant"
+        Width="460"
+        Height="620"
+        CanResize="False"
+        Title="Klantgegevens"
+        Background="#F5F5F5">
+
+	<Border BorderBrush="#DDD" BorderThickness="1" CornerRadius="10" Background="White" Margin="10">
+		<ScrollViewer>
+			<StackPanel Margin="20" Spacing="10">
+
+				<TextBlock Text="Klantgegevens"
+						   FontSize="22"
+						   FontWeight="Bold"
+						   Foreground="#222"
+						   Margin="0,0,0,10"/>
+
+				<TextBox Watermark="Voornaam"   Text="{Binding Voornaam, Mode=TwoWay}"/>
+				<TextBox Watermark="Achternaam" Text="{Binding Achternaam, Mode=TwoWay}"/>
+
+				<TextBox Watermark="E-mail"   Text="{Binding Email, Mode=TwoWay}"/>
+				<TextBox Watermark="Telefoon" Text="{Binding Telefoon, Mode=TwoWay}"/>
+
+				<TextBox Watermark="Straat"   Text="{Binding Straat, Mode=TwoWay}"/>
+				<TextBox Watermark="Nummer"   Text="{Binding Nummer, Mode=TwoWay}"/>
+				<TextBox Watermark="Postcode" Text="{Binding Postcode, Mode=TwoWay}"/>
+				<TextBox Watermark="Gemeente" Text="{Binding Gemeente, Mode=TwoWay}"/>
+
+				<TextBox Watermark="BTW-nummer (bv. BE0123456789)" Text="{Binding BtwNummer, Mode=TwoWay}"/>
+
+				<TextBox Watermark="Opmerking"
+						 Text="{Binding Opmerking, Mode=TwoWay}"
+						 AcceptsReturn="True"
+						 TextWrapping="Wrap"
+						 MinHeight="90"/>
+
+				<StackPanel Orientation="Horizontal"
+							Spacing="10"
+							Margin="0,20,0,0"
+							HorizontalAlignment="Right">
+
+					<Button Content="Annuleren"
+							Width="110"
+							Background="#DDD"
+							Foreground="#333"
+							CornerRadius="8"
+							Click="Annuleren_Click"/>
+
+					<Button Content="Opslaan"
+							Width="110"
+							Background="#444A50"
+							Foreground="White"
+							FontWeight="Bold"
+							CornerRadius="8"
+							Click="Opslaan_Click"/>
+				</StackPanel>
+
+			</StackPanel>
+		</ScrollViewer>
+	</Border>
+</Window>

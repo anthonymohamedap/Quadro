@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="quadro.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="1"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="11177"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="7" parent="0"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="AfwerkingsGroepen" custom_title="0" dock_id="1" table="4,17:mainAfwerkingsGroepen"/><table title="AfwerkingsGroepen" custom_title="0" dock_id="2" table="4,17:mainAfwerkingsGroepen"/><dock_state state="000000ff00000000fd00000001000000020000043b000002aefc0100000001fc000000000000043b0000011800fffffffa000000010100000002fb000000160064006f0063006b00420072006f00770073006500310100000000ffffffff0000011800fffffffb000000160064006f0063006b00420072006f00770073006500320100000000ffffffff0000011800ffffff000002580000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="AfwerkingsGroepen" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="29"/><column index="2" value="36"/><column index="3" value="41"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Instellingen" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="47"/><column index="2" value="51"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Klanten" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="29"/><column index="2" value="65"/><column index="3" value="75"/><column index="4" value="39"/><column index="5" value="56"/><column index="6" value="42"/><column index="7" value="56"/><column index="8" value="59"/><column index="9" value="65"/><column index="10" value="78"/><column index="11" value="70"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Leveranciers" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="29"/><column index="2" value="36"/><column index="3" value="117"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="TypeLijsten" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="29"/><column index="2" value="91"/><column index="3" value="101"/><column index="4" value="87"/><column index="5" value="70"/><column index="6" value="39"/><column index="7" value="62"/><column index="8" value="56"/><column index="9" value="296"/><column index="10" value="84"/><column index="11" value="110"/><column index="12" value="99"/><column index="13" value="64"/><column index="14" value="83"/><column index="15" value="91"/><column index="16" value="90"/><column index="17" value="156"/><column index="18" value="111"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1">------------------------------------------------------------
+-- Alles wissen (optioneel)
+------------------------------------------------------------
+DELETE FROM AfwerkingsOpties;
+
+------------------------------------------------------------
+-- 🪟 GLAS (G) – leverancier HOF
+------------------------------------------------------------
+INSERT INTO AfwerkingsOpties
+(AfwerkingsGroepId, Naam, Volgnummer, KostprijsPerM2,
+ WinstMarge, AfvalPercentage, VasteKost, WerkMinuten, LeverancierId)
+SELECT g.Id, 'Helder glas 2 mm', 1, 18.00,
+       2.50, 5.0, 0.00, 3, l.Id
+FROM AfwerkingsGroepen g
+JOIN Leveranciers l ON l.Code = 'HOF'
+WHERE g.Code = 'G';
+
+INSERT INTO AfwerkingsOpties
+(AfwerkingsGroepId, Naam, Volgnummer, KostprijsPerM2,
+ WinstMarge, AfvalPercentage, VasteKost, WerkMinuten, LeverancierId)
+SELECT g.Id, 'Ontspiegeld glas 2 mm', 2, 26.50,
+       2.50, 5.0, 0.00, 3, l.Id
+FROM AfwerkingsGroepen g
+JOIN Leveranciers l ON l.Code = 'HOF'
+WHERE g.Code = 'G';
+
+INSERT INTO AfwerkingsOpties
+(AfwerkingsGroepId, Naam, Volgnummer, KostprijsPerM2,
+ WinstMarge, AfvalPercentage, VasteKost, WerkMinuten, LeverancierId)
+SELECT g.Id, 'Museumglas UV-filter', 3, 60.00,
+       2.30, 4.0, 0.00, 4, l.Id
+FROM AfwerkingsGroepen g
+JOIN Leveranciers l ON l.Code = 'HOF'
+WHERE g.Code = 'G';
+
+------------------------------------------------------------
+-- 🎨 PASSE-PARTOUT (P) – leverancier FRA
+------------------------------------------------------------
+INSERT INTO AfwerkingsOpties
+(AfwerkingsGroepId, Naam, Volgnummer, KostprijsPerM2,
+ WinstMarge, AfvalPercentage, VasteKost, WerkMinuten, LeverancierId)
+SELECT g.Id, 'Passe-partout wit', 1, 12.00,
+       2.40, 8.0, 0.00, 5, l.Id
+FROM AfwerkingsGroepen g
+JOIN Leveranciers l ON l.Code = 'FRA'
+WHERE g.Code = 'P';
+
+INSERT INTO AfwerkingsOpties
+(AfwerkingsGroepId, Naam, Volgnummer, KostprijsPerM2,
+ WinstMarge, AfvalPercentage, VasteKost, WerkMinuten, LeverancierId)
+SELECT g.Id, 'Passe-partout zwart', 2, 13.50,
+       2.40, 8.0, 0.00, 5, l.Id
+FROM AfwerkingsGroepen g
+JOIN Leveranciers l ON l.Code = 'FRA'
+WHERE g.Code = 'P';
+
+INSERT INTO AfwerkingsOpties
+(AfwerkingsGroepId, Naam, Volgnummer, KostprijsPerM2,
+ WinstMarge, AfvalPercentage, VasteKost, WerkMinuten, LeverancierId)
+SELECT g.Id, 'Dubbele passe-partout', 3, 18.00,
+       2.20, 10.0, 0.00, 7, l.Id
+FROM AfwerkingsGroepen g
+JOIN Leveranciers l ON l.Code = 'FRA'
+WHERE g.Code = 'P';
+
+------------------------------------------------------------
+-- 🧱 DIEPTE / KERN (D) – leverancier BOL
+------------------------------------------------------------
+INSERT INTO AfwerkingsOpties
+(AfwerkingsGroepId, Naam, Volgnummer, KostprijsPerM2,
+ WinstMarge, AfvalPercentage, VasteKost, WerkMinuten, LeverancierId)
+SELECT g.Id, 'Foamboard 5 mm', 1, 15.50,
+       2.30, 5.0, 0.00, 3, l.Id
+FROM AfwerkingsGroepen g
+JOIN Leveranciers l ON l.Code = 'BOL'
+WHERE g.Code = 'D';
+
+INSERT INTO AfwerkingsOpties
+(AfwerkingsGroepId, Naam, Volgnummer, KostprijsPerM2,
+ WinstMarge, AfvalPercentage, VasteKost, WerkMinuten, LeverancierId)
+SELECT g.Id, 'Foamboard 10 mm', 2, 19.00,
+       2.30, 5.0, 0.00, 3, l.Id
+FROM AfwerkingsGroepen g
+JOIN Leveranciers l ON l.Code = 'BOL'
+WHERE g.Code = 'D';
+
+INSERT INTO AfwerkingsOpties
+(AfwerkingsGroepId, Naam, Volgnummer, KostprijsPerM2,
+ WinstMarge, AfvalPercentage, VasteKost, WerkMinuten, LeverancierId)
+SELECT g.Id, 'PVC-kern 5 mm', 3, 22.00,
+       2.20, 5.0, 0.00, 4, l.Id
+FROM AfwerkingsGroepen g
+JOIN Leveranciers l ON l.Code = 'BOL'
+WHERE g.Code = 'D';
+
+------------------------------------------------------------
+-- 🧷 OPKLEVEN (O) – leverancier ICO
+------------------------------------------------------------
+INSERT INTO AfwerkingsOpties
+(AfwerkingsGroepId, Naam, Volgnummer, KostprijsPerM2,
+ WinstMarge, AfvalPercentage, VasteKost, WerkMinuten, LeverancierId)
+SELECT g.Id, 'Opkleven zuurvrij', 1, 10.00,
+       2.50, 5.0, 0.00, 6, l.Id
+FROM AfwerkingsGroepen g
+JOIN Leveranciers l ON l.Code = 'ICO'
+WHERE g.Code = 'O';
+
+INSERT INTO AfwerkingsOpties
+(AfwerkingsGroepId, Naam, Volgnummer, KostprijsPerM2,
+ WinstMarge, AfvalPercentage, VasteKost, WerkMinuten, LeverancierId)
+SELECT g.Id, 'Opkleven spray-mount', 2, 8.50,
+       2.50, 5.0, 0.00, 5, l.Id
+FROM AfwerkingsGroepen g
+JOIN Leveranciers l ON l.Code = 'ICO'
+WHERE g.Code = 'O';
+
+INSERT INTO AfwerkingsOpties
+(AfwerkingsGroepId, Naam, Volgnummer, KostprijsPerM2,
+ WinstMarge, AfvalPercentage, VasteKost, WerkMinuten, LeverancierId)
+SELECT g.Id, 'Opkleven film', 3, 11.00,
+       2.40, 6.0, 0.00, 6, l.Id
+FROM AfwerkingsGroepen g
+JOIN Leveranciers l ON l.Code = 'ICO'
+WHERE g.Code = 'O';
+
+------------------------------------------------------------
+-- 🪵 RUG (R) – leverancier FRA
+------------------------------------------------------------
+INSERT INTO AfwerkingsOpties
+(AfwerkingsGroepId, Naam, Volgnummer, KostprijsPerM2,
+ WinstMarge, AfvalPercentage, VasteKost, WerkMinuten, LeverancierId)
+SELECT g.Id, 'MDF 3 mm', 1, 9.00,
+       2.50, 5.0, 0.00, 2, l.Id
+FROM AfwerkingsGroepen g
+JOIN Leveranciers l ON l.Code = 'FRA'
+WHERE g.Code = 'R';
+
+INSERT INTO AfwerkingsOpties
+(AfwerkingsGroepId, Naam, Volgnummer, KostprijsPerM2,
+ WinstMarge, AfvalPercentage, VasteKost, WerkMinuten, LeverancierId)
+SELECT g.Id, 'Hardboard 3 mm', 2, 8.00,
+       2.50, 5.0, 0.00, 2, l.Id
+FROM AfwerkingsGroepen g
+JOIN Leveranciers l ON l.Code = 'FRA'
+WHERE g.Code = 'R';
+
+INSERT INTO AfwerkingsOpties
+(AfwerkingsGroepId, Naam, Volgnummer, KostprijsPerM2,
+ WinstMarge, AfvalPercentage, VasteKost, WerkMinuten, LeverancierId)
+SELECT g.Id, 'Zuurvrij karton', 3, 11.00,
+       2.40, 6.0, 0.00, 3, l.Id
+FROM AfwerkingsGroepen g
+JOIN Leveranciers l ON l.Code = 'FRA'
+WHERE g.Code = 'R';
+</sql><current_tab id="0"/></tab_sql></sqlb_project>

@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:svc="clr-namespace:QuadroApp.Service.Toast"
+             xmlns:m="clr-namespace:QuadroApp.Model.Toast"
+             x:Class="QuadroApp.Views.ToastHost"
+             x:DataType="svc:ToastService">
+
+	<ItemsControl ItemsSource="{Binding Messages}">
+		<ItemsControl.ItemTemplate>
+			<DataTemplate x:DataType="m:ToastMessage">
+				<Border CornerRadius="8"
+						Padding="12"
+						Margin="0,8"
+						Background="{Binding Type, Converter={StaticResource ToastColorConverter}}">
+					<TextBlock Text="{Binding Content}" Foreground="White"/>
+				</Border>
+			</DataTemplate>
+		</ItemsControl.ItemTemplate>
+	</ItemsControl>
+
+</UserControl>
