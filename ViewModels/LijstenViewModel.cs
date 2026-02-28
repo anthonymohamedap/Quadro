@@ -498,6 +498,11 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
 
             await db.SaveChangesAsync();
 
+            if (GeselecteerdeLijst.VoorraadMeter < GeselecteerdeLijst.MinimumVoorraad)
+            {
+                _toast.Warning($"Voorraad bijna op voor lijst {GeselecteerdeLijst.Artikelnummer}");
+            }
+
             _toast.Success("Lijst opgeslagen.");
             await LoadAsync();
 
