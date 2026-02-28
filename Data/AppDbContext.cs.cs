@@ -19,6 +19,8 @@ namespace QuadroApp.Data
         public DbSet<Leverancier> Leveranciers => Set<Leverancier>();
 
         public DbSet<Klant> Klanten => Set<Klant>();
+        public DbSet<ImportSession> ImportSessions => Set<ImportSession>();
+        public DbSet<ImportRowLog> ImportRowLogs => Set<ImportRowLog>();
 
 
         public AppDbContext(DbContextOptions<AppDbContext> opties) : base(opties) { }
@@ -93,6 +95,25 @@ namespace QuadroApp.Data
                       .WithOne(w => w.Offerte)
                       .HasForeignKey<WerkBon>(w => w.OfferteId)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            b.Entity<ImportSession>(entity =>
+            {
+                entity.Property(x => x.EntityName).HasMaxLength(100);
+                entity.Property(x => x.FileName).HasMaxLength(260);
+                entity.Property(x => x.Status).HasMaxLength(50);
+                entity.Property(x => x.ErrorMessage).HasMaxLength(4000);
+            });
+
+            b.Entity<ImportRowLog>(entity =>
+            {
+                entity.Property(x => x.Key).HasMaxLength(250);
+                entity.Property(x => x.Message).HasMaxLength(2000);
+
+                entity.HasOne(x => x.ImportSession)
+                    .WithMany(x => x.RowLogs)
+                    .HasForeignKey(x => x.ImportSessionId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             // ───────── WerkBon ─────────
