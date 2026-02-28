@@ -18,17 +18,15 @@ public sealed class TypeLijstImportCommitter : IImportCommitter<TypeLijst>
         var updated = 0;
         var skipped = 0;
 
-        var leveranciersByCode = await db.Leveranciers
-            .Where(l => !string.IsNullOrWhiteSpace(l.Code))
-            .ToDictionaryAsync(l => l.Code.Trim(), StringComparer.OrdinalIgnoreCase, ct);
+        var leveranciersByNaam = await db.Leveranciers
+            .Where(l => !string.IsNullOrWhiteSpace(l.Naam))
+            .ToDictionaryAsync(l => l.Naam.Trim().ToUpper(), StringComparer.OrdinalIgnoreCase, ct);
 
         var existing = await db.TypeLijsten
             .AsTracking()
             .Include(t => t.Leverancier)
             .Where(t => !string.IsNullOrWhiteSpace(t.Artikelnummer))
             .ToDictionaryAsync(t => t.Artikelnummer.Trim(), StringComparer.OrdinalIgnoreCase, ct);
-
-        var fallbackLeverancierCode = $"QDO-{Guid.NewGuid():N}"[..10].ToUpperInvariant();
 
         foreach (var row in validRows)
         {
@@ -48,26 +46,24 @@ public sealed class TypeLijstImportCommitter : IImportCommitter<TypeLijst>
                 continue;
             }
 
-            var leverancierCode = parsed.Leverancier?.Code?.Trim();
-            if (string.IsNullOrWhiteSpace(leverancierCode))
+            var leverancierNaam = NormalizeLeverancierNaam(parsed.Leverancier?.Naam);
+            if (string.IsNullOrWhiteSpace(leverancierNaam))
             {
-                leverancierCode = fallbackLeverancierCode;
+                skipped++;
+                continue;
             }
 
-            if (!leveranciersByCode.TryGetValue(leverancierCode, out var leverancier))
+            if (!leveranciersByNaam.TryGetValue(leverancierNaam, out var leverancier))
             {
-                leverancier = new Leverancier
-                {
-                    Code = leverancierCode,
-                    Naam = "Quadro Default"
-                };
+                leverancier = new Leverancier { Naam = leverancierNaam };
                 db.Leveranciers.Add(leverancier);
-                leveranciersByCode[leverancierCode] = leverancier;
+                leveranciersByNaam[leverancierNaam] = leverancier;
             }
 
             if (!existing.TryGetValue(artikelnummer, out var current))
             {
                 parsed.Artikelnummer = artikelnummer;
+                parsed.Levcode = (parsed.Levcode ?? string.Empty).Trim();
                 parsed.Leverancier = leverancier;
                 parsed.LaatsteUpdate = DateTime.Now;
                 db.TypeLijsten.Add(parsed);
@@ -77,6 +73,7 @@ public sealed class TypeLijstImportCommitter : IImportCommitter<TypeLijst>
             }
 
             current.Leverancier = leverancier;
+            current.Levcode = (parsed.Levcode ?? string.Empty).Trim();
             current.BreedteCm = parsed.BreedteCm;
             current.Soort = parsed.Soort;
             current.Serie = parsed.Serie;
@@ -96,4 +93,7 @@ public sealed class TypeLijstImportCommitter : IImportCommitter<TypeLijst>
         await db.SaveChangesAsync(ct);
         return (inserted, updated, skipped);
     }
+
+    private static string NormalizeLeverancierNaam(string? raw)
+        => string.IsNullOrWhiteSpace(raw) ? string.Empty : raw.Trim().ToUpperInvariant();
 }

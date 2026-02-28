@@ -280,7 +280,7 @@ public partial class AfwerkingenViewModel : ObservableObject
             }
 
             IsDealerOptie = string.Equals(
-                SelectedOptie.Leverancier?.Code,
+                SelectedOptie.Leverancier?.Naam,
                 "DLR",
                 StringComparison.OrdinalIgnoreCase);
 
@@ -535,7 +535,6 @@ public partial class AfwerkingenViewModel : ObservableObject
             ? Leveranciers.ToList()
             : Leveranciers
                 .Where(l =>
-                    (l.Code ?? "").Contains(term, StringComparison.OrdinalIgnoreCase) ||
                     (l.Naam ?? "").Contains(term, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 

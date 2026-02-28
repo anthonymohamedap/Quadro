@@ -89,7 +89,7 @@ public sealed class AfwerkingsOptieImportDefinition : IImportPreviewDefinition
             ["Volgnummer"] = optie.Volgnummer == default ? string.Empty : optie.Volgnummer.ToString(),
             ["Kostprijs/m²"] = optie.KostprijsPerM2.ToString(),
             ["Winstmarge"] = optie.WinstMarge.ToString(),
-            ["LeverancierCode"] = optie.Leverancier?.Code
+            ["Leverancier"] = optie.Leverancier?.Naam
         };
     }
 

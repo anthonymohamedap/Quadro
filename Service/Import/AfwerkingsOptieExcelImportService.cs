@@ -40,9 +40,9 @@ public sealed class AfwerkingsOptieExcelImportService
             .ToDictionaryAsync(g => g.Naam.Trim(), StringComparer.OrdinalIgnoreCase);
 
         // leveranciers op code (case-insensitive)
-        var leveranciersByCode = await db.Leveranciers
-            .Where(l => !string.IsNullOrWhiteSpace(l.Code))
-            .ToDictionaryAsync(l => l.Code!.Trim(), StringComparer.OrdinalIgnoreCase);
+        var leveranciersByNaam = await db.Leveranciers
+            .Where(l => !string.IsNullOrWhiteSpace(l.Naam))
+            .ToDictionaryAsync(l => l.Naam!.Trim().ToUpper(), StringComparer.OrdinalIgnoreCase);
 
         // optioneel: alle bestaande opties al ophalen om N+1 queries te vermijden
         // (zeker als je veel rijen hebt)
@@ -67,21 +67,23 @@ public sealed class AfwerkingsOptieExcelImportService
 
             r.AfwerkingsGroepId = groep.Id;
 
-            // 2) leverancier bepalen (default QDO)
-            var code = string.IsNullOrWhiteSpace(r.LeverancierCode)
-      ? "QDO"
-      : r.LeverancierCode.Trim();
+            // 2) leverancier bepalen op Naam
+            var naam = NormalizeLeverancierNaam(r.Leverancier);
+            if (string.IsNullOrWhiteSpace(naam))
+            {
+                skipped++;
+                continue;
+            }
 
-            if (!leveranciersByCode.TryGetValue(code, out var leverancier))
+            if (!leveranciersByNaam.TryGetValue(naam, out var leverancier))
             {
                 leverancier = new Leverancier
                 {
-                    Code = code,
-                    Naam = code == "QDO" ? "Quadro Default" : code
+                    Naam = naam
                 };
 
                 db.Leveranciers.Add(leverancier);
-                leveranciersByCode[code] = leverancier;
+                leveranciersByNaam[naam] = leverancier;
             }
 
             // 3) update of insert (match op groep + volgnummer char)
@@ -130,6 +132,9 @@ public sealed class AfwerkingsOptieExcelImportService
         await db.SaveChangesAsync();
         return new ImportCommitResult(added, updated, skipped);
     }
+    private static string NormalizeLeverancierNaam(string? raw)
+        => string.IsNullOrWhiteSpace(raw) ? string.Empty : raw.Trim().ToUpperInvariant();
+
     public async Task<ImportPreviewResult<AfwerkingsOptiePreviewRow>> PreviewAsync(string file)
     {
         var rows = new List<AfwerkingsOptiePreviewRow>();

@@ -93,7 +93,8 @@ public partial class ImportPreviewViewModel : ObservableObject
             Rows.Add(new PreviewRowItem(row.RowNumber, row.IsValid, false, [], new Dictionary<string, string?>
             {
                 ["Artikelnummer"] = row.Artikelnummer,
-                ["LeverancierCode"] = row.LeverancierCode
+                ["Leverancier"] = row.Leverancier
+                ,["Levcode"] = row.Levcode
             }));
         }
     }

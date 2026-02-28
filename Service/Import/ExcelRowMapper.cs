@@ -14,18 +14,20 @@ public static class ExcelRowMapper
         int rowNumber)
     {
         var artikelnummer = r.Cell(1).GetString()?.Trim() ?? "";
-        var leverancierCode = r.Cell(2).GetString()?.Trim() ?? "";
+        var leverancierNaam = r.Cell(4).GetString()?.Trim() ?? "";
+        var levcode = r.Cell(2).GetString()?.Trim() ?? "";
 
         var preview = new TypeLijstPreviewRow
         {
             RowNumber = rowNumber,
             Artikelnummer = artikelnummer,
-            LeverancierCode = leverancierCode,
+            Leverancier = leverancierNaam.ToUpperInvariant(),
+            Levcode = levcode,
             BreedteCm = (int)ReadDecimalOrDefault(r.Cell(6), 0m),
             Type = r.Cell(5).GetString()?.Trim() ?? "",
             Opmerking1 = r.Cell(7).GetString()?.Trim() ?? "",
             Opmerking2 = r.Cell(8).GetString()?.Trim() ?? "",
-            LeverancierNaam = r.Cell(4).GetString()?.Trim() ?? "",
+            LeverancierNaam = leverancierNaam,
             Stock = ReadDecimalOrDefault(r.Cell(9), 0m),
             Minstock = ReadDecimalOrDefault(r.Cell(10), 0m),
             Inventariskost = ReadDecimalOrDefault(r.Cell(11), 0m),

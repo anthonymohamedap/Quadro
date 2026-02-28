@@ -14,16 +14,9 @@ namespace QuadroApp.Model.DB
         [Required]
         public string Artikelnummer { get; set; } = string.Empty;
 
-        [NotMapped]
-        public string LeverancierCode
-        {
-            get => Leverancier?.Code ?? string.Empty;
-            private set { /* nodig voor EF */ }
-        }
-
-        [NotMapped]
-        public List<Leverancier>? AlleLeveranciers { get; set; }
-
+        [MaxLength(50)]
+        [Required]
+        public string Levcode { get; set; } = null!;
 
         [Required]
         public int LeverancierId { get; set; }

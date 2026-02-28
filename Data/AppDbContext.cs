@@ -33,7 +33,6 @@ namespace QuadroApp.Data
             b.Entity<TypeLijst>(entity =>
             {
                 entity.Property(x => x.Artikelnummer).HasMaxLength(20);
-                entity.Property(x => x.LeverancierCode).HasMaxLength(3);
                 entity.Property(x => x.PrijsPerMeter).HasPrecision(10, 2);
                 entity.Property(x => x.WinstMargeFactor).HasPrecision(6, 3);
                 entity.Property(x => x.AfvalPercentage).HasPrecision(5, 2);
@@ -70,9 +69,16 @@ namespace QuadroApp.Data
                       .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(x => x.Leverancier)
-                      .WithMany(l => l.AfwerkingsOpties)
+                       .WithMany()
                       .HasForeignKey(x => x.LeverancierId)
                       .OnDelete(DeleteBehavior.SetNull);
+            });
+
+
+            b.Entity<Leverancier>(entity =>
+            {
+                entity.Property(x => x.Naam).HasMaxLength(10);
+                entity.HasIndex(x => x.Naam).IsUnique();
             });
 
             b.Entity<Offerte>(entity =>

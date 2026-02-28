@@ -12,19 +12,19 @@ namespace QuadroApp.Data
             if (!db.Leveranciers.Any())
             {
                 db.Leveranciers.AddRange(
-                    new Leverancier { Code = "ICO", Naam = "Iconic Frames" },
-                    new Leverancier { Code = "HOF", Naam = "Hofman Design" },
-                    new Leverancier { Code = "FRA", Naam = "FramingArt" },
-                    new Leverancier { Code = "BOL", Naam = "Bol FrameWorks" }
+                    new Leverancier { Naam = "ICO" },
+                    new Leverancier { Naam = "HOF" },
+                    new Leverancier { Naam = "FRA" },
+                    new Leverancier { Naam = "BOL" }
                 );
                 db.SaveChanges();
             }
 
             // IDs ophalen op basis van Code
-            int icoId = db.Leveranciers.Single(l => l.Code == "ICO").Id;
-            int hofId = db.Leveranciers.Single(l => l.Code == "HOF").Id;
-            int fraId = db.Leveranciers.Single(l => l.Code == "FRA").Id;
-            int bolId = db.Leveranciers.Single(l => l.Code == "BOL").Id;
+            int icoId = db.Leveranciers.Single(l => l.Naam == "ICO").Id;
+            int hofId = db.Leveranciers.Single(l => l.Naam == "HOF").Id;
+            int fraId = db.Leveranciers.Single(l => l.Naam == "FRA").Id;
+            int bolId = db.Leveranciers.Single(l => l.Naam == "BOL").Id;
 
             // 2) AfwerkingsGroepen (G / P / D / O / R)
             if (!db.AfwerkingsGroepen.Any())

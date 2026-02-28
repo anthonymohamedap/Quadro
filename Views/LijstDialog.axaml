@@ -51,15 +51,15 @@
                                  Grid.Column="1"
                                  Watermark="Bijv. 001085/4N"/>
 
-						<TextBlock Text="Leverancier"
+						<TextBlock Text="Levcode"
                                    Grid.Row="1"
                                    Grid.Column="0"
                                    FontWeight="Bold"
                                    Foreground="#222"/>
-						<TextBox Text="{Binding LeverancierCode}"
+						<TextBox Text="{Binding Levcode}"
                                  Grid.Row="1"
                                  Grid.Column="1"
-                                 Watermark="Bijv. ICO"/>
+                                 Watermark="Artikelcode leverancier"/>
 
 						<TextBlock Text="Soort"
                                    Grid.Row="2"

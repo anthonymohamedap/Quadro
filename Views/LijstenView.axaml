@@ -294,7 +294,7 @@
 												Padding="6">
 											<TextBlock FontWeight="SemiBold"
 													   Foreground="#1E40AF"
-													   Text="{Binding SelectedLeverancier.Code, TargetNullValue='Geen leverancier geselecteerd'}"/>
+													   Text="{Binding SelectedLeverancier.Naam, TargetNullValue='Geen leverancier geselecteerd'}"/>
 										</Border>
 
 										<!-- Zoekbox -->
@@ -309,8 +309,6 @@
 											<ComboBox.ItemTemplate>
 												<DataTemplate x:DataType="m:Leverancier">
 													<TextBlock>
-														<Run Text="{Binding Code}" />
-														<Run Text=" — " />
 														<Run Text="{Binding Naam}" />
 													</TextBlock>
 												</DataTemplate>

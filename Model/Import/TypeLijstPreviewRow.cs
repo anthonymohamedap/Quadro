@@ -4,7 +4,8 @@ public sealed class TypeLijstPreviewRow
 {
     public int RowNumber { get; set; }
     public string Artikelnummer { get; set; } = "";
-    public string LeverancierCode { get; set; } = "";
+    public string Leverancier { get; set; } = "";
+    public string Levcode { get; set; } = "";
     public int BreedteCm { get; set; }
     public string Type { get; set; } = "";
     public string Opmerking1 { get; set; } = "";

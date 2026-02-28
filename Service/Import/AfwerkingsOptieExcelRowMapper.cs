@@ -34,7 +34,7 @@ public static class AfwerkingsOptieExcelRowMapper
             AfvalPercentage = ReadDecimal(r.Cell(6)),
             VasteKost = ReadDecimal(r.Cell(7)),
             WerkMinuten = ReadInt(r.Cell(8)),
-            LeverancierCode = r.Cell(9).GetString().Trim()
+            Leverancier = r.Cell(9).GetString().Trim().ToUpperInvariant()
         };
 
         // 🔍 VALIDATIE
