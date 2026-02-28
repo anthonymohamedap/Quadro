@@ -28,6 +28,8 @@ public sealed class TypeLijstImportCommitter : IImportCommitter<TypeLijst>
             .Where(t => !string.IsNullOrWhiteSpace(t.Artikelnummer))
             .ToDictionaryAsync(t => t.Artikelnummer.Trim(), StringComparer.OrdinalIgnoreCase, ct);
 
+        var fallbackLeverancierCode = $"QDO-{Guid.NewGuid():N}"[..10].ToUpperInvariant();
+
         foreach (var row in validRows)
         {
             ct.ThrowIfCancellationRequested();
@@ -49,7 +51,7 @@ public sealed class TypeLijstImportCommitter : IImportCommitter<TypeLijst>
             var leverancierCode = parsed.Leverancier?.Code?.Trim();
             if (string.IsNullOrWhiteSpace(leverancierCode))
             {
-                leverancierCode = "QDO";
+                leverancierCode = fallbackLeverancierCode;
             }
 
             if (!leveranciersByCode.TryGetValue(leverancierCode, out var leverancier))
@@ -57,7 +59,7 @@ public sealed class TypeLijstImportCommitter : IImportCommitter<TypeLijst>
                 leverancier = new Leverancier
                 {
                     Code = leverancierCode,
-                    Naam = leverancierCode.Equals("QDO", StringComparison.OrdinalIgnoreCase) ? "Quadro Default" : leverancierCode
+                    Naam = "Quadro Default"
                 };
                 db.Leveranciers.Add(leverancier);
                 leveranciersByCode[leverancierCode] = leverancier;
