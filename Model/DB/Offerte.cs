@@ -41,7 +41,7 @@ namespace QuadroApp.Model.DB
         public int? GeschatteMinuten { get; set; }
 
         /// <summary>Status in het offertetraject.</summary>
-        public OfferteStatus Status { get; set; } = OfferteStatus.Nieuw;
+        public OfferteStatus Status { get; set; } = OfferteStatus.Concept;
 
         /// <summary>Gekoppelde bestelling (WerkBon) — kan null zijn.</summary>
         public WerkBon? WerkBon { get; set; }
