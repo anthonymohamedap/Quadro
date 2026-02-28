@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using QuadroApp.Data;
@@ -106,6 +107,7 @@ public sealed class ImportService : IImportService
     {
         _logger.LogInformation("Commit started for import preview.");
         await using var db = await _dbFactory.CreateDbContextAsync(ct);
+        await EnsureImportAuditTablesAsync(db, ct);
         await using var tx = await db.Database.BeginTransactionAsync(ct);
 
         var entityName = preview.GlobalIssues.FirstOrDefault(i => i.ColumnName == "__EntityName")?.Message ?? typeof(T).Name;
@@ -179,6 +181,55 @@ public sealed class ImportService : IImportService
             _logger.LogError(ex, "Commit failed SessionId={SessionId}", session.Id);
             throw;
         }
+    }
+
+
+    private static async Task EnsureImportAuditTablesAsync(AppDbContext db, CancellationToken ct)
+    {
+        if (!db.Database.IsSqlite())
+        {
+            return;
+        }
+
+        const string createSessions = """
+CREATE TABLE IF NOT EXISTS [ImportSessions] (
+    [Id] INTEGER NOT NULL CONSTRAINT [PK_ImportSessions] PRIMARY KEY AUTOINCREMENT,
+    [StartedAt] TEXT NOT NULL,
+    [FinishedAt] TEXT NULL,
+    [EntityName] TEXT NOT NULL,
+    [FileName] TEXT NOT NULL,
+    [TotalRows] INTEGER NOT NULL,
+    [ValidRows] INTEGER NOT NULL,
+    [InvalidRows] INTEGER NOT NULL,
+    [Inserted] INTEGER NOT NULL,
+    [Updated] INTEGER NOT NULL,
+    [Skipped] INTEGER NOT NULL,
+    [Status] TEXT NOT NULL,
+    [ErrorMessage] TEXT NULL
+);
+""";
+
+        const string createRowLogs = """
+CREATE TABLE IF NOT EXISTS [ImportRowLogs] (
+    [Id] INTEGER NOT NULL CONSTRAINT [PK_ImportRowLogs] PRIMARY KEY AUTOINCREMENT,
+    [ImportSessionId] INTEGER NOT NULL,
+    [RowNumber] INTEGER NOT NULL,
+    [Key] TEXT NOT NULL,
+    [Success] INTEGER NOT NULL,
+    [Message] TEXT NULL,
+    [IssuesJson] TEXT NULL,
+    CONSTRAINT [FK_ImportRowLogs_ImportSessions_ImportSessionId] FOREIGN KEY ([ImportSessionId]) REFERENCES [ImportSessions] ([Id]) ON DELETE CASCADE
+);
+""";
+
+        const string createIndex = """
+CREATE INDEX IF NOT EXISTS [IX_ImportRowLogs_ImportSessionId]
+ON [ImportRowLogs] ([ImportSessionId]);
+""";
+
+        await db.Database.ExecuteSqlRawAsync(createSessions, ct);
+        await db.Database.ExecuteSqlRawAsync(createRowLogs, ct);
+        await db.Database.ExecuteSqlRawAsync(createIndex, ct);
     }
 
     private static ImportSummary BuildSummary<T>(IReadOnlyCollection<ImportRowResult<T>> rows, int inserts, int updates, int skipped)

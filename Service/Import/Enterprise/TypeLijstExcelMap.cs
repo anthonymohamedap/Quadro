@@ -26,14 +26,11 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
                 target.Artikelnummer = cellText?.Trim() ?? string.Empty;
                 break;
             case "LeverancierCode":
-                issues.Add(new ImportRowIssue
+                var code = cellText?.Trim();
+                if (!string.IsNullOrWhiteSpace(code))
                 {
-                    RowNumber = rowNumber,
-                    ColumnName = columnKey,
-                    Message = "LeverancierCode is afgeleid van Leverancier en kan niet direct worden ingesteld.",
-                    Severity = Severity.Warning,
-                    RawValue = cellText
-                });
+                    target.Leverancier = new Leverancier { Code = code };
+                }
                 break;
             case "BreedteCm":
                 if (int.TryParse(cellText, out var width))

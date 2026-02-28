@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using QuadroApp.Model.DB;
 using QuadroApp.Model.Import;
 using QuadroApp.Service.Import;
+using QuadroApp.Service.Import.Enterprise;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Services.Import;
 using QuadroApp.Validation;
@@ -17,8 +18,7 @@ public partial class AfwerkingenViewModel : ObservableObject
 {
     private readonly IAfwerkingenService _service;
     private readonly INavigationService _nav;
-    private readonly IFilePickerService _filePicker;
-    private readonly AfwerkingsOptieExcelImportService _afwerkingImportService;
+    private readonly AfwerkingsOptieImportDefinition _afwerkingsImportDefinition;
     private readonly IDialogService _dialogs;
     private readonly ICrudValidator<AfwerkingsOptie> _validator;
     private readonly IToastService _toast;
@@ -91,16 +91,15 @@ public partial class AfwerkingenViewModel : ObservableObject
     public AfwerkingenViewModel(
         IAfwerkingenService service,
         INavigationService nav,
-        IFilePickerService filePicker,
+        AfwerkingsOptieImportDefinition afwerkingsImportDefinition,
         IDialogService dialogs,
-        AfwerkingsOptieExcelImportService afwerkingImportService, ICrudValidator<AfwerkingsOptie> validator,
+        ICrudValidator<AfwerkingsOptie> validator,
     IToastService toast)
     {
         _nav = nav ?? throw new ArgumentNullException(nameof(nav));
         _service = service ?? throw new ArgumentNullException(nameof(service));
-        _filePicker = filePicker ?? throw new ArgumentNullException(nameof(filePicker));
+        _afwerkingsImportDefinition = afwerkingsImportDefinition ?? throw new ArgumentNullException(nameof(afwerkingsImportDefinition));
         _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
-        _afwerkingImportService = afwerkingImportService ?? throw new ArgumentNullException(nameof(afwerkingImportService));
         _validator = validator;
         _toast = toast;
         RefreshAsyncCommand = new AsyncRelayCommand(RefreshAsync, () => !IsBusy);
@@ -151,53 +150,15 @@ public partial class AfwerkingenViewModel : ObservableObject
             Status = "Excel import…";
             Foutmelding = null;
 
-            var file = await _filePicker.PickExcelFileAsync();
-            if (string.IsNullOrWhiteSpace(file))
-            {
-                Status = "Klaar";
-                return;
-            }
-
-            var preview = await _afwerkingImportService.PreviewAsync(file);
-
-            if (preview?.Rows is null || !preview.Rows.Any())
-            {
-                _toast.Warning("Geen rijen gevonden in Excel.");
-                Status = "Klaar";
-                return;
-            }
-
-            var confirm = await _dialogs.ShowAfwerkingImportPreviewAsync(
-                new ObservableCollection<AfwerkingsOptiePreviewRow>(preview.Rows),
-                new ObservableCollection<ImportIssue>(preview.Issues ?? Array.Empty<ImportIssue>())
-            );
-
+            var confirm = await _dialogs.ShowUnifiedImportPreviewAsync(_afwerkingsImportDefinition);
             if (!confirm)
             {
                 Status = "Geannuleerd";
                 return;
             }
 
-            // ✅ Alleen geldige preview rows meenemen
-            var validRows = preview.Rows
-                .Where(r => r.IsValid)
-                .ToList();
-
-            if (!validRows.Any())
-            {
-                _toast.Error("Niets geïmporteerd: alle rijen zijn ongeldig.");
-                Status = "Klaar";
-                return;
-            }
-
-            var commit = await _afwerkingImportService.CommitAsync(validRows);
-
             await LoadAsync();
-
-            _toast.Success(
-                $"Import klaar. Added: {commit.Added}, Updated: {commit.Updated}, Skipped: {commit.Skipped}"
-            );
-
+            _toast.Success("Import van afwerkingen voltooid.");
             Status = "Import klaar";
         }
         catch (Exception ex)

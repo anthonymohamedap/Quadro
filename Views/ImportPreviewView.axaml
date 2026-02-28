@@ -6,6 +6,7 @@
         x:DataType="vm:ImportPreviewViewModel"
         Width="1200"
         Height="760"
+        Background="#F5F5F5"
         Title="Unified Import Preview">
   <Window.Styles>
     <Style Selector="TextBlock">
@@ -14,13 +15,15 @@
   </Window.Styles>
 
   <Grid RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="2*,*" Margin="12">
-    <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Spacing="8">
-      <TextBlock Text="Enterprise import preview" FontWeight="Bold" FontSize="20" />
-      <TextBlock Text="{Binding EntityName}" FontWeight="SemiBold" />
-      <TextBlock Text="{Binding ProgressText}" />
-    </StackPanel>
+    <Border Grid.Row="0" Grid.ColumnSpan="2" Background="#444A50" CornerRadius="8" Padding="12">
+      <StackPanel Spacing="4">
+        <TextBlock Text="Enterprise import preview" FontWeight="Bold" FontSize="20" Foreground="White" />
+        <TextBlock Text="{Binding EntityName}" FontWeight="SemiBold" Foreground="#DDD" />
+        <TextBlock Text="{Binding ProgressText}" Foreground="#F5C242" />
+      </StackPanel>
+    </Border>
 
-    <Border Grid.Row="1" Grid.ColumnSpan="2" Margin="0,10,0,10" BorderThickness="1" CornerRadius="8" Padding="10">
+    <Border Grid.Row="1" Grid.ColumnSpan="2" Margin="0,10,0,10" BorderBrush="#DDD" BorderThickness="1" Background="White" CornerRadius="8" Padding="10">
       <WrapPanel ItemHeight="40" ItemWidth="180">
         <TextBlock Text="{Binding TotalRows, StringFormat=Total: {0}}" />
         <TextBlock Text="{Binding ValidRows, StringFormat=Valid: {0}}" />
@@ -32,7 +35,7 @@
       </WrapPanel>
     </Border>
 
-    <Border Grid.Row="2" Grid.Column="0" BorderThickness="1" CornerRadius="8" Padding="8" Margin="0,0,10,0">
+    <Border Grid.Row="2" Grid.Column="0" BorderBrush="#DDD" BorderThickness="1" Background="White" CornerRadius="8" Padding="8" Margin="0,0,10,0">
       <ListBox ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}">
         <ListBox.ItemTemplate>
           <DataTemplate x:DataType="vm:PreviewRowItem">
@@ -60,7 +63,7 @@
     </Border>
 
     <StackPanel Grid.Row="2" Grid.Column="1" Spacing="8">
-      <Border BorderThickness="1" CornerRadius="8" Padding="8">
+      <Border BorderBrush="#DDD" BorderThickness="1" Background="White" CornerRadius="8" Padding="8">
         <StackPanel>
           <TextBlock Text="Issues" FontWeight="Bold" FontSize="16" />
           <ListBox ItemsSource="{Binding SelectedRowIssues}">
@@ -78,7 +81,7 @@
           </ListBox>
         </StackPanel>
       </Border>
-      <Border BorderThickness="1" CornerRadius="8" Padding="8">
+      <Border BorderBrush="#DDD" BorderThickness="1" Background="White" CornerRadius="8" Padding="8">
         <StackPanel>
           <TextBlock Text="Selected row values" FontWeight="Bold" FontSize="16" />
           <ItemsControl ItemsSource="{Binding SelectedRowValues}">
@@ -96,9 +99,9 @@
     </StackPanel>
 
     <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" Margin="0,10,0,0">
-      <Button Content="Choose File" Command="{Binding ChooseFileCommand}"  />
-      <Button Content="Dry Run / Preview" Command="{Binding DryRunCommand}"  />
-      <Button Content="Commit Import" Command="{Binding CommitImportCommand}"  />
+      <Button Content="Choose File" Command="{Binding ChooseFileCommand}" Background="#F5C242" Foreground="#222" FontWeight="Bold" />
+      <Button Content="Dry Run / Preview" Command="{Binding DryRunCommand}" Background="#F5C242" Foreground="#222" FontWeight="Bold" />
+      <Button Content="Commit Import" Command="{Binding CommitImportCommand}" Background="#F5C242" Foreground="#222" FontWeight="Bold" />
       <Button Content="Cancel Running" Command="{Binding CancelOperationCommand}" IsEnabled="{Binding IsBusy}" />
       <Button Content="Cancel" Command="{Binding CancelCommand}" />
     </StackPanel>

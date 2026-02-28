@@ -109,6 +109,16 @@ public partial class App : Application
         services.AddTransient<IImportCommitter<Klant>, KlantImportCommitter>();
         services.AddTransient<KlantImportDefinition>();
 
+        services.AddTransient<IExcelMap<TypeLijst>, TypeLijstExcelMap>();
+        services.AddTransient<IImportValidator<TypeLijst>, TypeLijstImportValidator>();
+        services.AddTransient<IImportCommitter<TypeLijst>, TypeLijstImportCommitter>();
+        services.AddTransient<TypeLijstImportDefinition>();
+
+        services.AddTransient<IExcelMap<AfwerkingsOptie>, AfwerkingsOptieExcelMap>();
+        services.AddTransient<IImportValidator<AfwerkingsOptie>, AfwerkingsOptieImportValidator>();
+        services.AddTransient<IImportCommitter<AfwerkingsOptie>, AfwerkingsOptieImportCommitter>();
+        services.AddTransient<AfwerkingsOptieImportDefinition>();
+
         // Import
         services.AddTransient<IExcelImportService, ExcelImportService>();
         services.AddTransient<KlantExcelImportService>();
@@ -197,8 +207,7 @@ public partial class App : Application
 
         Console.WriteLine("[DB] Resetting demo database...");
 
-        // 🔥 Demo reset
-
+        await db.Database.EnsureCreatedAsync();
 
         // Seed data
         SeedBasisData(db);
