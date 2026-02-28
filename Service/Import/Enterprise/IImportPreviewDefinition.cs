@@ -9,8 +9,8 @@ namespace QuadroApp.Service.Import.Enterprise;
 public interface IImportPreviewDefinition
 {
     string EntityName { get; }
-    Task<ImportResult<object>> DryRunAsync(Stream stream, CancellationToken ct);
-    Task<ImportCommitReceipt> CommitAsync(ImportResult<object> preview, CancellationToken ct);
+    Task<QuadroApp.Model.Import.ImportResult<object>> DryRunAsync(Stream stream, CancellationToken ct);
+    Task<ImportCommitReceipt> CommitAsync(QuadroApp.Model.Import.ImportResult<object> preview, CancellationToken ct);
     IReadOnlyDictionary<string, string?> ToDisplayMap(object item);
     string GetItemKey(object item);
 }

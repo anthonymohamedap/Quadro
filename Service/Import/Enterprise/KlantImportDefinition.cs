@@ -29,7 +29,7 @@ public sealed class KlantImportDefinition : IImportPreviewDefinition
 
     public string EntityName => _map.EntityName;
 
-    public async Task<ImportResult<object>> DryRunAsync(Stream stream, CancellationToken ct)
+    public async Task<QuadroApp.Model.Import.ImportResult<object>> DryRunAsync(Stream stream, CancellationToken ct)
     {
         var result = await _importService.DryRunAsync(stream, _map, _validator, ct);
         var convertedRows = result.Rows.Select(r =>
@@ -43,7 +43,7 @@ public sealed class KlantImportDefinition : IImportPreviewDefinition
             return converted;
         }).ToList();
 
-        return new ImportResult<object>
+        return new QuadroApp.Model.Import.ImportResult<object>
         {
             Summary = result.Summary,
             GlobalIssues = result.GlobalIssues,
@@ -51,7 +51,7 @@ public sealed class KlantImportDefinition : IImportPreviewDefinition
         };
     }
 
-    public async Task<ImportCommitReceipt> CommitAsync(ImportResult<object> preview, CancellationToken ct)
+    public async Task<ImportCommitReceipt> CommitAsync(QuadroApp.Model.Import.ImportResult<object> preview, CancellationToken ct)
     {
         var typedRows = preview.Rows.Select(r => new ImportRowResult<Klant>
         {
@@ -64,7 +64,7 @@ public sealed class KlantImportDefinition : IImportPreviewDefinition
             pair.Item2.Issues.AddRange(pair.Item1.Issues);
         }
 
-        var typedPreview = new ImportResult<Klant>
+        var typedPreview = new QuadroApp.Model.Import.ImportResult<Klant>
         {
             Summary = preview.Summary,
             GlobalIssues = preview.GlobalIssues,

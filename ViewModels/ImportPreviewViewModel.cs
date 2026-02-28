@@ -2,7 +2,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using QuadroApp.Model.Import;
-using QuadroApp.Service.Import;
 using QuadroApp.Service.Import.Enterprise;
 using QuadroApp.Service.Interfaces;
 using System;
@@ -18,13 +17,13 @@ namespace QuadroApp.ViewModels;
 public partial class ImportPreviewViewModel : ObservableObject
 {
     private readonly IImportPreviewDefinition _definition;
-    private readonly IFilePickerService _filePicker;
+    private readonly QuadroApp.Service.Import.IFilePickerService _filePicker;
     private readonly IToastService _toastService;
     private readonly ILogger<ImportPreviewViewModel> _logger;
     private readonly Action<bool> _close;
 
     private CancellationTokenSource? _cts;
-    private QuadroApp.Model.Import.ImportResult<object>? _preview;
+    private ImportResult<object>? _preview;
 
     [ObservableProperty] private string? selectedFilePath;
     [ObservableProperty] private bool isBusy;
@@ -59,7 +58,7 @@ public partial class ImportPreviewViewModel : ObservableObject
 
     public ImportPreviewViewModel(
         IImportPreviewDefinition definition,
-        IFilePickerService filePicker,
+        QuadroApp.Service.Import.IFilePickerService filePicker,
         IToastService toastService,
         ILogger<ImportPreviewViewModel> logger,
         Action<bool> close)
