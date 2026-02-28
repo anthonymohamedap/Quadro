@@ -1,63 +1,75 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:QuadroApp.ViewModels"
-xmlns:imp="clr-namespace:QuadroApp.Model.Import"
+        xmlns:imp="clr-namespace:QuadroApp.Model.Import"
         x:Class="QuadroApp.Views.ImportPreviewWindow"
         x:DataType="vm:ImportPreviewViewModel"
         Width="1100" Height="700"
         Title="Import preview">
 
-	<Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="2*,1*" Margin="12">
+  <Window.Styles>
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="Black"/>
+    </Style>
+  </Window.Styles>
 
-		<!-- Header -->
-		<StackPanel Grid.Row="0" Grid.ColumnSpan="2" Spacing="6">
-			<TextBlock Text="Excel import preview" FontSize="20" FontWeight="Bold"/>
-			<TextBlock Text="{Binding SummaryText}" Opacity="0.8"/>
-			<TextBlock Text="{Binding WarningText}" Foreground="Orange" IsVisible="{Binding HasWarnings}"/>
-		</StackPanel>
+  <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="2*,1*" Margin="12">
 
-		<!-- Preview table -->
-		<Border Grid.Row="1" Grid.Column="0" Margin="0,12,12,12" CornerRadius="8" BorderThickness="1">
-			<DataGrid ItemsSource="{Binding Rows}"
-					  AutoGenerateColumns="False"
-					  IsReadOnly="True"
-					  GridLinesVisibility="All">
-				<DataGrid.Columns>
-					<DataGridTextColumn Header="#" Binding="{Binding RowNumber}" Width="50"/>
-					<DataGridTextColumn Header="Artikel" Binding="{Binding Artikelnummer}" Width="200"/>
-					<DataGridTextColumn Header="LevCode" Binding="{Binding LeverancierCode}" Width="90"/>
-					<DataGridTextColumn Header="Breedte" Binding="{Binding BreedteCm}" Width="80"/>
-					<DataGridTextColumn Header="Valid" Binding="{Binding IsValid}" Width="70"/>
-					<DataGridTextColumn Header="Waarom" Binding="{Binding ValidationMessage}" Width="*"/>
-				</DataGrid.Columns>
-			</DataGrid>
-		</Border>
+    <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Spacing="6">
+      <TextBlock Text="Excel import preview" FontSize="20" FontWeight="Bold"/>
+      <TextBlock Text="{Binding SummaryText}" Opacity="0.8"/>
+      <TextBlock Text="{Binding WarningText}" IsVisible="{Binding HasWarnings}"/>
+    </StackPanel>
 
-		<!-- Issues -->
-		<Border Grid.Row="1" Grid.Column="1" Margin="0,12,0,12" CornerRadius="8" BorderThickness="1">
-			<StackPanel>
-				<TextBlock Text="Issues" FontSize="16" FontWeight="Bold" Margin="10,10,10,6"/>
-				<ListBox ItemsSource="{Binding Issues}" Margin="10,0,10,10">
-					<ListBox.ItemTemplate>
-						<!-- 🔥 Crucial: DataType for item -->
-						<DataTemplate x:DataType="imp:ImportIssue">
-							<StackPanel Margin="0,4">
-								<TextBlock Text="{Binding RowNumber, StringFormat=Rij {0}}" FontWeight="Bold"/>
-								<TextBlock Text="{Binding Message}" Opacity="0.9" TextWrapping="Wrap"/>
-							</StackPanel>
-						</DataTemplate>
-					</ListBox.ItemTemplate>
-				</ListBox>
-			</StackPanel>
-		</Border>
+    <Border Grid.Row="1" Grid.Column="0" Margin="0,12,12,12" CornerRadius="8" BorderThickness="1" Padding="8">
+      <ListBox ItemsSource="{Binding Rows}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:PreviewRowItem">
+            <Border BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,0,0,8">
+              <StackPanel>
+                <DockPanel>
+                  <TextBlock DockPanel.Dock="Left" Text="{Binding Title}" FontWeight="Bold" />
+                  <TextBlock DockPanel.Dock="Right" Text="{Binding StateLabel}" FontWeight="SemiBold" />
+                </DockPanel>
+                <ItemsControl ItemsSource="{Binding Values}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="{Binding Key, StringFormat={}{0}: }" />
+                        <TextBlock Text="{Binding Value}" />
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Border>
 
-		<!-- Buttons -->
-		<StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-			<Button Content="Annuleer" Command="{Binding CancelCommand}" />
-			<Button Content="Importeer"
-					Command="{Binding ConfirmCommand}"
-					IsEnabled="{Binding CanConfirm}" />
-		</StackPanel>
+    <Border Grid.Row="1" Grid.Column="1" Margin="0,12,0,12" CornerRadius="8" BorderThickness="1">
+      <StackPanel>
+        <TextBlock Text="Issues" FontSize="16" FontWeight="Bold" Margin="10,10,10,6"/>
+        <ListBox ItemsSource="{Binding Issues}" Margin="10,0,10,10">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="imp:ImportIssue">
+              <StackPanel Margin="0,4">
+                <TextBlock Text="{Binding RowNumber, StringFormat=Rij {0}}" FontWeight="Bold"/>
+                <TextBlock Text="{Binding Message}" Opacity="0.9" TextWrapping="Wrap"/>
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </StackPanel>
+    </Border>
 
-	</Grid>
+    <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="Annuleer" Command="{Binding CancelCommand}" />
+      <Button Content="Importeer"
+              Command="{Binding ConfirmCommand}"
+              IsEnabled="{Binding CanConfirm}" />
+    </StackPanel>
+
+  </Grid>
 </Window>

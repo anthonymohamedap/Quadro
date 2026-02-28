@@ -5,6 +5,7 @@ using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Model.Import;
 using QuadroApp.Service.Import;
+using QuadroApp.Service.Import.Enterprise;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Services.Import;
 using QuadroApp.Validation;
@@ -25,8 +26,7 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
     private readonly INavigationService _nav;
     private readonly IDialogService _dialogs;
     private readonly ILijstDialogService _lijstDialog;
-    private readonly IFilePickerService _filePicker;
-    private readonly IExcelImportService _excelImport;
+    private readonly TypeLijstImportDefinition _typeLijstImportDefinition;
     private readonly ICrudValidator<TypeLijst> _validator;
     private readonly IToastService _toast;
     public TypeLijst? Selected => GeselecteerdeLijst;
@@ -128,8 +128,7 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
         INavigationService nav,
         IDialogService dialogs,
         ILijstDialogService lijstDialog,
-        IFilePickerService filePicker,
-        IExcelImportService excelImport,
+        TypeLijstImportDefinition typeLijstImportDefinition,
         ICrudValidator<TypeLijst> validator,
         IToastService toast)
     {
@@ -137,8 +136,7 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
         _nav = nav;
         _dialogs = dialogs;
         _lijstDialog = lijstDialog;
-        _filePicker = filePicker;
-        _excelImport = excelImport;
+        _typeLijstImportDefinition = typeLijstImportDefinition;
 
         _validator = validator;
         _toast = toast;
@@ -531,40 +529,14 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
             if (IsBusy) return;
             IsBusy = true;
 
-            var path = await _filePicker.PickExcelFileAsync();
-            if (string.IsNullOrWhiteSpace(path)) return;
-
-            var preview = await _excelImport.ReadTypeLijstenPreviewAsync(path);
-            if (preview is null)
+            var ok = await _dialogs.ShowUnifiedImportPreviewAsync(_typeLijstImportDefinition);
+            if (!ok)
             {
-                _toast.Error("Import preview is leeg (preview=null).");
                 return;
             }
-
-            var rows = preview.Rows ?? new List<TypeLijstPreviewRow>();
-            var issues = preview.Issues ?? new List<ImportIssue>();
-
-            if (rows.Count == 0)
-            {
-                _toast.Warning("Geen rijen gevonden.");
-                return;
-            }
-
-            var ok = await _dialogs.ShowImportPreviewAsync(
-                new ObservableCollection<TypeLijstPreviewRow>(rows),
-                new ObservableCollection<ImportIssue>(issues)
-            );
-
-            if (!ok) return;
-
-            var commit = await _excelImport.CommitTypeLijstenAsync(rows);
-            _toast.Success($"Import klaar. Added: {commit.Added}, Updated: {commit.Updated}, Skipped: {commit.Skipped}");
-            if (commit.Added == 0 && commit.Updated == 0)
-                _toast.Warning("Er is niets opgeslagen. Waarschijnlijk zijn alle rijen ongeldig of artikelnummer ontbreekt.");
 
             await LoadAsync();
-
-            _toast.Success($"Import klaar. Added: {commit.Added}, Updated: {commit.Updated}, Skipped: {commit.Skipped}");
+            _toast.Success("Import van lijsten voltooid.");
         }
         catch (Exception ex)
         {

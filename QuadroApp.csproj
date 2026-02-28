@@ -14,14 +14,8 @@
 		<PublishTrimmed>false</PublishTrimmed>
 	</PropertyGroup>
   <ItemGroup>
-    <AvaloniaXaml Remove="App.axaml" />
-  </ItemGroup>
-  <ItemGroup>
     <None Remove="Assets\JPEG\Quadro_logo2012_RGB.jpg" />
     <None Remove="Assets\quadro_building.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <AvaloniaResource Include="App.axaml" />
   </ItemGroup>
 
   <ItemGroup>
