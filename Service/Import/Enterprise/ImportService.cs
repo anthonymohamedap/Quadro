@@ -48,7 +48,7 @@ public sealed class ImportService : IImportService
 
             foreach (var column in map.Columns)
             {
-                raw.TryGetValue(column.Header, out var cellText);
+                var cellText = ResolveCellText(raw, column);
                 var (ok, _, error) = column.Parser(cellText);
                 if (!ok)
                 {
@@ -244,5 +244,28 @@ ON [ImportRowLogs] ([ImportSessionId]);
             UpdateCount = updates,
             SkippedCount = skipped
         };
+    }
+
+    private static string? ResolveCellText<T>(IReadOnlyDictionary<string, string?> raw, ExcelColumn<T> column)
+    {
+        if (raw.TryGetValue(column.Header, out var byHeader))
+        {
+            return byHeader;
+        }
+
+        if (raw.TryGetValue(column.Key, out var byKey))
+        {
+            return byKey;
+        }
+
+        foreach (var alias in column.Aliases)
+        {
+            if (raw.TryGetValue(alias, out var byAlias))
+            {
+                return byAlias;
+            }
+        }
+
+        return null;
     }
 }

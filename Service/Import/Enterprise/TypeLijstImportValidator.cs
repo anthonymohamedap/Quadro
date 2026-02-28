@@ -1,8 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Model.Import;
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,18 +8,18 @@ namespace QuadroApp.Service.Import.Enterprise;
 
 public sealed class TypeLijstImportValidator : IImportValidator<TypeLijst>
 {
-    public async Task ValidateAsync(ImportRowResult<TypeLijst> row, AppDbContext db, CancellationToken ct)
+    public Task ValidateAsync(ImportRowResult<TypeLijst> row, AppDbContext db, CancellationToken ct)
     {
         if (row.Parsed is null)
         {
             row.Issues.Add(new ImportRowIssue
             {
                 RowNumber = row.RowNumber,
-                ColumnName = "Row",
+                ColumnName = "Rij",
                 Message = "Rij kon niet worden verwerkt.",
                 Severity = Severity.Error
             });
-            return;
+            return Task.CompletedTask;
         }
 
         if (string.IsNullOrWhiteSpace(row.Parsed.Artikelnummer))
@@ -35,32 +33,29 @@ public sealed class TypeLijstImportValidator : IImportValidator<TypeLijst>
             });
         }
 
-        var leverancierCode = row.Parsed.Leverancier?.Code?.Trim();
-        if (string.IsNullOrWhiteSpace(leverancierCode))
+        if (string.IsNullOrWhiteSpace(row.Parsed.Soort))
         {
             row.Issues.Add(new ImportRowIssue
             {
                 RowNumber = row.RowNumber,
-                ColumnName = "LeverancierCode",
-                Message = "LeverancierCode is verplicht.",
+                ColumnName = "Soort",
+                Message = "Type/soort is verplicht.",
                 Severity = Severity.Error
             });
-            return;
         }
 
-        var leverancierExists = await db.Leveranciers
-            .AnyAsync(l => l.Code == leverancierCode, ct);
-
-        if (!leverancierExists)
+        if (row.Parsed.BreedteCm <= 0)
         {
             row.Issues.Add(new ImportRowIssue
             {
                 RowNumber = row.RowNumber,
-                ColumnName = "LeverancierCode",
-                Message = $"Onbekende leveranciercode: {leverancierCode}.",
+                ColumnName = "BreedteCm",
+                Message = "Breedte moet groter zijn dan 0.",
                 Severity = Severity.Error,
-                RawValue = leverancierCode
+                RawValue = row.Parsed.BreedteCm.ToString()
             });
         }
+
+        return Task.CompletedTask;
     }
 }

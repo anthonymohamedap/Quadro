@@ -86,7 +86,10 @@ public sealed class TypeLijstImportDefinition : IImportPreviewDefinition
         {
             ["Artikelnummer"] = lijst.Artikelnummer,
             ["LeverancierCode"] = lijst.Leverancier?.Code,
-            ["BreedteCm"] = lijst.BreedteCm.ToString()
+            ["Type"] = lijst.Soort,
+            ["Breedte (cm)"] = lijst.BreedteCm.ToString(),
+            ["Stock"] = lijst.VoorraadMeter.ToString(),
+            ["Minstock"] = lijst.MinimumVoorraad.ToString()
         };
     }
 

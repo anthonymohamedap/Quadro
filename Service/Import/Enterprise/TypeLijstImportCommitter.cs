@@ -19,11 +19,14 @@ public sealed class TypeLijstImportCommitter : IImportCommitter<TypeLijst>
         var skipped = 0;
 
         var leveranciersByCode = await db.Leveranciers
-            .ToDictionaryAsync(l => l.Code, StringComparer.OrdinalIgnoreCase, ct);
+            .Where(l => !string.IsNullOrWhiteSpace(l.Code))
+            .ToDictionaryAsync(l => l.Code.Trim(), StringComparer.OrdinalIgnoreCase, ct);
 
         var existing = await db.TypeLijsten
+            .AsTracking()
             .Include(t => t.Leverancier)
-            .ToListAsync(ct);
+            .Where(t => !string.IsNullOrWhiteSpace(t.Artikelnummer))
+            .ToDictionaryAsync(t => t.Artikelnummer.Trim(), StringComparer.OrdinalIgnoreCase, ct);
 
         foreach (var row in validRows)
         {
@@ -35,34 +38,55 @@ public sealed class TypeLijstImportCommitter : IImportCommitter<TypeLijst>
                 continue;
             }
 
-            var leverancierCode = row.Parsed.Leverancier?.Code?.Trim();
-            if (string.IsNullOrWhiteSpace(leverancierCode) || !leveranciersByCode.TryGetValue(leverancierCode, out var leverancier))
+            var parsed = row.Parsed;
+            var artikelnummer = parsed.Artikelnummer.Trim();
+            if (string.IsNullOrWhiteSpace(artikelnummer))
             {
                 skipped++;
                 continue;
             }
 
-            var artikelnummer = row.Parsed.Artikelnummer.Trim();
-            var current = existing.FirstOrDefault(t =>
-                t.LeverancierId == leverancier.Id &&
-                string.Equals(t.Artikelnummer, artikelnummer, StringComparison.OrdinalIgnoreCase));
-
-            if (current is null)
+            var leverancierCode = parsed.Leverancier?.Code?.Trim();
+            if (string.IsNullOrWhiteSpace(leverancierCode))
             {
-                row.Parsed.LeverancierId = leverancier.Id;
-                row.Parsed.Leverancier = leverancier;
-                row.Parsed.Artikelnummer = artikelnummer;
-                row.Parsed.LaatsteUpdate = DateTime.Now;
-                db.TypeLijsten.Add(row.Parsed);
+                leverancierCode = "QDO";
+            }
+
+            if (!leveranciersByCode.TryGetValue(leverancierCode, out var leverancier))
+            {
+                leverancier = new Leverancier
+                {
+                    Code = leverancierCode,
+                    Naam = leverancierCode.Equals("QDO", StringComparison.OrdinalIgnoreCase) ? "Quadro Default" : leverancierCode
+                };
+                db.Leveranciers.Add(leverancier);
+                leveranciersByCode[leverancierCode] = leverancier;
+            }
+
+            if (!existing.TryGetValue(artikelnummer, out var current))
+            {
+                parsed.Artikelnummer = artikelnummer;
+                parsed.Leverancier = leverancier;
+                parsed.LaatsteUpdate = DateTime.Now;
+                db.TypeLijsten.Add(parsed);
+                existing[artikelnummer] = parsed;
                 inserted++;
                 continue;
             }
 
-            current.BreedteCm = row.Parsed.BreedteCm;
-            current.Soort = string.IsNullOrWhiteSpace(row.Parsed.Soort) ? current.Soort : row.Parsed.Soort;
-            current.Serie = row.Parsed.Serie;
-            current.IsDealer = row.Parsed.IsDealer;
-            current.Opmerking = row.Parsed.Opmerking;
+            current.Leverancier = leverancier;
+            current.BreedteCm = parsed.BreedteCm;
+            current.Soort = parsed.Soort;
+            current.Serie = parsed.Serie;
+            current.Opmerking = parsed.Opmerking;
+            current.PrijsPerMeter = parsed.PrijsPerMeter;
+            current.WinstMargeFactor = parsed.WinstMargeFactor;
+            current.AfvalPercentage = parsed.AfvalPercentage;
+            current.VasteKost = parsed.VasteKost;
+            current.WerkMinuten = parsed.WerkMinuten;
+            current.VoorraadMeter = parsed.VoorraadMeter;
+            current.MinimumVoorraad = parsed.MinimumVoorraad;
+            current.InventarisKost = parsed.InventarisKost;
             current.LaatsteUpdate = DateTime.Now;
             updated++;
         }

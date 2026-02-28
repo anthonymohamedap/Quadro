@@ -21,7 +21,12 @@ public sealed class AfwerkingsOptieImportCommitter : IImportCommitter<Afwerkings
         var groepenByCode = await db.AfwerkingsGroepen
             .ToDictionaryAsync(g => g.Code, ct);
 
+        var leveranciersByCode = await db.Leveranciers
+            .Where(l => !string.IsNullOrWhiteSpace(l.Code))
+            .ToDictionaryAsync(l => l.Code.Trim(), StringComparer.OrdinalIgnoreCase, ct);
+
         var bestaande = await db.AfwerkingsOpties
+            .AsTracking()
             .Include(o => o.AfwerkingsGroep)
             .ToListAsync(ct);
 
@@ -34,37 +39,54 @@ public sealed class AfwerkingsOptieImportCommitter : IImportCommitter<Afwerkings
                 continue;
             }
 
-            var groepCode = row.Parsed.AfwerkingsGroep?.Code;
-            if (!groepCode.HasValue || groepCode.Value == default || !groepenByCode.TryGetValue(groepCode.Value, out var groep))
+            var parsed = row.Parsed;
+            var groepCode = parsed.AfwerkingsGroep?.Code;
+            if (!groepCode.HasValue || !groepenByCode.TryGetValue(groepCode.Value, out var groep))
             {
                 skipped++;
                 continue;
             }
 
-            var naam = row.Parsed.Naam.Trim();
+            var leverancierCode = parsed.Leverancier?.Code?.Trim();
+            if (string.IsNullOrWhiteSpace(leverancierCode))
+            {
+                leverancierCode = "QDO";
+            }
+
+            if (!leveranciersByCode.TryGetValue(leverancierCode, out var leverancier))
+            {
+                leverancier = new Leverancier
+                {
+                    Code = leverancierCode,
+                    Naam = leverancierCode.Equals("QDO", StringComparison.OrdinalIgnoreCase) ? "Quadro Default" : leverancierCode
+                };
+                db.Leveranciers.Add(leverancier);
+                leveranciersByCode[leverancierCode] = leverancier;
+            }
+
+            var naam = parsed.Naam.Trim();
             var huidig = bestaande.FirstOrDefault(o =>
                 o.AfwerkingsGroepId == groep.Id &&
-                string.Equals(o.Naam, naam, StringComparison.OrdinalIgnoreCase));
+                o.Volgnummer == parsed.Volgnummer);
 
             if (huidig is null)
             {
-                row.Parsed.AfwerkingsGroepId = groep.Id;
-                row.Parsed.AfwerkingsGroep = groep;
-                if (row.Parsed.Volgnummer == default)
-                {
-                    row.Parsed.Volgnummer = 'A';
-                }
-
-                db.AfwerkingsOpties.Add(row.Parsed);
+                parsed.Naam = naam;
+                parsed.AfwerkingsGroep = groep;
+                parsed.Leverancier = leverancier;
+                db.AfwerkingsOpties.Add(parsed);
+                bestaande.Add(parsed);
                 inserted++;
                 continue;
             }
 
             huidig.Naam = naam;
-            if (row.Parsed.Volgnummer != default)
-            {
-                huidig.Volgnummer = row.Parsed.Volgnummer;
-            }
+            huidig.KostprijsPerM2 = parsed.KostprijsPerM2;
+            huidig.WinstMarge = parsed.WinstMarge;
+            huidig.AfvalPercentage = parsed.AfvalPercentage;
+            huidig.VasteKost = parsed.VasteKost;
+            huidig.WerkMinuten = parsed.WerkMinuten;
+            huidig.Leverancier = leverancier;
             updated++;
         }
 

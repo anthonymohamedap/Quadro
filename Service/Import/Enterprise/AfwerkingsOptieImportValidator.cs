@@ -16,7 +16,7 @@ public sealed class AfwerkingsOptieImportValidator : IImportValidator<Afwerkings
             row.Issues.Add(new ImportRowIssue
             {
                 RowNumber = row.RowNumber,
-                ColumnName = "Row",
+                ColumnName = "Rij",
                 Message = "Rij kon niet worden verwerkt.",
                 Severity = Severity.Error
             });
@@ -34,8 +34,19 @@ public sealed class AfwerkingsOptieImportValidator : IImportValidator<Afwerkings
             });
         }
 
+        if (row.Parsed.Volgnummer == default)
+        {
+            row.Issues.Add(new ImportRowIssue
+            {
+                RowNumber = row.RowNumber,
+                ColumnName = "Volgnummer",
+                Message = "Volgnummer is verplicht.",
+                Severity = Severity.Error
+            });
+        }
+
         var groepCode = row.Parsed.AfwerkingsGroep?.Code;
-        if (!groepCode.HasValue || groepCode.Value == default)
+        if (!groepCode.HasValue)
         {
             row.Issues.Add(new ImportRowIssue
             {
@@ -47,17 +58,16 @@ public sealed class AfwerkingsOptieImportValidator : IImportValidator<Afwerkings
             return;
         }
 
-        var groepCodeValue = groepCode.Value;
-        var groepExists = await db.AfwerkingsGroepen.AnyAsync(g => g.Code == groepCodeValue, ct);
+        var groepExists = await db.AfwerkingsGroepen.AnyAsync(g => g.Code == groepCode.Value, ct);
         if (!groepExists)
         {
             row.Issues.Add(new ImportRowIssue
             {
                 RowNumber = row.RowNumber,
                 ColumnName = "Groep",
-                Message = $"Onbekende groepcode: {groepCodeValue}.",
+                Message = $"Onbekende groepcode: {groepCode.Value}.",
                 Severity = Severity.Error,
-                RawValue = groepCodeValue.ToString()
+                RawValue = groepCode.Value.ToString()
             });
         }
     }

@@ -36,17 +36,17 @@ public partial class ImportPreviewViewModel : ObservableObject
 
     public string EntityName => _definition?.EntityName ?? "Import";
 
-    // Legacy compatibility for existing TypeLijst preview window
+    // Legacy compatibility
     public ObservableCollection<ImportIssue> Issues { get; } = new();
     public int ValidCount => 0;
     public int TotalCount => 0;
+
     public bool CanConfirm => _preview is not null && _preview.Summary.ValidRows > 0;
-    public bool HasWarnings => Issues.Count > 0 || WarningRows > 0;
-    public string SummaryText => $"Totaal: {TotalRows} rijen — Geldig: {ValidRows} — Issues: {Issues.Count}";
-    public string WarningText => "Er zijn issues gevonden. Ongeldige rijen worden overgeslagen.";
+    public bool HasWarnings => WarningRows > 0 || InvalidRows > 0;
+    public string SummaryText => $"Totaal: {TotalRows} — Geldig: {ValidRows} — Ongeldig: {InvalidRows} — Waarschuwingen: {WarningRows}";
+    public string WarningText => "Er zijn fouten of waarschuwingen gevonden. Controleer de details per rij.";
 
     public IRelayCommand ConfirmCommand { get; }
-
 
     public int TotalRows => _preview?.Summary.TotalRows ?? 0;
     public int ValidRows => _preview?.Summary.ValidRows ?? 0;
@@ -145,7 +145,7 @@ public partial class ImportPreviewViewModel : ObservableObject
         try
         {
             IsBusy = true;
-            ProgressText = "Preview wordt geladen...";
+            ProgressText = "Voorbeeld wordt geladen...";
 
             await using var stream = File.OpenRead(SelectedFilePath);
             _preview = await _definition.DryRunAsync(stream, _cts.Token);
@@ -162,22 +162,22 @@ public partial class ImportPreviewViewModel : ObservableObject
 
             if (_preview.Summary.InvalidRows > 0)
             {
-                _toastService.Warning($"Import contains {_preview.Summary.InvalidRows} errors. Fix and retry.");
+                _toastService.Warning($"Import bevat {_preview.Summary.InvalidRows} fouten. Pas het bestand aan en probeer opnieuw.");
             }
 
-            ProgressText = "Preview klaar.";
+            ProgressText = "Voorbeeld klaar.";
             RaiseSummaryProperties();
-            _logger.LogInformation("Dry run completed for {EntityName}. Total={Total}", EntityName, _preview.Summary.TotalRows);
+            _logger.LogInformation("Dry run voltooid voor {EntityName}. Totaal={Total}", EntityName, _preview.Summary.TotalRows);
         }
         catch (OperationCanceledException)
         {
-            ProgressText = "Preview geannuleerd.";
+            ProgressText = "Voorbeeld geannuleerd.";
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Dry run failed for {EntityName}", EntityName);
-            _toastService.Error("Import failed. See details.");
-            ProgressText = "Preview mislukt.";
+            _logger.LogError(ex, "Dry run mislukt voor {EntityName}", EntityName);
+            _toastService.Error("Import mislukt. Bekijk de details.");
+            ProgressText = "Voorbeeld mislukt.";
         }
         finally
         {
@@ -196,7 +196,7 @@ public partial class ImportPreviewViewModel : ObservableObject
 
         if (_preview is null)
         {
-            _toastService.Warning("Voer eerst een dry run uit.");
+            _toastService.Warning("Voer eerst een voorbeeldcontrole uit.");
             return;
         }
 
@@ -205,22 +205,22 @@ public partial class ImportPreviewViewModel : ObservableObject
         try
         {
             IsBusy = true;
-            ProgressText = "Commit bezig...";
+            ProgressText = "Import wordt opgeslagen...";
 
             var receipt = await _definition.CommitAsync(_preview, _cts.Token);
-            ProgressText = $"Commit klaar. Sessie: {receipt.SessionId}";
-            _toastService.Success($"Imported: inserted {receipt.Inserted}, updated {receipt.Updated}, skipped {receipt.Skipped}.");
+            ProgressText = $"Import klaar. Sessie: {receipt.SessionId}";
+            _toastService.Success($"Geïmporteerd: toegevoegd {receipt.Inserted}, bijgewerkt {receipt.Updated}, overgeslagen {receipt.Skipped}.");
             _close(true);
         }
         catch (OperationCanceledException)
         {
-            ProgressText = "Commit geannuleerd.";
+            ProgressText = "Import geannuleerd.";
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Commit failed for {EntityName}", EntityName);
-            _toastService.Error("Import failed. See details.");
-            ProgressText = "Commit mislukt.";
+            _logger.LogError(ex, "Commit mislukt voor {EntityName}", EntityName);
+            _toastService.Error("Import mislukt. Bekijk de details.");
+            ProgressText = "Import mislukt.";
         }
         finally
         {
@@ -243,6 +243,9 @@ public partial class ImportPreviewViewModel : ObservableObject
         OnPropertyChanged(nameof(PredictedInsert));
         OnPropertyChanged(nameof(PredictedUpdate));
         OnPropertyChanged(nameof(PredictedSkipped));
+        OnPropertyChanged(nameof(SummaryText));
+        OnPropertyChanged(nameof(HasWarnings));
+        OnPropertyChanged(nameof(CanConfirm));
     }
 }
 
@@ -262,6 +265,6 @@ public sealed class PreviewRowItem
     public bool HasWarnings { get; }
     public IReadOnlyCollection<ImportRowIssue> Issues { get; }
     public IReadOnlyDictionary<string, string?> Values { get; }
-    public string StateLabel => IsValid ? (HasWarnings ? "WARNINGS" : "VALID") : "ERRORS";
-    public string Title => $"Row {RowNumber}";
+    public string StateLabel => IsValid ? (HasWarnings ? "WAARSCHUWING" : "GELDIG") : "FOUTEN";
+    public string Title => $"Rij {RowNumber}";
 }
