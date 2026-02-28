@@ -22,23 +22,29 @@ namespace QuadroApp.Service
         public async Task<int> BevestigAsync(int offerteId)
         {
             await using var db = await _factory.CreateDbContextAsync();
-            var huidigeStatus = await db.Offertes
+            var snapshot = await db.Offertes
                 .Where(o => o.Id == offerteId)
-                .Select(o => (OfferteStatus?)o.Status)
+                .Select(o => new
+                {
+                    Status = (OfferteStatus?)o.Status,
+                    ExistingWerkBonId = o.WerkBon != null ? (int?)o.WerkBon.Id : null
+                })
                 .FirstOrDefaultAsync();
 
-            if (huidigeStatus is null)
+            if (snapshot?.Status is null)
                 throw new InvalidOperationException("Offerte niet gevonden.");
 
-            if (huidigeStatus == OfferteStatus.Concept)
+            if (snapshot.Status == OfferteStatus.Concept)
                 await _workflow.ChangeOfferteStatusAsync(offerteId, OfferteStatus.Verzonden);
 
             await _workflow.ChangeOfferteStatusAsync(offerteId, OfferteStatus.Goedgekeurd);
 
-            var werkBonId = await db.WerkBonnen
-                .Where(w => w.OfferteId == offerteId)
-                .Select(w => w.Id)
-                .FirstOrDefaultAsync();
+            var werkBonId = snapshot.ExistingWerkBonId
+                ?? await db.WerkBonnen
+                    .Where(w => w.OfferteId == offerteId)
+                    .Select(w => (int?)w.Id)
+                    .FirstOrDefaultAsync()
+                ?? 0;
 
             if (werkBonId == 0)
             {

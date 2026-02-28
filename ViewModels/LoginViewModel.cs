@@ -1,3 +1,4 @@
+// Candidate for removal – requires runtime verification
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -8,6 +9,7 @@ namespace QuadroApp.ViewModels
 
 
 
+    [Obsolete("Not used in current startup flow. Remove after runtime verification.")]
     public partial class LoginViewModel : ObservableObject
     {
         private readonly Action _onSuccess;

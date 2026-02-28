@@ -1,7 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:QuadroApp.ViewModels"
-        x:Class="QuadroApp.AfwerkingImportPreviewWindow"
+        x:Class="QuadroApp.Views.AfwerkingImportPreviewWindow"
         x:DataType="vm:AfwerkingExcelPreviewViewModel"
         Width="900"
         Height="600"

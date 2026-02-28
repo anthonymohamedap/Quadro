@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace QuadroApp.Services.Pricing;
+namespace QuadroApp.Service.Pricing;
 
 public sealed class PricingService : IPricingService
 {

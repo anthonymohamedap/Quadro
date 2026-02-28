@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace QuadroApp.Services.Import;
+namespace QuadroApp.Service.Import;
 
 public static class AfwerkingsOptieExcelRowMapper
 {

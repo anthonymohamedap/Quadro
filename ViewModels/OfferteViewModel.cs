@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
-using QuadroApp.Services; // LegacyAfwerkingCode
+using QuadroApp.Service; // LegacyAfwerkingCode
 using QuadroApp.Validation;
 using QuadroApp.Views;
 using System;

@@ -1,3 +1,4 @@
+// Candidate for removal – requires runtime verification
 ﻿using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -10,8 +11,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace QuadroApp.Services.Import;
+namespace QuadroApp.Service.Import;
 
+[Obsolete("Not used in current startup flow. Remove after runtime verification.")]
 public sealed class AfwerkingsOptieExcelImportService
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;

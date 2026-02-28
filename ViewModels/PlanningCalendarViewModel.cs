@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
+using QuadroApp.Model;
 using QuadroApp.Model.DB;
 using QuadroApp.Model.Toast;
 using QuadroApp.Service.Interfaces;
@@ -513,13 +514,6 @@ public partial class PlanningCalendarViewModel : ObservableObject
 }
 
 // ───────── SUPPORT CLASSES (TOP LEVEL) ─────────
-
-public partial class RegelPlanItem : ObservableObject
-{
-    public int RegelId { get; set; }
-    public string Label { get; set; } = "";
-    [ObservableProperty] private bool isSelected;
-}
 
 public class DayTile
 {
