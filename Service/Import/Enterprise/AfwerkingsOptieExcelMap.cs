@@ -83,7 +83,9 @@ public sealed class AfwerkingsOptieExcelMap : IExcelMap<AfwerkingsOptie>
         }
     }
 
-    public string? GetCellText(AfwerkingsOptie source, string columnKey) => columnKey switch
+    string? IExcelMap<AfwerkingsOptie>.GetCellText(AfwerkingsOptie source, string columnKey) => GetCellTextValue(source, columnKey);
+
+    private static string? GetCellTextValue(AfwerkingsOptie source, string columnKey) => columnKey switch
     {
         "Groep" => source.AfwerkingsGroep is not null ? source.AfwerkingsGroep.Code.ToString() : source.AfwerkingsGroepId.ToString(),
         "Naam" => source.Naam,
