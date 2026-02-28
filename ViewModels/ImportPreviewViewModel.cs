@@ -24,7 +24,7 @@ public partial class ImportPreviewViewModel : ObservableObject
     private readonly Action<bool> _close;
 
     private CancellationTokenSource? _cts;
-    private ImportResult<object>? _preview;
+    private QuadroApp.Model.Import.ImportResult<object>? _preview;
 
     [ObservableProperty] private string? selectedFilePath;
     [ObservableProperty] private bool isBusy;

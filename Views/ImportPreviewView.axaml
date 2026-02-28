@@ -45,7 +45,10 @@
                 <ItemsControl ItemsSource="{Binding Values}">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                      <TextBlock Text="{Binding Key, StringFormat={0}: }" />
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="{Binding Key, StringFormat={}{0}: }" />
+                        <TextBlock Text="{Binding Value}" />
+                      </StackPanel>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -81,7 +84,10 @@
           <ItemsControl ItemsSource="{Binding SelectedRowValues}">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <TextBlock Text="{Binding Key, StringFormat={0}: }" />
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <TextBlock Text="{Binding Key, StringFormat={}{0}: }" />
+                  <TextBlock Text="{Binding Value}" />
+                </StackPanel>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>

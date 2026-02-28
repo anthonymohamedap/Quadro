@@ -26,10 +26,31 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
                 target.Artikelnummer = cellText?.Trim() ?? string.Empty;
                 break;
             case "LeverancierCode":
-                target.LeverancierCode = cellText?.Trim();
+                issues.Add(new ImportRowIssue
+                {
+                    RowNumber = rowNumber,
+                    ColumnName = columnKey,
+                    Message = "LeverancierCode is afgeleid van Leverancier en kan niet direct worden ingesteld.",
+                    Severity = Severity.Warning,
+                    RawValue = cellText
+                });
                 break;
             case "BreedteCm":
-                target.BreedteCm = decimal.TryParse(cellText, out var width) ? width : null;
+                if (int.TryParse(cellText, out var width))
+                {
+                    target.BreedteCm = width;
+                }
+                else if (!string.IsNullOrWhiteSpace(cellText))
+                {
+                    issues.Add(new ImportRowIssue
+                    {
+                        RowNumber = rowNumber,
+                        ColumnName = columnKey,
+                        Message = "BreedteCm is geen geldig geheel getal.",
+                        Severity = Severity.Error,
+                        RawValue = cellText
+                    });
+                }
                 break;
         }
     }
@@ -38,7 +59,7 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
     {
         "Artikelnummer" => source.Artikelnummer,
         "LeverancierCode" => source.LeverancierCode,
-        "BreedteCm" => source.BreedteCm?.ToString(),
+        "BreedteCm" => source.BreedteCm.ToString(),
         _ => null
     };
 
@@ -58,8 +79,8 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
     {
         Key = key,
         Header = key,
-        Parser = value => string.IsNullOrWhiteSpace(value) || decimal.TryParse(value, out _)
+        Parser = value => string.IsNullOrWhiteSpace(value) || int.TryParse(value, out _)
             ? (true, value, null)
-            : (false, null, $"Kolom {key} bevat geen geldig getal.")
+            : (false, null, $"Kolom {key} bevat geen geldig geheel getal.")
     };
 }

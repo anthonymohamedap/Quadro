@@ -36,14 +36,14 @@ public sealed class AfwerkingsOptieExcelMap : IExcelMap<AfwerkingsOptie>
     {
         if (columnKey == "Naam")
         {
-            target.Omschrijving = cellText?.Trim() ?? string.Empty;
+            target.Naam = cellText?.Trim() ?? string.Empty;
         }
     }
 
     public string? GetCellText(AfwerkingsOptie source, string columnKey) => columnKey switch
     {
         "Groep" => source.AfwerkingsGroepId.ToString(),
-        "Naam" => source.Omschrijving,
+        "Naam" => source.Naam,
         _ => null
     };
 
