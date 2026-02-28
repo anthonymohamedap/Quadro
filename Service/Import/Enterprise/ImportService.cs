@@ -29,7 +29,7 @@ public sealed class ImportService : IImportService
         _logger = logger;
     }
 
-    public async Task<ImportResult<T>> DryRunAsync<T>(Stream stream, IExcelMap<T> map, IImportValidator<T> validator, CancellationToken ct)
+    public async Task<QuadroApp.Model.Import.ImportResult<T>> DryRunAsync<T>(Stream stream, IExcelMap<T> map, IImportValidator<T> validator, CancellationToken ct)
     {
         _logger.LogInformation("Dry run started for {EntityName}.", map.EntityName);
         var rows = new List<ImportRowResult<T>>();
@@ -94,7 +94,7 @@ public sealed class ImportService : IImportService
 
         globalIssues.Add(new ImportRowIssue { RowNumber = 0, ColumnName = "__EntityName", Message = map.EntityName, Severity = Severity.Info });
 
-        return new ImportResult<T>
+        return new QuadroApp.Model.Import.ImportResult<T>
         {
             Summary = summary,
             Rows = rows,
@@ -102,7 +102,7 @@ public sealed class ImportService : IImportService
         };
     }
 
-    public async Task<ImportCommitReceipt> CommitAsync<T>(ImportResult<T> preview, IImportCommitter<T> committer, CancellationToken ct)
+    public async Task<ImportCommitReceipt> CommitAsync<T>(QuadroApp.Model.Import.ImportResult<T> preview, IImportCommitter<T> committer, CancellationToken ct)
     {
         _logger.LogInformation("Commit started for import preview.");
         await using var db = await _dbFactory.CreateDbContextAsync(ct);
