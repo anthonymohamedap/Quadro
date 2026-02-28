@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using QuadroApp.Service.Interfaces;
+using QuadroApp.ViewModels;
 using System;
 using System.Threading.Tasks;
 
@@ -40,6 +41,9 @@ namespace QuadroApp.Service
         {
             await SetAndInitializeAsync(viewModel);
         }
+
+        public Task NavigateToKlantDetailAsync(int klantId)
+            => NavigateToAsync<KlantDetailViewModel, int>(klantId);
 
         private async Task SetAndInitializeAsync(object vm)
         {

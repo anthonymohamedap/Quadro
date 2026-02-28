@@ -1,0 +1,207 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:QuadroApp.ViewModels"
+    xmlns:m="using:QuadroApp.Model.DB"
+    x:Class="QuadroApp.Views.KlantDetailView"
+    x:DataType="vm:KlantDetailViewModel"
+    Background="#F5F5F5">
+
+	<Grid RowDefinitions="Auto,*,Auto">
+		<Border Grid.ColumnSpan="2" Background="#444A50" Height="70">
+			<DockPanel LastChildFill="False" Margin="20,0">
+				<StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
+					<Ellipse Width="35" Height="35" Fill="#F5C242"/>
+					<TextBlock Text="QUADRO" Foreground="White" FontWeight="Bold" FontSize="20" VerticalAlignment="Center"/>
+					<TextBlock Text="KLANTDETAIL" Foreground="#CCC" FontSize="13" Margin="5,0,0,0" VerticalAlignment="Center"/>
+				</StackPanel>
+				<Button Content="⬅️ Terug" Command="{Binding TerugCommand}" DockPanel.Dock="Right" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,10,10,0" Background="#F5C242" Foreground="#222" FontWeight="Bold" CornerRadius="8" Padding="10,5" Width="100" Height="32"/>
+			</DockPanel>
+		</Border>
+
+		<StackPanel Grid.Row="1" Margin="20" Spacing="12">
+			<TextBlock Text="👤 Klantdetail" FontSize="24" FontWeight="Bold" Foreground="#222"/>
+
+			<Border Background="White" CornerRadius="8" Padding="12" BorderBrush="#DDD" BorderThickness="1">
+				<Grid ColumnDefinitions="1.6*,1.6*,2*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="6">
+					<TextBlock Grid.Row="0" Grid.Column="0" Text="Naam" FontWeight="Bold"/>
+					<TextBlock Grid.Row="0" Grid.Column="1" Text="Email" FontWeight="Bold"/>
+					<TextBlock Grid.Row="0" Grid.Column="2" Text="Adres" FontWeight="Bold"/>
+
+					<TextBlock Grid.Row="1" Grid.Column="0">
+						<TextBlock.Text>
+							<MultiBinding StringFormat="{}{0} {1}">
+								<Binding Path="Klant.Voornaam" TargetNullValue=""/>
+								<Binding Path="Klant.Achternaam" TargetNullValue=""/>
+							</MultiBinding>
+						</TextBlock.Text>
+					</TextBlock>
+					<TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Klant.Email, TargetNullValue='-'}"/>
+					<TextBlock Grid.Row="1" Grid.Column="2">
+						<TextBlock.Text>
+							<MultiBinding StringFormat="{}{0} {1}, {2} {3}">
+								<Binding Path="Klant.Straat" TargetNullValue=""/>
+								<Binding Path="Klant.Nummer" TargetNullValue=""/>
+								<Binding Path="Klant.Postcode" TargetNullValue=""/>
+								<Binding Path="Klant.Gemeente" TargetNullValue=""/>
+							</MultiBinding>
+						</TextBlock.Text>
+					</TextBlock>
+
+					<TextBlock Grid.Row="2" Grid.ColumnSpan="3" Foreground="#AA3333" Text="{Binding Foutmelding}"/>
+				</Grid>
+			</Border>
+
+			<Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+				<Border Grid.Column="0" Background="White" CornerRadius="8" Padding="10" BorderBrush="#DDD" BorderThickness="1">
+					<StackPanel Spacing="8">
+						<DockPanel LastChildFill="False">
+							<TextBlock Text="📄 Offertes" FontSize="18" FontWeight="Bold" DockPanel.Dock="Left"/>
+							<StackPanel Orientation="Horizontal" Spacing="6" DockPanel.Dock="Right">
+								<Button Content="Open" Command="{Binding OpenOfferteCommand}" CommandParameter="{Binding SelectedOfferte}" Classes="MainBtn"/>
+								<Button Content="➕ Nieuw" Command="{Binding NieuweOfferteCommand}" Classes="MainBtn"/>
+							</StackPanel>
+						</DockPanel>
+
+						<ListBox
+		ItemsSource="{Binding Offertes}"
+		SelectedItem="{Binding SelectedOfferte, Mode=TwoWay}"
+		DoubleTapped="OffertesGrid_DoubleTapped"
+		Height="260">
+
+							<ListBox.ItemTemplate>
+								<DataTemplate>
+									<Border
+										Background="White"
+										BorderBrush="#E0E0E0"
+										BorderThickness="1"
+										CornerRadius="6"
+										Padding="10"
+										Margin="0,0,0,6">
+
+										<Grid ColumnDefinitions="70,120,120,*">
+
+											<TextBlock
+												Grid.Column="0"
+												Text="{Binding Id}"
+												FontWeight="Bold"/>
+
+											<TextBlock
+												Grid.Column="1"
+												Text="{Binding Datum, StringFormat={}{0:dd/MM/yyyy}}"/>
+
+											<TextBlock
+												Grid.Column="2"
+												Text="{Binding Status}"/>
+
+											<TextBlock
+												Grid.Column="3"
+												Text="{Binding TotaalInclBtw, StringFormat=€ {0:0.00}}"
+												HorizontalAlignment="Right"
+												FontWeight="Bold"/>
+
+										</Grid>
+									</Border>
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+						</ListBox>
+					</StackPanel>
+				</Border>
+
+				<Border Grid.Column="1" Background="White" CornerRadius="8" Padding="10" BorderBrush="#DDD" BorderThickness="1">
+					<StackPanel Spacing="8">
+						<TextBlock Text="🧾 WerkBonnen"
+			   FontSize="18"
+			   FontWeight="Bold"/>
+
+						<ListBox
+							ItemsSource="{Binding WerkBonnen}"
+							SelectedItem="{Binding SelectedWerkBon, Mode=TwoWay}"
+							Height="260">
+
+							<ListBox.ItemTemplate>
+								<DataTemplate>
+									<Border
+										Background="White"
+										BorderBrush="#E0E0E0"
+										BorderThickness="1"
+										CornerRadius="6"
+										Padding="10"
+										Margin="0,0,0,6">
+
+										<Grid ColumnDefinitions="70,90,130,*">
+
+											<TextBlock
+												Grid.Column="0"
+												Text="{Binding Id}"
+												FontWeight="Bold"/>
+
+											<TextBlock
+												Grid.Column="1"
+												Text="{Binding OfferteId}"/>
+
+											<TextBlock
+												Grid.Column="2"
+												Text="{Binding Status}"/>
+
+											<TextBlock
+												Grid.Column="3"
+												Text="{Binding AfhaalDatum, StringFormat={}{0:dd/MM/yyyy}}"
+												HorizontalAlignment="Right"/>
+
+										</Grid>
+
+									</Border>
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+						</ListBox>
+					</StackPanel>
+				</Border>
+			</Grid>
+		</StackPanel>
+	</Grid>
+
+	<UserControl.Styles>
+		<Style Selector="Button.MainBtn">
+			<Setter Property="Background" Value="#444A50"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="FontWeight" Value="Bold"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="BorderBrush" Value="Transparent"/>
+			<Setter Property="FontSize" Value="14"/>
+			<Setter Property="Padding" Value="10,5"/>
+		</Style>
+		<Style Selector="Button.MainBtn:pointerover">
+			<Setter Property="Background" Value="#F5C242"/>
+			<Setter Property="Foreground" Value="#222"/>
+		</Style>
+		<Style Selector="TextBlock">
+			<Setter Property="Foreground" Value="Black"/>
+		</Style>
+		<Style Selector="DataGrid">
+			<Setter Property="GridLinesVisibility" Value="All"/>
+		</Style>
+
+		<Style Selector="DataGridColumnHeader">
+			<Setter Property="Background" Value="#EAEAEA"/>
+			<Setter Property="Foreground" Value="#222"/>
+			<Setter Property="BorderBrush" Value="#DDD"/>
+			<Setter Property="BorderThickness" Value="0,0,0,1"/>
+		</Style>
+		<Style Selector="Button.MainBtn">
+			<Setter Property="Background" Value="#444A50"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="FontWeight" Value="Bold"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="BorderBrush" Value="Transparent"/>
+			<Setter Property="FontSize" Value="14"/>
+			<Setter Property="Padding" Value="10,5"/>
+		</Style>
+
+		<Style Selector="Button.MainBtn:pointerover">
+			<Setter Property="Background" Value="#F5C242"/>
+			<Setter Property="Foreground" Value="#222"/>
+		</Style>
+
+	</UserControl.Styles>
+</UserControl>
