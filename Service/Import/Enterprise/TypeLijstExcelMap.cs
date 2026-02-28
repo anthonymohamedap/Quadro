@@ -14,7 +14,7 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
     [
         Text("Artikelnummer", true, "Code"),
         Text("LeverancierCode", false, "Levcode"),
-        Text("Soort", true, "Type"),
+        Text("Soort", false, "Type"),
         Number("BreedteCm", true, "Breedte"),
         Decimal("PrijsPerMeter", false, "KostprijsPerM", "Kostprijs", "PrijsPerMeter"),
         Decimal("WinstMargeFactor", false, "WinstMarge"),
