@@ -189,8 +189,7 @@ public partial class App : Application
         Console.WriteLine("[DB] Resetting demo database...");
 
         // 🔥 Demo reset
-        await db.Database.EnsureDeletedAsync();
-        await db.Database.EnsureCreatedAsync();
+
 
         // Seed data
         SeedBasisData(db);
@@ -737,8 +736,7 @@ public partial class App : Application
     }
     private static void SeedBasisData(AppDbContext db)
     {
-        db.Database.EnsureDeleted();
-        db.Database.EnsureCreated();
+
 
         SeedData(db);
     }

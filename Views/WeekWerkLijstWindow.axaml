@@ -132,7 +132,7 @@
 													</StackPanel>
 
 													<!-- Notitie -->
-														<StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,10,0,0" Spacing="6">
+														<StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,10,0,0" Spacing="6">
 															<TextBlock Text="Notitie (blijft bewaard)" FontWeight="Bold" Foreground="Black"/>
 															<TextBox Text="{Binding Notitie, Mode=TwoWay}"
 																	 AcceptsReturn="True"
