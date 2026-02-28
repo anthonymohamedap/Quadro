@@ -6,7 +6,7 @@ using QuadroApp.Service.Interfaces;
 using QuadroApp.Views;
 using System.Threading.Tasks;
 
-namespace QuadroApp.Services;
+namespace QuadroApp.Service;
 
 public sealed class LijstDialogService : ILijstDialogService
 {

@@ -1,18 +1,20 @@
+// Candidate for removal – requires runtime verification
 ﻿using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
+using System;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Model.Import;
 using QuadroApp.Service.Import;
 using QuadroApp.Validation;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace QuadroApp.Services.Import;
+namespace QuadroApp.Service.Import;
 
+[Obsolete("Not used in current startup flow. Remove after runtime verification.")]
 public sealed class KlantExcelImportService
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;

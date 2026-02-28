@@ -1,7 +1,6 @@
 ﻿using QuadroApp.Service.Interfaces;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 namespace QuadroApp.ViewModels
 {
@@ -33,12 +32,6 @@ namespace QuadroApp.ViewModels
             _ = _nav.NavigateToAsync<HomeViewModel>();
         }
 
-        public Task GoWerkbonAsync() => _nav.NavigateToAsync<WerkBonLijstViewModel>();
-        public Task GoHomeAsync() => _nav.NavigateToAsync<HomeViewModel>();
-        public Task GoLijstenAsync() => _nav.NavigateToAsync<LijstenViewModel>();
-        public Task GoKlantenAsync() => _nav.NavigateToAsync<KlantenViewModel>();
-        public Task GoOffertesAsync() => _nav.NavigateToAsync<OffertesLijstViewModel>();
-        public Task GoAfwerkingAsync() => _nav.NavigateToAsync<AfwerkingenViewModel>();
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? name = null)

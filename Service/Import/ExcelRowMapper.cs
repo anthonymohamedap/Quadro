@@ -4,7 +4,7 @@ using QuadroApp.Model.Import;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace QuadroApp.Services.Import;
+namespace QuadroApp.Service.Import;
 
 public static class ExcelRowMapper
 {

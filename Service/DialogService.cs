@@ -1,5 +1,7 @@
+// Candidate for removal – requires runtime verification
 ﻿using Avalonia.Controls;
 using Avalonia.Threading;
+using System;
 using Microsoft.Extensions.Logging;
 using QuadroApp.Model.Import;
 using QuadroApp.Service.Import;
@@ -7,7 +9,6 @@ using QuadroApp.Service.Import.Enterprise;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.ViewModels;
 using QuadroApp.Views;
-using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
@@ -32,6 +33,7 @@ namespace QuadroApp.Service
             _loggerFactory = loggerFactory;
         }
 
+        [Obsolete("Not used in current startup flow. Remove after runtime verification.")]
         public async Task<bool> ShowImportPreviewAsync(
             ObservableCollection<TypeLijstPreviewRow> previewRows,
             ObservableCollection<ImportIssue> issues)
@@ -84,6 +86,7 @@ namespace QuadroApp.Service
             return result;
         }
 
+        [Obsolete("Not used in current startup flow. Remove after runtime verification.")]
         public async Task<bool> ShowKlantImportPreviewAsync(
             ObservableCollection<KlantPreviewRow> previewRows,
             ObservableCollection<ImportIssue> issues)
@@ -138,10 +141,47 @@ namespace QuadroApp.Service
 
         public async Task<bool> ConfirmAsync(string title, string message)
         {
-            await Task.CompletedTask;
-            return true;
+            var owner = _windowProvider.GetMainWindow();
+            if (owner == null) return false;
+
+            var tcs = new TaskCompletionSource<bool>();
+
+            var yes = new Button { Content = "Ja", MinWidth = 90 };
+            var no = new Button { Content = "Nee", MinWidth = 90 };
+
+            var window = new Window
+            {
+                Title = title,
+                Width = 460,
+                Height = 220,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Content = new StackPanel
+                {
+                    Margin = new Avalonia.Thickness(16),
+                    Spacing = 16,
+                    Children =
+                    {
+                        new TextBlock { Text = message, TextWrapping = Avalonia.Media.TextWrapping.Wrap },
+                        new StackPanel
+                        {
+                            Orientation = Avalonia.Layout.Orientation.Horizontal,
+                            Spacing = 8,
+                            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                            Children = { no, yes }
+                        }
+                    }
+                }
+            };
+
+            yes.Click += (_, _) => { tcs.TrySetResult(true); window.Close(); };
+            no.Click += (_, _) => { tcs.TrySetResult(false); window.Close(); };
+            window.Closed += (_, _) => tcs.TrySetResult(false);
+
+            await window.ShowDialog(owner);
+            return await tcs.Task;
         }
 
+        [Obsolete("Not used in current startup flow. Remove after runtime verification.")]
         public async Task<bool> ShowAfwerkingImportPreviewAsync(
             ObservableCollection<AfwerkingsOptiePreviewRow> previewRows,
             ObservableCollection<ImportIssue> issues)

@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace QuadroApp.Services
+namespace QuadroApp.Service
 {
     public static class LegacyAfwerkingCode
     {
