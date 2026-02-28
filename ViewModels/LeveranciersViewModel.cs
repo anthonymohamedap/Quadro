@@ -5,6 +5,7 @@ using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,12 +19,30 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
     private readonly IDialogService _dialogs;
     private readonly IToastService _toast;
 
+    private List<Leverancier> _allLeveranciers = new();
+    private List<TypeLijst> _allLijstenVanLeverancier = new();
+
     [ObservableProperty] private ObservableCollection<Leverancier> leveranciers = new();
     [ObservableProperty] private ObservableCollection<TypeLijst> lijstenVanLeverancier = new();
     [ObservableProperty] private Leverancier? selectedLeverancier;
     [ObservableProperty] private bool isDetailOpen;
     [ObservableProperty] private string? zoekterm;
     [ObservableProperty] private bool isBusy;
+
+    [ObservableProperty] private int leveranciersCurrentPage = 1;
+    [ObservableProperty] private int leveranciersPageSize = 10;
+    [ObservableProperty] private int lijstenCurrentPage = 1;
+    [ObservableProperty] private int lijstenPageSize = 8;
+
+    public int LeveranciersTotalPages => Math.Max(1, (int)Math.Ceiling((_allLeveranciers.Count) / (double)LeveranciersPageSize));
+    public int LijstenTotalPages => Math.Max(1, (int)Math.Ceiling((_allLijstenVanLeverancier.Count) / (double)LijstenPageSize));
+
+    public bool CanPrevLeveranciersPage => LeveranciersCurrentPage > 1;
+    public bool CanNextLeveranciersPage => LeveranciersCurrentPage < LeveranciersTotalPages;
+    public bool CanPrevLijstenPage => LijstenCurrentPage > 1;
+    public bool CanNextLijstenPage => LijstenCurrentPage < LijstenTotalPages;
+    public string LeveranciersPageLabel => $"Pagina {LeveranciersCurrentPage} van {LeveranciersTotalPages}";
+    public string LijstenPageLabel => $"Pagina {LijstenCurrentPage} van {LijstenTotalPages}";
 
     public LeveranciersViewModel(
         IDbContextFactory<AppDbContext> dbFactory,
@@ -49,25 +68,105 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
         _ = LoadTypeLijstenForSelectedAsync(value);
     }
 
+    partial void OnLeveranciersCurrentPageChanged(int value) => UpdateLeveranciersPage();
+    partial void OnLeveranciersPageSizeChanged(int value)
+    {
+        if (value <= 0)
+        {
+            LeveranciersPageSize = 10;
+            return;
+        }
+
+        LeveranciersCurrentPage = 1;
+        UpdateLeveranciersPage();
+    }
+
+    partial void OnLijstenCurrentPageChanged(int value) => UpdateLijstenPage();
+    partial void OnLijstenPageSizeChanged(int value)
+    {
+        if (value <= 0)
+        {
+            LijstenPageSize = 8;
+            return;
+        }
+
+        LijstenCurrentPage = 1;
+        UpdateLijstenPage();
+    }
+
     private async Task LoadTypeLijstenForSelectedAsync(Leverancier? leverancier)
     {
-        if (leverancier is null)
+        if (leverancier is null || leverancier.Id == 0)
         {
+            _allLijstenVanLeverancier = new List<TypeLijst>();
             LijstenVanLeverancier = new ObservableCollection<TypeLijst>();
-            IsDetailOpen = false;
+            LijstenCurrentPage = 1;
+            IsDetailOpen = leverancier is not null;
+            NotifyLijstenPagingChanged();
             return;
         }
 
         await using var db = await _dbFactory.CreateDbContextAsync();
 
-        var gekoppeldeLijsten = await db.TypeLijsten
+        _allLijstenVanLeverancier = await db.TypeLijsten
             .AsNoTracking()
             .Where(x => x.LeverancierId == leverancier.Id)
             .OrderBy(x => x.Artikelnummer)
             .ToListAsync();
 
-        LijstenVanLeverancier = new ObservableCollection<TypeLijst>(gekoppeldeLijsten);
+        LijstenCurrentPage = 1;
+        UpdateLijstenPage();
         IsDetailOpen = true;
+    }
+
+    private void UpdateLeveranciersPage()
+    {
+        if (LeveranciersCurrentPage < 1)
+            LeveranciersCurrentPage = 1;
+
+        if (LeveranciersCurrentPage > LeveranciersTotalPages)
+            LeveranciersCurrentPage = LeveranciersTotalPages;
+
+        var skip = (LeveranciersCurrentPage - 1) * LeveranciersPageSize;
+        var page = _allLeveranciers.Skip(skip).Take(LeveranciersPageSize).ToList();
+        Leveranciers = new ObservableCollection<Leverancier>(page);
+
+        NotifyLeveranciersPagingChanged();
+    }
+
+    private void UpdateLijstenPage()
+    {
+        if (LijstenCurrentPage < 1)
+            LijstenCurrentPage = 1;
+
+        if (LijstenCurrentPage > LijstenTotalPages)
+            LijstenCurrentPage = LijstenTotalPages;
+
+        var skip = (LijstenCurrentPage - 1) * LijstenPageSize;
+        var page = _allLijstenVanLeverancier.Skip(skip).Take(LijstenPageSize).ToList();
+        LijstenVanLeverancier = new ObservableCollection<TypeLijst>(page);
+
+        NotifyLijstenPagingChanged();
+    }
+
+    private void NotifyLeveranciersPagingChanged()
+    {
+        OnPropertyChanged(nameof(LeveranciersTotalPages));
+        OnPropertyChanged(nameof(CanPrevLeveranciersPage));
+        OnPropertyChanged(nameof(CanNextLeveranciersPage));
+        OnPropertyChanged(nameof(LeveranciersPageLabel));
+        PrevLeveranciersPageCommand.NotifyCanExecuteChanged();
+        NextLeveranciersPageCommand.NotifyCanExecuteChanged();
+    }
+
+    private void NotifyLijstenPagingChanged()
+    {
+        OnPropertyChanged(nameof(LijstenTotalPages));
+        OnPropertyChanged(nameof(CanPrevLijstenPage));
+        OnPropertyChanged(nameof(CanNextLijstenPage));
+        OnPropertyChanged(nameof(LijstenPageLabel));
+        PrevLijstenPageCommand.NotifyCanExecuteChanged();
+        NextLijstenPageCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand]
@@ -90,18 +189,23 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
                 query = query.Where(x => x.Naam.Contains(term));
             }
 
-            var items = await query.ToListAsync();
-            Leveranciers = new ObservableCollection<Leverancier>(items);
+            _allLeveranciers = await query.ToListAsync();
+            LeveranciersCurrentPage = 1;
+            UpdateLeveranciersPage();
 
             if (SelectedLeverancier is not null)
             {
-                SelectedLeverancier = Leveranciers.FirstOrDefault(x => x.Id == SelectedLeverancier.Id);
+                var kept = _allLeveranciers.FirstOrDefault(x => x.Id == SelectedLeverancier.Id);
+                SelectedLeverancier = kept;
             }
 
             if (SelectedLeverancier is null)
             {
                 IsDetailOpen = false;
+                _allLijstenVanLeverancier = new List<TypeLijst>();
                 LijstenVanLeverancier = new ObservableCollection<TypeLijst>();
+                LijstenCurrentPage = 1;
+                NotifyLijstenPagingChanged();
             }
         }
         catch (Exception ex)
@@ -118,7 +222,10 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
     private void Nieuw()
     {
         SelectedLeverancier = new Leverancier();
+        _allLijstenVanLeverancier = new List<TypeLijst>();
         LijstenVanLeverancier = new ObservableCollection<TypeLijst>();
+        LijstenCurrentPage = 1;
+        NotifyLijstenPagingChanged();
         IsDetailOpen = true;
     }
 
@@ -174,7 +281,7 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
 
             var selectedId = SelectedLeverancier.Id;
             await LoadLeveranciersAsync();
-            SelectedLeverancier = Leveranciers.FirstOrDefault(x => x.Id == selectedId);
+            SelectedLeverancier = _allLeveranciers.FirstOrDefault(x => x.Id == selectedId);
         }
         catch (DbUpdateException ex)
         {
@@ -222,7 +329,10 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
 
             SelectedLeverancier = null;
             IsDetailOpen = false;
+            _allLijstenVanLeverancier = new List<TypeLijst>();
             LijstenVanLeverancier = new ObservableCollection<TypeLijst>();
+            LijstenCurrentPage = 1;
+            NotifyLijstenPagingChanged();
 
             await LoadLeveranciersAsync();
         }
@@ -241,8 +351,23 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
     {
         IsDetailOpen = false;
         SelectedLeverancier = null;
+        _allLijstenVanLeverancier = new List<TypeLijst>();
         LijstenVanLeverancier = new ObservableCollection<TypeLijst>();
+        LijstenCurrentPage = 1;
+        NotifyLijstenPagingChanged();
     }
+
+    [RelayCommand(CanExecute = nameof(CanPrevLeveranciersPage))]
+    private void PrevLeveranciersPage() => LeveranciersCurrentPage--;
+
+    [RelayCommand(CanExecute = nameof(CanNextLeveranciersPage))]
+    private void NextLeveranciersPage() => LeveranciersCurrentPage++;
+
+    [RelayCommand(CanExecute = nameof(CanPrevLijstenPage))]
+    private void PrevLijstenPage() => LijstenCurrentPage--;
+
+    [RelayCommand(CanExecute = nameof(CanNextLijstenPage))]
+    private void NextLijstenPage() => LijstenCurrentPage++;
 
     [RelayCommand]
     private async Task GaTerugAsync()

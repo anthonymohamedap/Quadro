@@ -55,6 +55,13 @@
 					</StackPanel>
 				</Grid>
 
+				<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+					<Button Content="◀ Vorige" Command="{Binding PrevLeveranciersPageCommand}" Classes="MainBtn"/>
+					<TextBlock VerticalAlignment="Center"
+                               Text="{Binding LeveranciersPageLabel}"/>
+					<Button Content="Volgende ▶" Command="{Binding NextLeveranciersPageCommand}" Classes="MainBtn"/>
+				</StackPanel>
+
 				<Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8">
 					<ListBox ItemsSource="{Binding Leveranciers}" SelectedItem="{Binding SelectedLeverancier, Mode=TwoWay}">
 						<ListBox.ItemTemplate>
@@ -105,6 +112,13 @@
 
 					<Separator Margin="0,10,0,10"/>
 					<TextBlock Text="Gekoppelde TypeLijsten" FontSize="16" FontWeight="SemiBold"/>
+
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+						<Button Content="◀ Vorige" Command="{Binding PrevLijstenPageCommand}" Classes="MainBtn"/>
+						<TextBlock VerticalAlignment="Center"
+                               Text="{Binding LijstenPageLabel}"/>
+						<Button Content="Volgende ▶" Command="{Binding NextLijstenPageCommand}" Classes="MainBtn"/>
+					</StackPanel>
 
 					<Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8">
 						<StackPanel>
