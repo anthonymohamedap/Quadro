@@ -12,7 +12,7 @@ namespace QuadroApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20251130200505_date")]
-    partial class date
+    partial class AddDateFieldMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

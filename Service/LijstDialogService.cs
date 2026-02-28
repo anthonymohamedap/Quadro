@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Threading;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Views;
@@ -11,13 +12,35 @@ public sealed class LijstDialogService : ILijstDialogService
 {
     public async Task<TypeLijst?> EditAsync(TypeLijst lijst)
     {
-        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+        if (lijst is null)
+        {
             return null;
-
-        var owner = desktop.MainWindow;
-        if (owner is null) return null;
+        }
 
         var dialog = new LijstDialog(lijst);
-        return await dialog.ShowDialog<TypeLijst?>(owner);
+
+        return await Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                return await ShowWithoutOwnerAsync(dialog);
+            }
+
+            var owner = desktop.MainWindow;
+            if (owner is null)
+            {
+                return await ShowWithoutOwnerAsync(dialog);
+            }
+
+            return await dialog.ShowDialog<TypeLijst?>(owner);
+        });
+    }
+
+    private static async Task<TypeLijst?> ShowWithoutOwnerAsync(LijstDialog dialog)
+    {
+        var tcs = new TaskCompletionSource<TypeLijst?>();
+        dialog.Closed += (_, _) => tcs.TrySetResult(dialog.Result);
+        dialog.Show();
+        return await tcs.Task;
     }
 }

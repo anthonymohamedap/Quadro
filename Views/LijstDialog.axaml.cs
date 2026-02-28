@@ -6,21 +6,19 @@ namespace QuadroApp.Views;
 
 public partial class LijstDialog : Window
 {
-    private readonly TypeLijst _original;
     private readonly TypeLijst _editCopy;
+
+    public TypeLijst? Result { get; private set; }
 
     public LijstDialog()
     {
         InitializeComponent();
-        _original = new TypeLijst();
         _editCopy = new TypeLijst();
         DataContext = _editCopy;
     }
 
     public LijstDialog(TypeLijst lijst) : this()
     {
-        _original = lijst;
-
         _editCopy.Id = lijst.Id;
         _editCopy.Artikelnummer = lijst.Artikelnummer;
         _editCopy.Opmerking = lijst.Opmerking;
@@ -32,8 +30,6 @@ public partial class LijstDialog : Window
         _editCopy.WerkMinuten = lijst.WerkMinuten;
         _editCopy.LeverancierId = lijst.LeverancierId;
         _editCopy.LaatsteUpdate = lijst.LaatsteUpdate;
-
-        // Als je UI dit gebruikt:
         _editCopy.AlleLeveranciers = lijst.AlleLeveranciers;
         _editCopy.Leverancier = lijst.Leverancier;
 
@@ -41,8 +37,14 @@ public partial class LijstDialog : Window
     }
 
     private void Annuleer_Click(object? sender, RoutedEventArgs e)
-        => Close(null);
+    {
+        Result = null;
+        Close(null);
+    }
 
     private void Opslaan_Click(object? sender, RoutedEventArgs e)
-        => Close(_editCopy);
+    {
+        Result = _editCopy;
+        Close(Result);
+    }
 }

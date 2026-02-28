@@ -871,7 +871,11 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
             if (App.Current?.ApplicationLifetime is
                 Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
             {
-                await window.ShowDialog(desktop.MainWindow);
+                var owner = desktop.MainWindow;
+                if (owner is null)
+                    return;
+
+                await window.ShowDialog(owner);
             }
         }
         catch (Exception ex)

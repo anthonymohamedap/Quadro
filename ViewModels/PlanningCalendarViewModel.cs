@@ -69,7 +69,11 @@ public partial class PlanningCalendarViewModel : ObservableObject
         if (App.Current?.ApplicationLifetime is
             Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
         {
-            await win.ShowDialog(desktop.MainWindow);
+            var owner = desktop.MainWindow;
+            if (owner is null)
+                return;
+
+            await win.ShowDialog(owner);
         }
     }
 
