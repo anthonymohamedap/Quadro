@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Logging.Abstractions;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
-using QuadroApp.Service;
+using System;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace WorkflowService.Tests;

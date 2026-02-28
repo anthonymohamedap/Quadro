@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace QuadroApp.Service
 {
-    public sealed class WorkflowService : IWorkflowService
+    public class WorkflowService : IWorkflowService
     {
         private readonly IDbContextFactory<AppDbContext> _factory;
         private readonly ILogger<WorkflowService> _logger;

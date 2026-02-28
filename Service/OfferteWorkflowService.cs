@@ -3,6 +3,7 @@ using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace QuadroApp.Service
