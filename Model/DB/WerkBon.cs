@@ -5,7 +5,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace QuadroApp.Model.DB
 {
-    public enum WerkBonStatus { Nieuw, InPlanning, InUitvoering, Afgewerkt, Geannuleerd }
+    public enum WerkBonStatus
+    {
+        Gepland = 0,
+        InUitvoering = 1,
+        Afgewerkt = 2,
+        Afgehaald = 3
+    }
 
     [Index(nameof(OfferteId))]
     public class WerkBon
@@ -19,8 +25,7 @@ namespace QuadroApp.Model.DB
         [Precision(10, 2)]
         public decimal TotaalPrijsIncl { get; set; }
 
-        // Nieuw
-        public WerkBonStatus Status { get; set; } = WerkBonStatus.Nieuw;
+        public WerkBonStatus Status { get; set; } = WerkBonStatus.Gepland;
 
         public DateTime AangemaaktOp { get; set; } = DateTime.UtcNow;
         public DateTime? BijgewerktOp { get; set; }

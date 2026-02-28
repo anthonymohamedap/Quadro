@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using QuadroApp.Model.DB;
+using System.Threading.Tasks;
 
 namespace QuadroApp.Service.Interfaces
 {
@@ -6,5 +7,6 @@ namespace QuadroApp.Service.Interfaces
     {
         Task<int> BevestigAsync(int offerteId);
         Task AnnuleerAsync(int offerteId);
+        Task ChangeOfferteStatusAsync(int offerteId, OfferteStatus newStatus);
     }
 }

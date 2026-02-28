@@ -50,7 +50,7 @@ public sealed class OfferteValidator : IOfferteValidator
             return vr;
         }
 
-        if (snapshot.Status != OfferteStatus.Nieuw)
+        if (snapshot.Status != OfferteStatus.Concept)
             vr.Error(nameof(Offerte.Status), "Je kan enkel offertes met status 'Nieuw' verwijderen.");
 
         if (snapshot.WerkBon is not null)

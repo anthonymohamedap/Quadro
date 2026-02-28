@@ -94,6 +94,7 @@ public partial class App : Application
         // ==============================
 
         services.AddScoped<IAfwerkingenService, AfwerkingenService>();
+        services.AddScoped<IWorkflowService, WorkflowService>();
         services.AddScoped<IOfferteWorkflowService, OfferteWorkflowService>();
         services.AddScoped<IWerkBonWorkflowService, WerkBonWorkflowService>();
 

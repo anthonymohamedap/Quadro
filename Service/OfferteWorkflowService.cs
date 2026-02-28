@@ -10,64 +10,47 @@ namespace QuadroApp.Service
     public class OfferteWorkflowService : IOfferteWorkflowService
     {
         private readonly IDbContextFactory<AppDbContext> _factory;
-        private readonly IWerkBonWorkflowService _werkBonWorkflow;
+        private readonly IWorkflowService _workflow;
 
-        public OfferteWorkflowService(
-            IDbContextFactory<AppDbContext> factory,
-            IWerkBonWorkflowService werkBonWorkflow)
+        public OfferteWorkflowService(IDbContextFactory<AppDbContext> factory, IWorkflowService workflow)
         {
-            _factory = factory;
-            _werkBonWorkflow = werkBonWorkflow;
+            _factory = factory ?? throw new ArgumentNullException(nameof(factory));
+            _workflow = workflow ?? throw new ArgumentNullException(nameof(workflow));
         }
 
         public async Task<int> BevestigAsync(int offerteId)
         {
             await using var db = await _factory.CreateDbContextAsync();
+            var huidigeStatus = await db.Offertes
+                .Where(o => o.Id == offerteId)
+                .Select(o => (OfferteStatus?)o.Status)
+                .FirstOrDefaultAsync();
 
-            var offerte = await db.Offertes
-                .Include(o => o.WerkBon)
-                .Include(o => o.Regels) // handig als je straks taken wil maken
-                .FirstOrDefaultAsync(o => o.Id == offerteId);
-
-            if (offerte == null)
+            if (huidigeStatus is null)
                 throw new InvalidOperationException("Offerte niet gevonden.");
 
-            if (offerte.Status != OfferteStatus.Nieuw)
-                throw new InvalidOperationException("Enkel nieuwe offertes kunnen bevestigd worden.");
+            if (huidigeStatus == OfferteStatus.Concept)
+                await _workflow.ChangeOfferteStatusAsync(offerteId, OfferteStatus.Verzonden);
 
-            // ✅ voorkom dubbel
-            if (offerte.WerkBon != null)
-                return offerte.WerkBon.Id;
+            await _workflow.ChangeOfferteStatusAsync(offerteId, OfferteStatus.Goedgekeurd);
 
-            offerte.Status = OfferteStatus.Bevestigd;
+            var werkBonId = await db.WerkBonnen
+                .Where(w => w.OfferteId == offerteId)
+                .Select(w => w.Id)
+                .FirstOrDefaultAsync();
 
-            var werkBon = new WerkBon
+            if (werkBonId == 0)
             {
-                OfferteId = offerteId,
-                TotaalPrijsIncl = offerte.TotaalInclBtw,
-                Status = WerkBonStatus.Nieuw
-            };
+                throw new InvalidOperationException("Werkbon niet gevonden.");
+            }
 
-            db.WerkBonnen.Add(werkBon);
-
-            // (optioneel) hier kan je meteen WerkTaken maken per regel
-
-            await db.SaveChangesAsync();
-
-            return werkBon.Id;
+            return werkBonId;
         }
 
-        public async Task AnnuleerAsync(int offerteId)
-        {
-            await using var db = await _factory.CreateDbContextAsync();
+        public Task AnnuleerAsync(int offerteId) =>
+            _workflow.ChangeOfferteStatusAsync(offerteId, OfferteStatus.Geannuleerd);
 
-            var offerte = await db.Offertes.FindAsync(offerteId);
-            if (offerte == null)
-                throw new InvalidOperationException("Offerte niet gevonden.");
-
-            offerte.Status = OfferteStatus.Geannuleerd;
-
-            await db.SaveChangesAsync();
-        }
+        public Task ChangeOfferteStatusAsync(int offerteId, OfferteStatus newStatus) =>
+            _workflow.ChangeOfferteStatusAsync(offerteId, newStatus);
     }
 }

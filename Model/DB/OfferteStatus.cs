@@ -2,11 +2,13 @@
 {
     public enum OfferteStatus
     {
-        Nieuw = 0,
-        InPlanning = 1,
-        Bevestigd = 2,
-        Afgewerkt = 3,
-        Geannuleerd = 4,
-        Betaald = 5
+        Concept = 0,
+        Verzonden = 1,
+        Goedgekeurd = 2,
+        InProductie = 3,
+        Afgewerkt = 4,
+        Gefactureerd = 5,
+        Betaald = 6,
+        Geannuleerd = 7
     }
 }

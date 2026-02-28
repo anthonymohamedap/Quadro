@@ -16,6 +16,7 @@ namespace QuadroApp.ViewModels
         private readonly IDbContextFactory<AppDbContext> _factory;
         private readonly INavigationService _nav;
         private readonly IWerkBonWorkflowService _workflow;
+        private readonly IWorkflowService _statusWorkflow;
         private readonly IToastService _toast;
 
         [ObservableProperty] private ObservableCollection<WerkBon> werkBonnen = new();
@@ -41,12 +42,15 @@ namespace QuadroApp.ViewModels
         public WerkBonLijstViewModel(
             IDbContextFactory<AppDbContext> factory,
             INavigationService nav,
-            IWerkBonWorkflowService workflow, IToastService toast)
+            IWerkBonWorkflowService workflow,
+            IWorkflowService statusWorkflow,
+            IToastService toast)
         {
             _factory = factory;
             _nav = nav;
             _toast = toast;
             _workflow = workflow;
+            _statusWorkflow = statusWorkflow;
         }
 
         public async Task LoadAsync()
@@ -143,28 +147,20 @@ namespace QuadroApp.ViewModels
             if (SelectedWerkBon == null)
                 return;
 
-            await using var db = await _factory.CreateDbContextAsync();
+            if (SelectedWerkBonStatus.HasValue && SelectedWerkBonStatus.Value != SelectedWerkBon.Status)
+                await _statusWorkflow.ChangeWerkBonStatusAsync(SelectedWerkBon.Id, SelectedWerkBonStatus.Value);
 
-            var wb = await db.WerkBonnen
-                .Include(w => w.Offerte)
-                .FirstOrDefaultAsync(w => w.Id == SelectedWerkBon.Id);
-
-            if (wb == null) return;
-
-            if (SelectedWerkBonStatus.HasValue)
-                wb.Status = SelectedWerkBonStatus.Value;
-
-            if (wb.Offerte != null && SelectedOfferteStatus.HasValue)
-                wb.Offerte.Status = SelectedOfferteStatus.Value;
-
-            wb.BijgewerktOp = DateTime.UtcNow;
-
-            await db.SaveChangesAsync();
+            if (SelectedWerkBon.Offerte != null &&
+                SelectedOfferteStatus.HasValue &&
+                SelectedOfferteStatus.Value != SelectedWerkBon.Offerte.Status)
+            {
+                await _statusWorkflow.ChangeOfferteStatusAsync(SelectedWerkBon.Offerte.Id, SelectedOfferteStatus.Value);
+            }
 
             await LoadAsync();
 
             // reselect
-            SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == wb.Id);
+            SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == SelectedWerkBon.Id);
         }
 
         /// <summary>
@@ -178,8 +174,8 @@ namespace QuadroApp.ViewModels
             if (SelectedWerkBon == null)
                 return;
 
-            SelectedOfferteStatus = OfferteStatus.Nieuw;
-            SelectedWerkBonStatus = WerkBonStatus.Geannuleerd; // kies wat je wil
+            SelectedOfferteStatus = OfferteStatus.Concept;
+            SelectedWerkBonStatus = WerkBonStatus.Afgehaald; // kies wat je wil
             await SaveStatusAsync();
         }
 
