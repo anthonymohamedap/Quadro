@@ -33,17 +33,6 @@ public sealed class TypeLijstImportValidator : IImportValidator<TypeLijst>
             });
         }
 
-        if (string.IsNullOrWhiteSpace(row.Parsed.Soort))
-        {
-            row.Issues.Add(new ImportRowIssue
-            {
-                RowNumber = row.RowNumber,
-                ColumnName = "Soort",
-                Message = "Type/soort is verplicht.",
-                Severity = Severity.Error
-            });
-        }
-
         if (row.Parsed.BreedteCm <= 0)
         {
             row.Issues.Add(new ImportRowIssue

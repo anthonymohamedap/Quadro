@@ -13,8 +13,8 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
     public IReadOnlyList<ExcelColumn<TypeLijst>> Columns { get; } =
     [
         Text("Artikelnummer", true, "Code"),
-        Text("LeverancierCode", true, "Levcode"),
-        Text("Soort", true, "Type"),
+        Text("LeverancierCode", false, "Levcode"),
+        Text("Soort", false, "Type"),
         Number("BreedteCm", true, "Breedte"),
         Decimal("PrijsPerMeter", false, "KostprijsPerM", "Kostprijs", "PrijsPerMeter"),
         Decimal("WinstMargeFactor", false, "WinstMarge"),

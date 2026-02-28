@@ -30,6 +30,8 @@ public sealed class AfwerkingsOptieImportCommitter : IImportCommitter<Afwerkings
             .Include(o => o.AfwerkingsGroep)
             .ToListAsync(ct);
 
+        var fallbackLeverancierCode = $"QDO-{Guid.NewGuid():N}"[..10].ToUpperInvariant();
+
         foreach (var row in validRows)
         {
             ct.ThrowIfCancellationRequested();
@@ -50,7 +52,7 @@ public sealed class AfwerkingsOptieImportCommitter : IImportCommitter<Afwerkings
             var leverancierCode = parsed.Leverancier?.Code?.Trim();
             if (string.IsNullOrWhiteSpace(leverancierCode))
             {
-                leverancierCode = "QDO";
+                leverancierCode = fallbackLeverancierCode;
             }
 
             if (!leveranciersByCode.TryGetValue(leverancierCode, out var leverancier))
@@ -58,7 +60,7 @@ public sealed class AfwerkingsOptieImportCommitter : IImportCommitter<Afwerkings
                 leverancier = new Leverancier
                 {
                     Code = leverancierCode,
-                    Naam = leverancierCode.Equals("QDO", StringComparison.OrdinalIgnoreCase) ? "Quadro Default" : leverancierCode
+                    Naam = "Quadro Default"
                 };
                 db.Leveranciers.Add(leverancier);
                 leveranciersByCode[leverancierCode] = leverancier;
