@@ -63,40 +63,98 @@
 							</StackPanel>
 						</DockPanel>
 
-						<DataGrid
-							x:Name="OffertesGrid"
-							ItemsSource="{Binding Offertes}"
-							SelectedItem="{Binding SelectedOfferte, Mode=TwoWay}"
-							AutoGenerateColumns="False"
-							CanUserSortColumns="True"
-							Height="260"
-							DoubleTapped="OffertesGrid_DoubleTapped">
-							<DataGrid.Columns>
-								<DataGridTextColumn Header="Nr" Binding="{Binding Id}" Width="70"/>
-								<DataGridTextColumn Header="Datum" Binding="{Binding Datum, StringFormat={}{0:dd/MM/yyyy}}" Width="120"/>
-								<DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
-								<DataGridTextColumn Header="Totaal" Binding="{Binding TotaalInclBtw, StringFormat=€ {0:0.00}}" Width="*"/>
-							</DataGrid.Columns>
-						</DataGrid>
+						<ListBox
+		ItemsSource="{Binding Offertes}"
+		SelectedItem="{Binding SelectedOfferte, Mode=TwoWay}"
+		DoubleTapped="OffertesGrid_DoubleTapped"
+		Height="260">
+
+							<ListBox.ItemTemplate>
+								<DataTemplate>
+									<Border
+										Background="White"
+										BorderBrush="#E0E0E0"
+										BorderThickness="1"
+										CornerRadius="6"
+										Padding="10"
+										Margin="0,0,0,6">
+
+										<Grid ColumnDefinitions="70,120,120,*">
+
+											<TextBlock
+												Grid.Column="0"
+												Text="{Binding Id}"
+												FontWeight="Bold"/>
+
+											<TextBlock
+												Grid.Column="1"
+												Text="{Binding Datum, StringFormat={}{0:dd/MM/yyyy}}"/>
+
+											<TextBlock
+												Grid.Column="2"
+												Text="{Binding Status}"/>
+
+											<TextBlock
+												Grid.Column="3"
+												Text="{Binding TotaalInclBtw, StringFormat=€ {0:0.00}}"
+												HorizontalAlignment="Right"
+												FontWeight="Bold"/>
+
+										</Grid>
+									</Border>
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+						</ListBox>
 					</StackPanel>
 				</Border>
 
 				<Border Grid.Column="1" Background="White" CornerRadius="8" Padding="10" BorderBrush="#DDD" BorderThickness="1">
 					<StackPanel Spacing="8">
-						<TextBlock Text="🧾 WerkBonnen" FontSize="18" FontWeight="Bold"/>
-						<DataGrid
+						<TextBlock Text="🧾 WerkBonnen"
+			   FontSize="18"
+			   FontWeight="Bold"/>
+
+						<ListBox
 							ItemsSource="{Binding WerkBonnen}"
 							SelectedItem="{Binding SelectedWerkBon, Mode=TwoWay}"
-							AutoGenerateColumns="False"
-							CanUserSortColumns="True"
 							Height="260">
-							<DataGrid.Columns>
-								<DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="70"/>
-								<DataGridTextColumn Header="Offerte" Binding="{Binding OfferteId}" Width="90"/>
-								<DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="130"/>
-								<DataGridTextColumn Header="Afhaal" Binding="{Binding AfhaalDatum, StringFormat={}{0:dd/MM/yyyy}}" Width="*"/>
-							</DataGrid.Columns>
-						</DataGrid>
+
+							<ListBox.ItemTemplate>
+								<DataTemplate>
+									<Border
+										Background="White"
+										BorderBrush="#E0E0E0"
+										BorderThickness="1"
+										CornerRadius="6"
+										Padding="10"
+										Margin="0,0,0,6">
+
+										<Grid ColumnDefinitions="70,90,130,*">
+
+											<TextBlock
+												Grid.Column="0"
+												Text="{Binding Id}"
+												FontWeight="Bold"/>
+
+											<TextBlock
+												Grid.Column="1"
+												Text="{Binding OfferteId}"/>
+
+											<TextBlock
+												Grid.Column="2"
+												Text="{Binding Status}"/>
+
+											<TextBlock
+												Grid.Column="3"
+												Text="{Binding AfhaalDatum, StringFormat={}{0:dd/MM/yyyy}}"
+												HorizontalAlignment="Right"/>
+
+										</Grid>
+
+									</Border>
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+						</ListBox>
 					</StackPanel>
 				</Border>
 			</Grid>
@@ -117,5 +175,33 @@
 			<Setter Property="Background" Value="#F5C242"/>
 			<Setter Property="Foreground" Value="#222"/>
 		</Style>
+		<Style Selector="TextBlock">
+			<Setter Property="Foreground" Value="Black"/>
+		</Style>
+		<Style Selector="DataGrid">
+			<Setter Property="GridLinesVisibility" Value="All"/>
+		</Style>
+
+		<Style Selector="DataGridColumnHeader">
+			<Setter Property="Background" Value="#EAEAEA"/>
+			<Setter Property="Foreground" Value="#222"/>
+			<Setter Property="BorderBrush" Value="#DDD"/>
+			<Setter Property="BorderThickness" Value="0,0,0,1"/>
+		</Style>
+		<Style Selector="Button.MainBtn">
+			<Setter Property="Background" Value="#444A50"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="FontWeight" Value="Bold"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="BorderBrush" Value="Transparent"/>
+			<Setter Property="FontSize" Value="14"/>
+			<Setter Property="Padding" Value="10,5"/>
+		</Style>
+
+		<Style Selector="Button.MainBtn:pointerover">
+			<Setter Property="Background" Value="#F5C242"/>
+			<Setter Property="Foreground" Value="#222"/>
+		</Style>
+
 	</UserControl.Styles>
 </UserControl>

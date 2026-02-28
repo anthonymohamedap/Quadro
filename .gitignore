@@ -1,18 +1,29 @@
-# Build and Release Folders
-bin-debug/
-bin-release/
-[Oo]bj/
-[Bb]in/
+# =========================
+# .NET / Avalonia
+# =========================
+bin/
+obj/
 
-# Other files and folders
-.settings/
+# Publish folders
+publish/
 
-# Executables
-*.swf
-*.air
-*.ipa
-*.apk
+# Rider / Visual Studio
+.vs/
+.idea/
 
-# Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
-# should NOT be excluded as they contain compiler settings and other important
-# information for Eclipse / Flash Builder.
+# User specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# SQLite database (optioneel als je die niet wil pushen)
+*.db
+*.sqlite
+
+# Logs
+*.log
