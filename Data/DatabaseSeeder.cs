@@ -46,12 +46,14 @@ namespace QuadroApp.Data
             int rId = db.AfwerkingsGroepen.Single(g => g.Code == 'R').Id;
 
             // 3) TypeLijsten (jouw 10 records)
+            // 3) TypeLijsten
             if (!db.TypeLijsten.Any())
             {
                 db.TypeLijsten.AddRange(
                     new TypeLijst
                     {
                         Artikelnummer = "001001/A1",
+                        Levcode = "ICO-001001A1",
                         LeverancierId = icoId,
                         BreedteCm = 20,
                         Soort = "HOUT",
@@ -71,6 +73,7 @@ namespace QuadroApp.Data
                     new TypeLijst
                     {
                         Artikelnummer = "001002/A2",
+                        Levcode = "ICO-001002A2",
                         LeverancierId = icoId,
                         BreedteCm = 25,
                         Soort = "HOUT",
@@ -90,6 +93,7 @@ namespace QuadroApp.Data
                     new TypeLijst
                     {
                         Artikelnummer = "001003/B1",
+                        Levcode = "HOF-001003B1",
                         LeverancierId = hofId,
                         BreedteCm = 22,
                         Soort = "HOUT",
@@ -109,6 +113,7 @@ namespace QuadroApp.Data
                     new TypeLijst
                     {
                         Artikelnummer = "001004/B2",
+                        Levcode = "HOF-001004B2",
                         LeverancierId = hofId,
                         BreedteCm = 18,
                         Soort = "ALU",
@@ -128,6 +133,7 @@ namespace QuadroApp.Data
                     new TypeLijst
                     {
                         Artikelnummer = "001005/C1",
+                        Levcode = "FRA-001005C1",
                         LeverancierId = fraId,
                         BreedteCm = 28,
                         Soort = "PVC",
@@ -147,6 +153,7 @@ namespace QuadroApp.Data
                     new TypeLijst
                     {
                         Artikelnummer = "001006/C2",
+                        Levcode = "FRA-001006C2",
                         LeverancierId = fraId,
                         BreedteCm = 30,
                         Soort = "ALU",
@@ -166,6 +173,7 @@ namespace QuadroApp.Data
                     new TypeLijst
                     {
                         Artikelnummer = "001007/D1",
+                        Levcode = "BOL-001007D1",
                         LeverancierId = bolId,
                         BreedteCm = 35,
                         Soort = "HOUT",
@@ -185,6 +193,7 @@ namespace QuadroApp.Data
                     new TypeLijst
                     {
                         Artikelnummer = "001008/D2",
+                        Levcode = "BOL-001008D2",
                         LeverancierId = bolId,
                         BreedteCm = 15,
                         Soort = "PVC",
@@ -204,6 +213,7 @@ namespace QuadroApp.Data
                     new TypeLijst
                     {
                         Artikelnummer = "001009/E1",
+                        Levcode = "ICO-001009E1",
                         LeverancierId = icoId,
                         BreedteCm = 40,
                         Soort = "HOUT",
@@ -223,6 +233,7 @@ namespace QuadroApp.Data
                     new TypeLijst
                     {
                         Artikelnummer = "001010/E2",
+                        Levcode = "HOF-001010E2",
                         LeverancierId = hofId,
                         BreedteCm = 12,
                         Soort = "ALU",
@@ -243,7 +254,6 @@ namespace QuadroApp.Data
 
                 db.SaveChanges();
             }
-
             // 4) AfwerkingsOpties (G, P, D, O, R – alle rijen die je stuurde)
             if (!db.AfwerkingsOpties.Any())
             {

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace QuadroApp.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialSqlite : Migration
+    public partial class InitialClean : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -23,6 +23,30 @@ namespace QuadroApp.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AfwerkingsGroepen", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ImportSessions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    StartedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    FinishedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    EntityName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    FileName = table.Column<string>(type: "TEXT", maxLength: 260, nullable: false),
+                    TotalRows = table.Column<int>(type: "INTEGER", nullable: false),
+                    ValidRows = table.Column<int>(type: "INTEGER", nullable: false),
+                    InvalidRows = table.Column<int>(type: "INTEGER", nullable: false),
+                    Inserted = table.Column<int>(type: "INTEGER", nullable: false),
+                    Updated = table.Column<int>(type: "INTEGER", nullable: false),
+                    Skipped = table.Column<int>(type: "INTEGER", nullable: false),
+                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    ErrorMessage = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ImportSessions", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -65,12 +89,35 @@ namespace QuadroApp.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Code = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
-                    Naam = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true)
+                    Naam = table.Column<string>(type: "TEXT", maxLength: 10, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Leveranciers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ImportRowLogs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ImportSessionId = table.Column<int>(type: "INTEGER", nullable: false),
+                    RowNumber = table.Column<int>(type: "INTEGER", nullable: false),
+                    Key = table.Column<string>(type: "TEXT", maxLength: 250, nullable: false),
+                    Success = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Message = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
+                    IssuesJson = table.Column<string>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ImportRowLogs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ImportRowLogs_ImportSessions_ImportSessionId",
+                        column: x => x.ImportSessionId,
+                        principalTable: "ImportSessions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -80,10 +127,19 @@ namespace QuadroApp.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     KlantId = table.Column<int>(type: "INTEGER", nullable: true),
-                    SubtotaalExBtw = table.Column<decimal>(type: "decimal(18,2)", precision: 10, scale: 2, nullable: false),
-                    BtwBedrag = table.Column<decimal>(type: "decimal(18,2)", precision: 10, scale: 2, nullable: false),
-                    TotaalInclBtw = table.Column<decimal>(type: "decimal(18,2)", precision: 10, scale: 2, nullable: false),
-                    Opmerking = table.Column<string>(type: "TEXT", nullable: true)
+                    SubtotaalExBtw = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    BtwBedrag = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Datum = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    TotaalInclBtw = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Opmerking = table.Column<string>(type: "TEXT", nullable: true),
+                    GeplandeDatum = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    DeadlineDatum = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    GeschatteMinuten = table.Column<int>(type: "INTEGER", nullable: true),
+                    Status = table.Column<string>(type: "TEXT", maxLength: 30, nullable: false),
+                    KortingPct = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    MeerPrijsIncl = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    IsVoorschotBetaald = table.Column<bool>(type: "INTEGER", nullable: false),
+                    VoorschotBedrag = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -92,8 +148,7 @@ namespace QuadroApp.Migrations
                         name: "FK_Offertes_Klanten_KlantId",
                         column: x => x.KlantId,
                         principalTable: "Klanten",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -104,7 +159,7 @@ namespace QuadroApp.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     AfwerkingsGroepId = table.Column<int>(type: "INTEGER", nullable: false),
                     Naam = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    Volgnummer = table.Column<int>(type: "INTEGER", nullable: false),
+                    Volgnummer = table.Column<char>(type: "TEXT", nullable: false),
                     KostprijsPerM2 = table.Column<decimal>(type: "TEXT", precision: 10, scale: 2, nullable: false),
                     WinstMarge = table.Column<decimal>(type: "TEXT", precision: 6, scale: 3, nullable: false),
                     AfvalPercentage = table.Column<decimal>(type: "TEXT", precision: 5, scale: 2, nullable: false),
@@ -136,7 +191,7 @@ namespace QuadroApp.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Artikelnummer = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
-                    LeverancierCode = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    Levcode = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     LeverancierId = table.Column<int>(type: "INTEGER", nullable: false),
                     BreedteCm = table.Column<int>(type: "INTEGER", nullable: false),
                     Soort = table.Column<string>(type: "TEXT", nullable: false),
@@ -173,9 +228,10 @@ namespace QuadroApp.Migrations
                     OfferteId = table.Column<int>(type: "INTEGER", nullable: false),
                     AfhaalDatum = table.Column<DateTime>(type: "TEXT", nullable: true),
                     TotaalPrijsIncl = table.Column<decimal>(type: "TEXT", precision: 10, scale: 2, nullable: false),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
+                    Status = table.Column<string>(type: "TEXT", maxLength: 30, nullable: false),
                     AangemaaktOp = table.Column<DateTime>(type: "TEXT", nullable: false),
                     BijgewerktOp = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    StockReservationProcessed = table.Column<bool>(type: "INTEGER", nullable: false),
                     RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true)
                 },
                 constraints: table =>
@@ -196,6 +252,7 @@ namespace QuadroApp.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     OfferteId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Opmerking = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
                     AantalStuks = table.Column<int>(type: "INTEGER", nullable: false),
                     BreedteCm = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
                     HoogteCm = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
@@ -271,18 +328,27 @@ namespace QuadroApp.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     WerkBonId = table.Column<int>(type: "INTEGER", nullable: false),
+                    OfferteRegelId = table.Column<int>(type: "INTEGER", nullable: true),
                     GeplandVan = table.Column<DateTime>(type: "TEXT", nullable: false),
                     GeplandTot = table.Column<DateTime>(type: "TEXT", nullable: false),
                     DuurMinuten = table.Column<int>(type: "INTEGER", nullable: false),
                     Omschrijving = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     Resource = table.Column<string>(type: "TEXT", maxLength: 80, nullable: true),
+                    WeekNotitie = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
+                    IsBesteld = table.Column<bool>(type: "INTEGER", nullable: false),
+                    BestelDatum = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    IsOpVoorraad = table.Column<bool>(type: "INTEGER", nullable: false),
+                    BenodigdeMeter = table.Column<decimal>(type: "TEXT", precision: 10, scale: 2, nullable: false),
                     RowVersion = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_WerkTaken", x => x.Id);
-                    table.CheckConstraint("CK_WerkTaak_Duur_Positive", "[DuurMinuten] >= 1");
-                    table.CheckConstraint("CK_WerkTaak_Tot_After_Van", "[GeplandTot] > [GeplandVan]");
+                    table.ForeignKey(
+                        name: "FK_WerkTaken_OfferteRegels_OfferteRegelId",
+                        column: x => x.OfferteRegelId,
+                        principalTable: "OfferteRegels",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_WerkTaken_WerkBonnen_WerkBonId",
                         column: x => x.WerkBonId,
@@ -301,6 +367,17 @@ namespace QuadroApp.Migrations
                 name: "IX_AfwerkingsOpties_LeverancierId",
                 table: "AfwerkingsOpties",
                 column: "LeverancierId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ImportRowLogs_ImportSessionId",
+                table: "ImportRowLogs",
+                column: "ImportSessionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Leveranciers_Naam",
+                table: "Leveranciers",
+                column: "Naam",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_OfferteRegels_DiepteKernId",
@@ -355,12 +432,18 @@ namespace QuadroApp.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_WerkBonnen_OfferteId",
                 table: "WerkBonnen",
-                column: "OfferteId");
+                column: "OfferteId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_WerkTaken_GeplandVan",
                 table: "WerkTaken",
                 column: "GeplandVan");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WerkTaken_OfferteRegelId",
+                table: "WerkTaken",
+                column: "OfferteRegelId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WerkTaken_WerkBonId",
@@ -372,13 +455,22 @@ namespace QuadroApp.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "ImportRowLogs");
+
+            migrationBuilder.DropTable(
                 name: "Instellingen");
+
+            migrationBuilder.DropTable(
+                name: "WerkTaken");
+
+            migrationBuilder.DropTable(
+                name: "ImportSessions");
 
             migrationBuilder.DropTable(
                 name: "OfferteRegels");
 
             migrationBuilder.DropTable(
-                name: "WerkTaken");
+                name: "WerkBonnen");
 
             migrationBuilder.DropTable(
                 name: "AfwerkingsOpties");
@@ -387,16 +479,13 @@ namespace QuadroApp.Migrations
                 name: "TypeLijsten");
 
             migrationBuilder.DropTable(
-                name: "WerkBonnen");
+                name: "Offertes");
 
             migrationBuilder.DropTable(
                 name: "AfwerkingsGroepen");
 
             migrationBuilder.DropTable(
                 name: "Leveranciers");
-
-            migrationBuilder.DropTable(
-                name: "Offertes");
 
             migrationBuilder.DropTable(
                 name: "Klanten");

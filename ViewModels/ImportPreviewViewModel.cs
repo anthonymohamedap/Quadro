@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -94,7 +93,8 @@ public partial class ImportPreviewViewModel : ObservableObject
             {
                 ["Artikelnummer"] = row.Artikelnummer,
                 ["Leverancier"] = row.Leverancier
-                ,["Levcode"] = row.Levcode
+                ,
+                ["Levcode"] = row.Levcode
             }));
         }
     }
@@ -140,7 +140,7 @@ public partial class ImportPreviewViewModel : ObservableObject
             _toastService.Warning("Kies eerst een geldig Excel-bestand.");
             return;
         }
-    }
+
 
         _cts = new CancellationTokenSource();
 
@@ -271,22 +271,4 @@ public sealed class PreviewRowItem
     public string Title => $"Rij {RowNumber}";
 }
 
-public sealed class PreviewRowItem
-{
-    public PreviewRowItem(int rowNumber, bool isValid, bool hasWarnings, IReadOnlyCollection<ImportRowIssue> issues, IReadOnlyDictionary<string, string?> values)
-    {
-        RowNumber = rowNumber;
-        IsValid = isValid;
-        HasWarnings = hasWarnings;
-        Issues = issues;
-        Values = values;
-    }
 
-    public int RowNumber { get; }
-    public bool IsValid { get; }
-    public bool HasWarnings { get; }
-    public IReadOnlyCollection<ImportRowIssue> Issues { get; }
-    public IReadOnlyDictionary<string, string?> Values { get; }
-    public string StateLabel => IsValid ? (HasWarnings ? "WAARSCHUWING" : "GELDIG") : "FOUTEN";
-    public string Title => $"Rij {RowNumber}";
-}
