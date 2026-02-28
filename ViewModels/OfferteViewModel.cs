@@ -30,6 +30,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
     private readonly IPricingService _pricing;
     private readonly IOfferteWorkflowService _workflow;
     private readonly IWerkBonWorkflowService _werkBonWorkflow;
+    private readonly IWorkflowService _statusWorkflow;
     private readonly ICrudValidator<Klant> _klantValidator;
     private readonly IKlantDialogService _klantDialog;
     // ====== state ======
@@ -116,6 +117,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
         IPricingService pricing,
         IOfferteWorkflowService workflow,
         IWerkBonWorkflowService werkBonWorkflow,
+        IWorkflowService statusWorkflow,
         IOfferteValidator validator,
         IToastService toast, ICrudValidator<Klant> crudValidator, IKlantDialogService klantDialog)
     {
@@ -125,6 +127,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
         _pricing = pricing;
         _workflow = workflow;
         _werkBonWorkflow = werkBonWorkflow;
+        _statusWorkflow = statusWorkflow;
         _validator = validator;
         _klantValidator = crudValidator;
         _klantDialog = klantDialog;
@@ -860,7 +863,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
             }
 
             // planning window (zoals je al had)
-            var vm = new PlanningCalendarViewModel(_dbFactory, _werkBonWorkflow, _toast);
+            var vm = new PlanningCalendarViewModel(_dbFactory, _werkBonWorkflow, _toast, _statusWorkflow);
             await vm.InitializeAsync(werkBonId);
 
             var window = new PlanningCalendarWindow { DataContext = vm };

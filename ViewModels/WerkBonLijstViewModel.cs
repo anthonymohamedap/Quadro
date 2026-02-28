@@ -28,7 +28,7 @@ namespace QuadroApp.ViewModels
 
         [ObservableProperty] private bool isDetailOpen;
 
-        [ObservableProperty] private DateTime? geselecteerdeBestelDatum = DateTime.Today;
+        [ObservableProperty] private DateTimeOffset? geselecteerdeBestelDatum = DateTimeOffset.Now.Date;
 
         // Dropdown data
         public ObservableCollection<WerkBonStatus> WerkBonStatusOpties { get; } =
@@ -112,7 +112,7 @@ namespace QuadroApp.ViewModels
 
             SelectedWerkBonStatus = value.Status;
             SelectedOfferteStatus = value.Offerte?.Status;
-            GeselecteerdeBestelDatum = DateTime.Today;
+            GeselecteerdeBestelDatum = DateTimeOffset.Now.Date;
         }
 
         [RelayCommand]
@@ -124,7 +124,7 @@ namespace QuadroApp.ViewModels
             if (SelectedWerkBon == null)
                 return;
 
-            var vm = new PlanningCalendarViewModel(_factory, _workflow, _toast);
+            var vm = new PlanningCalendarViewModel(_factory, _workflow, _toast, _statusWorkflow);
             await vm.InitializeAsync(SelectedWerkBon.Id);
 
             var window = new QuadroApp.Views.PlanningCalendarWindow
@@ -190,7 +190,7 @@ namespace QuadroApp.ViewModels
             if (taak is null)
                 return;
 
-            var bestelDatum = GeselecteerdeBestelDatum ?? DateTime.Today;
+            var bestelDatum = (GeselecteerdeBestelDatum ?? DateTimeOffset.Now.Date).Date;
             await _statusWorkflow.MarkLijstAsBesteldAsync(taak.Id, bestelDatum);
 
             var selectedWerkBonId = SelectedWerkBon?.Id;

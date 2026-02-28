@@ -21,6 +21,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
     private readonly IDbContextFactory<AppDbContext> _factory;
     private readonly IWerkBonWorkflowService _workflow;
     private readonly IToastService _toast;
+    private readonly IWorkflowService _statusWorkflow;
     [ObservableProperty] private DayRow? selectedDayRow;
     [ObservableProperty] private int selectedWeekNr;
     [ObservableProperty] private ObservableCollection<DayRow> weekDayRows = new();
@@ -35,11 +36,13 @@ public partial class PlanningCalendarViewModel : ObservableObject
     public PlanningCalendarViewModel(
         IDbContextFactory<AppDbContext> factory,
         IWerkBonWorkflowService workflow,
-        IToastService toast)
+        IToastService toast,
+        IWorkflowService statusWorkflow)
     {
         _factory = factory;
         _workflow = workflow;
         _toast = toast;
+        _statusWorkflow = statusWorkflow;
 
         ToastMessages = ((ToastService)_toast).Messages;
 
@@ -55,7 +58,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
         var weekNr = System.Globalization.ISOWeek.GetWeekOfYear(SelectedDate);
         var year = SelectedDate.Year;
 
-        var vm = new WeekWerkLijstViewModel(_factory);
+        var vm = new WeekWerkLijstViewModel(_factory, _statusWorkflow);
         await vm.InitializeAsync(year, weekNr);
 
         var win = new QuadroApp.Views.WeekWerkLijstWindow

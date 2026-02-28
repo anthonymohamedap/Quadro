@@ -13,6 +13,7 @@ namespace QuadroApp.ViewModels
         private readonly IDbContextFactory<AppDbContext> _factory;
         private readonly IWerkBonWorkflowService _workflow;
         private readonly IToastService _toast;
+        private readonly IWorkflowService _statusWorkflow;
         public IAsyncRelayCommand OpenKlantenCommand { get; }
         public IAsyncRelayCommand OpenLijstenCommand { get; }
         public IAsyncRelayCommand OpenPlanningCommand { get; }
@@ -25,7 +26,8 @@ namespace QuadroApp.ViewModels
             INavigationService nav,
             IDbContextFactory<AppDbContext> factory,
             IWerkBonWorkflowService workflow,
-            IToastService toast)
+            IToastService toast,
+            IWorkflowService statusWorkflow)
         {
             _nav = nav;
             _factory = factory;
@@ -40,11 +42,12 @@ namespace QuadroApp.ViewModels
             OpenOfferteCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OfferteViewModel>());
             OpenOffertesLijstCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OffertesLijstViewModel>());
             _toast = toast;
+            _statusWorkflow = statusWorkflow;
         }
 
         private async Task OpenPlanningAsync()
         {
-            var vm = new PlanningCalendarViewModel(_factory, _workflow, _toast);
+            var vm = new PlanningCalendarViewModel(_factory, _workflow, _toast, _statusWorkflow);
 
             // ✅ globale mode: geen werkbon gekoppeld
             await vm.InitializeGlobalAsync();

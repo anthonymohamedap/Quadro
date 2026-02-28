@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
+using QuadroApp.Service.Interfaces;
 using System;
 using System.Collections.ObjectModel;
 using System.Globalization;
@@ -14,6 +15,7 @@ namespace QuadroApp.ViewModels;
 public partial class WeekWerkLijstViewModel : ObservableObject
 {
     private readonly IDbContextFactory<AppDbContext> _factory;
+    private readonly IWorkflowService _workflow;
 
     [ObservableProperty] private int year;
     [ObservableProperty] private int weekNr;
@@ -21,8 +23,11 @@ public partial class WeekWerkLijstViewModel : ObservableObject
 
     [ObservableProperty] private ObservableCollection<KlantWeekBlock> blocks = new();
 
-    public WeekWerkLijstViewModel(IDbContextFactory<AppDbContext> factory)
-        => _factory = factory;
+    public WeekWerkLijstViewModel(IDbContextFactory<AppDbContext> factory, IWorkflowService workflow)
+    {
+        _factory = factory;
+        _workflow = workflow;
+    }
 
     public async Task InitializeAsync(int year, int weekNr)
     {
@@ -75,6 +80,17 @@ public partial class WeekWerkLijstViewModel : ObservableObject
         }
     }
 
+
+    [RelayCommand]
+    private async Task MarkeerBesteldAsync(WeekWerkItem item)
+    {
+        if (item is null) return;
+
+        var bestelDatum = (item.BestelDatumInput ?? DateTimeOffset.Now.Date).Date;
+        await _workflow.MarkLijstAsBesteldAsync(item.TaakId, bestelDatum);
+        await LoadAsync();
+    }
+
     // Save 1 notitie (per taak)
     [RelayCommand]
     private async Task SaveNotitieAsync(WeekWerkItem item)
@@ -111,6 +127,10 @@ public partial class WeekWerkItem : ObservableObject
     public DateTime ProductieDatum { get; init; } // GeplandVan datum
 
     [ObservableProperty] private string? notitie;
+    [ObservableProperty] private bool isBesteld;
+    [ObservableProperty] private DateTime? bestelDatum;
+    [ObservableProperty] private bool isOpVoorraad;
+    [ObservableProperty] private DateTimeOffset? bestelDatumInput;
 
     public static WeekWerkItem FromTaak(WerkTaak t)
     {
@@ -129,7 +149,11 @@ public partial class WeekWerkItem : ObservableObject
             Inleg1 = $"{r?.InlegBreedteCm}×{r?.InlegHoogteCm}",
             Inleg2 = "",
             ProductieDatum = t.GeplandVan.Date,
-            Notitie = t.WeekNotitie
+            Notitie = t.WeekNotitie,
+            IsBesteld = t.IsBesteld,
+            BestelDatum = t.BestelDatum,
+            IsOpVoorraad = t.IsOpVoorraad,
+            BestelDatumInput = (t.BestelDatum ?? DateTime.Today)
         };
     }
 }
