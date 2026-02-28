@@ -121,6 +121,7 @@ public partial class App : Application
         services.AddTransient<AfwerkingenViewModel>();
         services.AddTransient<OffertesLijstViewModel>();
         services.AddTransient<OfferteViewModel>();
+        services.AddTransient<KlantDetailViewModel>();
         services.AddTransient<WerkBonLijstViewModel>();
 
         Services = services.BuildServiceProvider();

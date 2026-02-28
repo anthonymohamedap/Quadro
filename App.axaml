@@ -35,6 +35,10 @@
 			<views:OffertesLijstView/>
 		</DataTemplate>
 
+		<DataTemplate DataType="{x:Type vm:KlantDetailViewModel}">
+			<views:KlantDetailView/>
+		</DataTemplate>
+
 		<DataTemplate DataType="{x:Type vm:AfwerkingenViewModel}">
 			<views:AfwerkingenView/>
 		</DataTemplate>

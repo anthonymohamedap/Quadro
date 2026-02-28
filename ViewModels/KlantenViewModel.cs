@@ -259,6 +259,17 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
     }
 
     [RelayCommand(CanExecute = nameof(CanRunAction))]
+    private async Task OpenKlantDetailAsync(Klant? klant)
+    {
+        if (!CanRunAction()) return;
+
+        var target = klant ?? SelectedKlant;
+        if (target is null) return;
+
+        await _nav.NavigateToKlantDetailAsync(target.Id);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRunAction))]
     private async Task RefreshAsync()
     {
         if (!CanRunAction()) return;

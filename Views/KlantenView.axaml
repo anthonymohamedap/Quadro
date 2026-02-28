@@ -17,6 +17,7 @@
 			<!-- Toolbar -->
 			<StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,10">
 				<TextBox Width="260" Watermark="Zoek klant…" Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+				<Button Content="📂 Open" Command="{Binding OpenKlantDetailCommand}" CommandParameter="{Binding SelectedKlant}" Classes="MainBtn"/>
 				<Button Content="➕ Nieuw" Command="{Binding NewCommand}" Classes="MainBtn"/>
 				<Button Content="✏️ Bewerken" Command="{Binding EditCommand}" Classes="MainBtn"/>
 				<Button Content="🗑️ Verwijderen" Command="{Binding DeleteCommand}" Classes="MainBtn"/>
@@ -34,7 +35,7 @@
 				<TextBlock Text="Actie" Grid.Column="6" FontWeight="Bold" Foreground="#000" HorizontalAlignment="Right"/>
 			</Grid>
 			<Border BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Background="White">
-				<ListBox ItemsSource="{Binding FilteredKlanten}" SelectedItem="{Binding SelectedKlant, Mode=TwoWay}" BorderThickness="0" Background="Transparent" ScrollViewer.VerticalScrollBarVisibility="Auto">
+				<ListBox ItemsSource="{Binding FilteredKlanten}" SelectedItem="{Binding SelectedKlant, Mode=TwoWay}" BorderThickness="0" Background="Transparent" ScrollViewer.VerticalScrollBarVisibility="Auto" DoubleTapped="KlantenList_DoubleTapped">
 					<ListBox.Styles>
 						<Style Selector="ListBoxItem">
 							<Setter Property="CornerRadius" Value="6"/>

@@ -15,5 +15,7 @@ namespace QuadroApp.Service.Interfaces
 
         Task NavigateToAsync<TViewModel, TParam>(TParam parameter)
             where TViewModel : class;
+
+        Task NavigateToKlantDetailAsync(int klantId);
     }
 }
