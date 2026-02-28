@@ -27,6 +27,10 @@
 			<views:LijstenView/>
 		</DataTemplate>
 
+		<DataTemplate DataType="{x:Type vm:LeveranciersViewModel}">
+			<views:LeveranciersView/>
+		</DataTemplate>
+
 		<DataTemplate DataType="{x:Type vm:OfferteViewModel}">
 			<views:OfferteView/>
 		</DataTemplate>
