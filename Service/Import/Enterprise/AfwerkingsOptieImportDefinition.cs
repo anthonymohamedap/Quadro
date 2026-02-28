@@ -84,7 +84,7 @@ public sealed class AfwerkingsOptieImportDefinition : IImportPreviewDefinition
 
         return new Dictionary<string, string?>
         {
-            ["Groep"] = optie.AfwerkingsGroep?.Code,
+            ["Groep"] = optie.AfwerkingsGroep is null ? null : optie.AfwerkingsGroep.Code.ToString(),
             ["Naam"] = optie.Naam,
             ["Volgnummer"] = optie.Volgnummer == default ? string.Empty : optie.Volgnummer.ToString()
         };

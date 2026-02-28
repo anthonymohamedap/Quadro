@@ -34,8 +34,8 @@ public sealed class AfwerkingsOptieImportValidator : IImportValidator<Afwerkings
             });
         }
 
-        var groepCode = row.Parsed.AfwerkingsGroep?.Code?.Trim();
-        if (string.IsNullOrWhiteSpace(groepCode))
+        var groepCode = row.Parsed.AfwerkingsGroep?.Code;
+        if (!groepCode.HasValue || groepCode.Value == default)
         {
             row.Issues.Add(new ImportRowIssue
             {
@@ -47,16 +47,17 @@ public sealed class AfwerkingsOptieImportValidator : IImportValidator<Afwerkings
             return;
         }
 
-        var groepExists = await db.AfwerkingsGroepen.AnyAsync(g => g.Code == groepCode, ct);
+        var groepCodeValue = groepCode.Value;
+        var groepExists = await db.AfwerkingsGroepen.AnyAsync(g => g.Code == groepCodeValue, ct);
         if (!groepExists)
         {
             row.Issues.Add(new ImportRowIssue
             {
                 RowNumber = row.RowNumber,
                 ColumnName = "Groep",
-                Message = $"Onbekende groepcode: {groepCode}.",
+                Message = $"Onbekende groepcode: {groepCodeValue}.",
                 Severity = Severity.Error,
-                RawValue = groepCode
+                RawValue = groepCodeValue.ToString()
             });
         }
     }

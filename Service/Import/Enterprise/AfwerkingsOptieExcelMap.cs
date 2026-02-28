@@ -15,9 +15,18 @@ public sealed class AfwerkingsOptieExcelMap : IExcelMap<AfwerkingsOptie>
             Key = "Groep",
             Header = "Groep",
             Required = true,
-            Parser = value => string.IsNullOrWhiteSpace(value)
-                ? (false, null, "Groep is verplicht.")
-                : (true, value, null)
+            Parser = value =>
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    return (false, null, "Groep is verplicht.");
+                }
+
+                var text = value.Trim();
+                return text.Length == 1
+                    ? (true, text, null)
+                    : (false, null, "Groep moet 1 karakter zijn.");
+            }
         },
         new ExcelColumn<AfwerkingsOptie>
         {
@@ -33,9 +42,18 @@ public sealed class AfwerkingsOptieExcelMap : IExcelMap<AfwerkingsOptie>
             Key = "Volgnummer",
             Header = "Volgnummer",
             Required = false,
-            Parser = value => string.IsNullOrWhiteSpace(value) || value.Trim().Length == 1
-                ? (true, value, null)
-                : (false, null, "Volgnummer moet 1 karakter zijn.")
+            Parser = value =>
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    return (true, null, null);
+                }
+
+                var text = value.Trim();
+                return text.Length == 1
+                    ? (true, text, null)
+                    : (false, null, "Volgnummer moet 1 karakter zijn.");
+            }
         }
     ];
 
@@ -46,10 +64,10 @@ public sealed class AfwerkingsOptieExcelMap : IExcelMap<AfwerkingsOptie>
         switch (columnKey)
         {
             case "Groep":
-                var groepCode = cellText?.Trim();
-                if (!string.IsNullOrWhiteSpace(groepCode))
+                var groepCodeText = cellText?.Trim();
+                if (!string.IsNullOrWhiteSpace(groepCodeText))
                 {
-                    target.AfwerkingsGroep = new AfwerkingsGroep { Code = groepCode };
+                    target.AfwerkingsGroep = new AfwerkingsGroep { Code = groepCodeText[0] };
                 }
                 break;
             case "Naam":
@@ -67,7 +85,7 @@ public sealed class AfwerkingsOptieExcelMap : IExcelMap<AfwerkingsOptie>
 
     public string? GetCellText(AfwerkingsOptie source, string columnKey) => columnKey switch
     {
-        "Groep" => source.AfwerkingsGroep?.Code ?? source.AfwerkingsGroepId.ToString(),
+        "Groep" => source.AfwerkingsGroep is not null ? source.AfwerkingsGroep.Code.ToString() : source.AfwerkingsGroepId.ToString(),
         "Naam" => source.Naam,
         "Volgnummer" => source.Volgnummer == default ? string.Empty : source.Volgnummer.ToString(),
         _ => null

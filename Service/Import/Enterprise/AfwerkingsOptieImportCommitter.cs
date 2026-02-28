@@ -19,7 +19,7 @@ public sealed class AfwerkingsOptieImportCommitter : IImportCommitter<Afwerkings
         var skipped = 0;
 
         var groepenByCode = await db.AfwerkingsGroepen
-            .ToDictionaryAsync(g => g.Code, StringComparer.OrdinalIgnoreCase, ct);
+            .ToDictionaryAsync(g => g.Code, ct);
 
         var bestaande = await db.AfwerkingsOpties
             .Include(o => o.AfwerkingsGroep)
@@ -34,8 +34,8 @@ public sealed class AfwerkingsOptieImportCommitter : IImportCommitter<Afwerkings
                 continue;
             }
 
-            var groepCode = row.Parsed.AfwerkingsGroep?.Code?.Trim();
-            if (string.IsNullOrWhiteSpace(groepCode) || !groepenByCode.TryGetValue(groepCode, out var groep))
+            var groepCode = row.Parsed.AfwerkingsGroep?.Code;
+            if (!groepCode.HasValue || groepCode.Value == default || !groepenByCode.TryGetValue(groepCode.Value, out var groep))
             {
                 skipped++;
                 continue;
