@@ -1,0 +1,100 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:QuadroApp.ViewModels"
+        xmlns:imp="clr-namespace:QuadroApp.Model.Import"
+        x:Class="QuadroApp.Views.ImportPreviewView"
+        x:DataType="vm:ImportPreviewViewModel"
+        Width="1200"
+        Height="760"
+        Title="Unified Import Preview">
+  <Window.Styles>
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="Black" />
+    </Style>
+  </Window.Styles>
+
+  <Grid RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="2*,*" Margin="12">
+    <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Spacing="8">
+      <TextBlock Text="Enterprise import preview" FontWeight="Bold" FontSize="20" />
+      <TextBlock Text="{Binding EntityName}" FontWeight="SemiBold" />
+      <TextBlock Text="{Binding ProgressText}" />
+    </StackPanel>
+
+    <Border Grid.Row="1" Grid.ColumnSpan="2" Margin="0,10,0,10" BorderThickness="1" CornerRadius="8" Padding="10">
+      <WrapPanel ItemHeight="40" ItemWidth="180">
+        <TextBlock Text="{Binding TotalRows, StringFormat=Total: {0}}" />
+        <TextBlock Text="{Binding ValidRows, StringFormat=Valid: {0}}" />
+        <TextBlock Text="{Binding InvalidRows, StringFormat=Invalid: {0}}" />
+        <TextBlock Text="{Binding WarningRows, StringFormat=Warnings: {0}}" />
+        <TextBlock Text="{Binding PredictedInsert, StringFormat=Insert: {0}}" />
+        <TextBlock Text="{Binding PredictedUpdate, StringFormat=Update: {0}}" />
+        <TextBlock Text="{Binding PredictedSkipped, StringFormat=Skipped: {0}}" />
+      </WrapPanel>
+    </Border>
+
+    <Border Grid.Row="2" Grid.Column="0" BorderThickness="1" CornerRadius="8" Padding="8" Margin="0,0,10,0">
+      <ListBox ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:PreviewRowItem">
+            <Border BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,0,0,8">
+              <StackPanel>
+                <DockPanel>
+                  <TextBlock DockPanel.Dock="Left" Text="{Binding Title}" FontWeight="Bold" />
+                  <TextBlock DockPanel.Dock="Right" Text="{Binding StateLabel}" FontWeight="SemiBold" />
+                </DockPanel>
+                <ItemsControl ItemsSource="{Binding Values}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="{Binding Key, StringFormat={0}: }" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Border>
+
+    <StackPanel Grid.Row="2" Grid.Column="1" Spacing="8">
+      <Border BorderThickness="1" CornerRadius="8" Padding="8">
+        <StackPanel>
+          <TextBlock Text="Issues" FontWeight="Bold" FontSize="16" />
+          <ListBox ItemsSource="{Binding SelectedRowIssues}">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="imp:ImportRowIssue">
+                <Border Padding="6" Margin="0,4,0,0">
+                  <StackPanel>
+                    <TextBlock Text="{Binding Severity}" FontWeight="Bold" />
+                    <TextBlock Text="{Binding ColumnName}" />
+                    <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </StackPanel>
+      </Border>
+      <Border BorderThickness="1" CornerRadius="8" Padding="8">
+        <StackPanel>
+          <TextBlock Text="Selected row values" FontWeight="Bold" FontSize="16" />
+          <ItemsControl ItemsSource="{Binding SelectedRowValues}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Key, StringFormat={0}: }" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+
+    <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" Margin="0,10,0,0">
+      <Button Content="Choose File" Command="{Binding ChooseFileCommand}"  />
+      <Button Content="Dry Run / Preview" Command="{Binding DryRunCommand}"  />
+      <Button Content="Commit Import" Command="{Binding CommitImportCommand}"  />
+      <Button Content="Cancel Running" Command="{Binding CancelOperationCommand}" IsEnabled="{Binding IsBusy}" />
+      <Button Content="Cancel" Command="{Binding CancelCommand}" />
+    </StackPanel>
+  </Grid>
+</Window>

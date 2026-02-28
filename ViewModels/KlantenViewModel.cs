@@ -3,10 +3,8 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
-using QuadroApp.Model.Import;
-using QuadroApp.Service.Import;
+using QuadroApp.Service.Import.Enterprise;
 using QuadroApp.Service.Interfaces;
-using QuadroApp.Services.Import;
 using QuadroApp.Validation;
 using System;
 using System.Collections.ObjectModel;
@@ -28,8 +26,7 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
     private readonly INavigationService _nav;
     private readonly IDialogService _dialogs;
 
-    private readonly KlantExcelImportService _klantImportService;
-    private readonly IFilePickerService _filePicker;
+    private readonly KlantImportDefinition _klantImportDefinition;
     private readonly ICrudValidator<Klant> _validator;
     private readonly IKlantDialogService _klantDialog;
     private readonly IToastService _toast;
@@ -54,16 +51,14 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
         ICrudValidator<Klant> validator,
         IDialogService dialogs,
         IKlantDialogService klantDialog,
-        KlantExcelImportService klantImportService,
-        IFilePickerService filePicker,
+        KlantImportDefinition klantImportDefinition,
         IToastService toast)
     {
         _dbFactory = dbFactory ?? throw new ArgumentNullException(nameof(dbFactory));
         _nav = nav ?? throw new ArgumentNullException(nameof(nav));
         _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
         _klantDialog = klantDialog ?? throw new ArgumentNullException(nameof(klantDialog));
-        _klantImportService = klantImportService ?? throw new ArgumentNullException(nameof(klantImportService));
-        _filePicker = filePicker ?? throw new ArgumentNullException(nameof(filePicker));
+        _klantImportDefinition = klantImportDefinition ?? throw new ArgumentNullException(nameof(klantImportDefinition));
         _toast = toast;
         _validator = validator;
     }
@@ -124,35 +119,11 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
             IsBusy = true;
             Foutmelding = null;
 
-            var file = await _filePicker.PickExcelFileAsync();
-            if (string.IsNullOrWhiteSpace(file))
-                return;
-
-            var preview = await _klantImportService.PreviewAsync(file);
-
-            if (preview is null || preview.Rows is null || !preview.Rows.Any())
+            var confirm = await _dialogs.ShowUnifiedImportPreviewAsync(_klantImportDefinition);
+            if (confirm)
             {
-                _toast.Warning("Geen geldige rijen gevonden in het Excel bestand.");
-                return;
+                await LoadAsync();
             }
-
-            // Preview dialoog (laat issues zien)
-            var confirm = await _dialogs.ShowKlantImportPreviewAsync(
-                new ObservableCollection<KlantPreviewRow>(preview.Rows),
-                new ObservableCollection<ImportIssue>(preview.Issues ?? Array.Empty<ImportIssue>())
-            );
-
-            if (!confirm) return;
-
-            // ✅ Commit
-            var result = await _klantImportService.CommitAsync(preview.Rows);
-
-            _toast.Success($"Import klaar. Toegevoegd: {result.Added}, Bijgewerkt: {result.Updated}, Overgeslagen: {result.Skipped}.");
-
-            if (result.Skipped > 0)
-                _toast.Warning($"{result.Skipped} rij(en) zijn overgeslagen wegens fouten.");
-
-            await LoadAsync();
         }
         catch (Exception ex)
         {

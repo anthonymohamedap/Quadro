@@ -11,6 +11,7 @@ using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service;
 using QuadroApp.Service.Import;
+using QuadroApp.Service.Import.Enterprise;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Service.Toast;
 using QuadroApp.Services;
@@ -82,9 +83,9 @@ public partial class App : Application
         services.AddSingleton<IOfferteNavigationService, OfferteNavigationService>();
 
         services.AddSingleton<IWindowProvider, WindowProvider>();
-        services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IFilePickerService, FilePickerService>();
         services.AddSingleton<IToastService, ToastService>();
+        services.AddSingleton<IDialogService, DialogService>();
 
         services.AddTransient<IKlantDialogService, KlantDialogService>();
         services.AddTransient<ILijstDialogService, LijstDialogService>();
@@ -99,6 +100,14 @@ public partial class App : Application
         services.AddScoped<IWerkBonWorkflowService, WerkBonWorkflowService>();
 
         services.AddSingleton<IPricingService, PricingService>();
+
+        // Enterprise import pipeline
+        services.AddTransient<IExcelParser, ClosedXmlExcelParser>();
+        services.AddTransient<IImportService, ImportService>();
+        services.AddTransient<IExcelMap<Klant>, KlantExcelMap>();
+        services.AddTransient<IImportValidator<Klant>, KlantImportValidator>();
+        services.AddTransient<IImportCommitter<Klant>, KlantImportCommitter>();
+        services.AddTransient<KlantImportDefinition>();
 
         // Import
         services.AddTransient<IExcelImportService, ExcelImportService>();

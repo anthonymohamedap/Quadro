@@ -1,20 +1,34 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using QuadroApp.Model.Import;
+using QuadroApp.Service.Import.Enterprise;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.ViewModels;
 using QuadroApp.Views;
+using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+
 namespace QuadroApp.Service
 {
     public sealed class DialogService : IDialogService
     {
         private readonly IWindowProvider _windowProvider;
+        private readonly IFilePickerService _filePicker;
+        private readonly IToastService _toast;
+        private readonly ILoggerFactory _loggerFactory;
 
-        public DialogService(IWindowProvider windowProvider)
+        public DialogService(
+            IWindowProvider windowProvider,
+            IFilePickerService filePicker,
+            IToastService toast,
+            ILoggerFactory loggerFactory)
         {
             _windowProvider = windowProvider;
+            _filePicker = filePicker;
+            _toast = toast;
+            _loggerFactory = loggerFactory;
         }
 
         public async Task<bool> ShowImportPreviewAsync(
@@ -23,34 +37,52 @@ namespace QuadroApp.Service
         {
             var owner = _windowProvider.GetMainWindow();
             if (owner == null)
+            {
                 return false;
+            }
 
-            bool result = false;
-
-            // 1️⃣ Maak window
+            var result = false;
             var window = new ImportPreviewWindow();
 
-            // 2️⃣ Sluit-actie (wordt door ViewModel aangeroepen)
             void Close(bool confirmed)
             {
                 result = confirmed;
                 window.Close(confirmed);
             }
 
-            // 3️⃣ Maak ViewModel MET close-action
-            var vm = new ImportPreviewViewModel(
-                previewRows,
-                issues,
-                Close
-            );
-
-            window.DataContext = vm;
-
-            // 4️⃣ Toon dialog (Avalonia-correct)
+            window.DataContext = new ImportPreviewViewModel(previewRows, issues, Close);
             await window.ShowDialog<bool>(owner);
-
             return result;
         }
+
+        public async Task<bool> ShowUnifiedImportPreviewAsync(IImportPreviewDefinition definition)
+        {
+            var owner = _windowProvider.GetMainWindow();
+            if (owner == null)
+            {
+                return false;
+            }
+
+            var result = false;
+            var window = new ImportPreviewView();
+
+            void Close(bool confirmed)
+            {
+                result = confirmed;
+                window.Close();
+            }
+
+            window.DataContext = new ImportPreviewViewModel(
+                definition,
+                _filePicker,
+                _toast,
+                _loggerFactory.CreateLogger<ImportPreviewViewModel>(),
+                Close);
+
+            await window.ShowDialog(owner);
+            return result;
+        }
+
         public async Task<bool> ShowKlantImportPreviewAsync(
             ObservableCollection<KlantPreviewRow> previewRows,
             ObservableCollection<ImportIssue> issues)
@@ -105,13 +137,13 @@ namespace QuadroApp.Service
 
         public async Task<bool> ConfirmAsync(string title, string message)
         {
-            // Simpele confirm voor nu (geen aparte dialog)
             await Task.CompletedTask;
             return true;
         }
+
         public async Task<bool> ShowAfwerkingImportPreviewAsync(
-    ObservableCollection<AfwerkingsOptiePreviewRow> previewRows,
-    ObservableCollection<ImportIssue> issues)
+            ObservableCollection<AfwerkingsOptiePreviewRow> previewRows,
+            ObservableCollection<ImportIssue> issues)
         {
             var owner = _windowProvider.GetMainWindow();
             if (owner == null) return false;
@@ -134,6 +166,5 @@ namespace QuadroApp.Service
             await window.ShowDialog<bool>(owner);
             return result;
         }
-
     }
 }

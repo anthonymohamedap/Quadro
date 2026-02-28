@@ -1,4 +1,5 @@
 ﻿using QuadroApp.Model.Import;
+using QuadroApp.Service.Import.Enterprise;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
@@ -13,12 +14,13 @@ namespace QuadroApp.Service.Interfaces
         Task ShowErrorAsync(string title, string message);
         Task<bool> ConfirmAsync(string title, string message);
         Task<bool> ShowKlantImportPreviewAsync(
-    ObservableCollection<KlantPreviewRow> previewRows,
-    ObservableCollection<ImportIssue> issues);
+            ObservableCollection<KlantPreviewRow> previewRows,
+            ObservableCollection<ImportIssue> issues);
 
         Task<bool> ShowAfwerkingImportPreviewAsync(
-    ObservableCollection<AfwerkingsOptiePreviewRow> previewRows,
-    ObservableCollection<ImportIssue> issues);
+            ObservableCollection<AfwerkingsOptiePreviewRow> previewRows,
+            ObservableCollection<ImportIssue> issues);
 
+        Task<bool> ShowUnifiedImportPreviewAsync(IImportPreviewDefinition definition);
     }
 }
