@@ -35,11 +35,13 @@ namespace QuadroApp.Service
             {
                 OfferteId = offerteId,
                 TotaalPrijsIncl = offerte.TotaalInclBtw,
-                Status = WerkBonStatus.Gepland
+                Status = WerkBonStatus.Gepland,
+                StockReservationProcessed = false
             };
 
             db.WerkBonnen.Add(werkBon);
             await db.SaveChangesAsync();
+            await _workflow.ReserveStockForWerkBonAsync(werkBon.Id);
 
             return werkBon;
         }

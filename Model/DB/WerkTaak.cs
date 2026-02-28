@@ -33,6 +33,13 @@ namespace QuadroApp.Model.DB
         [MaxLength(2000)]
         public string? WeekNotitie { get; set; }
 
+        public bool IsBesteld { get; set; }
+        public DateTime? BestelDatum { get; set; }
+        public bool IsOpVoorraad { get; set; }
+
+        [Precision(10, 2)]
+        public decimal BenodigdeMeter { get; set; }
+
         [Timestamp]
         public byte[]? RowVersion { get; set; }
     }

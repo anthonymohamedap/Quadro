@@ -28,6 +28,8 @@ namespace QuadroApp.ViewModels
 
         [ObservableProperty] private bool isDetailOpen;
 
+        [ObservableProperty] private DateTime? geselecteerdeBestelDatum = DateTime.Today;
+
         // Dropdown data
         public ObservableCollection<WerkBonStatus> WerkBonStatusOpties { get; } =
             new ObservableCollection<WerkBonStatus>(Enum.GetValues<WerkBonStatus>());
@@ -110,6 +112,7 @@ namespace QuadroApp.ViewModels
 
             SelectedWerkBonStatus = value.Status;
             SelectedOfferteStatus = value.Offerte?.Status;
+            GeselecteerdeBestelDatum = DateTime.Today;
         }
 
         [RelayCommand]
@@ -177,6 +180,20 @@ namespace QuadroApp.ViewModels
             SelectedOfferteStatus = OfferteStatus.Concept;
             SelectedWerkBonStatus = WerkBonStatus.Afgehaald; // kies wat je wil
             await SaveStatusAsync();
+        }
+
+        [RelayCommand]
+        private async Task MarkeerLijstAlsBesteldAsync(WerkTaak? taak)
+        {
+            if (taak is null)
+                return;
+
+            var bestelDatum = GeselecteerdeBestelDatum ?? DateTime.Today;
+            await _statusWorkflow.MarkLijstAsBesteldAsync(taak.Id, bestelDatum);
+
+            await LoadAsync();
+            if (SelectedWerkBon != null)
+                SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == SelectedWerkBon.Id);
         }
 
         [RelayCommand]
