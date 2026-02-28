@@ -160,10 +160,12 @@ namespace QuadroApp.ViewModels
                 await _statusWorkflow.ChangeOfferteStatusAsync(SelectedWerkBon.Offerte.Id, SelectedOfferteStatus.Value);
             }
 
+            var selectedWerkBonId = SelectedWerkBon.Id;
+
             await LoadAsync();
 
             // reselect
-            SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == SelectedWerkBon.Id);
+            SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == selectedWerkBonId);
         }
 
         /// <summary>
@@ -191,9 +193,11 @@ namespace QuadroApp.ViewModels
             var bestelDatum = GeselecteerdeBestelDatum ?? DateTime.Today;
             await _statusWorkflow.MarkLijstAsBesteldAsync(taak.Id, bestelDatum);
 
+            var selectedWerkBonId = SelectedWerkBon?.Id;
             await LoadAsync();
-            if (SelectedWerkBon != null)
-                SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == SelectedWerkBon.Id);
+
+            if (selectedWerkBonId.HasValue)
+                SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == selectedWerkBonId.Value);
         }
 
         [RelayCommand]
