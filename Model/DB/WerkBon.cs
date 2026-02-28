@@ -29,6 +29,7 @@ namespace QuadroApp.Model.DB
 
         public DateTime AangemaaktOp { get; set; } = DateTime.UtcNow;
         public DateTime? BijgewerktOp { get; set; }
+        public bool StockReservationProcessed { get; set; }
 
         [Timestamp] public byte[]? RowVersion { get; set; }
 

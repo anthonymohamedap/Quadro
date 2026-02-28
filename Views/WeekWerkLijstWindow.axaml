@@ -24,10 +24,10 @@
 					<TextBlock Text="QUADRO"
 							   FontSize="20"
 							   FontWeight="Bold"
-							   Foreground="White"/>
+							   Foreground="Black"/>
 					<TextBlock Text="{Binding Title}"
 							   FontSize="13"
-							   Foreground="#CCC"
+							   Foreground="Black"
 							   Margin="20,0,0,0"
 							   VerticalAlignment="Center"/>
 				</StackPanel>
@@ -36,13 +36,13 @@
 							Orientation="Horizontal"
 							Spacing="10"
 							VerticalAlignment="Center">
-					<TextBlock Text="{Binding Year}" Foreground="#EEE" VerticalAlignment="Center"/>
-					<TextBlock Text="{Binding WeekNr, StringFormat='Week {0}'}" Foreground="#EEE" VerticalAlignment="Center"/>
+					<TextBlock Text="{Binding Year}" Foreground="Black" VerticalAlignment="Center"/>
+					<TextBlock Text="{Binding WeekNr, StringFormat='Week {0}'}" Foreground="Black" VerticalAlignment="Center"/>
 
 					<Button Content="⬅️ Terug"
         Click="Close_Click"
         Background="#F5C242"
-        Foreground="#222"
+        Foreground="Black"
         FontWeight="Bold"
         CornerRadius="8"
         Padding="10,5"
@@ -60,7 +60,7 @@
 					<TextBlock Text="🖨 Weeklijst (print overzicht)"
 							   FontSize="22"
 							   FontWeight="Bold"
-							   Foreground="#222"/>
+							   Foreground="Black"/>
 
 					<!-- Blocks per klant -->
 					<ItemsControl ItemsSource="{Binding Blocks}">
@@ -73,7 +73,7 @@
 										<TextBlock Text="{Binding KlantNaam}"
 												   FontSize="18"
 												   FontWeight="Bold"
-												   Foreground="#222"/>
+												   Foreground="Black"/>
 									</Border>
 
 									<!-- Items -->
@@ -94,8 +94,8 @@
 														<StackPanel Grid.Column="0" Spacing="2">
 															<TextBlock Text="{Binding Stuks, StringFormat='{}{0} stuks in te lijsten:'}"
 																	   FontWeight="Bold"
-																	   Foreground="#222"/>
-															<TextBlock Text="{Binding Omschrijving}" Foreground="#222"/>
+																	   Foreground="Black"/>
+															<TextBlock Text="{Binding Omschrijving}" Foreground="Black"/>
 
 															<Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="16" Margin="0,6,0,0">
 																<TextBlock Text="{Binding Breedte, StringFormat='breedte : {0} cm'}" />
@@ -106,22 +106,34 @@
 
 															<TextBlock Text="{Binding ProductieDatum, StringFormat='productie op {0:dd/MM/yy}'}"
 																	   Margin="0,6,0,0"
-																	   Foreground="#444"/>
+																	   Foreground="Black"/>
 															<TextBlock Text="{Binding BonNr, StringFormat='bonnr. {0}'}"
-																	   Foreground="#444"/>
+																	   Foreground="Black"/>
 														</StackPanel>
 
 														<!-- Rechter kolom: inleg/artikel -->
 														<StackPanel Grid.Column="1" Spacing="4">
 															<TextBlock Text="{Binding Inleg1, StringFormat='inleg 1 : {0}'}"/>
 															<TextBlock Text="{Binding Inleg2, StringFormat='inleg 2 : {0}'}"/>
-															<TextBlock Text="artikel 1 :" Foreground="#444"/>
-															<TextBlock Text="artikel 2 :" Foreground="#444"/>
+															<TextBlock Text="artikel 1 :" Foreground="Black"/>
+															<TextBlock Text="artikel 2 :" Foreground="Black"/>
 														</StackPanel>
 
-														<!-- Notitie -->
-														<StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,10,0,0" Spacing="6">
-															<TextBlock Text="Notitie (blijft bewaard)" FontWeight="Bold" Foreground="#222"/>
+														<StackPanel Grid.Row="1" Grid.Column="0" Margin="0,10,0,0" Spacing="6">
+														<TextBlock Text="Op voorraad" Foreground="Black" IsVisible="{Binding IsOpVoorraad}"/>
+														<TextBlock Text="Bestellen vereist" Foreground="Black" IsVisible="{Binding !IsOpVoorraad}"/>
+														<TextBlock Text="{Binding BestelDatum, StringFormat='Besteld op: {0:dd/MM/yyyy}'}" Foreground="Black" IsVisible="{Binding IsBesteld}"/>
+														<StackPanel Orientation="Horizontal" Spacing="8">
+															<DatePicker SelectedDate="{Binding BestelDatumInput, Mode=TwoWay}"/>
+															<Button Content="Markeer besteld"
+																Command="{Binding $parent[Window].DataContext.MarkeerBesteldCommand}"
+																CommandParameter="{Binding}"/>
+														</StackPanel>
+													</StackPanel>
+
+													<!-- Notitie -->
+														<StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,10,0,0" Spacing="6">
+															<TextBlock Text="Notitie (blijft bewaard)" FontWeight="Bold" Foreground="Black"/>
 															<TextBox Text="{Binding Notitie, Mode=TwoWay}"
 																	 AcceptsReturn="True"
 																	 TextWrapping="Wrap"
@@ -170,11 +182,11 @@
 
 		<Style Selector="Button.MainBtn:pointerover">
 			<Setter Property="Background" Value="#F5C242"/>
-			<Setter Property="Foreground" Value="#222"/>
+			<Setter Property="Foreground" Value="Black"/>
 		</Style>
 
 		<Style Selector="TextBlock">
-			<Setter Property="Foreground" Value="#222"/>
+			<Setter Property="Foreground" Value="Black"/>
 		</Style>
 	</Window.Styles>
 </Window>

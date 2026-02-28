@@ -7,6 +7,7 @@
     xmlns:design="clr-namespace:Avalonia.Markup.Xaml;assembly=Avalonia.Markup"
     xmlns:conv="using:QuadroApp.Converters"
     x:Class="QuadroApp.Views.WerkBonLijstView"
+    x:Name="Root"
     x:DataType="vm:WerkBonLijstViewModel"
     d:DataContext="{d:DesignInstance vm:WerkBonLijstViewModel, IsDesignTimeCreatable=True}"
     Background="#F5F5F5">
@@ -35,10 +36,10 @@
 					<TextBlock Text="QUADRO"
 							   FontSize="20"
 							   FontWeight="Bold"
-							   Foreground="White"/>
+							   Foreground="Black"/>
 					<TextBlock Text="WERKBONNEN"
 							   FontSize="13"
-							   Foreground="#CCC"
+							   Foreground="Black"
 							   Margin="20,0,0,0"/>
 				</StackPanel>
 
@@ -159,7 +160,7 @@
 					</Border>
 
 					<TextBlock Text="{Binding WerkBonnen.Count, StringFormat='Aantal werkbonnen: {0}'}"
-							   Foreground="#666"
+							   Foreground="Black"
 							   HorizontalAlignment="Center"/>
 
 				</StackPanel>
@@ -195,7 +196,7 @@
 						<TextBlock Text="📌 Werkbon details"
 								   FontSize="22"
 								   FontWeight="Bold"
-								   Foreground="#222"/>
+								   Foreground="Black"/>
 
 						<!-- Als niets geselecteerd -->
 						<Border Background="#FFF8E1"
@@ -203,7 +204,7 @@
 								Padding="10"
 								IsVisible="{Binding !IsDetailOpen}">
 							<TextBlock Text="Selecteer links een werkbon om details te zien."
-									   Foreground="#333"/>
+									   Foreground="Black"/>
 						</Border>
 
 						<!-- Details -->
@@ -255,7 +256,7 @@
 							<TextBlock Text="🛠 WerkTaken"
 									   FontSize="18"
 									   FontWeight="SemiBold"
-									   Foreground="#222"/>
+									   Foreground="Black"/>
 
 							<Border Background="#FAFAFA"
 									BorderBrush="#DDD"
@@ -275,12 +276,20 @@
 													Padding="10"
 													Margin="0,0,0,8">
 												<StackPanel Spacing="4">
-													<TextBlock Text="{Binding Omschrijving}" FontWeight="Bold"/>
-													<TextBlock Text="{Binding DuurMinuten, StringFormat='Duur: {0} min'}" Foreground="#666"/>
-													<TextBlock Text="{Binding GeplandVan, StringFormat='Van: {0:dd/MM HH:mm}'}" Foreground="#666"/>
-													<TextBlock Text="{Binding GeplandTot, StringFormat='Tot: {0:dd/MM HH:mm}'}" Foreground="#666"/>
-													<TextBlock Text="{Binding OfferteRegel.TypeLijst.Artikelnummer, StringFormat='Lijst: {0}'}"
-															   Foreground="#666"/>
+													<TextBlock Text="{Binding Omschrijving}" FontWeight="Bold" Foreground="Black"/>
+													<TextBlock Text="{Binding DuurMinuten, StringFormat='Duur: {0} min'}" Foreground="Black"/>
+													<TextBlock Text="{Binding GeplandVan, StringFormat='Van: {0:dd/MM HH:mm}'}" Foreground="Black"/>
+													<TextBlock Text="{Binding GeplandTot, StringFormat='Tot: {0:dd/MM HH:mm}'}" Foreground="Black"/>
+													<TextBlock Text="{Binding OfferteRegel.TypeLijst.Artikelnummer, StringFormat='Lijst: {0}'}" Foreground="Black"/>
+													<TextBlock Text="Op voorraad" Foreground="Black" IsVisible="{Binding IsOpVoorraad}"/>
+													<TextBlock Text="Bestellen vereist" Foreground="Black" IsVisible="{Binding !IsOpVoorraad}"/>
+													<TextBlock Text="{Binding BestelDatum, StringFormat='Besteld op: {0:dd/MM/yyyy}'}" Foreground="Black" IsVisible="{Binding IsBesteld}"/>
+													<StackPanel Orientation="Horizontal" Spacing="8">
+														<DatePicker SelectedDate="{Binding #Root.DataContext.GeselecteerdeBestelDatum, Mode=TwoWay}"/>
+														<Button Content="Markeer besteld"
+																Command="{Binding #Root.DataContext.MarkeerLijstAlsBesteldCommand}"
+																CommandParameter="{Binding}"/>
+													</StackPanel>
 												</StackPanel>
 											</Border>
 										</DataTemplate>

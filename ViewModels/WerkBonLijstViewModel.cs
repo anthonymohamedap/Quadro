@@ -28,6 +28,8 @@ namespace QuadroApp.ViewModels
 
         [ObservableProperty] private bool isDetailOpen;
 
+        [ObservableProperty] private DateTimeOffset? geselecteerdeBestelDatum = DateTimeOffset.Now.Date;
+
         // Dropdown data
         public ObservableCollection<WerkBonStatus> WerkBonStatusOpties { get; } =
             new ObservableCollection<WerkBonStatus>(Enum.GetValues<WerkBonStatus>());
@@ -110,6 +112,7 @@ namespace QuadroApp.ViewModels
 
             SelectedWerkBonStatus = value.Status;
             SelectedOfferteStatus = value.Offerte?.Status;
+            GeselecteerdeBestelDatum = DateTimeOffset.Now.Date;
         }
 
         [RelayCommand]
@@ -121,7 +124,7 @@ namespace QuadroApp.ViewModels
             if (SelectedWerkBon == null)
                 return;
 
-            var vm = new PlanningCalendarViewModel(_factory, _workflow, _toast);
+            var vm = new PlanningCalendarViewModel(_factory, _workflow, _toast, _statusWorkflow);
             await vm.InitializeAsync(SelectedWerkBon.Id);
 
             var window = new QuadroApp.Views.PlanningCalendarWindow
@@ -157,10 +160,12 @@ namespace QuadroApp.ViewModels
                 await _statusWorkflow.ChangeOfferteStatusAsync(SelectedWerkBon.Offerte.Id, SelectedOfferteStatus.Value);
             }
 
+            var selectedWerkBonId = SelectedWerkBon.Id;
+
             await LoadAsync();
 
             // reselect
-            SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == SelectedWerkBon.Id);
+            SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == selectedWerkBonId);
         }
 
         /// <summary>
@@ -177,6 +182,22 @@ namespace QuadroApp.ViewModels
             SelectedOfferteStatus = OfferteStatus.Concept;
             SelectedWerkBonStatus = WerkBonStatus.Afgehaald; // kies wat je wil
             await SaveStatusAsync();
+        }
+
+        [RelayCommand]
+        private async Task MarkeerLijstAlsBesteldAsync(WerkTaak? taak)
+        {
+            if (taak is null)
+                return;
+
+            var bestelDatum = (GeselecteerdeBestelDatum ?? DateTimeOffset.Now.Date).Date;
+            await _statusWorkflow.MarkLijstAsBesteldAsync(taak.Id, bestelDatum);
+
+            var selectedWerkBonId = SelectedWerkBon?.Id;
+            await LoadAsync();
+
+            if (selectedWerkBonId.HasValue)
+                SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == selectedWerkBonId.Value);
         }
 
         [RelayCommand]

@@ -112,6 +112,7 @@ namespace QuadroApp.Data
             {
                 entity.Property(t => t.Omschrijving).HasMaxLength(200);
                 entity.Property(t => t.Resource).HasMaxLength(80);
+                entity.Property(t => t.BenodigdeMeter).HasPrecision(10, 2);
             });
             // OfferteRegel entity
             b.Entity<OfferteRegel>(entity =>
