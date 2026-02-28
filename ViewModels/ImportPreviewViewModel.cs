@@ -108,10 +108,7 @@ public partial class ImportPreviewViewModel : ObservableObject
             return;
         }
 
-        foreach (var issue in value.Issues
-                     .OrderBy(issue => GetSeveritySortKey(issue.Severity))
-                     .ThenBy(issue => issue.ColumnName)
-                     .ThenBy(issue => issue.RowNumber))
+        foreach (var issue in value.Issues)
         {
             SelectedRowIssues.Add(issue);
         }
@@ -121,13 +118,6 @@ public partial class ImportPreviewViewModel : ObservableObject
             SelectedRowValues.Add(pair);
         }
     }
-
-    private static int GetSeveritySortKey(Severity severity) => severity switch
-    {
-        Severity.Error => 0,
-        Severity.Warning => 1,
-        _ => 2
-    };
 
     [RelayCommand]
     private async Task ChooseFileAsync()
@@ -149,6 +139,7 @@ public partial class ImportPreviewViewModel : ObservableObject
             _toastService.Warning("Kies eerst een geldig Excel-bestand.");
             return;
         }
+    }
 
         _cts = new CancellationTokenSource();
 
@@ -161,11 +152,7 @@ public partial class ImportPreviewViewModel : ObservableObject
             _preview = await _definition.DryRunAsync(stream, _cts.Token);
 
             Rows.Clear();
-            var orderedRows = _preview.Rows
-                .OrderBy(row => row.IsValid ? 0 : 1)
-                .ThenBy(row => row.RowNumber);
-
-            foreach (var row in orderedRows)
+            foreach (var row in _preview.Rows)
             {
                 var values = row.Parsed is null
                     ? new Dictionary<string, string?>()
@@ -261,6 +248,26 @@ public partial class ImportPreviewViewModel : ObservableObject
         OnPropertyChanged(nameof(HasWarnings));
         OnPropertyChanged(nameof(CanConfirm));
     }
+}
+
+public sealed class PreviewRowItem
+{
+    public PreviewRowItem(int rowNumber, bool isValid, bool hasWarnings, IReadOnlyCollection<ImportRowIssue> issues, IReadOnlyDictionary<string, string?> values)
+    {
+        RowNumber = rowNumber;
+        IsValid = isValid;
+        HasWarnings = hasWarnings;
+        Issues = issues;
+        Values = values;
+    }
+
+    public int RowNumber { get; }
+    public bool IsValid { get; }
+    public bool HasWarnings { get; }
+    public IReadOnlyCollection<ImportRowIssue> Issues { get; }
+    public IReadOnlyDictionary<string, string?> Values { get; }
+    public string StateLabel => IsValid ? (HasWarnings ? "WAARSCHUWING" : "GELDIG") : "FOUTEN";
+    public string Title => $"Rij {RowNumber}";
 }
 
 public sealed class PreviewRowItem
