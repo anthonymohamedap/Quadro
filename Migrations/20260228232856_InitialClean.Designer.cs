@@ -11,8 +11,8 @@ using QuadroApp.Data;
 namespace QuadroApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251128140818_SyncModel_20251128")]
-    partial class SyncModel_20251128
+    [Migration("20260228232856_InitialClean")]
+    partial class InitialClean
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,7 +20,7 @@ namespace QuadroApp.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
 
-            modelBuilder.Entity("QuadroApp.Model.AfwerkingsGroep", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.AfwerkingsGroep", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -40,7 +40,7 @@ namespace QuadroApp.Migrations
                     b.ToTable("AfwerkingsGroepen");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.AfwerkingsOptie", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.AfwerkingsOptie", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -69,8 +69,8 @@ namespace QuadroApp.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Volgnummer")
-                        .HasColumnType("INTEGER");
+                    b.Property<char>("Volgnummer")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("WerkMinuten")
                         .HasColumnType("INTEGER");
@@ -89,7 +89,95 @@ namespace QuadroApp.Migrations
                     b.ToTable("AfwerkingsOpties");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.Instelling", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.ImportRowLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ImportSessionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("IssuesJson")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Success")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImportSessionId");
+
+                    b.ToTable("ImportRowLogs");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.ImportSession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("EntityName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("FinishedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Inserted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("InvalidRows")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Skipped")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TotalRows")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Updated")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ValidRows")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ImportSessions");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.Instelling", b =>
                 {
                     b.Property<string>("Sleutel")
                         .HasMaxLength(100)
@@ -105,7 +193,7 @@ namespace QuadroApp.Migrations
                     b.ToTable("Instellingen");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.Klant", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.Klant", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -148,48 +236,73 @@ namespace QuadroApp.Migrations
                     b.ToTable("Klanten");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.Leverancier", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.Leverancier", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Naam")
-                        .HasMaxLength(100)
+                        .IsRequired()
+                        .HasMaxLength(10)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Naam")
+                        .IsUnique();
+
                     b.ToTable("Leveranciers");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.Offerte", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.Offerte", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("BtwBedrag")
-                        .HasPrecision(10, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("Datum")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeadlineDatum")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("GeplandeDatum")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("GeschatteMinuten")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsVoorschotBetaald")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int?>("KlantId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<decimal>("KortingPct")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MeerPrijsIncl")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Opmerking")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal>("SubtotaalExBtw")
-                        .HasPrecision(10, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("TotaalInclBtw")
-                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("VoorschotBedrag")
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -199,7 +312,7 @@ namespace QuadroApp.Migrations
                     b.ToTable("Offertes");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.OfferteRegel", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.OfferteRegel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -256,6 +369,10 @@ namespace QuadroApp.Migrations
                     b.Property<int?>("OpklevenId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Opmerking")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
                     b.Property<int?>("PassePartout1Id")
                         .HasColumnType("INTEGER");
 
@@ -300,7 +417,7 @@ namespace QuadroApp.Migrations
                     b.ToTable("OfferteRegels");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.TypeLijst", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.TypeLijst", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -328,9 +445,9 @@ namespace QuadroApp.Migrations
                     b.Property<DateTime>("LaatsteUpdate")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("LeverancierCode")
+                    b.Property<string>("Levcode")
                         .IsRequired()
-                        .HasMaxLength(3)
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("LeverancierId")
@@ -377,7 +494,7 @@ namespace QuadroApp.Migrations
                     b.ToTable("TypeLijsten");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.WerkBon", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.WerkBon", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -390,7 +507,6 @@ namespace QuadroApp.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("BijgewerktOp")
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("TEXT");
 
                     b.Property<int>("OfferteId")
@@ -401,7 +517,12 @@ namespace QuadroApp.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
 
-                    b.Property<int>("Status")
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("StockReservationProcessed")
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("TotaalPrijsIncl")
@@ -410,16 +531,24 @@ namespace QuadroApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OfferteId");
+                    b.HasIndex("OfferteId")
+                        .IsUnique();
 
                     b.ToTable("WerkBonnen");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.WerkTaak", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.WerkTaak", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("BenodigdeMeter")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("BestelDatum")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("DuurMinuten")
                         .HasColumnType("INTEGER");
@@ -429,6 +558,15 @@ namespace QuadroApp.Migrations
 
                     b.Property<DateTime>("GeplandVan")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsBesteld")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsOpVoorraad")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("OfferteRegelId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Omschrijving")
                         .IsRequired()
@@ -444,6 +582,10 @@ namespace QuadroApp.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
 
+                    b.Property<string>("WeekNotitie")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("WerkBonId")
                         .HasColumnType("INTEGER");
 
@@ -451,26 +593,23 @@ namespace QuadroApp.Migrations
 
                     b.HasIndex("GeplandVan");
 
+                    b.HasIndex("OfferteRegelId");
+
                     b.HasIndex("WerkBonId");
 
-                    b.ToTable("WerkTaken", t =>
-                        {
-                            t.HasCheckConstraint("CK_WerkTaak_Duur_Positive", "[DuurMinuten] >= 1");
-
-                            t.HasCheckConstraint("CK_WerkTaak_Tot_After_Van", "[GeplandTot] > [GeplandVan]");
-                        });
+                    b.ToTable("WerkTaken");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.AfwerkingsOptie", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.AfwerkingsOptie", b =>
                 {
-                    b.HasOne("QuadroApp.Model.AfwerkingsGroep", "AfwerkingsGroep")
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsGroep", "AfwerkingsGroep")
                         .WithMany("Opties")
                         .HasForeignKey("AfwerkingsGroepId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("QuadroApp.Model.Leverancier", "Leverancier")
-                        .WithMany("AfwerkingsOpties")
+                    b.HasOne("QuadroApp.Model.DB.Leverancier", "Leverancier")
+                        .WithMany()
                         .HasForeignKey("LeverancierId")
                         .OnDelete(DeleteBehavior.SetNull);
 
@@ -479,55 +618,65 @@ namespace QuadroApp.Migrations
                     b.Navigation("Leverancier");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.Offerte", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.ImportRowLog", b =>
                 {
-                    b.HasOne("QuadroApp.Model.Klant", "Klant")
+                    b.HasOne("QuadroApp.Model.DB.ImportSession", "ImportSession")
+                        .WithMany("RowLogs")
+                        .HasForeignKey("ImportSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImportSession");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.Offerte", b =>
+                {
+                    b.HasOne("QuadroApp.Model.DB.Klant", "Klant")
                         .WithMany("Offertes")
-                        .HasForeignKey("KlantId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("KlantId");
 
                     b.Navigation("Klant");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.OfferteRegel", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.OfferteRegel", b =>
                 {
-                    b.HasOne("QuadroApp.Model.AfwerkingsOptie", "DiepteKern")
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsOptie", "DiepteKern")
                         .WithMany()
                         .HasForeignKey("DiepteKernId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("QuadroApp.Model.AfwerkingsOptie", "Glas")
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsOptie", "Glas")
                         .WithMany()
                         .HasForeignKey("GlasId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("QuadroApp.Model.Offerte", "Offerte")
+                    b.HasOne("QuadroApp.Model.DB.Offerte", "Offerte")
                         .WithMany("Regels")
                         .HasForeignKey("OfferteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("QuadroApp.Model.AfwerkingsOptie", "Opkleven")
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsOptie", "Opkleven")
                         .WithMany()
                         .HasForeignKey("OpklevenId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("QuadroApp.Model.AfwerkingsOptie", "PassePartout1")
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsOptie", "PassePartout1")
                         .WithMany()
                         .HasForeignKey("PassePartout1Id")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("QuadroApp.Model.AfwerkingsOptie", "PassePartout2")
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsOptie", "PassePartout2")
                         .WithMany()
                         .HasForeignKey("PassePartout2Id")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("QuadroApp.Model.AfwerkingsOptie", "Rug")
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsOptie", "Rug")
                         .WithMany()
                         .HasForeignKey("RugId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("QuadroApp.Model.TypeLijst", "TypeLijst")
+                    b.HasOne("QuadroApp.Model.DB.TypeLijst", "TypeLijst")
                         .WithMany()
                         .HasForeignKey("TypeLijstId")
                         .OnDelete(DeleteBehavior.NoAction);
@@ -549,9 +698,9 @@ namespace QuadroApp.Migrations
                     b.Navigation("TypeLijst");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.TypeLijst", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.TypeLijst", b =>
                 {
-                    b.HasOne("QuadroApp.Model.Leverancier", "Leverancier")
+                    b.HasOne("QuadroApp.Model.DB.Leverancier", "Leverancier")
                         .WithMany("TypeLijsten")
                         .HasForeignKey("LeverancierId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -560,51 +709,62 @@ namespace QuadroApp.Migrations
                     b.Navigation("Leverancier");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.WerkBon", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.WerkBon", b =>
                 {
-                    b.HasOne("QuadroApp.Model.Offerte", "Offerte")
-                        .WithMany()
-                        .HasForeignKey("OfferteId")
+                    b.HasOne("QuadroApp.Model.DB.Offerte", "Offerte")
+                        .WithOne("WerkBon")
+                        .HasForeignKey("QuadroApp.Model.DB.WerkBon", "OfferteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Offerte");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.WerkTaak", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.WerkTaak", b =>
                 {
-                    b.HasOne("QuadroApp.Model.WerkBon", "WerkBon")
+                    b.HasOne("QuadroApp.Model.DB.OfferteRegel", "OfferteRegel")
+                        .WithMany()
+                        .HasForeignKey("OfferteRegelId");
+
+                    b.HasOne("QuadroApp.Model.DB.WerkBon", "WerkBon")
                         .WithMany("Taken")
                         .HasForeignKey("WerkBonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("OfferteRegel");
+
                     b.Navigation("WerkBon");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.AfwerkingsGroep", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.AfwerkingsGroep", b =>
                 {
                     b.Navigation("Opties");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.Klant", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.ImportSession", b =>
+                {
+                    b.Navigation("RowLogs");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.Klant", b =>
                 {
                     b.Navigation("Offertes");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.Leverancier", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.Leverancier", b =>
                 {
-                    b.Navigation("AfwerkingsOpties");
-
                     b.Navigation("TypeLijsten");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.Offerte", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.Offerte", b =>
                 {
                     b.Navigation("Regels");
+
+                    b.Navigation("WerkBon");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.WerkBon", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.WerkBon", b =>
                 {
                     b.Navigation("Taken");
                 });

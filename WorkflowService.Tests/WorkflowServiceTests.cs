@@ -230,7 +230,7 @@ public class WorkflowServiceTests
     {
         await using var db = await factory.CreateDbContextAsync();
 
-        var leverancier = new Leverancier { Code = "LEV", Naam = "Leverancier" };
+        var leverancier = new Leverancier { Naam = "LEV" };
         db.Leveranciers.Add(leverancier);
 
         var lijst = new TypeLijst

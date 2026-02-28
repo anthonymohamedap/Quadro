@@ -16,7 +16,7 @@
     public decimal VasteKost { get; set; }
     public int WerkMinuten { get; set; }
 
-    public string? LeverancierCode { get; set; }
+    public string? Leverancier { get; set; }
 
     // alleen voor groep-resolve
     public int AfwerkingsGroepId { get; set; }

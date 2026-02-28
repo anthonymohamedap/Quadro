@@ -21,6 +21,7 @@ public partial class LijstDialog : Window
     {
         _editCopy.Id = lijst.Id;
         _editCopy.Artikelnummer = lijst.Artikelnummer;
+        _editCopy.Levcode = lijst.Levcode;
         _editCopy.Opmerking = lijst.Opmerking;
         _editCopy.BreedteCm = lijst.BreedteCm;
         _editCopy.PrijsPerMeter = lijst.PrijsPerMeter;
@@ -30,7 +31,6 @@ public partial class LijstDialog : Window
         _editCopy.WerkMinuten = lijst.WerkMinuten;
         _editCopy.LeverancierId = lijst.LeverancierId;
         _editCopy.LaatsteUpdate = lijst.LaatsteUpdate;
-        _editCopy.AlleLeveranciers = lijst.AlleLeveranciers;
         _editCopy.Leverancier = lijst.Leverancier;
 
         DataContext = _editCopy;

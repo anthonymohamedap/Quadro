@@ -85,7 +85,8 @@ public sealed class TypeLijstImportDefinition : IImportPreviewDefinition
         return new Dictionary<string, string?>
         {
             ["Artikelnummer"] = lijst.Artikelnummer,
-            ["LeverancierCode"] = lijst.Leverancier?.Code,
+            ["Leverancier"] = lijst.Leverancier?.Naam,
+            ["Levcode"] = lijst.Levcode,
             ["Type"] = lijst.Soort,
             ["Breedte (cm)"] = lijst.BreedteCm.ToString(),
             ["Stock"] = lijst.VoorraadMeter.ToString(),

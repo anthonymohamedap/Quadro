@@ -13,7 +13,8 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
     public IReadOnlyList<ExcelColumn<TypeLijst>> Columns { get; } =
     [
         Text("Artikelnummer", true, "Code"),
-        Text("LeverancierCode", false, "Levcode"),
+        Text("Leverancier", true, "LeverancierCode"),
+        Text("Levcode", false, "SupplierArticleCode"),
         Text("Soort", false, "Type"),
         Number("BreedteCm", true, "Breedte"),
         Decimal("PrijsPerMeter", false, "KostprijsPerM", "Kostprijs", "PrijsPerMeter"),
@@ -38,12 +39,15 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
             case "Artikelnummer":
                 target.Artikelnummer = cellText?.Trim() ?? string.Empty;
                 break;
-            case "LeverancierCode":
-                var code = cellText?.Trim();
-                if (!string.IsNullOrWhiteSpace(code))
+            case "Leverancier":
+                var naam = NormalizeLeverancierNaam(cellText);
+                if (!string.IsNullOrWhiteSpace(naam))
                 {
-                    target.Leverancier = new Leverancier { Code = code };
+                    target.Leverancier = new Leverancier { Naam = naam };
                 }
+                break;
+            case "Levcode":
+                target.Levcode = (cellText ?? string.Empty).Trim();
                 break;
             case "Soort":
                 target.Soort = cellText?.Trim() ?? string.Empty;
@@ -117,7 +121,8 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
     public string? GetCellText(TypeLijst source, string columnKey) => columnKey switch
     {
         "Artikelnummer" => source.Artikelnummer,
-        "LeverancierCode" => source.LeverancierCode,
+        "Leverancier" => source.Leverancier?.Naam,
+        "Levcode" => source.Levcode,
         "Soort" => source.Soort,
         "BreedteCm" => source.BreedteCm.ToString(CultureInfo.InvariantCulture),
         "PrijsPerMeter" => source.PrijsPerMeter.ToString(CultureInfo.InvariantCulture),
@@ -135,6 +140,9 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
     };
 
     public string GetKey(TypeLijst source) => source.Artikelnummer?.Trim().ToLowerInvariant() ?? string.Empty;
+
+    private static string NormalizeLeverancierNaam(string? raw)
+        => string.IsNullOrWhiteSpace(raw) ? string.Empty : raw.Trim().ToUpperInvariant();
 
     private static string MergeOpmerking(string? input, string existing, int part)
     {

@@ -45,13 +45,12 @@ public sealed class ExcelImportService : IExcelImportService
 
         await using var db = await _dbFactory.CreateDbContextAsync();
 
-        // ✅ SAFE leveranciers dictionary (geen crash bij duplicaten)
-        var leveranciersByCode = await db.Leveranciers
+        var leveranciersByNaam = await db.Leveranciers
             .AsNoTracking()
-            .Where(l => !string.IsNullOrWhiteSpace(l.Code))
-            .GroupBy(l => l.Code!.Trim())
+            .Where(l => !string.IsNullOrWhiteSpace(l.Naam))
+            .GroupBy(l => l.Naam.Trim().ToUpper())
             .Select(g => g.First())
-            .ToDictionaryAsync(l => l.Code!.Trim());
+            .ToDictionaryAsync(l => l.Naam.Trim().ToUpper());
 
         try
         {
@@ -78,7 +77,7 @@ public sealed class ExcelImportService : IExcelImportService
 
                 var preview = ExcelRowMapper.TryMapPreview(
                     r,
-                    leveranciersByCode,
+                    leveranciersByNaam,
                     rowNumber
                 );
 
@@ -116,13 +115,11 @@ public sealed class ExcelImportService : IExcelImportService
 
         await using var db = await _dbFactory.CreateDbContextAsync();
 
-        // ✅ leveranciers op code (trim + case-insensitive)
-        var leveranciersByCode = await db.Leveranciers
+        var leveranciersByNaam = await db.Leveranciers
             .AsTracking()
-            .Where(l => !string.IsNullOrWhiteSpace(l.Code))
-            .ToDictionaryAsync(l => l.Code!.Trim(), StringComparer.OrdinalIgnoreCase);
+            .Where(l => !string.IsNullOrWhiteSpace(l.Naam))
+            .ToDictionaryAsync(l => l.Naam.Trim().ToUpper(), StringComparer.OrdinalIgnoreCase);
 
-        // ✅ bestaande lijsten op artikelnummer (trim + case-insensitive)
         var bestaandeByArtikelnummer = await db.TypeLijsten
             .AsTracking()
             .Where(t => !string.IsNullOrWhiteSpace(t.Artikelnummer))
@@ -130,7 +127,6 @@ public sealed class ExcelImportService : IExcelImportService
 
         foreach (var r in rowList)
         {
-            // ✅ skip invalid rows
             if (r is null || !r.IsValid || string.IsNullOrWhiteSpace(r.Artikelnummer))
             {
                 skipped++;
@@ -138,29 +134,20 @@ public sealed class ExcelImportService : IExcelImportService
             }
 
             var artikel = r.Artikelnummer.Trim();
-
-            // leverancier code bepalen
-            var code = (r.LeverancierCode ?? "").Trim();
-            if (string.IsNullOrWhiteSpace(code))
-                code = "QDO";
-
-            // leverancier ophalen of aanmaken
-            if (!leveranciersByCode.TryGetValue(code, out var leverancier))
+            var leverancierNaam = NormalizeLeverancierNaam(r.Leverancier);
+            if (string.IsNullOrWhiteSpace(leverancierNaam))
             {
-                leverancier = new Leverancier
-                {
-                    Code = code,
-                    Naam = (code.Equals("QDO", StringComparison.OrdinalIgnoreCase))
-                        ? "Quadro Default"
-                        : (r.LeverancierNaam ?? code).Trim()
-                };
-
-                db.Leveranciers.Add(leverancier);
-                leveranciersByCode[code] = leverancier;
-                // ✅ nog geen SaveChanges nodig: EF tracked dit
+                skipped++;
+                continue;
             }
 
-            // 🔁 UPDATE
+            if (!leveranciersByNaam.TryGetValue(leverancierNaam, out var leverancier))
+            {
+                leverancier = new Leverancier { Naam = leverancierNaam };
+                db.Leveranciers.Add(leverancier);
+                leveranciersByNaam[leverancierNaam] = leverancier;
+            }
+
             if (bestaandeByArtikelnummer.TryGetValue(artikel, out var existing))
             {
                 existing.Opmerking = $"{r.Opmerking1 ?? ""}/{r.Opmerking2 ?? ""}".Trim('/');
@@ -169,20 +156,18 @@ public sealed class ExcelImportService : IExcelImportService
                 existing.MinimumVoorraad = r.Minstock;
                 existing.InventarisKost = r.Inventariskost;
                 existing.Soort = r.Type ?? existing.Soort;
+                existing.Levcode = (r.Levcode ?? string.Empty).Trim();
                 existing.LaatsteUpdate = DateTime.Now;
-
-                // ✅ zet FK expliciet (belangrijk)
-                existing.LeverancierId = leverancier.Id;
                 existing.Leverancier = leverancier;
 
                 updated++;
             }
-            // ➕ INSERT
             else
             {
                 var nieuw = new TypeLijst
                 {
                     Artikelnummer = artikel,
+                    Levcode = (r.Levcode ?? string.Empty).Trim(),
                     BreedteCm = r.BreedteCm,
                     Opmerking = $"{r.Opmerking1 ?? ""}/{r.Opmerking2 ?? ""}".Trim('/'),
                     PrijsPerMeter = 0m,
@@ -195,10 +180,7 @@ public sealed class ExcelImportService : IExcelImportService
                     VasteKost = 0m,
                     WerkMinuten = 0,
                     LaatsteUpdate = DateTime.Now,
-
-                    // ✅ zet FK expliciet
-                    Leverancier = leverancier,
-                    LeverancierId = leverancier.Id
+                    Leverancier = leverancier
                 };
 
                 db.TypeLijsten.Add(nieuw);
@@ -212,4 +194,6 @@ public sealed class ExcelImportService : IExcelImportService
         return new ImportCommitResult(added, updated, skipped);
     }
 
+    private static string NormalizeLeverancierNaam(string? naam)
+        => string.IsNullOrWhiteSpace(naam) ? string.Empty : naam.Trim().ToUpperInvariant();
 }

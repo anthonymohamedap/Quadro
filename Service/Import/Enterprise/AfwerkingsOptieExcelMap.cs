@@ -20,7 +20,7 @@ public sealed class AfwerkingsOptieExcelMap : IExcelMap<AfwerkingsOptie>
         Decimal("AfvalPercentage", false, "AfvalPerce", "AfvalPercentage"),
         Decimal("VasteKost", false),
         Number("WerkMinuten", false, "WerkMinu"),
-        Text("LeverancierCode", false)
+        Text("Leverancier", false, "LeverancierCode")
     ];
 
     public AfwerkingsOptie Create() => new();
@@ -76,11 +76,11 @@ public sealed class AfwerkingsOptieExcelMap : IExcelMap<AfwerkingsOptie>
                     target.WerkMinuten = werkMinuten;
                 }
                 break;
-            case "LeverancierCode":
-                var leverancierCode = cellText?.Trim();
-                if (!string.IsNullOrWhiteSpace(leverancierCode))
+            case "Leverancier":
+                var leverancierNaam = NormalizeLeverancierNaam(cellText);
+                if (!string.IsNullOrWhiteSpace(leverancierNaam))
                 {
-                    target.Leverancier = new Leverancier { Code = leverancierCode };
+                    target.Leverancier = new Leverancier { Naam = leverancierNaam };
                 }
                 break;
         }
@@ -96,7 +96,7 @@ public sealed class AfwerkingsOptieExcelMap : IExcelMap<AfwerkingsOptie>
         "AfvalPercentage" => source.AfvalPercentage.ToString(CultureInfo.InvariantCulture),
         "VasteKost" => source.VasteKost.ToString(CultureInfo.InvariantCulture),
         "WerkMinuten" => source.WerkMinuten.ToString(CultureInfo.InvariantCulture),
-        "LeverancierCode" => source.Leverancier?.Code,
+        "Leverancier" => source.Leverancier?.Naam,
         _ => null
     };
 
@@ -121,6 +121,10 @@ public sealed class AfwerkingsOptieExcelMap : IExcelMap<AfwerkingsOptie>
             _ => null
         };
     }
+
+
+    private static string NormalizeLeverancierNaam(string? raw)
+        => string.IsNullOrWhiteSpace(raw) ? string.Empty : raw.Trim().ToUpperInvariant();
 
     private static char? ParseVolgnummer(string? value)
     {

@@ -197,9 +197,9 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
         }
 
         // fallback: op code als Id ontbreekt
-        var code = (GeselecteerdeLijst.Leverancier?.Code ?? "").Trim();
-        if (!string.IsNullOrWhiteSpace(code))
-            SelectedLeverancier = Leveranciers.FirstOrDefault(l => string.Equals(l.Code, code, StringComparison.OrdinalIgnoreCase));
+        var naam = (GeselecteerdeLijst.Leverancier?.Naam ?? "").Trim();
+        if (!string.IsNullOrWhiteSpace(naam))
+            SelectedLeverancier = Leveranciers.FirstOrDefault(l => string.Equals(l.Naam, naam, StringComparison.OrdinalIgnoreCase));
     }
     public async Task InitializeAsync()
     {
@@ -331,8 +331,7 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
             Log("Loading leveranciers...");
             Leveranciers = await db.Leveranciers
                 .AsNoTracking()
-                .OrderBy(l => l.Code)
-                .ThenBy(l => l.Naam)
+                .OrderBy(l => l.Naam)
                 .ToListAsync();
             Log($"Loaded leveranciers: {Leveranciers.Count}");
 
@@ -394,7 +393,6 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
             var term = Zoekterm.Trim().ToLowerInvariant();
             var filtered = Lijsten.Where(l =>
                 (l.Artikelnummer ?? "").ToLowerInvariant().Contains(term) ||
-                (l.Leverancier?.Code ?? "").ToLowerInvariant().Contains(term) ||
                 (l.Leverancier?.Naam ?? "").ToLowerInvariant().Contains(term)
             );
 
@@ -626,7 +624,6 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
         {
             var term = LeverancierZoekterm.Trim().ToLowerInvariant();
             filtered = Leveranciers.Where(l =>
-                (l.Code ?? "").ToLowerInvariant().Contains(term) ||
                 (l.Naam ?? "").ToLowerInvariant().Contains(term));
         }
 
