@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Converters;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Avalonia.Media;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -182,19 +183,29 @@ public partial class App : Application
         if (Application.Current?.ApplicationLifetime
             is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var win = new Window
+            Dispatcher.UIThread.Post(() =>
             {
-                Width = 500,
-                Height = 200,
-                Content = new TextBlock
+                var win = new Window
                 {
-                    Text = "Er is een fout opgetreden.\nZie crash.log",
-                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
-                }
-            };
+                    Width = 500,
+                    Height = 200,
+                    Content = new TextBlock
+                    {
+                        Text = "Er is een fout opgetreden.\nZie crash.log",
+                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
+                    }
+                };
 
-            win.ShowDialog(desktop.MainWindow);
+                var owner = desktop.MainWindow;
+                if (owner is null)
+                {
+                    win.Show();
+                    return;
+                }
+
+                _ = win.ShowDialog(owner);
+            });
         }
     }
     private static async Task InitializeDatabaseAsync(IServiceProvider provider)
