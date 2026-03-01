@@ -1,9 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using QuadroApp.Data;
-using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
 using System;
-using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace QuadroApp.Service.Pricing;
@@ -11,28 +12,32 @@ namespace QuadroApp.Service.Pricing;
 public sealed class PricingService : IPricingService
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
+    private readonly IPricingSettingsProvider _settingsProvider;
+    private readonly PricingEngine _engine;
+    private readonly ILogger<PricingService> _logger;
 
-    public PricingService(IDbContextFactory<AppDbContext> dbFactory)
+    public PricingService(
+        IDbContextFactory<AppDbContext> dbFactory,
+        IPricingSettingsProvider settingsProvider,
+        PricingEngine engine,
+        ILogger<PricingService> logger)
     {
         _dbFactory = dbFactory;
+        _settingsProvider = settingsProvider;
+        _engine = engine;
+        _logger = logger;
     }
 
     public async Task BerekenAsync(int offerteId)
     {
-        Console.WriteLine("=== START BEREKEN ===");
-        Console.WriteLine($"OfferteId: {offerteId}");
+        var sw = Stopwatch.StartNew();
 
         await using var db = await _dbFactory.CreateDbContextAsync();
 
-        var inst = await db.Instellingen.ToDictionaryAsync(x => x.Sleutel, x => x.Waarde);
-        decimal uurloon = decimal.TryParse(inst.GetValueOrDefault("Uurloon"), out var u) ? u : 45m;
-        decimal btwPct = decimal.TryParse(inst.GetValueOrDefault("BtwPercent"), out var b) ? b : 21m;
-        decimal btwFactor = btwPct / 100m;
+        var uurloon = await _settingsProvider.GetUurloonAsync();
+        var btwPct = await _settingsProvider.GetBtwPercentAsync();
 
-        Console.WriteLine($"Uurloon: {uurloon}");
-        Console.WriteLine($"BTW%: {btwPct}");
-
-        var o = await db.Offertes
+        var offerte = await db.Offertes
             .Include(x => x.Regels).ThenInclude(r => r.TypeLijst)
             .Include(x => x.Regels).ThenInclude(r => r.Glas)
             .Include(x => x.Regels).ThenInclude(r => r.PassePartout1)
@@ -42,108 +47,35 @@ public sealed class PricingService : IPricingService
             .Include(x => x.Regels).ThenInclude(r => r.Rug)
             .FirstAsync(x => x.Id == offerteId);
 
-        Console.WriteLine($"Aantal regels: {o.Regels.Count}");
+        var result = _engine.Calculate(offerte, uurloon, btwPct);
 
-        decimal totaalRegelsEx = 0m;
-
-        foreach (var r in o.Regels)
+        foreach (var regel in offerte.Regels)
         {
-            Console.WriteLine($"-- Regel {r.Id}");
+            var regelResult = result.Regels.FirstOrDefault(x => x.RegelId == regel.Id);
+            if (regelResult is null)
+                continue;
 
-            decimal SurfaceM2()
-            {
-                var bw = r.InlegBreedteCm ?? r.BreedteCm;
-                var bh = r.InlegHoogteCm ?? r.HoogteCm;
-                return (bw * bh) / 10_000m;
-            }
-
-            decimal CalcOpt(AfwerkingsOptie? opt)
-            {
-                if (opt is null) return 0m;
-
-                var m2 = SurfaceM2();
-                var kost = opt.KostprijsPerM2 * m2 + opt.VasteKost;
-                var afval = kost * (opt.AfvalPercentage / 100m);
-                var arbeid = (opt.WerkMinuten / 60m) * uurloon;
-
-                return Math.Round((kost + afval) * (1m + opt.WinstMarge) + arbeid, 2);
-            }
-
-            decimal lijstPrijs = r.AfgesprokenPrijsExcl ?? 0m;
-
-            if (!r.AfgesprokenPrijsExcl.HasValue && r.TypeLijst is not null)
-            {
-                var perimMm =
-                    (r.BreedteCm + r.HoogteCm) * 2m * 10m
-                    + (r.TypeLijst.BreedteCm * 10m);
-
-                var lengteM = perimMm / 1000m;
-
-                var kost = r.TypeLijst.PrijsPerMeter * lengteM;
-                var afval = kost * (r.TypeLijst.AfvalPercentage / 100m);
-                var arbeid = (r.TypeLijst.WerkMinuten / 60m) * uurloon;
-
-                lijstPrijs = Math.Round(
-                    (kost + afval) * (1m + r.TypeLijst.WinstMargeFactor)
-                    + r.TypeLijst.VasteKost
-                    + arbeid,
-                    2);
-            }
-
-            var optiesEx =
-                CalcOpt(r.Glas) +
-                CalcOpt(r.PassePartout1) +
-                CalcOpt(r.PassePartout2) +
-                CalcOpt(r.DiepteKern) +
-                CalcOpt(r.Opkleven) +
-                CalcOpt(r.Rug);
-
-            decimal lineEx = lijstPrijs + optiesEx;
-            lineEx += (r.ExtraWerkMinuten / 60m) * uurloon;
-            lineEx += r.ExtraPrijs;
-            lineEx -= r.Korting;
-            lineEx = Math.Max(0m, lineEx) * Math.Max(1, r.AantalStuks);
-
-            Console.WriteLine($"RegelExcl: {lineEx}");
-
-            r.TotaalExcl = lineEx;
-            r.SubtotaalExBtw = lineEx;
-
-            totaalRegelsEx += lineEx;
+            regel.TotaalExcl = regelResult.TotaalExcl;
+            regel.SubtotaalExBtw = regelResult.SubtotaalExBtw;
+            regel.BtwBedrag = regelResult.BtwBedrag;
+            regel.TotaalInclBtw = regelResult.TotaalInclBtw;
         }
 
-        Console.WriteLine($"Totaal regels excl: {totaalRegelsEx}");
-
-        var kortingExcl = totaalRegelsEx * (o.KortingPct / 100m);
-        var meerPrijsIncl = o.MeerPrijsIncl;
-        var meerPrijsExcl = meerPrijsIncl / (1m + btwFactor);
-        var meerPrijsBtw = meerPrijsIncl - meerPrijsExcl;
-
-        var nieuwSubtotaalEx =
-            totaalRegelsEx
-            - kortingExcl
-            + meerPrijsExcl;
-
-        nieuwSubtotaalEx = Math.Max(0m, nieuwSubtotaalEx);
-
-        var btwRegels = nieuwSubtotaalEx * btwFactor;
-
-        var totaalIncl =
-            nieuwSubtotaalEx
-            + btwRegels
-            + meerPrijsBtw;
-
-        o.SubtotaalExBtw = Math.Round(nieuwSubtotaalEx, 2);
-        o.BtwBedrag = Math.Round(btwRegels + meerPrijsBtw, 2);
-        o.TotaalInclBtw = Math.Round(totaalIncl, 2);
-
-        Console.WriteLine($"Totaal Incl: {o.TotaalInclBtw}");
-
-        if (o.VoorschotBedrag > o.TotaalInclBtw)
-            o.VoorschotBedrag = o.TotaalInclBtw;
+        offerte.SubtotaalExBtw = result.SubtotaalExBtw;
+        offerte.BtwBedrag = result.BtwBedrag;
+        offerte.TotaalInclBtw = result.TotaalInclBtw;
+        offerte.VoorschotBedrag = result.VoorschotBedrag;
 
         await db.SaveChangesAsync();
 
-        Console.WriteLine("=== EINDE BEREKEN ===");
+        sw.Stop();
+        _logger.LogInformation(
+            "Pricing completed for OfferteId={OfferteId}. Regels={RegelCount}, SubtotaalEx={SubtotaalEx}, Btw={Btw}, TotaalIncl={TotaalIncl}, ElapsedMs={ElapsedMs}",
+            offerteId,
+            offerte.Regels.Count,
+            offerte.SubtotaalExBtw,
+            offerte.BtwBedrag,
+            offerte.TotaalInclBtw,
+            sw.ElapsedMilliseconds);
     }
 }
