@@ -59,6 +59,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             Jaar = jaar,
             VolgNr = volgNr,
             FactuurNummer = $"{jaar}-{volgNr}",
+            DocumentType = "Bestelbon",
             KlantNaam = BuildKlantNaam(klant),
             KlantAdres = BuildAdres(klant),
             KlantBtwNummer = klant?.BtwNummer,
@@ -117,6 +118,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         factuur.FactuurDatum = updated.FactuurDatum;
         factuur.VervalDatum = updated.VervalDatum;
         factuur.Opmerking = updated.Opmerking;
+        factuur.AangenomenDoorInitialen = updated.AangenomenDoorInitialen;
 
         foreach (var lijn in updated.Lijnen.Where(l => l.Id == 0))
         {

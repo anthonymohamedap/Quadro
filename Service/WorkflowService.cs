@@ -15,6 +15,7 @@ namespace QuadroApp.Service
         private readonly IDbContextFactory<AppDbContext> _factory;
         private readonly ILogger<WorkflowService> _logger;
         private readonly IToastService _toast;
+        private readonly IFactuurWorkflowService _factuurWorkflow;
 
         private static readonly IReadOnlyDictionary<OfferteStatus, HashSet<OfferteStatus>> OfferteTransitions =
             new Dictionary<OfferteStatus, HashSet<OfferteStatus>>
@@ -35,11 +36,16 @@ namespace QuadroApp.Service
                 [WerkBonStatus.Afgewerkt] = new() { WerkBonStatus.Afgehaald }
             };
 
-        public WorkflowService(IDbContextFactory<AppDbContext> factory, ILogger<WorkflowService> logger, IToastService toast)
+        public WorkflowService(
+            IDbContextFactory<AppDbContext> factory,
+            ILogger<WorkflowService> logger,
+            IToastService toast,
+            IFactuurWorkflowService factuurWorkflow)
         {
             _factory = factory ?? throw new ArgumentNullException(nameof(factory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _toast = toast ?? throw new ArgumentNullException(nameof(toast));
+            _factuurWorkflow = factuurWorkflow ?? throw new ArgumentNullException(nameof(factuurWorkflow));
         }
 
         public async Task ChangeOfferteStatusAsync(int offerteId, OfferteStatus newStatus)
@@ -108,6 +114,11 @@ namespace QuadroApp.Service
 
             werkBon.Status = newStatus;
             await db.SaveChangesAsync();
+
+            if (newStatus == WerkBonStatus.Afgewerkt)
+            {
+                await _factuurWorkflow.MaakFactuurVanWerkBonAsync(werkBonId);
+            }
 
             _logger.LogInformation(
                 "WerkBon {WerkBonId} status changed from {OldStatus} to {NewStatus} at {Timestamp}",

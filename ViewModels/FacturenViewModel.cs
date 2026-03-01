@@ -26,6 +26,7 @@ public partial class FacturenViewModel : ObservableObject, IAsyncInitializable
     [ObservableProperty] private DateTime factuurDatum;
     [ObservableProperty] private DateTime vervalDatum;
     [ObservableProperty] private string? opmerking;
+    [ObservableProperty] private string? aangenomenDoorInitialen;
 
     public ObservableCollection<FactuurLijn> Lijnen { get; } = new();
     public Array Statussen => Enum.GetValues(typeof(FactuurStatus));
@@ -82,6 +83,7 @@ public partial class FacturenViewModel : ObservableObject, IAsyncInitializable
         FactuurDatum = value.FactuurDatum;
         VervalDatum = value.VervalDatum;
         Opmerking = value.Opmerking;
+        AangenomenDoorInitialen = value.AangenomenDoorInitialen;
 
         foreach (var l in value.Lijnen.OrderBy(x => x.Sortering))
             Lijnen.Add(l);
@@ -95,6 +97,7 @@ public partial class FacturenViewModel : ObservableObject, IAsyncInitializable
         GeselecteerdeFactuur.FactuurDatum = FactuurDatum;
         GeselecteerdeFactuur.VervalDatum = VervalDatum;
         GeselecteerdeFactuur.Opmerking = Opmerking;
+        GeselecteerdeFactuur.AangenomenDoorInitialen = AangenomenDoorInitialen;
         GeselecteerdeFactuur.Lijnen = Lijnen;
 
         await _workflow.SaveDraftAsync(GeselecteerdeFactuur);

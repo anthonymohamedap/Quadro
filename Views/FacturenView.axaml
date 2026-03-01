@@ -25,7 +25,7 @@
       <StackPanel Spacing="12">
         <TextBlock Text="Factuurdetail" FontSize="20" FontWeight="Bold"/>
 
-        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
           <TextBlock Text="Factuurdatum"/>
           <DatePicker Grid.Column="1" SelectedDate="{Binding FactuurDatum, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
 
@@ -34,6 +34,9 @@
 
           <TextBlock Grid.Row="2" Text="Opmerking"/>
           <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Opmerking, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
+
+          <TextBlock Grid.Row="3" Text="Initialen"/>
+          <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding AangenomenDoorInitialen, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
         </Grid>
 
         <DataGrid ItemsSource="{Binding Lijnen}" AutoGenerateColumns="False" Height="300" IsReadOnly="True">

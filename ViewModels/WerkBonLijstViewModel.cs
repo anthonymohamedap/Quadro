@@ -154,6 +154,9 @@ namespace QuadroApp.ViewModels
             if (SelectedWerkBon == null)
                 return;
 
+            var wasAfgewerkt = SelectedWerkBon.Status == WerkBonStatus.Afgewerkt;
+            var wordtAfgewerkt = SelectedWerkBonStatus == WerkBonStatus.Afgewerkt;
+
             if (SelectedWerkBonStatus.HasValue && SelectedWerkBonStatus.Value != SelectedWerkBon.Status)
                 await _statusWorkflow.ChangeWerkBonStatusAsync(SelectedWerkBon.Id, SelectedWerkBonStatus.Value);
 
@@ -170,6 +173,12 @@ namespace QuadroApp.ViewModels
 
             // reselect
             SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == selectedWerkBonId);
+
+            if (!wasAfgewerkt && wordtAfgewerkt)
+            {
+                _toast.Success("Werkbon afgewerkt: bestelbon/factuur werd automatisch aangemaakt.");
+                await _nav.NavigateToAsync<FacturenViewModel>();
+            }
         }
 
         /// <summary>

@@ -29,6 +29,9 @@ public class Factuur
     [MaxLength(20)]
     public string FactuurNummer { get; set; } = string.Empty;
 
+    [MaxLength(30)]
+    public string DocumentType { get; set; } = "Bestelbon";
+
     [MaxLength(200)]
     public string KlantNaam { get; set; } = string.Empty;
 
@@ -43,6 +46,9 @@ public class Factuur
 
     [MaxLength(2000)]
     public string? Opmerking { get; set; }
+
+    [MaxLength(10)]
+    public string? AangenomenDoorInitialen { get; set; }
 
     public bool IsBtwVrijgesteld { get; set; }
 
@@ -66,4 +72,3 @@ public class Factuur
 
     public ICollection<FactuurLijn> Lijnen { get; set; } = new List<FactuurLijn>();
 }
-

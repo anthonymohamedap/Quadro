@@ -4,7 +4,6 @@ using QuestPDF.Infrastructure;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Service.Model;
-using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -20,59 +19,70 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     {
         Directory.CreateDirectory(exportFolder);
         var safeNumber = factuur.FactuurNummer.Replace('/', '-');
-        var path = Path.Combine(exportFolder, $"Factuur-{safeNumber}.pdf");
+        var path = Path.Combine(exportFolder, $"{factuur.DocumentType}-{safeNumber}.pdf");
+
+        var logoPath = Path.GetFullPath("Assets/Quadro_logo2012_RGB.jpg");
+        var logoBytes = File.Exists(logoPath) ? File.ReadAllBytes(logoPath) : null;
 
         var doc = Document.Create(container =>
         {
             container.Page(page =>
             {
-                page.Margin(32);
+                page.Margin(36);
                 page.Size(PageSizes.A4);
-                page.DefaultTextStyle(x => x.FontSize(10));
+                page.DefaultTextStyle(x => x.FontSize(11));
 
                 page.Header().Column(col =>
                 {
-                    col.Item().Text("QUADRO").FontSize(22).SemiBold();
-                    col.Item().Text("Factuur").FontSize(13).FontColor(Colors.Grey.Darken2);
-                });
+                    col.Spacing(6);
 
-                page.Content().Column(col =>
-                {
-                    col.Spacing(8);
+                    if (logoBytes is not null)
+                    {
+                        col.Item().AlignCenter().Height(70).Image(logoBytes, ImageScaling.FitHeight);
+                    }
+
                     col.Item().Row(row =>
                     {
                         row.RelativeItem().Column(c =>
                         {
-                            c.Item().Text("QUADRO");
-                            c.Item().Text("Atelierlaan 1");
-                            c.Item().Text("9000 Gent");
-                            c.Item().Text("BE 0123.456.789");
+                            c.Item().Text("QUADRO INLIJSTATELIER").SemiBold();
+                            c.Item().Text("LIERSESTEENWEG 64");
+                            c.Item().Text("3200 AARSCHOT");
+                            c.Item().Text("Telnr : 016/57.08.72");
                         });
 
-                        row.RelativeItem().Column(c =>
+                        row.RelativeItem().AlignRight().Column(c =>
                         {
-                            c.Item().Text(factuur.KlantNaam).SemiBold();
-                            if (!string.IsNullOrWhiteSpace(factuur.KlantAdres)) c.Item().Text(factuur.KlantAdres);
-                            if (!string.IsNullOrWhiteSpace(factuur.KlantBtwNummer)) c.Item().Text($"BTW: {factuur.KlantBtwNummer}");
-                        });
-
-                        row.RelativeItem().Column(c =>
-                        {
-                            c.Item().Text($"Factuur #: {factuur.FactuurNummer}");
-                            c.Item().Text($"Factuurdatum: {factuur.FactuurDatum:dd/MM/yyyy}");
-                            c.Item().Text($"Vervaldatum: {factuur.VervalDatum:dd/MM/yyyy}");
+                            c.Item().Text($"{factuur.DocumentType.ToLowerInvariant()}nr. {factuur.FactuurNummer}");
+                            c.Item().Text($"datum {factuur.FactuurDatum:dd/MM/yyyy}");
+                            c.Item().Text($"vervaldatum {factuur.VervalDatum:dd/MM/yyyy}");
+                            if (!string.IsNullOrWhiteSpace(factuur.AangenomenDoorInitialen))
+                                c.Item().Text($"initialen {factuur.AangenomenDoorInitialen}");
                         });
                     });
+
+                    col.Item().PaddingTop(4).Text("OPENINGSUREN: DINSDAG TOT VRIJDAG: 10-12U / 13-18U\nZATERDAG: 10-16U DOORLOPEND\nZONDAG EN MAANDAG GESLOTEN").Italic();
+                });
+
+                page.Content().PaddingTop(12).Column(col =>
+                {
+                    col.Spacing(8);
+
+                    col.Item().Text(factuur.KlantNaam).SemiBold();
+                    if (!string.IsNullOrWhiteSpace(factuur.KlantAdres))
+                        col.Item().Text(factuur.KlantAdres);
+                    if (!string.IsNullOrWhiteSpace(factuur.KlantBtwNummer))
+                        col.Item().Text($"BTW: {factuur.KlantBtwNummer}");
 
                     col.Item().PaddingTop(8).Table(t =>
                     {
                         t.ColumnsDefinition(def =>
                         {
                             def.RelativeColumn(4);
-                            def.RelativeColumn(1);
-                            def.RelativeColumn(1.3f);
-                            def.RelativeColumn(1);
-                            def.RelativeColumn(1.3f);
+                            def.RelativeColumn(0.9f);
+                            def.RelativeColumn(1.2f);
+                            def.RelativeColumn(0.8f);
+                            def.RelativeColumn(1.2f);
                         });
 
                         t.Header(h =>
@@ -87,41 +97,55 @@ public sealed class PdfFactuurExporter : IFactuurExporter
                         foreach (var lijn in factuur.Lijnen.OrderBy(x => x.Sortering))
                         {
                             t.Cell().Element(CellBody).Text(lijn.Omschrijving);
-                            t.Cell().Element(CellBody).AlignRight().Text($"{lijn.Aantal:0.##} {lijn.Eenheid}");
+                            t.Cell().Element(CellBody).AlignRight().Text($"{lijn.Aantal:0.##}");
                             t.Cell().Element(CellBody).AlignRight().Text(Eur(lijn.PrijsExcl));
                             t.Cell().Element(CellBody).AlignRight().Text($"{lijn.BtwPct:0.##}%");
                             t.Cell().Element(CellBody).AlignRight().Text(Eur(lijn.TotaalIncl));
                         }
                     });
 
-                    col.Item().AlignRight().Width(220).Table(t =>
+                    col.Item().PaddingTop(12).AlignRight().Width(260).Table(t =>
                     {
                         t.ColumnsDefinition(x =>
                         {
-                            x.RelativeColumn();
+                            x.RelativeColumn(1.4f);
                             x.RelativeColumn();
                         });
 
                         t.Cell().Text("Subtotaal");
                         t.Cell().AlignRight().Text(Eur(factuur.TotaalExclBtw));
-                        t.Cell().Text("BTW");
+
+                        var btwLabel = factuur.IsBtwVrijgesteld ? "Btw (0%)" : "Btw (21%)";
+                        t.Cell().Text(btwLabel);
                         t.Cell().AlignRight().Text(Eur(factuur.TotaalBtw));
+
                         t.Cell().Text("Totaal").SemiBold();
                         t.Cell().AlignRight().Text(Eur(factuur.TotaalInclBtw)).SemiBold();
                     });
 
                     if (factuur.IsBtwVrijgesteld)
                     {
-                        col.Item().PaddingTop(8).Text("BTW-vrijstelling van toepassing volgens artikel 44 van het BTW-wetboek.")
+                        col.Item().Text("BTW-vrijstelling van toepassing volgens artikel 44 van het BTW-wetboek.")
                             .Italic().FontColor(Colors.Grey.Darken1);
                     }
 
                     if (!string.IsNullOrWhiteSpace(factuur.Opmerking))
-                        col.Item().PaddingTop(6).Text($"Opmerking: {factuur.Opmerking}");
+                    {
+                        col.Item().Text($"Opmerking: {factuur.Opmerking}");
+                    }
+
+                    col.Item().PaddingTop(18).Text("VOOR AKKOORD : ______________________________");
                 });
 
-                page.Footer().Text("Algemene voorwaarden: betaling binnen 30 dagen op rekening BE00 0000 0000 0000.")
-                    .FontSize(8).FontColor(Colors.Grey.Darken1);
+                page.Footer().AlignCenter().Column(col =>
+                {
+                    col.Item().Text("Liersesteenweg 64 - 3200 Aarschot - T 016 57 08 72 - kaders@quadro.be - www.quadro.be")
+                        .FontSize(9);
+                    col.Item().Text("BTW BE 0636 525 975 - BE28 7343 0100 1820 - BIC KREDBEBB")
+                        .FontSize(9);
+                    col.Item().Text("Openingsuren : Di t/m Vr 10-12 & 13-18.00 - Za doorlopend 10-17 - Zo/Ma gesloten")
+                        .FontSize(9);
+                });
             });
         });
 
@@ -131,6 +155,9 @@ public sealed class PdfFactuurExporter : IFactuurExporter
 
     private static string Eur(decimal value) => $"€ {value.ToString("0.00", CultureInfo.InvariantCulture)}";
 
-    private static IContainer CellHeader(IContainer container) => container.BorderBottom(1).PaddingVertical(4).PaddingHorizontal(2).DefaultTextStyle(x => x.SemiBold());
-    private static IContainer CellBody(IContainer container) => container.BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).PaddingVertical(4).PaddingHorizontal(2);
+    private static IContainer CellHeader(IContainer container) =>
+        container.BorderBottom(1).BorderColor(Colors.Grey.Lighten1).PaddingVertical(5).PaddingHorizontal(2).DefaultTextStyle(x => x.SemiBold());
+
+    private static IContainer CellBody(IContainer container) =>
+        container.BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).PaddingVertical(4).PaddingHorizontal(2);
 }

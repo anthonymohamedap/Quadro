@@ -129,10 +129,12 @@ namespace QuadroApp.Data
             b.Entity<Factuur>(entity =>
             {
                 entity.Property(x => x.FactuurNummer).HasMaxLength(20).IsRequired();
+                entity.Property(x => x.DocumentType).HasMaxLength(30).IsRequired();
                 entity.Property(x => x.KlantNaam).HasMaxLength(200).IsRequired();
                 entity.Property(x => x.KlantAdres).HasMaxLength(250);
                 entity.Property(x => x.KlantBtwNummer).HasMaxLength(120);
                 entity.Property(x => x.Opmerking).HasMaxLength(2000);
+                entity.Property(x => x.AangenomenDoorInitialen).HasMaxLength(10);
                 entity.Property(x => x.ExportPad).HasMaxLength(500);
                 entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(30);
                 entity.Property(x => x.TotaalExclBtw).HasPrecision(18, 2);
