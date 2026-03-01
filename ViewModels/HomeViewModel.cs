@@ -22,6 +22,7 @@ namespace QuadroApp.ViewModels
         public IAsyncRelayCommand OpenWerkBonCommand { get; }
         public IAsyncRelayCommand OpenAfwerkingsOptiesCommand { get; }
         public IAsyncRelayCommand OpenLeveranciersCommand { get; }
+        public IAsyncRelayCommand OpenFacturenCommand { get; }
 
         public HomeViewModel(
             INavigationService nav,
@@ -43,6 +44,7 @@ namespace QuadroApp.ViewModels
             OpenLeveranciersCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<LeveranciersViewModel>());
             OpenOfferteCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OfferteViewModel>());
             OpenOffertesLijstCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OffertesLijstViewModel>());
+            OpenFacturenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<FacturenViewModel>());
             _toast = toast;
             _statusWorkflow = statusWorkflow;
         }

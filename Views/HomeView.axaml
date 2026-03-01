@@ -47,6 +47,10 @@
                             Command="{Binding OpenWerkBonCommand}"
                             Classes="NavButton"/>
 
+					<Button Content="🧾 Facturen"
+                            Command="{Binding OpenFacturenCommand}"
+                            Classes="NavButton"/>
+
 					<Button Content="📅 Planning"
                             Command="{Binding OpenPlanningCommand}"
                             Classes="NavButton"/>

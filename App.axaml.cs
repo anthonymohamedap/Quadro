@@ -97,7 +97,11 @@ public partial class App : Application
         services.AddScoped<IWorkflowService, QuadroApp.Service.WorkflowService>();
         services.AddScoped<IOfferteWorkflowService, OfferteWorkflowService>();
         services.AddScoped<IWerkBonWorkflowService, WerkBonWorkflowService>();
+        services.AddScoped<IFactuurWorkflowService, FactuurWorkflowService>();
+        services.AddScoped<IFactuurExportService, FactuurExportService>();
+        services.AddScoped<IFactuurExporter, PdfFactuurExporter>();
 
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         services.AddSingleton<IPricingService, PricingService>();
 
         // Enterprise import pipeline
@@ -143,6 +147,7 @@ public partial class App : Application
         services.AddTransient<OfferteViewModel>();
         services.AddTransient<KlantDetailViewModel>();
         services.AddTransient<WerkBonLijstViewModel>();
+        services.AddTransient<FacturenViewModel>();
 
         Services = services.BuildServiceProvider();
 

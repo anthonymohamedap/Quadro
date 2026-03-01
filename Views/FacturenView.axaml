@@ -1,0 +1,83 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:QuadroApp.ViewModels"
+             x:Class="QuadroApp.Views.FacturenView"
+             x:DataType="vm:FacturenViewModel"
+             Background="#F7F8FA"
+             Foreground="Black">
+  <UserControl.Styles>
+    <Style Selector="Button.FactuurActionButton">
+      <Setter Property="Background" Value="#F5C242"/>
+      <Setter Property="Foreground" Value="Black"/>
+      <Setter Property="BorderBrush" Value="#D7A514"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Padding" Value="12,8"/>
+    </Style>
+
+    <Style Selector="Button.FactuurActionButton:pointerover">
+      <Setter Property="Background" Value="#FFD769"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="1.1*,1.4*" Margin="24" ColumnSpacing="16">
+    <StackPanel Grid.Column="0" Spacing="10">
+      <TextBlock Text="Facturen" FontSize="24" FontWeight="Bold"/>
+      <TextBox Watermark="Filter op nummer / klant / status" Text="{Binding FilterTekst, Mode=TwoWay}"/>
+      <ListBox ItemsSource="{Binding Facturen}" SelectedItem="{Binding GeselecteerdeFactuur, Mode=TwoWay}" Height="600">
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+            <Grid ColumnDefinitions="1.2*,2*,1*" Margin="4">
+              <TextBlock Text="{Binding FactuurNummer}" FontWeight="SemiBold"/>
+              <TextBlock Grid.Column="1" Text="{Binding KlantNaam}"/>
+              <TextBlock Grid.Column="2" Text="{Binding Status}" HorizontalAlignment="Right"/>
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </StackPanel>
+
+    <Border Grid.Column="1" Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Padding="16">
+      <StackPanel Spacing="12">
+        <TextBlock Text="Factuurdetail" FontSize="20" FontWeight="Bold"/>
+
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+          <TextBlock Text="Factuurdatum"/>
+          <DatePicker Grid.Column="1" SelectedDate="{Binding FactuurDatum, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
+
+          <TextBlock Grid.Row="1" Text="Vervaldatum"/>
+          <DatePicker Grid.Row="1" Grid.Column="1" SelectedDate="{Binding VervalDatum, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
+
+          <TextBlock Grid.Row="2" Text="Opmerking"/>
+          <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Opmerking, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
+
+          <TextBlock Grid.Row="3" Text="Initialen"/>
+          <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding AangenomenDoorInitialen, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
+        </Grid>
+
+        <Border BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Background="#FAFAFA" Height="300" Padding="6">
+          <ListBox ItemsSource="{Binding Lijnen}" BorderThickness="0" Background="Transparent">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="2.6*,0.7*,0.9*,0.7*,0.9*" Margin="0,2">
+                  <TextBlock Text="{Binding Omschrijving}" TextWrapping="Wrap"/>
+                  <TextBlock Grid.Column="1" Text="{Binding Aantal}" HorizontalAlignment="Right"/>
+                  <TextBlock Grid.Column="2" Text="{Binding PrijsExcl}" HorizontalAlignment="Right"/>
+                  <TextBlock Grid.Column="3" Text="{Binding BtwPct}" HorizontalAlignment="Right"/>
+                  <TextBlock Grid.Column="4" Text="{Binding TotaalIncl}" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Border>
+
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Classes="FactuurActionButton" Content="Opslaan" Command="{Binding SaveCommand}"/>
+          <Button Classes="FactuurActionButton" Content="MarkeerKlaarVoorExport" Command="{Binding MarkeerKlaarVoorExportCommand}"/>
+          <Button Classes="FactuurActionButton" Content="Export PDF" Command="{Binding ExportPdfCommand}"/>
+          <Button Classes="FactuurActionButton" Content="Markeer Betaald" Command="{Binding MarkeerBetaaldCommand}"/>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+  </Grid>
+</UserControl>

@@ -21,6 +21,8 @@ namespace QuadroApp.Data
         public DbSet<Klant> Klanten => Set<Klant>();
         public DbSet<ImportSession> ImportSessions => Set<ImportSession>();
         public DbSet<ImportRowLog> ImportRowLogs => Set<ImportRowLog>();
+        public DbSet<Factuur> Facturen => Set<Factuur>();
+        public DbSet<FactuurLijn> FactuurLijnen => Set<FactuurLijn>();
 
 
         public AppDbContext(DbContextOptions<AppDbContext> opties) : base(opties) { }
@@ -122,6 +124,44 @@ namespace QuadroApp.Data
                     .WithMany(x => x.RowLogs)
                     .HasForeignKey(x => x.ImportSessionId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            b.Entity<Factuur>(entity =>
+            {
+                entity.Property(x => x.FactuurNummer).HasMaxLength(20).IsRequired();
+                entity.Property(x => x.DocumentType).HasMaxLength(30).IsRequired();
+                entity.Property(x => x.KlantNaam).HasMaxLength(200).IsRequired();
+                entity.Property(x => x.KlantAdres).HasMaxLength(250);
+                entity.Property(x => x.KlantBtwNummer).HasMaxLength(120);
+                entity.Property(x => x.Opmerking).HasMaxLength(2000);
+                entity.Property(x => x.AangenomenDoorInitialen).HasMaxLength(10);
+                entity.Property(x => x.ExportPad).HasMaxLength(500);
+                entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(30);
+                entity.Property(x => x.TotaalExclBtw).HasPrecision(18, 2);
+                entity.Property(x => x.TotaalBtw).HasPrecision(18, 2);
+                entity.Property(x => x.TotaalInclBtw).HasPrecision(18, 2);
+
+                entity.HasOne(x => x.WerkBon)
+                    .WithOne()
+                    .HasForeignKey<Factuur>(x => x.WerkBonId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasMany(x => x.Lijnen)
+                    .WithOne(x => x.Factuur)
+                    .HasForeignKey(x => x.FactuurId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            b.Entity<FactuurLijn>(entity =>
+            {
+                entity.Property(x => x.Omschrijving).HasMaxLength(500).IsRequired();
+                entity.Property(x => x.Eenheid).HasMaxLength(20);
+                entity.Property(x => x.Aantal).HasPrecision(18, 2);
+                entity.Property(x => x.PrijsExcl).HasPrecision(18, 2);
+                entity.Property(x => x.BtwPct).HasPrecision(5, 2);
+                entity.Property(x => x.TotaalExcl).HasPrecision(18, 2);
+                entity.Property(x => x.TotaalBtw).HasPrecision(18, 2);
+                entity.Property(x => x.TotaalIncl).HasPrecision(18, 2);
             });
 
             // ───────── WerkBon ─────────
