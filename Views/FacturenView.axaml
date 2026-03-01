@@ -3,7 +3,8 @@
              xmlns:vm="using:QuadroApp.ViewModels"
              x:Class="QuadroApp.Views.FacturenView"
              x:DataType="vm:FacturenViewModel"
-             Background="#F7F8FA">
+             Background="#F7F8FA"
+             Foreground="Black">
   <Grid ColumnDefinitions="1.1*,1.4*" Margin="24" ColumnSpacing="16">
     <StackPanel Grid.Column="0" Spacing="10">
       <TextBlock Text="Facturen" FontSize="24" FontWeight="Bold"/>

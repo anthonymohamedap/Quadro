@@ -23,8 +23,8 @@ public partial class FacturenViewModel : ObservableObject, IAsyncInitializable
     [ObservableProperty] private Factuur? geselecteerdeFactuur;
     [ObservableProperty] private string filterTekst = string.Empty;
 
-    [ObservableProperty] private DateTime factuurDatum;
-    [ObservableProperty] private DateTime vervalDatum;
+    [ObservableProperty] private DateTimeOffset? factuurDatum;
+    [ObservableProperty] private DateTimeOffset? vervalDatum;
     [ObservableProperty] private string? opmerking;
     [ObservableProperty] private string? aangenomenDoorInitialen;
 
@@ -81,8 +81,8 @@ public partial class FacturenViewModel : ObservableObject, IAsyncInitializable
         if (value is null)
             return;
 
-        FactuurDatum = value.FactuurDatum;
-        VervalDatum = value.VervalDatum;
+        FactuurDatum = new DateTimeOffset(value.FactuurDatum);
+        VervalDatum = new DateTimeOffset(value.VervalDatum);
         Opmerking = value.Opmerking;
         AangenomenDoorInitialen = value.AangenomenDoorInitialen;
 
@@ -95,8 +95,8 @@ public partial class FacturenViewModel : ObservableObject, IAsyncInitializable
     private async Task SaveAsync()
     {
         if (GeselecteerdeFactuur is null) return;
-        GeselecteerdeFactuur.FactuurDatum = FactuurDatum;
-        GeselecteerdeFactuur.VervalDatum = VervalDatum;
+        GeselecteerdeFactuur.FactuurDatum = (FactuurDatum ?? DateTimeOffset.Now).Date;
+        GeselecteerdeFactuur.VervalDatum = (VervalDatum ?? DateTimeOffset.Now).Date;
         GeselecteerdeFactuur.Opmerking = Opmerking;
         GeselecteerdeFactuur.AangenomenDoorInitialen = AangenomenDoorInitialen;
         GeselecteerdeFactuur.Lijnen = Lijnen;
