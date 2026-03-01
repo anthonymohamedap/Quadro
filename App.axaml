@@ -50,6 +50,10 @@
 		<DataTemplate DataType="vm:WerkBonLijstViewModel">
 			<views:WerkBonLijstView/>
 		</DataTemplate>
+
+		<DataTemplate DataType="{x:Type vm:FacturenViewModel}">
+			<views:FacturenView/>
+		</DataTemplate>
 	</Application.DataTemplates>
 
 </Application>
