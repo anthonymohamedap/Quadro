@@ -1,0 +1,58 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:QuadroApp.ViewModels"
+             x:Class="QuadroApp.Views.FacturenView"
+             x:DataType="vm:FacturenViewModel"
+             Background="#F7F8FA">
+  <Grid ColumnDefinitions="1.1*,1.4*" Margin="24" ColumnSpacing="16">
+    <StackPanel Grid.Column="0" Spacing="10">
+      <TextBlock Text="Facturen" FontSize="24" FontWeight="Bold"/>
+      <TextBox Watermark="Filter op nummer / klant / status" Text="{Binding FilterTekst, Mode=TwoWay}"/>
+      <ListBox ItemsSource="{Binding Facturen}" SelectedItem="{Binding GeselecteerdeFactuur, Mode=TwoWay}" Height="600">
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+            <Grid ColumnDefinitions="1.2*,2*,1*" Margin="4">
+              <TextBlock Text="{Binding FactuurNummer}" FontWeight="SemiBold"/>
+              <TextBlock Grid.Column="1" Text="{Binding KlantNaam}"/>
+              <TextBlock Grid.Column="2" Text="{Binding Status}" HorizontalAlignment="Right"/>
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </StackPanel>
+
+    <Border Grid.Column="1" Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Padding="16">
+      <StackPanel Spacing="12">
+        <TextBlock Text="Factuurdetail" FontSize="20" FontWeight="Bold"/>
+
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+          <TextBlock Text="Factuurdatum"/>
+          <DatePicker Grid.Column="1" SelectedDate="{Binding FactuurDatum, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
+
+          <TextBlock Grid.Row="1" Text="Vervaldatum"/>
+          <DatePicker Grid.Row="1" Grid.Column="1" SelectedDate="{Binding VervalDatum, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
+
+          <TextBlock Grid.Row="2" Text="Opmerking"/>
+          <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Opmerking, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
+        </Grid>
+
+        <DataGrid ItemsSource="{Binding Lijnen}" AutoGenerateColumns="False" Height="300" IsReadOnly="True">
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="Beschrijving" Binding="{Binding Omschrijving}" Width="*"/>
+            <DataGridTextColumn Header="Aantal" Binding="{Binding Aantal}" Width="80"/>
+            <DataGridTextColumn Header="Prijs excl." Binding="{Binding PrijsExcl}" Width="100"/>
+            <DataGridTextColumn Header="Btw" Binding="{Binding BtwPct}" Width="80"/>
+            <DataGridTextColumn Header="Totaal" Binding="{Binding TotaalIncl}" Width="100"/>
+          </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Content="Opslaan" Command="{Binding SaveCommand}"/>
+          <Button Content="MarkeerKlaarVoorExport" Command="{Binding MarkeerKlaarVoorExportCommand}"/>
+          <Button Content="Export PDF" Command="{Binding ExportPdfCommand}"/>
+          <Button Content="Markeer Betaald" Command="{Binding MarkeerBetaaldCommand}"/>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+  </Grid>
+</UserControl>

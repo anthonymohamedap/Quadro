@@ -1,0 +1,48 @@
+﻿using Microsoft.EntityFrameworkCore;
+using QuadroApp.Data;
+using QuadroApp.Model.DB;
+using QuadroApp.Service.Interfaces;
+using QuadroApp.Service.Model;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace QuadroApp.Service;
+
+public sealed class FactuurExportService : IFactuurExportService
+{
+    private readonly IDbContextFactory<AppDbContext> _factory;
+    private readonly IReadOnlyDictionary<ExportFormaat, IFactuurExporter> _exporters;
+
+    public FactuurExportService(IDbContextFactory<AppDbContext> factory, IEnumerable<IFactuurExporter> exporters)
+    {
+        _factory = factory;
+        _exporters = exporters.ToDictionary(x => x.Formaat, x => x);
+    }
+
+    public async Task<ExportResult> ExportAsync(int factuurId, ExportFormaat formaat, string exportFolder)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        var factuur = await db.Facturen.Include(x => x.Lijnen.OrderBy(l => l.Sortering)).FirstOrDefaultAsync(x => x.Id == factuurId);
+        if (factuur is null)
+            throw new InvalidOperationException("Factuur niet gevonden.");
+
+        if (factuur.Status != FactuurStatus.KlaarVoorExport)
+            throw new InvalidOperationException("Export mag enkel vanuit status KlaarVoorExport.");
+
+        if (!_exporters.TryGetValue(formaat, out var exporter))
+            throw new InvalidOperationException($"Geen exporter geregistreerd voor formaat {formaat}.");
+
+        var result = await exporter.ExportAsync(factuur, exportFolder);
+        if (!result.Success)
+            return result;
+
+        factuur.Status = FactuurStatus.Geexporteerd;
+        factuur.ExportPad = result.BestandPad;
+        factuur.BijgewerktOp = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        return result;
+    }
+}
