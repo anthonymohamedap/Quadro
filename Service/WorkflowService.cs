@@ -17,6 +17,22 @@ namespace QuadroApp.Service
         private readonly IToastService _toast;
         private readonly IFactuurWorkflowService _factuurWorkflow;
 
+        private sealed class NoOpFactuurWorkflowService : IFactuurWorkflowService
+        {
+            public Task<Factuur> MaakFactuurVanWerkBonAsync(int werkBonId) =>
+                Task.FromResult(new Factuur { WerkBonId = werkBonId });
+
+            public Task<Factuur?> GetFactuurAsync(int factuurId) => Task.FromResult<Factuur?>(null);
+
+            public Task MarkeerKlaarVoorExportAsync(int factuurId) => Task.CompletedTask;
+
+            public Task MarkeerBetaaldAsync(int factuurId) => Task.CompletedTask;
+
+            public Task SaveDraftAsync(Factuur factuur) => Task.CompletedTask;
+
+            public Task HerberekenTotalenAsync(int factuurId) => Task.CompletedTask;
+        }
+
         private static readonly IReadOnlyDictionary<OfferteStatus, HashSet<OfferteStatus>> OfferteTransitions =
             new Dictionary<OfferteStatus, HashSet<OfferteStatus>>
             {
@@ -46,6 +62,15 @@ namespace QuadroApp.Service
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _toast = toast ?? throw new ArgumentNullException(nameof(toast));
             _factuurWorkflow = factuurWorkflow ?? throw new ArgumentNullException(nameof(factuurWorkflow));
+        }
+
+        // Backward-compatible constructor for older test/setup code paths
+        public WorkflowService(
+            IDbContextFactory<AppDbContext> factory,
+            ILogger<WorkflowService> logger,
+            IToastService toast)
+            : this(factory, logger, toast, new NoOpFactuurWorkflowService())
+        {
         }
 
         public async Task ChangeOfferteStatusAsync(int offerteId, OfferteStatus newStatus)
