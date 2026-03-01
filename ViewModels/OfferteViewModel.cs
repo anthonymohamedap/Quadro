@@ -318,13 +318,16 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
             GefilterdeKlanten.Add(k);
     }
     // ====== Load offerte ======
-    public async Task LoadAsync(int offerteId)
+    public async Task LoadAsync(int offerteId) => await LoadAsync(offerteId, reloadCatalog: true);
+
+    private async Task LoadAsync(int offerteId, bool reloadCatalog)
     {
         _suppressRecalc = true;
 
         try
         {
-            await LoadCatalogAsync(); // altijd eerst catalog laden
+            if (reloadCatalog)
+                await LoadCatalogAsync(); // altijd eerst catalog laden
 
             await using var db = await _dbFactory.CreateDbContextAsync();
 
@@ -429,7 +432,9 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
     }
     // ====== Save ======
     [RelayCommand]
-    private async Task SaveAsync()
+    private async Task SaveAsync() => await SaveCoreAsync(reloadAfterSave: true);
+
+    private async Task SaveCoreAsync(bool reloadAfterSave)
     {
         if (Offerte is null) return;
         if (IsBusy) return;
@@ -455,6 +460,8 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
 
 
             // NEW: eerst offerte opslaan zodat Id bestaat
+            var shouldSaveAtEnd = true;
+
             if (Offerte.Id == 0)
             {
                 db.Offertes.Add(Offerte);
@@ -490,6 +497,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
                 }
 
                 await db.SaveChangesAsync();
+                shouldSaveAtEnd = false;
             }
             else
             {
@@ -591,12 +599,16 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
             // upsert regels
 
 
-            await db.SaveChangesAsync();
+            if (shouldSaveAtEnd)
+                await db.SaveChangesAsync();
 
             _toast.Success("Offerte opgeslagen");
 
-            // ✅ reload met includes zodat UI zeker klopt
-            await LoadAsync(Offerte.Id);
+            if (reloadAfterSave)
+            {
+                // ✅ reload met includes zodat UI zeker klopt
+                await LoadAsync(Offerte.Id, reloadCatalog: false);
+            }
         }
         catch (Exception ex)
         {
@@ -791,7 +803,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
             IsBusy = true;
 
             if (Offerte.Id == 0)
-                await SaveAsync();
+                await SaveCoreAsync(reloadAfterSave: false);
 
             if (Offerte.Id == 0)
                 return;
@@ -801,7 +813,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
             _suppressRecalc = true;
             try
             {
-                await LoadAsync(Offerte.Id);
+                await LoadAsync(Offerte.Id, reloadCatalog: false);
             }
             finally
             {
@@ -833,7 +845,9 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
 
             // Zorg dat alles eerst opgeslagen is
             if (Offerte.Id == 0)
-                await SaveAsync();
+                await SaveCoreAsync(reloadAfterSave: false);
+
+            var shouldSaveAtEnd = true;
 
             if (Offerte.Id == 0)
             {

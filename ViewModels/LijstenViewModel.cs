@@ -7,6 +7,7 @@ using QuadroApp.Model.Import;
 using QuadroApp.Service.Import;
 using QuadroApp.Service.Import.Enterprise;
 using QuadroApp.Service.Interfaces;
+using QuadroApp.Service.Pricing;
 using QuadroApp.Validation;
 using System;
 using System.Collections.Generic;
@@ -303,15 +304,7 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
             : $"💰 Geschatte verkoopprijs: € {BerekenPrijs(GeselecteerdeLijst, Breedte, Hoogte, Werkloon):F2}";
 
     private static decimal BerekenPrijs(TypeLijst lijst, decimal breedteCm, decimal hoogteCm, decimal werkloon)
-    {
-        var lengteMeter = ((breedteCm + hoogteCm) * 2m + 10m * (lijst.BreedteCm / 10m)) / 100m;
-        var kost = lijst.PrijsPerMeter * lengteMeter;
-        var marge = kost * lijst.WinstMargeFactor;
-        var afval = kost * (lijst.AfvalPercentage / 100m);
-        var werk = lijst.WerkMinuten > 0 ? werkloon * (lijst.WerkMinuten / 60m) : 0m;
-
-        return marge + afval + lijst.VasteKost;
-    }
+        => PricingEngine.CalculateLijstPrijsExcl(lijst, breedteCm, hoogteCm, werkloon);
 
     [RelayCommand]
     private async Task LoadAsync()

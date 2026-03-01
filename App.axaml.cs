@@ -101,6 +101,8 @@ public partial class App : Application
         services.AddScoped<IFactuurExporter, PdfFactuurExporter>();
 
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+        services.AddSingleton<PricingEngine>();
+        services.AddSingleton<IPricingSettingsProvider, PricingSettingsProvider>();
         services.AddSingleton<IPricingService, PricingService>();
 
         // Enterprise import pipeline
