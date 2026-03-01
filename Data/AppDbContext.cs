@@ -77,7 +77,9 @@ namespace QuadroApp.Data
 
             b.Entity<Leverancier>(entity =>
             {
-                entity.Property(x => x.Naam).HasMaxLength(10);
+                entity.Property(x => x.Naam)
+                    .HasMaxLength(3)
+                    .IsRequired();
                 entity.HasIndex(x => x.Naam).IsUnique();
             });
 

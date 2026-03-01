@@ -7,7 +7,8 @@ namespace QuadroApp.Model.DB
     {
         public int Id { get; set; }
 
-        [MaxLength(10)]
+        [Required]
+        [MaxLength(3)]
         public string Naam { get; set; } = null!;
 
         public ICollection<TypeLijst> TypeLijsten { get; set; } = new List<TypeLijst>();

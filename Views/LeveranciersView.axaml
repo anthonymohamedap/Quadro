@@ -1,0 +1,188 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:QuadroApp.ViewModels"
+    xmlns:m="using:QuadroApp.Model.DB"
+    xmlns:conv="using:QuadroApp.Converters"
+    x:Class="QuadroApp.Views.LeveranciersView"
+    x:DataType="vm:LeveranciersViewModel"
+    Background="#F5F5F5">
+
+	<UserControl.Resources>
+		<conv:BoolToThicknessConverter x:Key="BoolToThicknessSlide"
+                                       WhenTrue="0"
+                                       WhenFalse="520,0,-520,0"/>
+		<conv:BoolToDoubleConverter x:Key="BoolToOpacity"
+                                    WhenTrue="1"
+                                    WhenFalse="0"/>
+	</UserControl.Resources>
+
+	<Grid RowDefinitions="Auto,*">
+		<Border Grid.ColumnSpan="2" Background="#444A50" Height="70">
+			<DockPanel LastChildFill="False" Margin="20,0">
+				<StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
+					<Ellipse Width="35" Height="35" Fill="#F5C242"/>
+					<TextBlock Text="QUADRO" Foreground="White" FontWeight="Bold" FontSize="20" VerticalAlignment="Center"/>
+					<TextBlock Text="Leveranciers" Foreground="#CCC" FontSize="13" Margin="5,0,0,0" VerticalAlignment="Center"/>
+				</StackPanel>
+				<Button Content="⬅️ Terug"
+                        Command="{Binding GaTerugCommand}"
+                        DockPanel.Dock="Right"
+                        Margin="0,10,10,0"
+                        Background="#F5C242"
+                        Foreground="#222"
+                        FontWeight="Bold"
+                        CornerRadius="8"
+                        Padding="10,5"
+                        Width="100"
+                        Height="32"/>
+			</DockPanel>
+		</Border>
+
+		<Grid Grid.Row="1" Margin="20" ColumnDefinitions="*,Auto" ColumnSpacing="20">
+			<StackPanel Grid.Column="0" Spacing="14">
+				<TextBlock Text="Leveranciers" FontSize="22" FontWeight="Bold"/>
+
+				<Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="10">
+					<TextBox Grid.Column="0"
+                             Width="280"
+                             Height="34"
+                             Watermark="Zoek leveranciercode…"
+                             Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+					<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+						<Button Content="Nieuw" Command="{Binding NieuwCommand}" Classes="MainBtn"/>
+						<Button Content="🗑️" Command="{Binding VerwijderCommand}" Classes="IconBtn"/>
+					</StackPanel>
+				</Grid>
+
+				<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+					<Button Content="◀ Vorige" Command="{Binding PrevLeveranciersPageCommand}" Classes="MainBtn"/>
+					<TextBlock VerticalAlignment="Center"
+                               Text="{Binding LeveranciersPageLabel}"/>
+					<Button Content="Volgende ▶" Command="{Binding NextLeveranciersPageCommand}" Classes="MainBtn"/>
+				</StackPanel>
+
+				<Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8">
+					<ListBox ItemsSource="{Binding Leveranciers}" SelectedItem="{Binding SelectedLeverancier, Mode=TwoWay}">
+						<ListBox.ItemTemplate>
+							<DataTemplate x:DataType="m:Leverancier">
+								<Border Padding="10,8">
+									<TextBlock Text="{Binding Naam}" FontWeight="SemiBold"/>
+								</Border>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
+				</Border>
+			</StackPanel>
+
+			<Border Grid.Column="1"
+                    Width="520"
+                    Padding="24"
+                    Background="White"
+                    CornerRadius="10"
+                    BorderBrush="#E0E0E0"
+                    BorderThickness="1"
+                    IsHitTestVisible="{Binding IsDetailOpen}">
+				<Border.Transitions>
+					<Transitions>
+						<ThicknessTransition Property="Margin" Duration="0:0:0.2"/>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Border.Transitions>
+
+				<Border.Margin>
+					<Binding Path="IsDetailOpen" Converter="{StaticResource BoolToThicknessSlide}"/>
+				</Border.Margin>
+				<Border.Opacity>
+					<Binding Path="IsDetailOpen" Converter="{StaticResource BoolToOpacity}"/>
+				</Border.Opacity>
+
+				<StackPanel Spacing="12">
+					<TextBlock Text="Leverancier detail" FontSize="22" FontWeight="Bold"/>
+
+					<Grid ColumnDefinitions="2*,3*" RowDefinitions="Auto" ColumnSpacing="14">
+						<TextBlock Text="Naam (3 tekens)" Grid.Column="0" FontWeight="Bold"/>
+						<TextBox Grid.Column="1" Text="{Binding SelectedLeverancier.Naam, Mode=TwoWay}" MaxLength="3"/>
+					</Grid>
+
+					<StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+						<Button Content="Opslaan" Command="{Binding OpslaanCommand}" Classes="MainBtn"/>
+						<Button Content="Sluiten" Command="{Binding SluitenCommand}" Classes="MainBtn"/>
+					</StackPanel>
+
+					<Separator Margin="0,10,0,10"/>
+					<TextBlock Text="Gekoppelde TypeLijsten" FontSize="16" FontWeight="SemiBold"/>
+
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+						<Button Content="◀ Vorige" Command="{Binding PrevLijstenPageCommand}" Classes="MainBtn"/>
+						<TextBlock VerticalAlignment="Center"
+                               Text="{Binding LijstenPageLabel}"/>
+						<Button Content="Volgende ▶" Command="{Binding NextLijstenPageCommand}" Classes="MainBtn"/>
+					</StackPanel>
+
+					<Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8">
+						<StackPanel>
+							<Border Background="#F3F4F6" Padding="10,6" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1">
+								<Grid ColumnDefinitions="1.5*,1.2*,1*" ColumnSpacing="12">
+									<TextBlock Text="Artikelnummer" FontWeight="SemiBold"/>
+									<TextBlock Grid.Column="1" Text="Levcode" FontWeight="SemiBold"/>
+									<TextBlock Grid.Column="2" Text="VoorraadMeter" FontWeight="SemiBold"/>
+								</Grid>
+							</Border>
+
+							<ListBox ItemsSource="{Binding LijstenVanLeverancier}" BorderThickness="0" Background="Transparent">
+								<ListBox.ItemTemplate>
+									<DataTemplate x:DataType="m:TypeLijst">
+										<Border Padding="10,6">
+											<Grid ColumnDefinitions="1.5*,1.2*,1*" ColumnSpacing="12">
+												<TextBlock Text="{Binding Artikelnummer}"/>
+												<TextBlock Grid.Column="1" Text="{Binding Levcode}"/>
+												<TextBlock Grid.Column="2" Text="{Binding VoorraadMeter, StringFormat='{}{0:0.##}'}"/>
+											</Grid>
+										</Border>
+									</DataTemplate>
+								</ListBox.ItemTemplate>
+							</ListBox>
+						</StackPanel>
+					</Border>
+				</StackPanel>
+			</Border>
+		</Grid>
+	</Grid>
+
+	<UserControl.Styles>
+		<Style Selector="Button.MainBtn">
+			<Setter Property="Background" Value="#444A50"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="FontWeight" Value="Bold"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="BorderBrush" Value="Transparent"/>
+			<Setter Property="FontSize" Value="15"/>
+			<Setter Property="Padding" Value="10,5"/>
+		</Style>
+		<Style Selector="Button.MainBtn:pointerover">
+			<Setter Property="Background" Value="#F5C242"/>
+			<Setter Property="Foreground" Value="#222"/>
+		</Style>
+
+		<Style Selector="Button.IconBtn">
+			<Setter Property="Width" Value="40"/>
+			<Setter Property="Height" Value="40"/>
+			<Setter Property="FontSize" Value="18"/>
+			<Setter Property="CornerRadius" Value="6"/>
+			<Setter Property="Background" Value="#444A50"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="FontWeight" Value="Bold"/>
+			<Setter Property="BorderBrush" Value="Transparent"/>
+			<Setter Property="Margin" Value="2"/>
+		</Style>
+		<Style Selector="Button.IconBtn:pointerover">
+			<Setter Property="Background" Value="#F5C242"/>
+			<Setter Property="Foreground" Value="#222"/>
+		</Style>
+
+		<Style Selector="TextBlock">
+			<Setter Property="Foreground" Value="Black"/>
+		</Style>
+	</UserControl.Styles>
+</UserControl>

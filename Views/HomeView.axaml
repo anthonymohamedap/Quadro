@@ -31,6 +31,10 @@
                             Command="{Binding OpenLijstenCommand}"
                             Classes="NavButton"/>
 
+					<Button Content="🏷️ Leveranciers"
+                            Command="{Binding OpenLeveranciersCommand}"
+                            Classes="NavButton"/>
+
 					<Button Content="🧩 Afwerkingen"
                             Command="{Binding OpenAfwerkingsOptiesCommand}"
                             Classes="NavButton"/>
@@ -122,6 +126,19 @@
                                        Foreground="Black"
                                        FontWeight="SemiBold"/>
 							<TextBlock Text="Type-lijsten en prijzen"
+                                       FontSize="12"
+                                       Foreground="#5F6C7B"/>
+						</StackPanel>
+					</Button>
+
+					<Button Classes="CardButton"
+                            Command="{Binding OpenLeveranciersCommand}">
+						<StackPanel Spacing="6">
+							<TextBlock Text="🏷️ Leveranciers"
+                                       FontSize="16"
+                                       Foreground="Black"
+                                       FontWeight="SemiBold"/>
+							<TextBlock Text="Beheer leverancierscodes"
                                        FontSize="12"
                                        Foreground="#5F6C7B"/>
 						</StackPanel>
