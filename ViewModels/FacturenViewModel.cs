@@ -60,6 +60,7 @@ public partial class FacturenViewModel : ObservableObject, IAsyncInitializable
     public async Task InitializeAsync()
     {
         await using var db = await _factory.CreateDbContextAsync();
+        await FactuurSchemaUpgrade.EnsureAsync(db);
         var query = db.Facturen.Include(x => x.Lijnen).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(FilterTekst))

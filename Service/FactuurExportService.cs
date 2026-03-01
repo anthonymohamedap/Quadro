@@ -24,6 +24,7 @@ public sealed class FactuurExportService : IFactuurExportService
     public async Task<ExportResult> ExportAsync(int factuurId, ExportFormaat formaat, string exportFolder)
     {
         await using var db = await _factory.CreateDbContextAsync();
+        await FactuurSchemaUpgrade.EnsureAsync(db);
         var factuur = await db.Facturen.Include(x => x.Lijnen.OrderBy(l => l.Sortering)).FirstOrDefaultAsync(x => x.Id == factuurId);
         if (factuur is null)
             throw new InvalidOperationException("Factuur niet gevonden.");
