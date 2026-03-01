@@ -3,8 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Converters;
 using Avalonia.Markup.Xaml;
-using Avalonia.Threading;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -14,14 +14,13 @@ using QuadroApp.Service;
 using QuadroApp.Service.Import;
 using QuadroApp.Service.Import.Enterprise;
 using QuadroApp.Service.Interfaces;
-using QuadroApp.Service.Toast;
 using QuadroApp.Service.Pricing;
+using QuadroApp.Service.Toast;
 using QuadroApp.Validation;
 using QuadroApp.ViewModels;
 using System;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 namespace QuadroApp;
 
@@ -221,7 +220,6 @@ public partial class App : Application
         await using var db = await factory.CreateDbContextAsync();
 
         Console.WriteLine("[DB] Resetting demo database...");
-        await db.Database.EnsureDeletedAsync();
         await db.Database.EnsureCreatedAsync();
 
         // Seed data (single source of truth)
