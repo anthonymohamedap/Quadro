@@ -1,6 +1,7 @@
 ﻿using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using Microsoft.Extensions.Logging;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Service.Model;
@@ -13,6 +14,13 @@ namespace QuadroApp.Service;
 
 public sealed class PdfFactuurExporter : IFactuurExporter
 {
+    private readonly ILogger<PdfFactuurExporter>? _logger;
+
+    public PdfFactuurExporter(ILogger<PdfFactuurExporter>? logger = null)
+    {
+        _logger = logger;
+    }
+
     public ExportFormaat Formaat => ExportFormaat.Pdf;
 
     public Task<ExportResult> ExportAsync(Factuur factuur, string exportFolder)
@@ -20,6 +28,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         Directory.CreateDirectory(exportFolder);
         var safeNumber = factuur.FactuurNummer.Replace('/', '-');
         var path = Path.Combine(exportFolder, $"{factuur.DocumentType}-{safeNumber}.pdf");
+        _logger?.LogInformation("PDF export map gegarandeerd: {Folder}", exportFolder);
 
         var logoPath = Path.GetFullPath("Assets/Quadro_logo2012_RGB.jpg");
         var logoBytes = File.Exists(logoPath) ? File.ReadAllBytes(logoPath) : null;
@@ -150,7 +159,15 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         });
 
         doc.GeneratePdf(path);
-        return Task.FromResult(ExportResult.Ok(path));
+
+        if (!File.Exists(path))
+        {
+            _logger?.LogError("PDF export mislukt: bestand niet gevonden na generate. Verwacht pad: {Pad}", path);
+            return Task.FromResult(ExportResult.Fail("PDF export mislukt: bestand niet aangemaakt."));
+        }
+
+        _logger?.LogInformation("PDF export succesvol geschreven: {Pad}", path);
+        return Task.FromResult(ExportResult.Ok(path, $"Export gelukt: {path}"));
     }
 
     private static string Eur(decimal value) => $"€ {value.ToString("0.00", CultureInfo.InvariantCulture)}";

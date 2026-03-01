@@ -7,6 +7,7 @@ using QuadroApp.Service.Interfaces;
 using QuadroApp.Service.Model;
 using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -117,7 +118,11 @@ public partial class FacturenViewModel : ObservableObject, IAsyncInitializable
     private async Task ExportPdfAsync()
     {
         if (GeselecteerdeFactuur is null) return;
-        var result = await _exportService.ExportAsync(GeselecteerdeFactuur.Id, ExportFormaat.Pdf, "exports");
+
+        var exportFolder = Path.Combine(AppContext.BaseDirectory, "exports");
+        Directory.CreateDirectory(exportFolder);
+
+        var result = await _exportService.ExportAsync(GeselecteerdeFactuur.Id, ExportFormaat.Pdf, exportFolder);
         if (result.Success) _toast.Success(result.Message);
         else _toast.Error(result.Message);
         await InitializeAsync();
