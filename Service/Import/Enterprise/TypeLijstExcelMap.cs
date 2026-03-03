@@ -132,7 +132,52 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
         return decimal.TryParse(input, out value);
     }
 
-    private static ExcelColumn<TypeLijst> Text(string key, bool required, params string[] aliases) => new(key, required, ColumnKind.Text, aliases);
-    private static ExcelColumn<TypeLijst> Decimal(string key, bool required, params string[] aliases) => new(key, required, ColumnKind.Decimal, aliases);
-    private static ExcelColumn<TypeLijst> Number(string key, bool required, params string[] aliases) => new(key, required, ColumnKind.Number, aliases);
+    private static ExcelColumn<TypeLijst> Text(string key, bool required = false, params string[] aliases) => new()
+    {
+        Key = key,
+        Header = key,
+        Aliases = aliases,
+        Required = required,
+        Parser = value => !required || !string.IsNullOrWhiteSpace(value)
+            ? (true, value, null)
+            : (false, null, $"Kolom {key} is verplicht.")
+    };
+
+    private static ExcelColumn<TypeLijst> Number(string key, bool required = false, params string[] aliases) => new()
+    {
+        Key = key,
+        Header = key,
+        Aliases = aliases,
+        Required = required,
+        Parser = value =>
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return required ? (false, null, $"Kolom {key} is verplicht.") : (true, null, null);
+            }
+
+            return TryParseInt(value, out _)
+                ? (true, value, null)
+                : (false, null, $"Kolom {key} bevat geen geldig geheel getal.");
+        }
+    };
+
+    private static ExcelColumn<TypeLijst> Decimal(string key, bool required = false, params string[] aliases) => new()
+    {
+        Key = key,
+        Header = key,
+        Aliases = aliases,
+        Required = required,
+        Parser = value =>
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return required ? (false, null, $"Kolom {key} is verplicht.") : (true, null, null);
+            }
+
+            return TryParseDecimal(value, out _)
+                ? (true, value, null)
+                : (false, null, $"Kolom {key} bevat geen geldig decimaal getal.");
+        }
+    };
 }
