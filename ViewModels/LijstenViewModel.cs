@@ -3,8 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
-using QuadroApp.Model.Import;
-using QuadroApp.Service.Import;
 using QuadroApp.Service.Import.Enterprise;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Service.Pricing;
@@ -665,7 +663,7 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
         await db.SaveChangesAsync();
 
         OnPropertyChanged(nameof(VerkoopPrijsPreview));
-        _toast.ShowSuccess("Prijsinstellingen opgeslagen");
+        _toast.Success("Prijsinstellingen opgeslagen");
     }
 
     private static async Task<decimal> ReadDecimalInstellingAsync(AppDbContext db, string sleutel, decimal fallback)
