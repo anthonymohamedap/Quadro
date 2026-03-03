@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Service.Interfaces;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace QuadroApp.Service.Pricing;
