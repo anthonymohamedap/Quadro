@@ -156,6 +156,7 @@ public sealed class ExcelImportService : IExcelImportService
                 existing.MinimumVoorraad = r.Minstock;
                 existing.InventarisKost = r.Inventariskost;
                 existing.Soort = r.Type ?? existing.Soort;
+                existing.IsStaaflijst = string.Equals(existing.Soort, "HOU", StringComparison.OrdinalIgnoreCase);
                 existing.Levcode = (r.Levcode ?? string.Empty).Trim();
                 existing.LaatsteUpdate = DateTime.Now;
                 existing.Leverancier = leverancier;
@@ -175,10 +176,9 @@ public sealed class ExcelImportService : IExcelImportService
                     InventarisKost = r.Inventariskost,
                     VoorraadMeter = r.Stock,
                     MinimumVoorraad = r.Minstock,
-                    WinstMargeFactor = 0.25m,
-                    AfvalPercentage = 0m,
                     VasteKost = 0m,
                     WerkMinuten = 0,
+                    IsStaaflijst = string.Equals(r.Type, "HOU", StringComparison.OrdinalIgnoreCase),
                     LaatsteUpdate = DateTime.Now,
                     Leverancier = leverancier
                 };

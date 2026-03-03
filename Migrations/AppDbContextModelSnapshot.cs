@@ -86,6 +86,157 @@ namespace QuadroApp.Migrations
                     b.ToTable("AfwerkingsOpties");
                 });
 
+            modelBuilder.Entity("QuadroApp.Model.DB.Factuur", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AangemaaktOp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AangenomenDoorInitialen")
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("BijgewerktOp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExportPad")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("FactuurDatum")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FactuurNummer")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsBtwVrijgesteld")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Jaar")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("KlantAdres")
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("KlantBtwNummer")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("KlantNaam")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Opmerking")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotaalBtw")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotaalExclBtw")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotaalInclBtw")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("VervalDatum")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("VolgNr")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("WerkBonId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WerkBonId")
+                        .IsUnique();
+
+                    b.HasIndex("Jaar", "VolgNr")
+                        .IsUnique();
+
+                    b.ToTable("Facturen");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.FactuurLijn", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Aantal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("BtwPct")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Eenheid")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("FactuurId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Omschrijving")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("PrijsExcl")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Sortering")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("TotaalBtw")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotaalExcl")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotaalIncl")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FactuurId");
+
+                    b.ToTable("FactuurLijnen");
+                });
+
             modelBuilder.Entity("QuadroApp.Model.DB.ImportRowLog", b =>
                 {
                     b.Property<int>("Id")
@@ -241,7 +392,7 @@ namespace QuadroApp.Migrations
 
                     b.Property<string>("Naam")
                         .IsRequired()
-                        .HasMaxLength(10)
+                        .HasMaxLength(3)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -420,10 +571,6 @@ namespace QuadroApp.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal>("AfvalPercentage")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Artikelnummer")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -437,6 +584,9 @@ namespace QuadroApp.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsDealer")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsStaaflijst")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("LaatsteUpdate")
@@ -479,10 +629,6 @@ namespace QuadroApp.Migrations
 
                     b.Property<int>("WerkMinuten")
                         .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("WinstMargeFactor")
-                        .HasPrecision(6, 3)
-                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -615,6 +761,28 @@ namespace QuadroApp.Migrations
                     b.Navigation("Leverancier");
                 });
 
+            modelBuilder.Entity("QuadroApp.Model.DB.Factuur", b =>
+                {
+                    b.HasOne("QuadroApp.Model.DB.WerkBon", "WerkBon")
+                        .WithOne()
+                        .HasForeignKey("QuadroApp.Model.DB.Factuur", "WerkBonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("WerkBon");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.FactuurLijn", b =>
+                {
+                    b.HasOne("QuadroApp.Model.DB.Factuur", "Factuur")
+                        .WithMany("Lijnen")
+                        .HasForeignKey("FactuurId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Factuur");
+                });
+
             modelBuilder.Entity("QuadroApp.Model.DB.ImportRowLog", b =>
                 {
                     b.HasOne("QuadroApp.Model.DB.ImportSession", "ImportSession")
@@ -737,6 +905,11 @@ namespace QuadroApp.Migrations
             modelBuilder.Entity("QuadroApp.Model.DB.AfwerkingsGroep", b =>
                 {
                     b.Navigation("Opties");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.Factuur", b =>
+                {
+                    b.Navigation("Lijnen");
                 });
 
             modelBuilder.Entity("QuadroApp.Model.DB.ImportSession", b =>

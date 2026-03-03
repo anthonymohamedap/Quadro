@@ -3,8 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
-using QuadroApp.Model.Import;
-using QuadroApp.Service.Import;
 using QuadroApp.Service.Import.Enterprise;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Service.Pricing;
@@ -297,14 +295,26 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
     [ObservableProperty] private decimal breedte = 30m;
     [ObservableProperty] private decimal hoogte = 40m;
     [ObservableProperty] private decimal werkloon = 15m;
+    [ObservableProperty] private decimal staaflijstWinstFactor = 3.5m;
+    [ObservableProperty] private decimal staaflijstAfvalPercentage = 20m;
+    [ObservableProperty] private decimal defaultWinstFactor = 0m;
+    [ObservableProperty] private decimal defaultAfvalPercentage = 0m;
 
     public string VerkoopPrijsPreview =>
         GeselecteerdeLijst == null
             ? "Selecteer een lijst om prijs te berekenen"
             : $"💰 Geschatte verkoopprijs: € {BerekenPrijs(GeselecteerdeLijst, Breedte, Hoogte, Werkloon):F2}";
 
-    private static decimal BerekenPrijs(TypeLijst lijst, decimal breedteCm, decimal hoogteCm, decimal werkloon)
-        => PricingEngine.CalculateLijstPrijsExcl(lijst, breedteCm, hoogteCm, werkloon);
+    private decimal BerekenPrijs(TypeLijst lijst, decimal breedteCm, decimal hoogteCm, decimal werkloon)
+        => PricingEngine.CalculateLijstPrijsExcl(
+            lijst,
+            breedteCm,
+            hoogteCm,
+            werkloon,
+            StaaflijstWinstFactor,
+            StaaflijstAfvalPercentage,
+            DefaultWinstFactor,
+            DefaultAfvalPercentage);
 
     [RelayCommand]
     private async Task LoadAsync()
@@ -320,6 +330,11 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
 
             await using var db = await _dbFactory.CreateDbContextAsync();
             Log("DbContext created");
+
+            StaaflijstWinstFactor = await ReadDecimalInstellingAsync(db, "StaaflijstWinstFactor", 3.5m);
+            StaaflijstAfvalPercentage = await ReadDecimalInstellingAsync(db, "StaaflijstAfvalPercentage", 20m);
+            DefaultWinstFactor = await ReadDecimalInstellingAsync(db, "DefaultWinstFactor", 0m);
+            DefaultAfvalPercentage = await ReadDecimalInstellingAsync(db, "DefaultAfvalPercentage", 0m);
 
             Log("Loading leveranciers...");
             Leveranciers = await db.Leveranciers
@@ -630,4 +645,48 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
     }
 
 
+
+    [RelayCommand]
+    private async Task SaveInstellingenAsync()
+    {
+        if (StaaflijstWinstFactor < 0 || StaaflijstAfvalPercentage < 0 || DefaultWinstFactor < 0 || DefaultAfvalPercentage < 0)
+        {
+            await _dialogs.ShowErrorAsync("Ongeldige instellingen", "Waarden moeten groter dan of gelijk aan 0 zijn.");
+            return;
+        }
+
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        SaveInstelling(db, "StaaflijstWinstFactor", StaaflijstWinstFactor);
+        SaveInstelling(db, "StaaflijstAfvalPercentage", StaaflijstAfvalPercentage);
+        SaveInstelling(db, "DefaultWinstFactor", DefaultWinstFactor);
+        SaveInstelling(db, "DefaultAfvalPercentage", DefaultAfvalPercentage);
+        await db.SaveChangesAsync();
+
+        OnPropertyChanged(nameof(VerkoopPrijsPreview));
+        _toast.Success("Prijsinstellingen opgeslagen");
+    }
+
+    private static async Task<decimal> ReadDecimalInstellingAsync(AppDbContext db, string sleutel, decimal fallback)
+    {
+        var value = await db.Instellingen
+            .AsNoTracking()
+            .Where(x => x.Sleutel == sleutel)
+            .Select(x => x.Waarde)
+            .FirstOrDefaultAsync();
+
+        return decimal.TryParse(value, out var parsed) ? parsed : fallback;
+    }
+
+    private static void SaveInstelling(AppDbContext db, string sleutel, decimal waarde)
+    {
+        var valueText = waarde.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var item = db.Instellingen.FirstOrDefault(x => x.Sleutel == sleutel);
+        if (item is null)
+        {
+            db.Instellingen.Add(new Instelling { Sleutel = sleutel, Waarde = valueText });
+            return;
+        }
+
+        item.Waarde = valueText;
+    }
 }

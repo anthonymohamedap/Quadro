@@ -25,8 +25,6 @@ public partial class LijstDialog : Window
         _editCopy.Opmerking = lijst.Opmerking;
         _editCopy.BreedteCm = lijst.BreedteCm;
         _editCopy.PrijsPerMeter = lijst.PrijsPerMeter;
-        _editCopy.WinstMargeFactor = lijst.WinstMargeFactor;
-        _editCopy.AfvalPercentage = lijst.AfvalPercentage;
         _editCopy.VasteKost = lijst.VasteKost;
         _editCopy.WerkMinuten = lijst.WerkMinuten;
         _editCopy.LeverancierId = lijst.LeverancierId;

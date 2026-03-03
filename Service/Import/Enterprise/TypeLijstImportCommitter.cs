@@ -65,6 +65,7 @@ public sealed class TypeLijstImportCommitter : IImportCommitter<TypeLijst>
                 parsed.Artikelnummer = artikelnummer;
                 parsed.Levcode = (parsed.Levcode ?? string.Empty).Trim();
                 parsed.Leverancier = leverancier;
+                parsed.IsStaaflijst = IsStaaflijstSoort(parsed.Soort);
                 parsed.LaatsteUpdate = DateTime.Now;
                 db.TypeLijsten.Add(parsed);
                 existing[artikelnummer] = parsed;
@@ -78,14 +79,10 @@ public sealed class TypeLijstImportCommitter : IImportCommitter<TypeLijst>
             current.Soort = parsed.Soort;
             current.Serie = parsed.Serie;
             current.Opmerking = parsed.Opmerking;
-            current.PrijsPerMeter = parsed.PrijsPerMeter;
-            current.WinstMargeFactor = parsed.WinstMargeFactor;
-            current.AfvalPercentage = parsed.AfvalPercentage;
-            current.VasteKost = parsed.VasteKost;
-            current.WerkMinuten = parsed.WerkMinuten;
             current.VoorraadMeter = parsed.VoorraadMeter;
             current.MinimumVoorraad = parsed.MinimumVoorraad;
             current.InventarisKost = parsed.InventarisKost;
+            current.IsStaaflijst = IsStaaflijstSoort(parsed.Soort);
             current.LaatsteUpdate = DateTime.Now;
             updated++;
         }
@@ -96,4 +93,7 @@ public sealed class TypeLijstImportCommitter : IImportCommitter<TypeLijst>
 
     private static string NormalizeLeverancierNaam(string? raw)
         => string.IsNullOrWhiteSpace(raw) ? string.Empty : raw.Trim().ToUpperInvariant();
+
+    private static bool IsStaaflijstSoort(string? soort)
+        => string.Equals(soort, "HOU", StringComparison.OrdinalIgnoreCase);
 }

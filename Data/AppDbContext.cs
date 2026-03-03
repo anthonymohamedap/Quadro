@@ -36,8 +36,6 @@ namespace QuadroApp.Data
             {
                 entity.Property(x => x.Artikelnummer).HasMaxLength(20);
                 entity.Property(x => x.PrijsPerMeter).HasPrecision(10, 2);
-                entity.Property(x => x.WinstMargeFactor).HasPrecision(6, 3);
-                entity.Property(x => x.AfvalPercentage).HasPrecision(5, 2);
                 entity.Property(x => x.VasteKost).HasPrecision(10, 2);
                 entity.Property(x => x.VoorraadMeter).HasPrecision(10, 2);
                 entity.Property(x => x.InventarisKost).HasPrecision(10, 2);

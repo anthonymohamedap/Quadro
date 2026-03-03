@@ -40,10 +40,6 @@ public sealed class TypeLijstValidator : ICrudValidator<TypeLijst>
 
         if (t.PrijsPerMeter < 0) r.Error(nameof(t.PrijsPerMeter), "PrijsPerMeter mag niet negatief zijn.");
         if (t.VasteKost < 0) r.Error(nameof(t.VasteKost), "VasteKost mag niet negatief zijn.");
-        if (t.AfvalPercentage < 0 || t.AfvalPercentage > 100)
-            r.Error(nameof(t.AfvalPercentage), "AfvalPercentage moet tussen 0 en 100 liggen.");
-        if (t.WinstMargeFactor < 0)
-            r.Error(nameof(t.WinstMargeFactor), "WinstMargeFactor mag niet negatief zijn.");
         if (t.WerkMinuten < 0)
             r.Error(nameof(t.WerkMinuten), "WerkMinuten mag niet negatief zijn.");
         if (t.VoorraadMeter < 0) r.Warn(nameof(t.VoorraadMeter), "VoorraadMeter is negatief (controleer).");

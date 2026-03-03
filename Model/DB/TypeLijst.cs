@@ -33,11 +33,7 @@ namespace QuadroApp.Model.DB
         [Precision(10, 2)]
         public decimal PrijsPerMeter { get; set; }
 
-        [Precision(6, 3)]
-        public decimal WinstMargeFactor { get; set; }
-
-        [Precision(5, 2)]
-        public decimal AfvalPercentage { get; set; }
+        public bool IsStaaflijst { get; set; }
 
         [Precision(10, 2)]
         public decimal VasteKost { get; set; }

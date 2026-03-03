@@ -26,6 +26,54 @@ namespace QuadroApp.Data
             int fraId = db.Leveranciers.Single(l => l.Naam == "FRA").Id;
             int bolId = db.Leveranciers.Single(l => l.Naam == "BOL").Id;
 
+
+            // ==============================
+            // 1B) Klanten
+            // ==============================
+            if (!db.Klanten.Any())
+            {
+                db.Klanten.AddRange(
+                    new Klant
+                    {
+                        Voornaam = "Jan",
+                        Achternaam = "Peeters",
+                        Email = "jan.peeters@email.be",
+                        Telefoon = "0475 12 34 56",
+                        Straat = "Stationsstraat",
+                        Nummer = "12",
+                        Postcode = "3000",
+                        Gemeente = "Leuven",
+                        BtwNummer = null
+                    },
+                    new Klant
+                    {
+                        Voornaam = "Sofie",
+                        Achternaam = "Vermeulen",
+                        Email = "sofie.vermeulen@email.be",
+                        Telefoon = "0496 45 67 89",
+                        Straat = "Meir",
+                        Nummer = "45",
+                        Postcode = "2000",
+                        Gemeente = "Antwerpen",
+                        BtwNummer = null
+                    },
+                    new Klant
+                    {
+                        Voornaam = "Art & Co BV",
+                        Achternaam = string.Empty,
+                        Email = "info@artenco.be",
+                        Telefoon = "03 123 45 67",
+                        Straat = "Industrieweg",
+                        Nummer = "8",
+                        Postcode = "3500",
+                        Gemeente = "Hasselt",
+                        BtwNummer = "BE0123456789"
+                    }
+                );
+
+                db.SaveChanges();
+            }
+
             // 2) AfwerkingsGroepen (G / P / D / O / R)
             if (!db.AfwerkingsGroepen.Any())
             {
@@ -57,12 +105,11 @@ namespace QuadroApp.Data
                         LeverancierId = icoId,
                         BreedteCm = 20,
                         Soort = "HOUT",
+                        IsStaaflijst = true,
                         Serie = "Classic",
                         IsDealer = true,
                         Opmerking = "Zwarte houten lijst 20mm plat profiel",
                         PrijsPerMeter = 6.50m,
-                        WinstMargeFactor = 2.200m,
-                        AfvalPercentage = 12.5m,
                         VasteKost = 1.50m,
                         WerkMinuten = 8,
                         VoorraadMeter = 120.00m,
@@ -77,12 +124,11 @@ namespace QuadroApp.Data
                         LeverancierId = icoId,
                         BreedteCm = 25,
                         Soort = "HOUT",
+                        IsStaaflijst = true,
                         Serie = "Modern",
                         IsDealer = true,
                         Opmerking = "Witte lijst met glans afwerking",
                         PrijsPerMeter = 7.10m,
-                        WinstMargeFactor = 2.300m,
-                        AfvalPercentage = 10.0m,
                         VasteKost = 1.80m,
                         WerkMinuten = 7,
                         VoorraadMeter = 100.00m,
@@ -97,12 +143,11 @@ namespace QuadroApp.Data
                         LeverancierId = hofId,
                         BreedteCm = 22,
                         Soort = "HOUT",
+                        IsStaaflijst = true,
                         Serie = "Classic",
                         IsDealer = false,
                         Opmerking = "Donkere eiken lijst met structuur",
                         PrijsPerMeter = 8.90m,
-                        WinstMargeFactor = 2.500m,
-                        AfvalPercentage = 15.0m,
                         VasteKost = 2.20m,
                         WerkMinuten = 10,
                         VoorraadMeter = 75.00m,
@@ -117,12 +162,11 @@ namespace QuadroApp.Data
                         LeverancierId = hofId,
                         BreedteCm = 18,
                         Soort = "ALU",
+                        IsStaaflijst = false,
                         Serie = "Modern",
                         IsDealer = false,
                         Opmerking = "Aluminium profiel zwart mat",
                         PrijsPerMeter = 4.95m,
-                        WinstMargeFactor = 2.000m,
-                        AfvalPercentage = 5.0m,
                         VasteKost = 1.20m,
                         WerkMinuten = 6,
                         VoorraadMeter = 200.00m,
@@ -137,12 +181,11 @@ namespace QuadroApp.Data
                         LeverancierId = fraId,
                         BreedteCm = 28,
                         Soort = "PVC",
+                        IsStaaflijst = false,
                         Serie = "Budget",
                         IsDealer = true,
                         Opmerking = "Wit profiel met fijne ribbels",
                         PrijsPerMeter = 3.80m,
-                        WinstMargeFactor = 2.100m,
-                        AfvalPercentage = 8.0m,
                         VasteKost = 0.90m,
                         WerkMinuten = 7,
                         VoorraadMeter = 300.00m,
@@ -157,12 +200,11 @@ namespace QuadroApp.Data
                         LeverancierId = fraId,
                         BreedteCm = 30,
                         Soort = "ALU",
+                        IsStaaflijst = false,
                         Serie = "Modern",
                         IsDealer = true,
                         Opmerking = "Zilver profiel 30mm breed",
                         PrijsPerMeter = 5.40m,
-                        WinstMargeFactor = 2.150m,
-                        AfvalPercentage = 6.0m,
                         VasteKost = 1.30m,
                         WerkMinuten = 5,
                         VoorraadMeter = 180.00m,
@@ -177,12 +219,11 @@ namespace QuadroApp.Data
                         LeverancierId = bolId,
                         BreedteCm = 35,
                         Soort = "HOUT",
+                        IsStaaflijst = true,
                         Serie = "Lux",
                         IsDealer = false,
                         Opmerking = "Hoge lijst donker eik afgerond",
                         PrijsPerMeter = 8.90m,
-                        WinstMargeFactor = 2.500m,
-                        AfvalPercentage = 12.0m,
                         VasteKost = 2.50m,
                         WerkMinuten = 10,
                         VoorraadMeter = 75.00m,
@@ -197,12 +238,11 @@ namespace QuadroApp.Data
                         LeverancierId = bolId,
                         BreedteCm = 15,
                         Soort = "PVC",
+                        IsStaaflijst = false,
                         Serie = "Budget",
                         IsDealer = false,
                         Opmerking = "Smalle witte kunststof lijst",
                         PrijsPerMeter = 3.20m,
-                        WinstMargeFactor = 2.050m,
-                        AfvalPercentage = 7.0m,
                         VasteKost = 0.80m,
                         WerkMinuten = 6,
                         VoorraadMeter = 250.00m,
@@ -217,12 +257,11 @@ namespace QuadroApp.Data
                         LeverancierId = icoId,
                         BreedteCm = 40,
                         Soort = "HOUT",
+                        IsStaaflijst = true,
                         Serie = "Lux",
                         IsDealer = true,
                         Opmerking = "Brede lijst mahonie met nerf",
                         PrijsPerMeter = 9.80m,
-                        WinstMargeFactor = 2.600m,
-                        AfvalPercentage = 14.0m,
                         VasteKost = 2.80m,
                         WerkMinuten = 12,
                         VoorraadMeter = 60.00m,
@@ -237,12 +276,11 @@ namespace QuadroApp.Data
                         LeverancierId = hofId,
                         BreedteCm = 12,
                         Soort = "ALU",
+                        IsStaaflijst = false,
                         Serie = "Modern",
                         IsDealer = false,
                         Opmerking = "Aluminium profiel zilver glans",
                         PrijsPerMeter = 4.50m,
-                        WinstMargeFactor = 2.000m,
-                        AfvalPercentage = 5.0m,
                         VasteKost = 1.00m,
                         WerkMinuten = 5,
                         VoorraadMeter = 210.00m,
@@ -471,9 +509,22 @@ namespace QuadroApp.Data
                 });
             }
 
+            EnsureInstelling(db, "StaaflijstWinstFactor", "3.5");
+            EnsureInstelling(db, "StaaflijstAfvalPercentage", "20");
+            EnsureInstelling(db, "DefaultWinstFactor", "0");
+            EnsureInstelling(db, "DefaultAfvalPercentage", "0");
+
             if (db.ChangeTracker.HasChanges())
             {
                 db.SaveChanges();
+            }
+        }
+
+        private static void EnsureInstelling(AppDbContext db, string sleutel, string waarde)
+        {
+            if (!db.Instellingen.Any(i => i.Sleutel == sleutel))
+            {
+                db.Instellingen.Add(new Instelling { Sleutel = sleutel, Waarde = waarde });
             }
         }
     }

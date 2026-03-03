@@ -346,50 +346,31 @@
 								</Border>
 
 								<Grid ColumnDefinitions="2*,3*"
-									  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+									  RowDefinitions="Auto,Auto,Auto,Auto"
 									  RowSpacing="7"
 									  ColumnSpacing="14">
-
-									<TextBlock Text="Breedte (cm)"
-											   Grid.Row="0" Grid.Column="0"
-											   FontWeight="Bold"/>
-									<TextBox Text="{Binding GeselecteerdeLijst.BreedteCm, Mode=TwoWay}"
-											 Grid.Row="0" Grid.Column="1"/>
-
-									<TextBlock Text="Prijs per meter (€)"
-											   Grid.Row="1" Grid.Column="0"
-											   FontWeight="Bold"/>
-									<TextBox Text="{Binding GeselecteerdeLijst.PrijsPerMeter, Mode=TwoWay}"
-											 Grid.Row="1" Grid.Column="1"/>
-
-									<TextBlock Text="Winstmarge factor"
-											   Grid.Row="2" Grid.Column="0"
-											   FontWeight="Bold"/>
-									<TextBox Text="{Binding GeselecteerdeLijst.WinstMargeFactor, Mode=TwoWay}"
-											 Grid.Row="2" Grid.Column="1"/>
-
-									<TextBlock Text="Afval (%)"
-											   Grid.Row="3" Grid.Column="0"
-											   FontWeight="Bold"/>
-									<TextBox Text="{Binding GeselecteerdeLijst.AfvalPercentage, Mode=TwoWay}"
-											 Grid.Row="3" Grid.Column="1"/>
-
-									<TextBlock Text="Vaste kost (€)"
-											   Grid.Row="4" Grid.Column="0"
-											   FontWeight="Bold"/>
-									<TextBox Text="{Binding GeselecteerdeLijst.VasteKost, Mode=TwoWay}"
-											 Grid.Row="4" Grid.Column="1"/>
-
-									<TextBlock Text="Werkminuten"
-											   Grid.Row="5" Grid.Column="0"
-											   FontWeight="Bold"/>
-									<TextBox Text="{Binding GeselecteerdeLijst.WerkMinuten, Mode=TwoWay}"
-											 Grid.Row="5" Grid.Column="1"/>
+									<TextBlock Text="Breedte (cm)" Grid.Row="0" Grid.Column="0" FontWeight="Bold"/>
+									<TextBox Text="{Binding GeselecteerdeLijst.BreedteCm, Mode=TwoWay}" Grid.Row="0" Grid.Column="1"/>
+									<TextBlock Text="Prijs per meter (€)" Grid.Row="1" Grid.Column="0" FontWeight="Bold"/>
+									<TextBox Text="{Binding GeselecteerdeLijst.PrijsPerMeter, Mode=TwoWay}" Grid.Row="1" Grid.Column="1"/>
+									<TextBlock Text="Vaste kost (€)" Grid.Row="2" Grid.Column="0" FontWeight="Bold"/>
+									<TextBox Text="{Binding GeselecteerdeLijst.VasteKost, Mode=TwoWay}" Grid.Row="2" Grid.Column="1"/>
+									<TextBlock Text="Werkminuten" Grid.Row="3" Grid.Column="0" FontWeight="Bold"/>
+									<TextBox Text="{Binding GeselecteerdeLijst.WerkMinuten, Mode=TwoWay}" Grid.Row="3" Grid.Column="1"/>
 								</Grid>
 							</StackPanel>
 
 							
-							<!-- ░░ VOORRAADINFORMATIE ░░ -->
+							
+							<StackPanel Margin="0,12,0,0" Spacing="6">
+								<TextBlock Text="⚙️ Instellingen (globale marges)" FontWeight="SemiBold"/>
+								<TextBox Watermark="Staaflijst winstfactor" Text="{Binding StaaflijstWinstFactor, Mode=TwoWay}"/>
+								<TextBox Watermark="Staaflijst afval %" Text="{Binding StaaflijstAfvalPercentage, Mode=TwoWay}"/>
+								<TextBox Watermark="Default winstfactor" Text="{Binding DefaultWinstFactor, Mode=TwoWay}"/>
+								<TextBox Watermark="Default afval %" Text="{Binding DefaultAfvalPercentage, Mode=TwoWay}"/>
+								<Button Content="Instellingen opslaan" Command="{Binding SaveInstellingenCommand}"/>
+							</StackPanel>
+<!-- ░░ VOORRAADINFORMATIE ░░ -->
 							<StackPanel>
 								<Border BorderBrush="#F5C242"
 										BorderThickness="0 0 3 0"

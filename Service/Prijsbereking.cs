@@ -37,6 +37,11 @@ public sealed class PricingService : IPricingService
         var uurloon = await _settingsProvider.GetUurloonAsync();
         var btwPct = await _settingsProvider.GetBtwPercentAsync();
 
+        var staaflijstWinstFactor = await _settingsProvider.GetStaaflijstWinstFactorAsync();
+        var staaflijstAfvalPercentage = await _settingsProvider.GetStaaflijstAfvalPercentageAsync();
+        var defaultWinstFactor = await _settingsProvider.GetDefaultWinstFactorAsync();
+        var defaultAfvalPercentage = await _settingsProvider.GetDefaultAfvalPercentageAsync();
+
         var offerte = await db.Offertes
             .Include(x => x.Regels).ThenInclude(r => r.TypeLijst)
             .Include(x => x.Regels).ThenInclude(r => r.Glas)
@@ -47,7 +52,14 @@ public sealed class PricingService : IPricingService
             .Include(x => x.Regels).ThenInclude(r => r.Rug)
             .FirstAsync(x => x.Id == offerteId);
 
-        var result = _engine.Calculate(offerte, uurloon, btwPct);
+        var result = _engine.Calculate(
+            offerte,
+            uurloon,
+            btwPct,
+            staaflijstWinstFactor,
+            staaflijstAfvalPercentage,
+            defaultWinstFactor,
+            defaultAfvalPercentage);
 
         foreach (var regel in offerte.Regels)
         {

@@ -17,11 +17,6 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
         Text("Levcode", false, "SupplierArticleCode"),
         Text("Soort", false, "Type"),
         Number("BreedteCm", true, "Breedte"),
-        Decimal("PrijsPerMeter", false, "KostprijsPerM", "Kostprijs", "PrijsPerMeter"),
-        Decimal("WinstMargeFactor", false, "WinstMarge"),
-        Decimal("AfvalPercentage", false, "AfvalPerce", "AfvalPercentage"),
-        Decimal("VasteKost", false, "VasteKost"),
-        Number("WerkMinuten", false, "WerkMinu", "WerkMinuten"),
         Decimal("VoorraadMeter", false, "Stock"),
         Decimal("MinimumVoorraad", false, "Minstock", "MinimumVoorraad"),
         Decimal("InventarisKost", false, "Inventariskost", "InventarisKost"),
@@ -53,58 +48,16 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
                 target.Soort = cellText?.Trim() ?? string.Empty;
                 break;
             case "BreedteCm":
-                if (TryParseInt(cellText, out var breedte))
-                {
-                    target.BreedteCm = breedte;
-                }
-                break;
-            case "PrijsPerMeter":
-                if (TryParseDecimal(cellText, out var prijsPerMeter))
-                {
-                    target.PrijsPerMeter = prijsPerMeter;
-                }
-                break;
-            case "WinstMargeFactor":
-                if (TryParseDecimal(cellText, out var winstMarge))
-                {
-                    target.WinstMargeFactor = winstMarge;
-                }
-                break;
-            case "AfvalPercentage":
-                if (TryParseDecimal(cellText, out var afvalPercentage))
-                {
-                    target.AfvalPercentage = afvalPercentage;
-                }
-                break;
-            case "VasteKost":
-                if (TryParseDecimal(cellText, out var vasteKost))
-                {
-                    target.VasteKost = vasteKost;
-                }
-                break;
-            case "WerkMinuten":
-                if (TryParseInt(cellText, out var werkMinuten))
-                {
-                    target.WerkMinuten = werkMinuten;
-                }
+                if (TryParseInt(cellText, out var breedte)) target.BreedteCm = breedte;
                 break;
             case "VoorraadMeter":
-                if (TryParseDecimal(cellText, out var voorraadMeter))
-                {
-                    target.VoorraadMeter = voorraadMeter;
-                }
+                if (TryParseDecimal(cellText, out var voorraadMeter)) target.VoorraadMeter = voorraadMeter;
                 break;
             case "MinimumVoorraad":
-                if (TryParseDecimal(cellText, out var minimumVoorraad))
-                {
-                    target.MinimumVoorraad = minimumVoorraad;
-                }
+                if (TryParseDecimal(cellText, out var minimumVoorraad)) target.MinimumVoorraad = minimumVoorraad;
                 break;
             case "InventarisKost":
-                if (TryParseDecimal(cellText, out var inventarisKost))
-                {
-                    target.InventarisKost = inventarisKost;
-                }
+                if (TryParseDecimal(cellText, out var inventarisKost)) target.InventarisKost = inventarisKost;
                 break;
             case "Opmerking1":
                 target.Opmerking = MergeOpmerking(cellText, target.Opmerking, 1);
@@ -125,11 +78,6 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
         "Levcode" => source.Levcode,
         "Soort" => source.Soort,
         "BreedteCm" => source.BreedteCm.ToString(CultureInfo.InvariantCulture),
-        "PrijsPerMeter" => source.PrijsPerMeter.ToString(CultureInfo.InvariantCulture),
-        "WinstMargeFactor" => source.WinstMargeFactor.ToString(CultureInfo.InvariantCulture),
-        "AfvalPercentage" => source.AfvalPercentage.ToString(CultureInfo.InvariantCulture),
-        "VasteKost" => source.VasteKost.ToString(CultureInfo.InvariantCulture),
-        "WerkMinuten" => source.WerkMinuten.ToString(CultureInfo.InvariantCulture),
         "VoorraadMeter" => source.VoorraadMeter.ToString(CultureInfo.InvariantCulture),
         "MinimumVoorraad" => source.MinimumVoorraad.ToString(CultureInfo.InvariantCulture),
         "InventarisKost" => source.InventarisKost.ToString(CultureInfo.InvariantCulture),
@@ -144,25 +92,44 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
     private static string NormalizeLeverancierNaam(string? raw)
         => string.IsNullOrWhiteSpace(raw) ? string.Empty : raw.Trim().ToUpperInvariant();
 
-    private static string MergeOpmerking(string? input, string existing, int part)
+    private static string MergeOpmerking(string? value, string existing, int part)
     {
-        var text = string.IsNullOrWhiteSpace(input) ? string.Empty : input.Trim();
-        var current = existing.Split('/', 2, StringSplitOptions.TrimEntries);
-        var first = current.Length > 0 ? current[0] : string.Empty;
-        var second = current.Length > 1 ? current[1] : string.Empty;
+        var firstPart = existing;
+        var secondPart = string.Empty;
+
+        if (!string.IsNullOrWhiteSpace(existing) && existing.Contains('/'))
+        {
+            var split = existing.Split('/', 2, StringSplitOptions.TrimEntries);
+            firstPart = split[0];
+            secondPart = split.Length > 1 ? split[1] : string.Empty;
+        }
 
         if (part == 1)
         {
-            first = text;
+            firstPart = value?.Trim() ?? string.Empty;
         }
         else
         {
-            second = text;
+            secondPart = value?.Trim() ?? string.Empty;
         }
 
-        return string.IsNullOrWhiteSpace(first) && string.IsNullOrWhiteSpace(second)
-            ? string.Empty
-            : $"{first}/{second}".Trim('/');
+        return string.IsNullOrWhiteSpace(secondPart)
+            ? firstPart
+            : $"{firstPart}/{secondPart}";
+    }
+
+    private static bool TryParseInt(string? input, out int value)
+    {
+        if (int.TryParse(input, NumberStyles.Integer, CultureInfo.InvariantCulture, out value)) return true;
+        if (int.TryParse(input, NumberStyles.Integer, CultureInfo.GetCultureInfo("nl-BE"), out value)) return true;
+        return int.TryParse(input, out value);
+    }
+
+    private static bool TryParseDecimal(string? input, out decimal value)
+    {
+        if (decimal.TryParse(input, NumberStyles.Number, CultureInfo.InvariantCulture, out value)) return true;
+        if (decimal.TryParse(input, NumberStyles.Number, CultureInfo.GetCultureInfo("nl-BE"), out value)) return true;
+        return decimal.TryParse(input, out value);
     }
 
     private static ExcelColumn<TypeLijst> Text(string key, bool required = false, params string[] aliases) => new()
@@ -213,47 +180,4 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
                 : (false, null, $"Kolom {key} bevat geen geldig decimaal getal.");
         }
     };
-
-    private static bool TryParseDecimal(string? value, out decimal parsed)
-    {
-        parsed = 0m;
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return false;
-        }
-
-        var raw = value.Trim();
-        return decimal.TryParse(raw, NumberStyles.Any, CultureInfo.GetCultureInfo("nl-BE"), out parsed)
-               || decimal.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out parsed);
-    }
-
-    private static bool TryParseInt(string? value, out int parsed)
-    {
-        parsed = 0;
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return false;
-        }
-
-        var raw = value.Trim();
-        if (int.TryParse(raw, NumberStyles.Any, CultureInfo.GetCultureInfo("nl-BE"), out parsed)
-            || int.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out parsed))
-        {
-            return true;
-        }
-
-        if (decimal.TryParse(raw, NumberStyles.Any, CultureInfo.GetCultureInfo("nl-BE"), out var decBe))
-        {
-            parsed = (int)Math.Round(decBe);
-            return true;
-        }
-
-        if (decimal.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var decInv))
-        {
-            parsed = (int)Math.Round(decInv);
-            return true;
-        }
-
-        return false;
-    }
 }
