@@ -33,7 +33,7 @@ public sealed class TypeLijstImportValidator : IImportValidator<TypeLijst>
             });
         }
 
-        if (row.Parsed.BreedteCm <= 0)
+        if (row.Parsed.BreedteCm < 0)
         {
             row.Issues.Add(new ImportRowIssue
             {

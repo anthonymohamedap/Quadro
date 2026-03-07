@@ -7,7 +7,6 @@ using QuadroApp.Model;
 using QuadroApp.Model.DB;
 using QuadroApp.Model.Toast;
 using QuadroApp.Service.Interfaces;
-using QuadroApp.Service.Toast;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -45,7 +44,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
         _toast = toast;
         _statusWorkflow = statusWorkflow;
 
-        ToastMessages = ((ToastService)_toast).Messages;
+        // ToastMessages = ((ToastService)_toast).Messages;
 
         PrevMonthCommand = new RelayCommand(PrevMonth);
         NextMonthCommand = new RelayCommand(NextMonth);

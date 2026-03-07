@@ -48,7 +48,7 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
                 target.Soort = cellText?.Trim() ?? string.Empty;
                 break;
             case "BreedteCm":
-                if (TryParseInt(cellText, out var breedte)) target.BreedteCm = breedte;
+                if (TryParseDecimal(cellText, out var breedte)) target.BreedteCm = (int)Math.Round(breedte);
                 break;
             case "VoorraadMeter":
                 if (TryParseDecimal(cellText, out var voorraadMeter)) target.VoorraadMeter = voorraadMeter;
@@ -120,16 +120,20 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
 
     private static bool TryParseInt(string? input, out int value)
     {
-        if (int.TryParse(input, NumberStyles.Integer, CultureInfo.InvariantCulture, out value)) return true;
-        if (int.TryParse(input, NumberStyles.Integer, CultureInfo.GetCultureInfo("nl-BE"), out value)) return true;
-        return int.TryParse(input, out value);
+        value = 0;
+        if (!TryParseDecimal(input, out var dec)) return false;
+        value = (int)Math.Round(dec);
+        return true;
     }
 
     private static bool TryParseDecimal(string? input, out decimal value)
     {
-        if (decimal.TryParse(input, NumberStyles.Number, CultureInfo.InvariantCulture, out value)) return true;
-        if (decimal.TryParse(input, NumberStyles.Number, CultureInfo.GetCultureInfo("nl-BE"), out value)) return true;
-        return decimal.TryParse(input, out value);
+        value = 0;
+        if (string.IsNullOrWhiteSpace(input)) return false;
+        var s = input.Trim();
+        if (decimal.TryParse(s, NumberStyles.Any, CultureInfo.GetCultureInfo("nl-BE"), out value)) return true;
+        if (decimal.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out value)) return true;
+        return false;
     }
 
     private static ExcelColumn<TypeLijst> Text(string key, bool required = false, params string[] aliases) => new()
@@ -156,9 +160,9 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
                 return required ? (false, null, $"Kolom {key} is verplicht.") : (true, null, null);
             }
 
-            return TryParseInt(value, out _)
+            return TryParseDecimal(value, out _)
                 ? (true, value, null)
-                : (false, null, $"Kolom {key} bevat geen geldig geheel getal.");
+                : (false, null, $"Kolom {key} bevat geen geldig getal.");
         }
     };
 

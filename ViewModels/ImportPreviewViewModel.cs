@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -153,7 +154,13 @@ public partial class ImportPreviewViewModel : ObservableObject
             _preview = await _definition.DryRunAsync(stream, _cts.Token);
 
             Rows.Clear();
-            foreach (var row in _preview.Rows)
+
+            var sortedRows = _preview.Rows
+                .OrderBy(r => r.IsValid)        // false (fout) eerst
+                .ThenByDescending(r => r.HasWarnings) // waarschuwingen daarna
+                .ThenBy(r => r.RowNumber);      // originele volgorde behouden
+
+            foreach (var row in sortedRows)
             {
                 var values = row.Parsed is null
                     ? new Dictionary<string, string?>()

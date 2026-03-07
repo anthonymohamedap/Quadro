@@ -1,34 +1,43 @@
-﻿using QuadroApp.Model.Toast;
+﻿using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Huskui.Avalonia.Controls;
+using Huskui.Avalonia.Models;
 using QuadroApp.Service.Interfaces;
-using System.Collections.ObjectModel;
-using System.Threading.Tasks;
+
 namespace QuadroApp.Service.Toast
 {
-
-
     public class ToastService : IToastService
     {
-        public ObservableCollection<ToastMessage> Messages { get; } = new();
+        private AppWindow? GetAppWindow()
+        {
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                return desktop.MainWindow as AppWindow;
+            return null;
+        }
 
         public void Show(string message, ToastType type, int durationMs = 3000)
         {
-            var toast = new ToastMessage(message, type);
-            Messages.Add(toast);
+            var appWindow = GetAppWindow();
+            if (appWindow == null) return;
 
-            _ = RemoveLaterAsync(toast, durationMs);
+            var level = type switch
+            {
+                ToastType.Success => GrowlLevel.Success,
+                ToastType.Error   => GrowlLevel.Danger,
+                ToastType.Warning => GrowlLevel.Warning,
+                _                 => GrowlLevel.Information
+            };
+
+            appWindow.PopGrowl(new GrowlItem
+            {
+                Level   = level,
+                Content = message
+            });
         }
 
         public void Success(string message) => Show(message, ToastType.Success);
-        public void Error(string message) => Show(message, ToastType.Error);
+        public void Error(string message)   => Show(message, ToastType.Error);
         public void Warning(string message) => Show(message, ToastType.Warning);
-        public void Info(string message) => Show(message, ToastType.Info);
-
-        private async Task RemoveLaterAsync(ToastMessage toast, int delay)
-        {
-            await Task.Delay(delay);
-            toast.IsVisible = false;
-            await Task.Delay(300); // animatie buffer
-            Messages.Remove(toast);
-        }
+        public void Info(string message)    => Show(message, ToastType.Info);
     }
 }

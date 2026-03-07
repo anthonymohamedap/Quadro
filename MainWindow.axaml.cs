@@ -1,9 +1,9 @@
-﻿using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
+﻿using Avalonia.Markup.Xaml;
+using Huskui.Avalonia.Controls;
 
 namespace QuadroApp
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : AppWindow
     {
         public MainWindow()
         {

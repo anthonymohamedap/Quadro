@@ -1,6 +1,7 @@
 ﻿using ClosedXML.Excel;
 using QuadroApp.Model.DB;
 using QuadroApp.Model.Import;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 
@@ -23,7 +24,7 @@ public static class ExcelRowMapper
             Artikelnummer = artikelnummer,
             Leverancier = leverancierNaam.ToUpperInvariant(),
             Levcode = levcode,
-            BreedteCm = (int)ReadDecimalOrDefault(r.Cell(6), 0m),
+            BreedteCm = (int)Math.Round(ReadDecimalOrDefault(r.Cell(6), 0m)),
             Type = r.Cell(5).GetString()?.Trim() ?? "",
             Opmerking1 = r.Cell(7).GetString()?.Trim() ?? "",
             Opmerking2 = r.Cell(8).GetString()?.Trim() ?? "",

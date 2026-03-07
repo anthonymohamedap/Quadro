@@ -161,9 +161,9 @@ public sealed class AfwerkingsOptieExcelMap : IExcelMap<AfwerkingsOptie>
                 return required ? (false, null, $"Kolom {key} is verplicht.") : (true, null, null);
             }
 
-            return TryParseInt(value, out _)
+            return TryParseDecimal(value, out _)
                 ? (true, value, null)
-                : (false, null, $"Kolom {key} bevat geen geldig geheel getal.");
+                : (false, null, $"Kolom {key} bevat geen geldig getal.");
         }
     };
 
@@ -189,13 +189,10 @@ public sealed class AfwerkingsOptieExcelMap : IExcelMap<AfwerkingsOptie>
     private static bool TryParseInt(string? value, out int parsed)
     {
         parsed = 0;
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return false;
-        }
-
-        return int.TryParse(value.Trim(), NumberStyles.Any, CultureInfo.GetCultureInfo("nl-BE"), out parsed)
-               || int.TryParse(value.Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out parsed);
+        if (string.IsNullOrWhiteSpace(value)) return false;
+        if (!TryParseDecimal(value, out var dec)) return false;
+        parsed = (int)Math.Round(dec);
+        return true;
     }
 
     private static bool TryParseDecimal(string? value, out decimal parsed)

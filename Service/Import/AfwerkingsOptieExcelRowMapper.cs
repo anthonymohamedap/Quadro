@@ -115,16 +115,21 @@ public static class AfwerkingsOptieExcelRowMapper
         return true;
     }
 
-    // jouw bestaande helpers (laten staan)
     private static int ReadInt(IXLCell cell)
     {
-        var raw = cell.GetString()?.Trim();
-        if (int.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var i))
-            return i;
-
-        // als het een nummercel is:
+        // Try numeric cell value first (handles all Excel number formats)
         if (cell.TryGetValue<double>(out var d))
             return (int)Math.Round(d);
+
+        // Fall back to parsing the string, supporting both comma and dot as decimal separator
+        var raw = cell.GetString()?.Trim();
+        if (string.IsNullOrWhiteSpace(raw)) return 0;
+
+        if (decimal.TryParse(raw, NumberStyles.Any, CultureInfo.GetCultureInfo("nl-BE"), out var be))
+            return (int)Math.Round(be);
+
+        if (decimal.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var inv))
+            return (int)Math.Round(inv);
 
         return 0;
     }

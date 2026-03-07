@@ -2,17 +2,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:QuadroApp.ViewModels"
              xmlns:views="using:QuadroApp.Views"
-             xmlns:toast="clr-namespace:QuadroApp.Service.Toast"
+             xmlns:huskui="https://github.com/d3ara1n/Huskui.Avalonia"
              x:Class="QuadroApp.App">
 
 	<Application.Styles>
-		<FluentTheme />
+		<huskui:HuskuiTheme />
 	</Application.Styles>
-
-	<!-- ✅ Voeg dit toe -->
-	<Application.Resources>
-		<toast:ToastColorConverter x:Key="ToastColorConverter"/>
-	</Application.Resources>
 
 	<Application.DataTemplates>
 		<DataTemplate DataType="{x:Type vm:HomeViewModel}">
