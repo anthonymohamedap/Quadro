@@ -201,6 +201,8 @@
 							<TextBlock Grid.Row="1" Text="Aantal stuks"/>
 							<NumericUpDown Grid.Row="1"
                                            Grid.Column="1"
+										   			Background="#F5C242"
+                            Foreground="Black"
                                            Minimum="1"
                                            Maximum="999"
                                            Value="{Binding SelectedRegel.AantalStuks, Mode=TwoWay}"/>
@@ -227,11 +229,15 @@
 
 							<TextBlock Grid.Row="3" Text="Breedte (cm)"/>
 							<NumericUpDown Grid.Row="3"
+										   			Background="#F5C242"
+                            Foreground="Black"
                                            Grid.Column="1"
                                            Value="{Binding SelectedRegel.BreedteCm, Mode=TwoWay}"/>
 
 							<TextBlock Grid.Row="4" Text="Hoogte (cm)"/>
 							<NumericUpDown Grid.Row="4"
+										   			Background="#F5C242"
+                            Foreground="Black"
                                            Grid.Column="1"
                                            Value="{Binding SelectedRegel.HoogteCm, Mode=TwoWay}"/>
 
@@ -244,11 +250,13 @@
 							<Grid Grid.Row="6"
                                   Grid.Column="1"
                                   ColumnDefinitions="*,8,*">
-								<NumericUpDown Value="{Binding SelectedRegel.InlegBreedteCm, Mode=TwoWay}"/>
+								<NumericUpDown Value="{Binding SelectedRegel.InlegBreedteCm, Mode=TwoWay}"			Background="#F5C242"
+                            Foreground="Black"/>
 								<TextBlock Grid.Column="1"
                                            Text="×"
                                            HorizontalAlignment="Center"/>
-								<NumericUpDown Grid.Column="2"
+								<NumericUpDown Grid.Column="2" 			Background="#F5C242"
+                            Foreground="Black"
                                                Value="{Binding SelectedRegel.InlegHoogteCm, Mode=TwoWay}"/>
 							</Grid>
 							<TextBlock Grid.Row="7"
@@ -477,6 +485,8 @@
 								<TextBlock Text="Korting (%)"/>
 								<NumericUpDown Grid.Column="1"
 											   Minimum="0"
+											   			Background="#F5C242"
+                            Foreground="Black"
 											   Maximum="100"
 											   Value="{Binding Offerte.KortingPct, Mode=TwoWay}"/>
 

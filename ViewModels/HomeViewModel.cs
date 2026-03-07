@@ -1,8 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using QuadroApp.Data;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Views;
+using System;
 using System.Threading.Tasks;
 
 namespace QuadroApp.ViewModels
@@ -14,6 +16,8 @@ namespace QuadroApp.ViewModels
         private readonly IWerkBonWorkflowService _workflow;
         private readonly IToastService _toast;
         private readonly IWorkflowService _statusWorkflow;
+        private readonly IServiceProvider _services;
+
         public IAsyncRelayCommand OpenKlantenCommand { get; }
         public IAsyncRelayCommand OpenLijstenCommand { get; }
         public IAsyncRelayCommand OpenPlanningCommand { get; }
@@ -23,19 +27,25 @@ namespace QuadroApp.ViewModels
         public IAsyncRelayCommand OpenAfwerkingsOptiesCommand { get; }
         public IAsyncRelayCommand OpenLeveranciersCommand { get; }
         public IAsyncRelayCommand OpenFacturenCommand { get; }
+        public IAsyncRelayCommand OpenInstellingenCommand { get; }
 
         public HomeViewModel(
             INavigationService nav,
             IDbContextFactory<AppDbContext> factory,
             IWerkBonWorkflowService workflow,
             IToastService toast,
-            IWorkflowService statusWorkflow)
+            IWorkflowService statusWorkflow,
+            IServiceProvider services)
         {
             _nav = nav;
             _factory = factory;
             _workflow = workflow;
+            _toast = toast;
+            _statusWorkflow = statusWorkflow;
+            _services = services;
 
             OpenPlanningCommand = new AsyncRelayCommand(OpenPlanningAsync);
+            OpenInstellingenCommand = new AsyncRelayCommand(OpenInstellingenAsync);
 
             OpenWerkBonCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<WerkBonLijstViewModel>());
             OpenKlantenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<KlantenViewModel>());
@@ -45,18 +55,35 @@ namespace QuadroApp.ViewModels
             OpenOfferteCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OfferteViewModel>());
             OpenOffertesLijstCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OffertesLijstViewModel>());
             OpenFacturenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<FacturenViewModel>());
-            _toast = toast;
-            _statusWorkflow = statusWorkflow;
         }
 
         private async Task OpenPlanningAsync()
         {
             var vm = new PlanningCalendarViewModel(_factory, _workflow, _toast, _statusWorkflow);
-
-            // ✅ globale mode: geen werkbon gekoppeld
             await vm.InitializeGlobalAsync();
 
             var window = new PlanningCalendarWindow
+            {
+                DataContext = vm
+            };
+
+            if (App.Current?.ApplicationLifetime is
+                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                var owner = desktop.MainWindow;
+                if (owner is null)
+                    return;
+
+                await window.ShowDialog(owner);
+            }
+        }
+
+        private async Task OpenInstellingenAsync()
+        {
+            var vm = _services.GetRequiredService<InstellingenViewModel>();
+            await vm.LoadAsync();
+
+            var window = new InstellingenWindow
             {
                 DataContext = vm
             };

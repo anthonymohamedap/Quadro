@@ -6,6 +6,7 @@
              x:Class="QuadroApp.App">
 
 	<Application.Styles>
+		<FluentTheme />
 		<huskui:HuskuiTheme />
 	</Application.Styles>
 

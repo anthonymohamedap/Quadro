@@ -1,0 +1,93 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:QuadroApp.ViewModels"
+        x:Class="QuadroApp.Views.InstellingenWindow"
+        x:DataType="vm:InstellingenViewModel"
+        Width="780"
+        Height="560"
+        MinWidth="700"
+        MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        Title="Instellingen"
+        Background="#F5F5F5">
+
+    <Grid RowDefinitions="Auto,*">
+        <Border Background="#444A50" Height="70">
+            <DockPanel Margin="20,0">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
+                    <Ellipse Width="35" Height="35" Fill="#F5C242"/>
+                    <TextBlock Text="QUADRO" Foreground="White" FontWeight="Bold" FontSize="20"/>
+                    <TextBlock Text="INSTELLINGEN" Foreground="#CCC" FontSize="13" Margin="20,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <Button Content="Sluiten"
+                        Click="Close_Click"
+                        DockPanel.Dock="Right"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Right"
+                        Margin="0,10,10,0"
+                        Background="#F5C242"
+                        Foreground="#222"
+                        FontWeight="Bold"
+                        CornerRadius="8"
+                        Padding="10,5"
+                        Width="100"
+                        Height="32"/>
+            </DockPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="20" Spacing="16">
+                <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="10" Padding="18">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Staaflijst Pricing" FontSize="18" FontWeight="SemiBold"/>
+
+                        <Grid ColumnDefinitions="2*,3*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="8">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="StaaflijstWinstFactor" FontWeight="Bold"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding StaaflijstWinstFactor, Mode=TwoWay}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="StaaflijstAfvalPercentage" FontWeight="Bold"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding StaaflijstAfvalPercentage, Mode=TwoWay}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="10" Padding="18">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Default Pricing" FontSize="18" FontWeight="SemiBold"/>
+
+                        <Grid ColumnDefinitions="2*,3*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="8">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="DefaultWinstFactor" FontWeight="Bold"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding DefaultWinstFactor, Mode=TwoWay}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="DefaultAfvalPercentage" FontWeight="Bold"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding DefaultAfvalPercentage, Mode=TwoWay}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                    <Button Content="Opslaan"
+                            Command="{Binding SaveCommand}"
+                            Classes="MainBtn"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+
+    <Window.Styles>
+        <Style Selector="Button.MainBtn">
+            <Setter Property="Background" Value="#444A50"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="Padding" Value="14,7"/>
+        </Style>
+        <Style Selector="Button.MainBtn:pointerover">
+            <Setter Property="Background" Value="#F5C242"/>
+            <Setter Property="Foreground" Value="#222"/>
+        </Style>
+    </Window.Styles>
+</Window>

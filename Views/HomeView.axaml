@@ -1,202 +1,243 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:QuadroApp.ViewModels"
              x:Class="QuadroApp.Views.HomeView"
              x:DataType="vm:HomeViewModel"
              Background="#F7F8FA">
 
-	<Grid ColumnDefinitions="260,*">
+    <Grid ColumnDefinitions="260,*">
 
-		<!-- SIDEBAR -->
-		<Border Background="#3F464C">
-			<Grid RowDefinitions="Auto,*,Auto" Margin="16">
-
-				<!-- Logo -->
-				<StackPanel Spacing="16" Margin="0,8,0,24">
-					<StackPanel Orientation="Horizontal" Spacing="12">
-						<Image Source="avares://QuadroApp/Assets/Quadro_logo2012_ZW1.jpg"
+        <Border Background="#3F464C">
+            <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+                <StackPanel Spacing="16" Margin="0,8,0,24">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Image Source="avares://QuadroApp/Assets/Quadro_logo2012_ZW1.jpg"
                                Width="150"
                                Stretch="Uniform"/>
-					</StackPanel>
-				</StackPanel>
+                    </StackPanel>
+                </StackPanel>
 
-				<!-- Navigation -->
-				<StackPanel Grid.Row="1" Spacing="8">
+                <StackPanel Grid.Row="1" Spacing="8">
+					<Button Command="{Binding OpenKlantenCommand}" Classes="NavButton">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<Path Data="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"
+								  Fill="{Binding $parent[Button].Foreground}" Width="16" Height="16" Stretch="Uniform"/>
+							<TextBlock Text="Klanten" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
 
-					<Button Content="👥 Klanten"
-                            Command="{Binding OpenKlantenCommand}"
-                            Classes="NavButton"/>
+					<Button Command="{Binding OpenLijstenCommand}" Classes="NavButton">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<Path Data="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"
+								  Fill="{Binding $parent[Button].Foreground}" Width="16" Height="16" Stretch="Uniform"/>
+							<TextBlock Text="Lijsten" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
 
-					<Button Content="🪟 Lijsten"
-                            Command="{Binding OpenLijstenCommand}"
-                            Classes="NavButton"/>
+					<Button Command="{Binding OpenLeveranciersCommand}" Classes="NavButton">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<Path Data="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"
+								  Fill="{Binding $parent[Button].Foreground}" Width="16" Height="16" Stretch="Uniform"/>
+							<TextBlock Text="Leveranciers" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
 
-					<Button Content="🏷️ Leveranciers"
-                            Command="{Binding OpenLeveranciersCommand}"
-                            Classes="NavButton"/>
+					<Button Command="{Binding OpenAfwerkingsOptiesCommand}" Classes="NavButton">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<Path Data="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm1-11h-2v3H8v2h3v3h2v-3h3v-2h-3z"
+								  Fill="{Binding $parent[Button].Foreground}" Width="16" Height="16" Stretch="Uniform"/>
+							<TextBlock Text="Afwerkingen" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
 
-					<Button Content="🧩 Afwerkingen"
-                            Command="{Binding OpenAfwerkingsOptiesCommand}"
-                            Classes="NavButton"/>
+					<Button Command="{Binding OpenOffertesLijstCommand}" Classes="NavButton">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<Path Data="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"
+								  Fill="{Binding $parent[Button].Foreground}" Width="16" Height="16" Stretch="Uniform"/>
+							<TextBlock Text="Prijsberekening" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
 
-					<Button Content="🧾 Prijsberekening"
-                            Command="{Binding OpenOffertesLijstCommand}"
-                            Classes="NavButton"/>
+					<Button Command="{Binding OpenWerkBonCommand}" Classes="NavButton">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<Path Data="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"
+								  Fill="{Binding $parent[Button].Foreground}" Width="16" Height="16" Stretch="Uniform"/>
+							<TextBlock Text="Bestellingen" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
 
-					<Button Content="📦 Bestellingen"
-                            Command="{Binding OpenWerkBonCommand}"
-                            Classes="NavButton"/>
+					<Button Command="{Binding OpenFacturenCommand}" Classes="NavButton">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<Path Data="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"
+								  Fill="{Binding $parent[Button].Foreground}" Width="16" Height="16" Stretch="Uniform"/>
+							<TextBlock Text="Facturen" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
 
-					<Button Content="🧾 Facturen"
-                            Command="{Binding OpenFacturenCommand}"
-                            Classes="NavButton"/>
+					<Button Command="{Binding OpenPlanningCommand}" Classes="NavButton">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<Path Data="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"
+								  Fill="{Binding $parent[Button].Foreground}" Width="16" Height="16" Stretch="Uniform"/>
+							<TextBlock Text="Planning" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
 
-					<Button Content="📅 Planning"
-                            Command="{Binding OpenPlanningCommand}"
-                            Classes="NavButton"/>
+					<Button Command="{Binding OpenInstellingenCommand}" Classes="NavButton">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<Path Data="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"
+								  Fill="{Binding $parent[Button].Foreground}" Width="16" Height="16" Stretch="Uniform"/>
+							<TextBlock Text="Instellingen" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
+                </StackPanel>
 
-				</StackPanel>
+                <StackPanel Grid.Row="2" Spacing="12">
+                  
 
-				<!-- Footer -->
-				<StackPanel Grid.Row="2" Spacing="12">
-					<Border Background="#55606A"
-                            CornerRadius="12"
-                            Padding="12">
-						<TextBlock Text="Gebruik filters in elke lijst om sneller te werken."
-                                   Foreground="#E5E7EB"
-                                   FontSize="12"
-                                   TextWrapping="Wrap"/>
-					</Border>
-
-					<TextBlock Text="© 2025 QuadroApp – Anthony Mohamed"
+                    <TextBlock Text="© 2025 QuadroApp - Anthony Mohamed"
                                Foreground="#9CA3AF"
                                FontSize="12"
                                HorizontalAlignment="Center"/>
-				</StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
 
-			</Grid>
-		</Border>
-
-		<!-- MAIN CONTENT -->
-		<ScrollViewer Grid.Column="1">
-			<StackPanel Margin="32" Spacing="24">
-
-				<!-- Header -->
-				<StackPanel Spacing="4">
-					<TextBlock Text="Welkom terug"
+        <ScrollViewer Grid.Column="1">
+            <StackPanel Margin="32" Spacing="24">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Welkom terug"
                                FontSize="24"
                                FontWeight="Bold"
                                Foreground="#1F2933"/>
 
-					<TextBlock Text="Start snel of bekijk de huidige status van je atelier."
+                    <TextBlock Text="Start snel of bekijk de huidige status van je atelier."
                                FontSize="14"
                                Foreground="#5F6C7B"/>
-				</StackPanel>
+                </StackPanel>
 
-				<!-- Quick Actions -->
 				<UniformGrid Columns="2">
 
-					<Button Classes="CardButton"
-                            Command="{Binding OpenOffertesLijstCommand}">
-						<StackPanel Spacing="6">
-							<TextBlock Text="🧾 Prijsberekening"
-                                       FontSize="16"
-                                       Foreground="Black"
-                                       FontWeight="SemiBold"/>
-							<TextBlock Text="Maak of bewerk offertes"
-                                       FontSize="12"
-                                       Foreground="#5F6C7B"/>
+					<!-- Prijsberekening -->
+					<Button Classes="CardButton" Command="{Binding OpenOffertesLijstCommand}">
+						<StackPanel Spacing="10">
+							<Border Background="#EEF4FF" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+								<Path Data="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"
+									  Fill="#3B82F6" Width="20" Height="20" Stretch="Uniform"
+									  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+							</Border>
+							<StackPanel Spacing="3">
+								<TextBlock Text="Prijsberekening" FontSize="15" Foreground="Black" FontWeight="SemiBold"/>
+								<TextBlock Text="Maak of bewerk offertes" FontSize="12" Foreground="#5F6C7B"/>
+							</StackPanel>
 						</StackPanel>
 					</Button>
 
-					<Button Classes="CardButton"
-                            Command="{Binding OpenKlantenCommand}">
-						<StackPanel Spacing="6">
-							<TextBlock Text="👥 Klanten"
-                                       FontSize="16"
-                                       Foreground="Black"
-                                       FontWeight="SemiBold"/>
-							<TextBlock Text="Beheer klantgegevens"
-                                       FontSize="12"
-                                       Foreground="#5F6C7B"/>
+					<!-- Klanten -->
+					<Button Classes="CardButton" Command="{Binding OpenKlantenCommand}">
+						<StackPanel Spacing="10">
+							<Border Background="#F0FDF4" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+								<Path Data="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"
+									  Fill="#22C55E" Width="20" Height="20" Stretch="Uniform"
+									  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+							</Border>
+							<StackPanel Spacing="3">
+								<TextBlock Text="Klanten" FontSize="15" Foreground="Black" FontWeight="SemiBold"/>
+								<TextBlock Text="Beheer klantgegevens" FontSize="12" Foreground="#5F6C7B"/>
+							</StackPanel>
 						</StackPanel>
 					</Button>
 
-					<Button Classes="CardButton"
-                            Command="{Binding OpenLijstenCommand}">
-						<StackPanel Spacing="6">
-							<TextBlock Text="🪟 Lijsten"
-                                       FontSize="16"
-                                       Foreground="Black"
-                                       FontWeight="SemiBold"/>
-							<TextBlock Text="Type-lijsten en prijzen"
-                                       FontSize="12"
-                                       Foreground="#5F6C7B"/>
+					<!-- Lijsten -->
+					<Button Classes="CardButton" Command="{Binding OpenLijstenCommand}">
+						<StackPanel Spacing="10">
+							<Border Background="#FFF7ED" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+								<Path Data="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"
+									  Fill="#F97316" Width="20" Height="20" Stretch="Uniform"
+									  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+							</Border>
+							<StackPanel Spacing="3">
+								<TextBlock Text="Lijsten" FontSize="15" Foreground="Black" FontWeight="SemiBold"/>
+								<TextBlock Text="Type-lijsten en prijzen" FontSize="12" Foreground="#5F6C7B"/>
+							</StackPanel>
 						</StackPanel>
 					</Button>
 
-					<Button Classes="CardButton"
-                            Command="{Binding OpenLeveranciersCommand}">
-						<StackPanel Spacing="6">
-							<TextBlock Text="🏷️ Leveranciers"
-                                       FontSize="16"
-                                       Foreground="Black"
-                                       FontWeight="SemiBold"/>
-							<TextBlock Text="Beheer leverancierscodes"
-                                       FontSize="12"
-                                       Foreground="#5F6C7B"/>
+					<!-- Leveranciers -->
+					<Button Classes="CardButton" Command="{Binding OpenLeveranciersCommand}">
+						<StackPanel Spacing="10">
+							<Border Background="#FDF4FF" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+								<Path Data="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"
+									  Fill="#A855F7" Width="20" Height="20" Stretch="Uniform"
+									  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+							</Border>
+							<StackPanel Spacing="3">
+								<TextBlock Text="Leveranciers" FontSize="15" Foreground="Black" FontWeight="SemiBold"/>
+								<TextBlock Text="Beheer leverancierscodes" FontSize="12" Foreground="#5F6C7B"/>
+							</StackPanel>
 						</StackPanel>
 					</Button>
 
-					<Button Classes="CardButton"
-                            Command="{Binding OpenPlanningCommand}">
-						<StackPanel Spacing="6">
-							<TextBlock Text="📅 Planning"
-                                       FontSize="16"
-                                       Foreground="Black"
-                                       FontWeight="SemiBold"/>
-							<TextBlock Text="Bekijk werkbezetting"
-                                       FontSize="12"
-                                       Foreground="#5F6C7B"/>
+					<!-- Planning -->
+					<Button Classes="CardButton" Command="{Binding OpenPlanningCommand}">
+						<StackPanel Spacing="10">
+							<Border Background="#FFF1F2" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+								<Path Data="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"
+									  Fill="#F43F5E" Width="20" Height="20" Stretch="Uniform"
+									  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+							</Border>
+							<StackPanel Spacing="3">
+								<TextBlock Text="Planning" FontSize="15" Foreground="Black" FontWeight="SemiBold"/>
+								<TextBlock Text="Bekijk werkbezetting" FontSize="12" Foreground="#5F6C7B"/>
+							</StackPanel>
+						</StackPanel>
+					</Button>
+
+					<!-- Instellingen -->
+					<Button Classes="CardButton" Command="{Binding OpenInstellingenCommand}">
+						<StackPanel Spacing="10">
+							<Border Background="#F8FAFC" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+								<Path Data="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"
+									  Fill="#64748B" Width="20" Height="20" Stretch="Uniform"
+									  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+							</Border>
+							<StackPanel Spacing="3">
+								<TextBlock Text="Instellingen" FontSize="15" Foreground="Black" FontWeight="SemiBold"/>
+								<TextBlock Text="Global pricing instellingen" FontSize="12" Foreground="#5F6C7B"/>
+							</StackPanel>
 						</StackPanel>
 					</Button>
 
 				</UniformGrid>
+            </StackPanel>
+        </ScrollViewer>
 
-			</StackPanel>
-		</ScrollViewer>
+    </Grid>
 
-	</Grid>
+    <UserControl.Styles>
+        <Style Selector="Button.NavButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="14,10"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        </Style>
 
-	<!-- STYLES -->
-	<UserControl.Styles>
+        <Style Selector="Button.NavButton:pointerover">
+            <Setter Property="Background" Value="#55606A"/>
+        </Style>
 
-		<Style Selector="Button.NavButton">
-			<Setter Property="Background" Value="Transparent"/>
-			<Setter Property="Foreground" Value="White"/>
-			<Setter Property="CornerRadius" Value="10"/>
-			<Setter Property="Padding" Value="14,10"/>
-			<Setter Property="HorizontalContentAlignment" Value="Left"/>
-		</Style>
+        <Style Selector="Button.CardButton">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#E6E8EB"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Margin" Value="0,0,24,24"/>
+        </Style>
 
-		<Style Selector="Button.NavButton:pointerover">
-			<Setter Property="Background" Value="#55606A"/>
-		</Style>
-
-		<Style Selector="Button.CardButton">
-			<Setter Property="Background" Value="White"/>
-			<Setter Property="BorderBrush" Value="#E6E8EB"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="CornerRadius" Value="16"/>
-			<Setter Property="Padding" Value="20"/>
-			<Setter Property="Margin" Value="0,0,24,24"/>
-		</Style>
-
-		<Style Selector="Button.CardButton:pointerover">
-			<Setter Property="Background" Value="#FFF4CC"/>
-			<Setter Property="BorderBrush" Value="#F5C242"/>
-		</Style>
-
-	</UserControl.Styles>
-
+        <Style Selector="Button.CardButton:pointerover">
+            <Setter Property="Background" Value="#FFF4CC"/>
+            <Setter Property="BorderBrush" Value="#F5C242"/>
+        </Style>
+    </UserControl.Styles>
 </UserControl>

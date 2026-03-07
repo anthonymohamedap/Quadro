@@ -1,37 +1,57 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:m="using:QuadroApp.Model.DB"
         x:Class="QuadroApp.Views.LijstDialog"
         x:DataType="m:TypeLijst"
         Width="520"
         Height="700"
-        Title="🧾 Lijst bewerken"
+        Title="Lijst bewerken"
         Background="#F5F5F5"
         WindowStartupLocation="CenterOwner">
 
-	<Border CornerRadius="10" BorderBrush="#DDD" BorderThickness="1" Margin="15" Padding="20" Background="White">
-		<ScrollViewer VerticalScrollBarVisibility="Auto">
-			<StackPanel Spacing="14">
-				<TextBlock Text="🧾 Lijstgegevens" FontSize="22" FontWeight="Bold" Foreground="#222" Margin="0,0,0,10"/>
+    <Border CornerRadius="10" BorderBrush="#DDD" BorderThickness="1" Margin="15" Padding="20" Background="White">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="14">
+                <TextBlock Text="Lijstgegevens" FontSize="22" FontWeight="Bold" Foreground="#222" Margin="0,0,0,10"/>
 
-				<TextBox Text="{Binding Artikelnummer}" Watermark="Artikelnummer"/>
-				<TextBox Text="{Binding Levcode}" Watermark="Levcode"/>
-				<TextBox Text="{Binding Soort}" Watermark="Soort"/>
-				<TextBox Text="{Binding Serie}" Watermark="Serie"/>
-				<NumericUpDown Value="{Binding BreedteCm}" Minimum="0" Maximum="100" Increment="1"/>
-				<NumericUpDown Value="{Binding PrijsPerMeter}" Increment="0.1"/>
-				<NumericUpDown Value="{Binding VasteKost}" Increment="0.5"/>
-				<NumericUpDown Value="{Binding WerkMinuten}" Increment="1"/>
-				<NumericUpDown Value="{Binding VoorraadMeter}" Increment="0.5"/>
-				<NumericUpDown Value="{Binding MinimumVoorraad}" Increment="0.5"/>
-				<NumericUpDown Value="{Binding InventarisKost}" Increment="0.1"/>
-				<TextBox Text="{Binding Opmerking}" AcceptsReturn="True" Height="90"/>
+                <TextBlock Text="Artikelnummer" FontWeight="Bold"/>
+                <TextBox Text="{Binding Artikelnummer}"/>
 
-				<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,10,0,0">
-					<Button Content="Annuleren" Width="100" Background="#999" Foreground="White" Click="Annuleer_Click"/>
-					<Button Content="Opslaan" Width="120" Background="#444A50" Foreground="White" Click="Opslaan_Click"/>
-				</StackPanel>
-			</StackPanel>
-		</ScrollViewer>
-	</Border>
+                <TextBlock Text="Levcode" FontWeight="Bold"/>
+                <TextBox Text="{Binding Levcode}"/>
+
+                <TextBlock Text="Leverancier" FontWeight="Bold"/>
+                <TextBlock Text="{Binding Leverancier.Naam, TargetNullValue='Geen leverancier'}"/>
+
+                <TextBlock Text="Breedte" FontWeight="Bold"/>
+                <NumericUpDown Value="{Binding BreedteCm}" Minimum="0" Maximum="100" Increment="1"/>
+
+                <TextBlock Text="Soort" FontWeight="Bold"/>
+                <TextBox Text="{Binding Soort}"/>
+
+                <TextBlock Text="Serie" FontWeight="Bold"/>
+                <TextBox Text="{Binding Serie}"/>
+
+                <TextBlock Text="Voorraad" FontWeight="Bold"/>
+                <NumericUpDown Value="{Binding VoorraadMeter}" Increment="0.5"/>
+
+                <TextBlock Text="InventarisKost" FontWeight="Bold"/>
+                <NumericUpDown Value="{Binding InventarisKost}" Increment="0.1"/>
+
+                <TextBlock Text="PrijsPerMeter" FontWeight="Bold"/>
+                <NumericUpDown Value="{Binding PrijsPerMeter}" Increment="0.1"/>
+
+                <TextBlock Text="VasteKost" FontWeight="Bold"/>
+                <NumericUpDown Value="{Binding VasteKost}" Increment="0.5"/>
+
+                <TextBlock Text="WerkMinuten" FontWeight="Bold"/>
+                <NumericUpDown Value="{Binding WerkMinuten}" Increment="1"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,10,0,0">
+                    <Button Content="Annuleren" Width="100" Background="#999" Foreground="White" Click="Annuleer_Click"/>
+                    <Button Content="Opslaan" Width="120" Background="#444A50" Foreground="White" Click="Opslaan_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
 </Window>

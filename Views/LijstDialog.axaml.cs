@@ -22,11 +22,16 @@ public partial class LijstDialog : Window
         _editCopy.Id = lijst.Id;
         _editCopy.Artikelnummer = lijst.Artikelnummer;
         _editCopy.Levcode = lijst.Levcode;
+        _editCopy.Soort = lijst.Soort;
+        _editCopy.Serie = lijst.Serie;
         _editCopy.Opmerking = lijst.Opmerking;
         _editCopy.BreedteCm = lijst.BreedteCm;
         _editCopy.PrijsPerMeter = lijst.PrijsPerMeter;
         _editCopy.VasteKost = lijst.VasteKost;
         _editCopy.WerkMinuten = lijst.WerkMinuten;
+        _editCopy.VoorraadMeter = lijst.VoorraadMeter;
+        _editCopy.MinimumVoorraad = lijst.MinimumVoorraad;
+        _editCopy.InventarisKost = lijst.InventarisKost;
         _editCopy.LeverancierId = lijst.LeverancierId;
         _editCopy.LaatsteUpdate = lijst.LaatsteUpdate;
         _editCopy.Leverancier = lijst.Leverancier;

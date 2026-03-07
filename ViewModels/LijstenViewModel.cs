@@ -1,19 +1,18 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Import.Enterprise;
 using QuadroApp.Service.Interfaces;
-using QuadroApp.Service.Pricing;
 using QuadroApp.Validation;
+using QuadroApp.Views;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace QuadroApp.ViewModels;
@@ -27,62 +26,25 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
     private readonly TypeLijstImportDefinition _typeLijstImportDefinition;
     private readonly ICrudValidator<TypeLijst> _validator;
     private readonly IToastService _toast;
-    public TypeLijst? Selected => GeselecteerdeLijst;
+
     [ObservableProperty]
     private string? leverancierZoekterm;
-
-
 
     [ObservableProperty]
     private ObservableCollection<Leverancier> gefilterdeLeveranciers = new();
 
+    [ObservableProperty]
+    private ObservableCollection<TypeLijst> lijsten = new();
 
+    [ObservableProperty]
+    private ObservableCollection<TypeLijst> filteredLijsten = new();
 
-    // ======= LOGGING =======
-    private const string LogPrefix = "[LijstenVM]";
-    private static void Log(
-        string message,
-        Exception? ex = null,
-        [CallerMemberName] string caller = "",
-        [CallerLineNumber] int line = 0)
-    {
-        var ts = DateTime.Now.ToString("HH:mm:ss.fff");
-        var tid = Thread.CurrentThread.ManagedThreadId;
-        var full = $"{ts} {LogPrefix} (T{tid}) {caller}:{line} | {message}";
-        if (ex is null)
-        {
-            Debug.WriteLine(full);
-            Console.WriteLine(full);
-        }
-        else
-        {
-            Debug.WriteLine(full);
-            Debug.WriteLine(ex);
-            Console.WriteLine(full);
-            Console.WriteLine(ex);
-        }
-    }
+    [ObservableProperty]
+    private List<Leverancier> leveranciers = new();
 
-    private string DumpState(string tag = "")
-    {
-        var sel = GeselecteerdeLijst is null ? "null" : $"{GeselecteerdeLijst.Id}/{GeselecteerdeLijst.Artikelnummer}";
-        var lijstenCount = Lijsten?.Count ?? 0;
-        var filteredCount = FilteredLijsten?.Count ?? 0;
-        var pagedCount = PagedLijsten?.Count ?? 0;
-
-        // TotalPages kan nu safe gebruikt worden, maar we houden het toch robuust
-        var totalPages = TotalPages;
-
-        return $"{tag} State => IsBusy={IsBusy}, Zoekterm='{Zoekterm}', Lijsten={lijstenCount}, Filtered={filteredCount}, Paged={pagedCount}, Page={CurrentPage}/{totalPages}, Selected={sel}, DetailOpen={IsDetailOpen}";
-    }
-
-    public ObservableCollection<Leverancier> AlleLeveranciers { get; } = new();
-
-    [ObservableProperty] private ObservableCollection<TypeLijst> lijsten = new();
-    [ObservableProperty] private ObservableCollection<TypeLijst> filteredLijsten = new();
-    [ObservableProperty] private List<Leverancier> leveranciers = new();
     [ObservableProperty]
     private Leverancier? selectedLeverancier;
+
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(EditCommand))]
     [NotifyCanExecuteChangedFor(nameof(DeleteCommand))]
@@ -91,17 +53,15 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
 
     [ObservableProperty] private bool isDetailOpen;
     [ObservableProperty] private string zoekterm = string.Empty;
-
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? foutmelding;
 
-    // =========================
-    // PAGING
-    // =========================
     [ObservableProperty] private ObservableCollection<TypeLijst> pagedLijsten = new();
-
+    [ObservableProperty] private ObservableCollection<TypeLijst> selectedLijsten = new();
     [ObservableProperty] private int currentPage = 1;
     [ObservableProperty] private int pageSize = 10;
+
+    public TypeLijst? Selected => GeselecteerdeLijst;
 
     public int TotalPages
     {
@@ -115,11 +75,10 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
 
     public bool CanPrevPage => CurrentPage > 1;
     public bool CanNextPage => CurrentPage < TotalPages;
+    public int AantalLijsten => FilteredLijsten?.Count ?? 0;
 
     public IRelayCommand PrevPageCommand { get; }
     public IRelayCommand NextPageCommand { get; }
-
-    public int AantalLijsten => FilteredLijsten?.Count ?? 0;
 
     public LijstenViewModel(
         IDbContextFactory<AppDbContext> dbFactory,
@@ -135,23 +94,15 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
         _dialogs = dialogs;
         _lijstDialog = lijstDialog;
         _typeLijstImportDefinition = typeLijstImportDefinition;
-
         _validator = validator;
         _toast = toast;
-
-        // rest van jouw ctor...
-
-
-        Log("CTOR start");
 
         PrevPageCommand = new RelayCommand(
             execute: () =>
             {
-                Log($"PrevPage clicked. {DumpState("BEFORE")}");
-                if (!CanPrevPage) { Log("PrevPage blocked (CanPrevPage=false)"); return; }
+                if (!CanPrevPage) return;
                 CurrentPage--;
                 UpdatePagedLijsten();
-                Log($"PrevPage done. {DumpState("AFTER")}");
             },
             canExecute: () => CanPrevPage
         );
@@ -159,111 +110,66 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
         NextPageCommand = new RelayCommand(
             execute: () =>
             {
-                Log($"NextPage clicked. {DumpState("BEFORE")}");
-                if (!CanNextPage) { Log("NextPage blocked (CanNextPage=false)"); return; }
+                if (!CanNextPage) return;
                 CurrentPage++;
                 UpdatePagedLijsten();
-                Log($"NextPage done. {DumpState("AFTER")}");
             },
             canExecute: () => CanNextPage
         );
-
-        Log($"CTOR done. {DumpState("INIT")}");
-    }
-    partial void OnSelectedLeverancierChanged(Leverancier? value)
-    {
-        if (GeselecteerdeLijst is not null)
-        {
-            GeselecteerdeLijst.Leverancier = value;
-            GeselecteerdeLijst.LeverancierId = (int)(value?.Id);
-        }
-    }
-    private void SyncSelectedLeverancierFromLijst()
-    {
-        if (GeselecteerdeLijst is null)
-        {
-            SelectedLeverancier = null;
-            return;
-        }
-
-        // prefer FK
-        var id = GeselecteerdeLijst.LeverancierId;
-
-        if (id > 0)
-        {
-            SelectedLeverancier = Leveranciers.FirstOrDefault(l => l.Id == id);
-            return;
-        }
-
-        // fallback: op code als Id ontbreekt
-        var naam = (GeselecteerdeLijst.Leverancier?.Naam ?? "").Trim();
-        if (!string.IsNullOrWhiteSpace(naam))
-            SelectedLeverancier = Leveranciers.FirstOrDefault(l => string.Equals(l.Naam, naam, StringComparison.OrdinalIgnoreCase));
-    }
-    public async Task InitializeAsync()
-    {
-        Log($"InitializeAsync start. {DumpState("BEFORE")}");
-        await LoadAsync();
-        Log($"InitializeAsync done. {DumpState("AFTER")}");
     }
 
-    partial void OnZoektermChanged(string value)
-    {
-        Log($"OnZoektermChanged => '{value}'. {DumpState("BEFORE")}");
-        ApplyFilter();
-        Log($"OnZoektermChanged done. {DumpState("AFTER")}");
-    }
+    public async Task InitializeAsync() => await LoadAsync();
+
+    partial void OnZoektermChanged(string value) => ApplyFilter();
 
     partial void OnGeselecteerdeLijstChanged(TypeLijst? value)
     {
-        Log($"OnGeselecteerdeLijstChanged => {(value is null ? "null" : $"{value.Id}/{value.Artikelnummer}")}. {DumpState("BEFORE")}");
         IsDetailOpen = value is not null;
-        OnPropertyChanged(nameof(VerkoopPrijsPreview));
         SyncSelectedLeverancierFromLijst();
-
-        Log($"OnGeselecteerdeLijstChanged done. {DumpState("AFTER")}");
     }
 
     partial void OnFilteredLijstenChanged(ObservableCollection<TypeLijst> value)
     {
-        Log($"OnFilteredLijstenChanged => Count={value?.Count ?? 0}. {DumpState("BEFORE")}");
         CurrentPage = 1;
         UpdatePagedLijsten();
         OnPropertyChanged(nameof(AantalLijsten));
         OnPropertyChanged(nameof(TotalPages));
         NotifyPagingCanExecute();
-        Log($"OnFilteredLijstenChanged done. {DumpState("AFTER")}");
     }
 
     partial void OnPageSizeChanged(int value)
     {
-        Log($"OnPageSizeChanged => {value}. {DumpState("BEFORE")}");
-
         if (value <= 0) PageSize = 10;
         CurrentPage = 1;
         UpdatePagedLijsten();
         OnPropertyChanged(nameof(TotalPages));
         NotifyPagingCanExecute();
-
-        Log($"OnPageSizeChanged done. {DumpState("AFTER")}");
     }
 
     partial void OnCurrentPageChanged(int value)
     {
-        Log($"OnCurrentPageChanged => {value}. {DumpState("BEFORE")}");
-
         if (CurrentPage < 1) CurrentPage = 1;
         if (CurrentPage > TotalPages) CurrentPage = TotalPages;
 
         UpdatePagedLijsten();
         NotifyPagingCanExecute();
-
-        Log($"OnCurrentPageChanged done. {DumpState("AFTER")}");
     }
+
+    partial void OnSelectedLeverancierChanged(Leverancier? value)
+    {
+        if (GeselecteerdeLijst is null)
+        {
+            return;
+        }
+
+        GeselecteerdeLijst.Leverancier = value;
+        GeselecteerdeLijst.LeverancierId = value?.Id ?? GeselecteerdeLijst.LeverancierId;
+    }
+
+    partial void OnLeverancierZoektermChanged(string? value) => FilterLeveranciers();
 
     private void NotifyPagingCanExecute()
     {
-        Log($"NotifyPagingCanExecute. CanPrev={CanPrevPage}, CanNext={CanNextPage}. {DumpState()}");
         (PrevPageCommand as RelayCommand)?.NotifyCanExecuteChanged();
         (NextPageCommand as RelayCommand)?.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(CanPrevPage));
@@ -272,161 +178,86 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
 
     private void UpdatePagedLijsten()
     {
-        Log($"UpdatePagedLijsten start. {DumpState("BEFORE")}");
-
         if (CurrentPage < 1) CurrentPage = 1;
         if (CurrentPage > TotalPages) CurrentPage = TotalPages;
 
         var skip = (CurrentPage - 1) * PageSize;
-
-        var page = FilteredLijsten
-            .Skip(skip)
-            .Take(PageSize)
-            .ToList();
-
+        var page = FilteredLijsten.Skip(skip).Take(PageSize).ToList();
         PagedLijsten = new ObservableCollection<TypeLijst>(page);
 
         OnPropertyChanged(nameof(TotalPages));
         NotifyPagingCanExecute();
-
-        Log($"UpdatePagedLijsten done. skip={skip}, take={PageSize}, pageCount={PagedLijsten.Count}. {DumpState("AFTER")}");
     }
 
-    [ObservableProperty] private decimal breedte = 30m;
-    [ObservableProperty] private decimal hoogte = 40m;
-    [ObservableProperty] private decimal werkloon = 15m;
-    [ObservableProperty] private decimal staaflijstWinstFactor = 3.5m;
-    [ObservableProperty] private decimal staaflijstAfvalPercentage = 20m;
-    [ObservableProperty] private decimal defaultWinstFactor = 0m;
-    [ObservableProperty] private decimal defaultAfvalPercentage = 0m;
+    private void SyncSelectedLeverancierFromLijst()
+    {
+        if (GeselecteerdeLijst is null)
+        {
+            SelectedLeverancier = null;
+            return;
+        }
 
-    public string VerkoopPrijsPreview =>
-        GeselecteerdeLijst == null
-            ? "Selecteer een lijst om prijs te berekenen"
-            : $"💰 Geschatte verkoopprijs: € {BerekenPrijs(GeselecteerdeLijst, Breedte, Hoogte, Werkloon):F2}";
+        var id = GeselecteerdeLijst.LeverancierId;
+        if (id > 0)
+        {
+            SelectedLeverancier = Leveranciers.FirstOrDefault(l => l.Id == id);
+            return;
+        }
 
-    private decimal BerekenPrijs(TypeLijst lijst, decimal breedteCm, decimal hoogteCm, decimal werkloon)
-        => PricingEngine.CalculateLijstPrijsExcl(
-            lijst,
-            breedteCm,
-            hoogteCm,
-            werkloon,
-            StaaflijstWinstFactor,
-            StaaflijstAfvalPercentage,
-            DefaultWinstFactor,
-            DefaultAfvalPercentage);
+        var naam = (GeselecteerdeLijst.Leverancier?.Naam ?? string.Empty).Trim();
+        if (!string.IsNullOrWhiteSpace(naam))
+        {
+            SelectedLeverancier = Leveranciers.FirstOrDefault(l =>
+                string.Equals(l.Naam, naam, StringComparison.OrdinalIgnoreCase));
+        }
+    }
 
     [RelayCommand]
     private async Task LoadAsync()
     {
-        Log($"LoadAsync start. {DumpState("BEFORE")}");
+        if (IsBusy) return;
 
         try
         {
-            if (IsBusy) { Log("LoadAsync blocked: IsBusy=true"); return; }
-
             IsBusy = true;
             Foutmelding = null;
 
             await using var db = await _dbFactory.CreateDbContextAsync();
-            Log("DbContext created");
 
-            StaaflijstWinstFactor = await ReadDecimalInstellingAsync(db, "StaaflijstWinstFactor", 3.5m);
-            StaaflijstAfvalPercentage = await ReadDecimalInstellingAsync(db, "StaaflijstAfvalPercentage", 20m);
-            DefaultWinstFactor = await ReadDecimalInstellingAsync(db, "DefaultWinstFactor", 0m);
-            DefaultAfvalPercentage = await ReadDecimalInstellingAsync(db, "DefaultAfvalPercentage", 0m);
-
-            Log("Loading leveranciers...");
             Leveranciers = await db.Leveranciers
                 .AsNoTracking()
                 .OrderBy(l => l.Naam)
                 .ToListAsync();
-            Log($"Loaded leveranciers: {Leveranciers.Count}");
 
-            Log("Loading typelijsten (Include Leverancier)...");
             var lijstenData = await db.TypeLijsten
                 .Include(t => t.Leverancier)
                 .AsNoTracking()
                 .OrderBy(t => t.Artikelnummer)
                 .ToListAsync();
-            Log($"Loaded typelijsten: {lijstenData.Count}");
 
             Lijsten = new ObservableCollection<TypeLijst>(lijstenData);
-            Log($"Lijsten set. Count={Lijsten.Count}");
-
             FilteredLijsten = new ObservableCollection<TypeLijst>(Lijsten);
-            Log($"FilteredLijsten set. Count={FilteredLijsten.Count}");
             GefilterdeLeveranciers = new ObservableCollection<Leverancier>(Leveranciers);
 
-            // ✅ Sync SelectedLeverancier met huidige lijst (indien detail open is)
             SyncSelectedLeverancierFromLijst();
             UpdatePagedLijsten();
-            Log($"After paging. Paged={PagedLijsten.Count}");
-
-            OnPropertyChanged(nameof(VerkoopPrijsPreview));
-
-            Log($"LoadAsync done OK. {DumpState("AFTER")}");
         }
         catch (Exception ex)
         {
-            Foutmelding = $"❌ Fout bij laden lijsten: {ex.Message}";
-            Log($"LoadAsync FAILED: {Foutmelding}", ex);
+            Foutmelding = $"Fout bij laden lijsten: {ex.Message}";
             await _dialogs.ShowErrorAsync("Laden mislukt", Foutmelding);
         }
         finally
         {
             IsBusy = false;
-            Log($"LoadAsync finally. {DumpState("FINALLY")}");
         }
-    }
-
-    private void ApplyFilter()
-    {
-        Log($"ApplyFilter start. Zoekterm='{Zoekterm}'. {DumpState("BEFORE")}");
-
-        if (Lijsten.Count == 0)
-        {
-            FilteredLijsten = new ObservableCollection<TypeLijst>();
-            Log("ApplyFilter: Lijsten empty => FilteredLijsten empty");
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(Zoekterm))
-        {
-            FilteredLijsten = new ObservableCollection<TypeLijst>(Lijsten);
-            Log($"ApplyFilter: empty term => {FilteredLijsten.Count} items");
-        }
-        else
-        {
-            var term = Zoekterm.Trim().ToLowerInvariant();
-            var filtered = Lijsten.Where(l =>
-                (l.Artikelnummer ?? "").ToLowerInvariant().Contains(term) ||
-                (l.Leverancier?.Naam ?? "").ToLowerInvariant().Contains(term)
-            );
-
-            var list = filtered.ToList();
-            FilteredLijsten = new ObservableCollection<TypeLijst>(list);
-            Log($"ApplyFilter: term='{term}' => {FilteredLijsten.Count} items");
-        }
-
-        Log($"ApplyFilter done. {DumpState("AFTER")}");
     }
 
     [RelayCommand]
-    private async Task GaTerugAsync()
-    {
-        Log($"GaTerugAsync start. {DumpState("BEFORE")}");
-        await _nav.NavigateToAsync<HomeViewModel>();
-        Log("GaTerugAsync done");
-    }
+    private async Task GaTerugAsync() => await _nav.NavigateToAsync<HomeViewModel>();
 
     [RelayCommand]
-    private async Task RefreshAsync()
-    {
-        Log($"RefreshAsync start. {DumpState("BEFORE")}");
-        await LoadAsync();
-        Log($"RefreshAsync done. {DumpState("AFTER")}");
-    }
+    private async Task RefreshAsync() => await LoadAsync();
 
     private bool CanEdit() => GeselecteerdeLijst is not null;
     private bool CanDelete() => GeselecteerdeLijst is not null;
@@ -434,29 +265,19 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
     [RelayCommand(CanExecute = nameof(CanEdit))]
     private async Task EditAsync()
     {
-        Log($"EditAsync start. Selected={(GeselecteerdeLijst is null ? "null" : GeselecteerdeLijst.Id.ToString())}. {DumpState("BEFORE")}");
-
         if (GeselecteerdeLijst is null) return;
 
         try
         {
             var ok = await _lijstDialog.EditAsync(GeselecteerdeLijst);
-            Log($"Edit dialog result => {(ok is null ? "null" : ok.ToString())}");
-
-            if (ok == null) return;
+            if (ok is null) return;
 
             await SaveAsync();
-            Log("EditAsync saved OK");
         }
         catch (Exception ex)
         {
-            Foutmelding = $"❌ Bewerken mislukt: {ex.Message}";
-            Log($"EditAsync FAILED: {Foutmelding}", ex);
+            Foutmelding = $"Bewerken mislukt: {ex.Message}";
             await _dialogs.ShowErrorAsync("Bewerken mislukt", Foutmelding);
-        }
-        finally
-        {
-            Log($"EditAsync finally. {DumpState("FINALLY")}");
         }
     }
 
@@ -470,16 +291,12 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
             IsBusy = true;
             Foutmelding = null;
 
-            // ✅ Zet FK vanuit combobox selectie (belangrijk!)
             GeselecteerdeLijst.LeverancierId = SelectedLeverancier?.Id ?? GeselecteerdeLijst.LeverancierId;
-
-            // Normalize
-            GeselecteerdeLijst.Artikelnummer = (GeselecteerdeLijst.Artikelnummer ?? "").Trim();
-            GeselecteerdeLijst.Soort = (GeselecteerdeLijst.Soort ?? "").Trim();
-            GeselecteerdeLijst.Opmerking = (GeselecteerdeLijst.Opmerking ?? "").Trim();
+            GeselecteerdeLijst.Artikelnummer = (GeselecteerdeLijst.Artikelnummer ?? string.Empty).Trim();
+            GeselecteerdeLijst.Soort = (GeselecteerdeLijst.Soort ?? string.Empty).Trim();
+            GeselecteerdeLijst.Serie = (GeselecteerdeLijst.Serie ?? string.Empty).Trim();
             GeselecteerdeLijst.LaatsteUpdate = DateTime.Now;
 
-            // ✅ Validatie
             var vr = await _validator.ValidateUpdateAsync(GeselecteerdeLijst);
 
             var warn = vr.WarningText();
@@ -495,8 +312,6 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
 
             db.TypeLijsten.Attach(GeselecteerdeLijst);
             db.Entry(GeselecteerdeLijst).State = EntityState.Modified;
-
-            // voorkom EF navigation gedoe
             db.Entry(GeselecteerdeLijst).Reference(x => x.Leverancier).IsModified = false;
 
             await db.SaveChangesAsync();
@@ -527,8 +342,6 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
     [RelayCommand]
     private async Task ImportExcelAsync()
     {
-        Log("ImportExcelAsync start");
-
         try
         {
             if (IsBusy) return;
@@ -546,34 +359,27 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
         catch (Exception ex)
         {
             var msg = ex.InnerException?.Message ?? ex.Message;
-            Foutmelding = $"❌ Import mislukt: {msg}";
-            Log(Foutmelding, ex);
+            Foutmelding = $"Import mislukt: {msg}";
             _toast.Error(Foutmelding);
         }
         finally
         {
             IsBusy = false;
-            Log("ImportExcelAsync done");
         }
     }
-
 
     [RelayCommand(CanExecute = nameof(CanDelete))]
     private async Task DeleteAsync()
     {
-        Log($"DeleteAsync start. {DumpState("BEFORE")}");
-
         if (GeselecteerdeLijst is null)
         {
-            Log("DeleteAsync aborted: GeselecteerdeLijst=null");
             return;
         }
 
         var ok = await _dialogs.ConfirmAsync(
             "Lijst verwijderen",
-            $"Ben je zeker dat je lijst '{GeselecteerdeLijst.Artikelnummer}' wil verwijderen?"
-        );
-        Log($"Delete confirm => ok={ok}");
+            $"Ben je zeker dat je lijst '{GeselecteerdeLijst.Artikelnummer}' wil verwijderen?");
+
         if (!ok) return;
 
         try
@@ -582,40 +388,52 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
             Foutmelding = null;
 
             await using var db = await _dbFactory.CreateDbContextAsync();
-            Log($"DeleteAsync: DbContext created. Removing TypeLijst Id={GeselecteerdeLijst.Id}");
             var vr = await _validator.ValidateDeleteAsync(GeselecteerdeLijst);
             if (!vr.IsValid)
             {
                 _toast.Error(vr.ErrorText());
                 return;
             }
+
             db.TypeLijsten.Remove(new TypeLijst { Id = GeselecteerdeLijst.Id });
-            var saved = await db.SaveChangesAsync();
-            Log($"DeleteAsync: SaveChangesAsync => {saved} rows");
+            await db.SaveChangesAsync();
 
             await LoadAsync();
 
             IsDetailOpen = false;
             GeselecteerdeLijst = null;
-
-            Log($"DeleteAsync done OK. {DumpState("AFTER")}");
         }
         catch (Exception ex)
         {
-            Foutmelding = $"❌ Verwijderen mislukt: {ex.Message}";
-            Log($"DeleteAsync FAILED: {Foutmelding}", ex);
+            Foutmelding = $"Verwijderen mislukt: {ex.Message}";
             await _dialogs.ShowErrorAsync("Verwijderen mislukt", Foutmelding);
         }
         finally
         {
             IsBusy = false;
-            Log($"DeleteAsync finally. {DumpState("FINALLY")}");
+        }
+    }
+
+    private void ApplyFilter()
+    {
+        if (Lijsten.Count == 0)
+        {
+            FilteredLijsten = new ObservableCollection<TypeLijst>();
+            return;
         }
 
-    }
-    partial void OnLeverancierZoektermChanged(string? value)
-    {
-        FilterLeveranciers();
+        if (string.IsNullOrWhiteSpace(Zoekterm))
+        {
+            FilteredLijsten = new ObservableCollection<TypeLijst>(Lijsten);
+            return;
+        }
+
+        var term = Zoekterm.Trim().ToLowerInvariant();
+        var filtered = Lijsten.Where(l =>
+            (l.Artikelnummer ?? string.Empty).ToLowerInvariant().Contains(term) ||
+            (l.Leverancier?.Naam ?? string.Empty).ToLowerInvariant().Contains(term));
+
+        FilteredLijsten = new ObservableCollection<TypeLijst>(filtered);
     }
 
     private void FilterLeveranciers()
@@ -632,61 +450,63 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
         {
             var term = LeverancierZoekterm.Trim().ToLowerInvariant();
             filtered = Leveranciers.Where(l =>
-                (l.Naam ?? "").ToLowerInvariant().Contains(term));
+                (l.Naam ?? string.Empty).ToLowerInvariant().Contains(term));
         }
 
         var list = filtered.ToList();
 
-        // ✅ hou de selected in de dropdown zelfs als filter hem wegduwt
         if (SelectedLeverancier is not null && list.All(x => x.Id != SelectedLeverancier.Id))
             list.Insert(0, SelectedLeverancier);
 
         GefilterdeLeveranciers = new ObservableCollection<Leverancier>(list);
     }
 
-
+    public void UpdateSelectedLijsten(IEnumerable<TypeLijst> selectedItems)
+    {
+        SelectedLijsten.Clear();
+        foreach (var item in selectedItems.Distinct())
+        {
+            SelectedLijsten.Add(item);
+        }
+    }
 
     [RelayCommand]
-    private async Task SaveInstellingenAsync()
+    private async Task BulkPrijsUpdateAsync()
     {
-        if (StaaflijstWinstFactor < 0 || StaaflijstAfvalPercentage < 0 || DefaultWinstFactor < 0 || DefaultAfvalPercentage < 0)
+        await OpenBulkWindowAsync(BulkLijstenActionMode.BulkPrijsUpdate);
+    }
+
+    [RelayCommand]
+    private async Task HerberekenSelectieAsync()
+    {
+        await OpenBulkWindowAsync(BulkLijstenActionMode.HerberekenSelectie);
+    }
+
+    private async Task OpenBulkWindowAsync(BulkLijstenActionMode actionMode)
+    {
+        var vm = new BulkLijstenViewModel(_dbFactory, _toast, actionMode);
+        await vm.InitializeAsync();
+
+        var window = new BulkLijstenWindow
         {
-            await _dialogs.ShowErrorAsync("Ongeldige instellingen", "Waarden moeten groter dan of gelijk aan 0 zijn.");
+            DataContext = vm
+        };
+
+        vm.RequestClose = confirmed => window.Close(confirmed);
+
+        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            window.Show();
             return;
         }
 
-        await using var db = await _dbFactory.CreateDbContextAsync();
-        SaveInstelling(db, "StaaflijstWinstFactor", StaaflijstWinstFactor);
-        SaveInstelling(db, "StaaflijstAfvalPercentage", StaaflijstAfvalPercentage);
-        SaveInstelling(db, "DefaultWinstFactor", DefaultWinstFactor);
-        SaveInstelling(db, "DefaultAfvalPercentage", DefaultAfvalPercentage);
-        await db.SaveChangesAsync();
-
-        OnPropertyChanged(nameof(VerkoopPrijsPreview));
-        _toast.Success("Prijsinstellingen opgeslagen");
-    }
-
-    private static async Task<decimal> ReadDecimalInstellingAsync(AppDbContext db, string sleutel, decimal fallback)
-    {
-        var value = await db.Instellingen
-            .AsNoTracking()
-            .Where(x => x.Sleutel == sleutel)
-            .Select(x => x.Waarde)
-            .FirstOrDefaultAsync();
-
-        return decimal.TryParse(value, out var parsed) ? parsed : fallback;
-    }
-
-    private static void SaveInstelling(AppDbContext db, string sleutel, decimal waarde)
-    {
-        var valueText = waarde.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        var item = db.Instellingen.FirstOrDefault(x => x.Sleutel == sleutel);
-        if (item is null)
+        var owner = desktop.MainWindow;
+        if (owner is null)
         {
-            db.Instellingen.Add(new Instelling { Sleutel = sleutel, Waarde = valueText });
+            window.Show();
             return;
         }
 
-        item.Waarde = valueText;
+        _ = await window.ShowDialog<bool>(owner);
     }
 }

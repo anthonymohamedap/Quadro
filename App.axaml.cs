@@ -104,6 +104,7 @@ public partial class App : Application
         services.AddSingleton<PricingEngine>();
         services.AddSingleton<IPricingSettingsProvider, PricingSettingsProvider>();
         services.AddSingleton<IPricingService, PricingService>();
+        services.AddSingleton<IAppSettingsProvider, AppSettingsProvider>();
 
         // Enterprise import pipeline
         services.AddTransient<IExcelParser, ClosedXmlExcelParser>();
@@ -149,6 +150,7 @@ public partial class App : Application
         services.AddTransient<KlantDetailViewModel>();
         services.AddTransient<WerkBonLijstViewModel>();
         services.AddTransient<FacturenViewModel>();
+        services.AddTransient<InstellingenViewModel>();
 
         Services = services.BuildServiceProvider();
 
@@ -255,3 +257,4 @@ public partial class App : Application
 
 
 }
+
