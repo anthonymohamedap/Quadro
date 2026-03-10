@@ -40,14 +40,14 @@
             <StackPanel Margin="20" Spacing="16">
                 <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="10" Padding="18">
                     <StackPanel Spacing="12">
-                        <TextBlock Text="Staaflijst Pricing" FontSize="18" FontWeight="SemiBold"/>
+                        <TextBlock Text="Staaflijst Pricing" FontSize="18" FontWeight="SemiBold" Foreground ="Black"/>
 
                         <Grid ColumnDefinitions="2*,3*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="8">
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="StaaflijstWinstFactor" FontWeight="Bold"/>
-                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding StaaflijstWinstFactor, Mode=TwoWay}"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="StaaflijstWinstFactor" FontWeight="Bold" Foreground ="Black"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding StaaflijstWinstFactor, Mode=TwoWay}" Foreground ="Black"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="StaaflijstAfvalPercentage" FontWeight="Bold"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding StaaflijstAfvalPercentage, Mode=TwoWay}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="StaaflijstAfvalPercentage" FontWeight="Bold" Foreground ="Black"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding StaaflijstAfvalPercentage, Mode=TwoWay}" Foreground ="Black"/>
                         </Grid>
                     </StackPanel>
                 </Border>
@@ -57,11 +57,11 @@
                         <TextBlock Text="Default Pricing" FontSize="18" FontWeight="SemiBold"/>
 
                         <Grid ColumnDefinitions="2*,3*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="8">
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="DefaultWinstFactor" FontWeight="Bold"/>
-                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding DefaultWinstFactor, Mode=TwoWay}"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="DefaultWinstFactor" FontWeight="Bold" Foreground ="Black"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding DefaultWinstFactor, Mode=TwoWay}" Foreground ="Black"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="DefaultAfvalPercentage" FontWeight="Bold"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding DefaultAfvalPercentage, Mode=TwoWay}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="DefaultAfvalPercentage" FontWeight="Bold" Foreground ="Black"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding DefaultAfvalPercentage, Mode=TwoWay}" Foreground ="Black"/>
                         </Grid>
                     </StackPanel>
                 </Border>

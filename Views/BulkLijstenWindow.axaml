@@ -130,6 +130,9 @@
             <Setter Property="Background" Value="#F5C242"/>
             <Setter Property="Foreground" Value="#222"/>
         </Style>
+		<Style Selector="TextBlock">
+			<Setter Property="Foreground" Value="Black"/>
+		</Style>
     </Window.Styles>
 </Window>
 
