@@ -19,6 +19,7 @@ public partial class FacturenViewModel : ObservableObject, IAsyncInitializable
     private readonly IFactuurWorkflowService _workflow;
     private readonly IFactuurExportService _exportService;
     private readonly IToastService _toast;
+    private readonly INavigationService _nav;
 
     [ObservableProperty] private ObservableCollection<Factuur> facturen = new();
     [ObservableProperty] private Factuur? geselecteerdeFactuur;
@@ -39,23 +40,27 @@ public partial class FacturenViewModel : ObservableObject, IAsyncInitializable
     public IAsyncRelayCommand MarkeerKlaarVoorExportCommand { get; }
     public IAsyncRelayCommand ExportPdfCommand { get; }
     public IAsyncRelayCommand MarkeerBetaaldCommand { get; }
+    public IAsyncRelayCommand GaTerugCommand { get; }
 
     public FacturenViewModel(
         IDbContextFactory<AppDbContext> factory,
         IFactuurWorkflowService workflow,
         IFactuurExportService exportService,
-        IToastService toast)
+        IToastService toast,
+        INavigationService nav)
     {
         _factory = factory;
         _workflow = workflow;
         _exportService = exportService;
         _toast = toast;
+        _nav = nav;
 
         RefreshCommand = new AsyncRelayCommand(InitializeAsync);
         SaveCommand = new AsyncRelayCommand(SaveAsync);
         MarkeerKlaarVoorExportCommand = new AsyncRelayCommand(MarkeerKlaarVoorExportAsync);
         ExportPdfCommand = new AsyncRelayCommand(ExportPdfAsync);
         MarkeerBetaaldCommand = new AsyncRelayCommand(MarkeerBetaaldAsync);
+        GaTerugCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<HomeViewModel>());
     }
 
     public async Task InitializeAsync()

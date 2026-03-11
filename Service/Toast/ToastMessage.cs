@@ -1,8 +1,9 @@
-﻿namespace QuadroApp.Model.Toast
-{
-    using CommunityToolkit.Mvvm.ComponentModel;
-    using QuadroApp.Service.Toast;
+using Avalonia.Media;
+using CommunityToolkit.Mvvm.ComponentModel;
+using QuadroApp.Service.Toast;
 
+namespace QuadroApp.Model.Toast
+{
     public partial class ToastMessage : ObservableObject
     {
         public ToastMessage(string content, ToastType type)
@@ -12,7 +13,20 @@
         }
 
         public string Content { get; }
+
+        /// <summary>Alias used by AXAML DataTemplates that bind to {Binding Message}.</summary>
+        public string Message => Content;
+
         public ToastType Type { get; }
+
+        /// <summary>Background brush derived from <see cref="Type"/> for AXAML overlays.</summary>
+        public IBrush BackgroundBrush => Type switch
+        {
+            ToastType.Success => new SolidColorBrush(Color.Parse("#52c41a")),
+            ToastType.Error   => new SolidColorBrush(Color.Parse("#ff4d4f")),
+            ToastType.Warning => new SolidColorBrush(Color.Parse("#faad14")),
+            _                 => new SolidColorBrush(Color.Parse("#1677ff"))
+        };
 
         [ObservableProperty]
         private bool isVisible = true;

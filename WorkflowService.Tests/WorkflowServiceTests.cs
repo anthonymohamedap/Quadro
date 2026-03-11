@@ -6,6 +6,7 @@ using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
@@ -293,6 +294,10 @@ public class WorkflowServiceTests
     {
         public List<string> SuccessMessages { get; } = new();
         public List<string> WarningMessages { get; } = new();
+
+        // Not used in tests — satisfy the interface contract
+        public ReadOnlyObservableCollection<QuadroApp.Model.Toast.ToastMessage> Messages { get; } =
+            new(new ObservableCollection<QuadroApp.Model.Toast.ToastMessage>());
 
         public void Show(string message, QuadroApp.Service.Toast.ToastType type, int durationMs = 3000)
         {

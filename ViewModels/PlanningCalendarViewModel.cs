@@ -31,7 +31,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
     public IAsyncRelayCommand OpenWeekWerkLijstCommand { get; }
 
-    public ObservableCollection<ToastMessage> ToastMessages { get; }
+    public ReadOnlyObservableCollection<ToastMessage> ToastMessages { get; }
 
     public PlanningCalendarViewModel(
         IDbContextFactory<AppDbContext> factory,
@@ -44,7 +44,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
         _toast = toast;
         _statusWorkflow = statusWorkflow;
 
-        // ToastMessages = ((ToastService)_toast).Messages;
+        ToastMessages = toast.Messages;
 
         PrevMonthCommand = new RelayCommand(PrevMonth);
         NextMonthCommand = new RelayCommand(NextMonth);

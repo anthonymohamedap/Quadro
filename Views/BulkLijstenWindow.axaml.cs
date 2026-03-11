@@ -1,7 +1,7 @@
 ﻿using Avalonia.Controls;
-using System.Linq;
 using QuadroApp.Model.DB;
 using QuadroApp.ViewModels;
+using System.Linq;
 
 namespace QuadroApp.Views;
 

@@ -51,16 +51,64 @@
 
                         <ComboBox Grid.Column="1"
                                   ItemsSource="{Binding SoortOptions}"
+								  Foreground="White"
                                   SelectedItem="{Binding SoortFilter, Mode=TwoWay}"/>
 
                         <ComboBox Grid.Column="2"
                                   ItemsSource="{Binding SerieOptions}"
+								  Foreground="White"
                                   SelectedItem="{Binding SerieFilter, Mode=TwoWay}"/>
 
                         <ComboBox Grid.Column="3"
                                   ItemsSource="{Binding ActionModes}"
+								  Foreground="White"
                                   SelectedItem="{Binding SelectedAction, Mode=TwoWay}"/>
                     </Grid>
+
+                    <!-- Price input panel — only visible for BulkPrijsUpdate -->
+                    <Border IsVisible="{Binding IsPrijsUpdateMode}"
+                            Background="#F0F6FF"
+                            BorderBrush="#93C5FD"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="12,10">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Prijs aanpassing" FontWeight="SemiBold" FontSize="13"/>
+
+                            <!-- Toggle absolute / percentage -->
+                            <CheckBox Content="Gebruik percentage (%)"
+                                      IsChecked="{Binding GebruikPercentage, Mode=TwoWay}"/>
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+
+                                <!-- Absolute new price -->
+                                <StackPanel Grid.Column="0"
+                                            IsVisible="{Binding IsAbsolutePrijs}"
+                                            Spacing="4">
+                                    <TextBlock Text="Nieuwe prijs per meter (€)" FontSize="12" Foreground="#555"/>
+                                    <NumericUpDown Value="{Binding NieuwePrijsPerMeter, Mode=TwoWay}"
+                                                   Minimum="0"
+                                                   Increment="0.50"
+                                                   FormatString="0.00"
+                                                   Watermark="bv. 12.50"
+                                                   HorizontalAlignment="Stretch"/>
+                                </StackPanel>
+
+                                <!-- Percentage change -->
+                                <StackPanel Grid.Column="1"
+                                            IsVisible="{Binding GebruikPercentage}"
+                                            Spacing="4">
+                                    <TextBlock Text="Wijziging (%)" FontSize="12" Foreground="#555"/>
+                                    <NumericUpDown Value="{Binding PrijsWijzigingPct, Mode=TwoWay}"
+                                                   Increment="1"
+                                                   FormatString="0.00"
+                                                   Watermark="bv. 5 of -3"
+                                                   HorizontalAlignment="Stretch"/>
+                                </StackPanel>
+
+                            </Grid>
+                        </StackPanel>
+                    </Border>
 
                     <TextBlock Text="{Binding SelectedCount, StringFormat='Geselecteerd: {0}'}"
                                Foreground="#666"/>
@@ -104,6 +152,10 @@
                     </ListBox>
 
                     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="12">
+                        <TextBlock Text="{Binding SelectedCount, StringFormat='({0} geselecteerd)'}"
+                                   VerticalAlignment="Center"
+                                   Foreground="#666"
+                                   Margin="0,0,8,0"/>
                         <Button Content="Uitvoeren"
                                 Command="{Binding ExecuteActionCommand}"
                                 Classes="MainBtn"/>
