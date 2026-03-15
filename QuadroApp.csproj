@@ -69,6 +69,9 @@
     <Compile Update="Views\PlanningCalendarWindow.axaml.cs">
       <DependentUpon>PlanningCalendarWindow.axaml</DependentUpon>
     </Compile>
+    <Compile Update="Views\PlanningTijdDialog.axaml.cs">
+      <DependentUpon>PlanningTijdDialog.axaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

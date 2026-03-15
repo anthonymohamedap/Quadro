@@ -150,39 +150,4 @@
 		</Grid>
 	</Grid>
 
-	<UserControl.Styles>
-		<Style Selector="Button.MainBtn">
-			<Setter Property="Background" Value="#444A50"/>
-			<Setter Property="Foreground" Value="White"/>
-			<Setter Property="FontWeight" Value="Bold"/>
-			<Setter Property="CornerRadius" Value="8"/>
-			<Setter Property="BorderBrush" Value="Transparent"/>
-			<Setter Property="FontSize" Value="15"/>
-			<Setter Property="Padding" Value="10,5"/>
-		</Style>
-		<Style Selector="Button.MainBtn:pointerover">
-			<Setter Property="Background" Value="#F5C242"/>
-			<Setter Property="Foreground" Value="#222"/>
-		</Style>
-
-		<Style Selector="Button.IconBtn">
-			<Setter Property="Width" Value="40"/>
-			<Setter Property="Height" Value="40"/>
-			<Setter Property="FontSize" Value="18"/>
-			<Setter Property="CornerRadius" Value="6"/>
-			<Setter Property="Background" Value="#444A50"/>
-			<Setter Property="Foreground" Value="White"/>
-			<Setter Property="FontWeight" Value="Bold"/>
-			<Setter Property="BorderBrush" Value="Transparent"/>
-			<Setter Property="Margin" Value="2"/>
-		</Style>
-		<Style Selector="Button.IconBtn:pointerover">
-			<Setter Property="Background" Value="#F5C242"/>
-			<Setter Property="Foreground" Value="#222"/>
-		</Style>
-
-		<Style Selector="TextBlock">
-			<Setter Property="Foreground" Value="Black"/>
-		</Style>
-	</UserControl.Styles>
 </UserControl>

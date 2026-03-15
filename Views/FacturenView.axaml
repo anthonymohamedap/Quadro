@@ -19,26 +19,6 @@
       <Setter Property="Background" Value="#FFD769"/>
     </Style>
 
-    <Style Selector="ListBoxItem">
-      <Setter Property="Padding" Value="4"/>
-      <Setter Property="Background" Value="#FFF9DB"/>
-    </Style>
-
-    <Style Selector="ListBoxItem TextBlock">
-      <Setter Property="Foreground" Value="Black"/>
-    </Style>
-
-    <Style Selector="ListBoxItem:pointerover">
-      <Setter Property="Background" Value="#FFE066"/>
-    </Style>
-
-    <Style Selector="ListBoxItem:selected">
-      <Setter Property="Background" Value="#F5C242"/>
-    </Style>
-
-    <Style Selector="ListBoxItem:selected:focus">
-      <Setter Property="Background" Value="#E0AC00"/>
-    </Style>
   </UserControl.Styles>
 
   <Grid RowDefinitions="Auto,*">

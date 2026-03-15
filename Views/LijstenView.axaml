@@ -13,7 +13,10 @@
     <UserControl.Resources>
         <conv:BoolToThicknessConverter x:Key="BoolToThicknessSlide"
                                        WhenTrue="0"
-                                       WhenFalse="520,0,-520,0"/>
+                                       WhenFalse="0,0,-540,0"/>
+        <conv:BoolToThicknessConverter x:Key="BoolToMainShift"
+                                       WhenTrue="0,0,540,0"
+                                       WhenFalse="0"/>
         <conv:BoolToDoubleConverter x:Key="BoolToOpacity"
                                     WhenTrue="1"
                                     WhenFalse="0"/>
@@ -56,12 +59,21 @@
             </DockPanel>
         </Border>
 
-        <Grid Grid.Row="1"
-              Margin="20"
-              ColumnDefinitions="*,Auto"
-              ColumnSpacing="20">
+        <Grid Grid.Row="1" Margin="20">
 
-            <StackPanel Grid.Column="0" Spacing="14">
+            <StackPanel Spacing="14"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Top"
+                        MaxWidth="850">
+
+                <StackPanel.Transitions>
+                    <Transitions>
+                        <ThicknessTransition Property="Margin" Duration="0:0:0.25"/>
+                    </Transitions>
+                </StackPanel.Transitions>
+                <StackPanel.Margin>
+                    <Binding Path="IsDetailOpen" Converter="{StaticResource BoolToMainShift}"/>
+                </StackPanel.Margin>
 
                 <TextBlock Text="TypeLijsten"
                            FontSize="22"
@@ -81,22 +93,10 @@
                                 Spacing="6"
                                 VerticalAlignment="Center">
 
-                        <Button Content="S"
-                                Command="{Binding SaveCommand}"
-                                Classes="IconBtn"/>
-
-                        <Button Content="D"
-                                Command="{Binding DeleteCommand}"
-                                Classes="IconBtn"/>
-
-                        <Button Content="R"
-                                Command="{Binding RefreshCommand}"
-                                Classes="IconBtn"/>
-
-                        <Button Content="Import Excel"
-                                Command="{Binding ImportExcelCommand}"
-                                IsEnabled="{Binding !IsBusy}"
-                                Classes="IconBtn"/>
+                        <Button Content="🗑️ Verwijderen" Command="{Binding DeleteCommand}" Classes="MainBtn"/>
+                        <Button Content="💾 Opslaan" Command="{Binding SaveCommand}" Classes="MainBtn"/>
+                        <Button Content="🔄 Ververs" Command="{Binding RefreshCommand}" Classes="MainBtn"/>
+                        <Button Content="📥 Excel import" Command="{Binding ImportExcelCommand}" Classes="MainBtn"/>
                     </StackPanel>
                 </Grid>
 
@@ -225,13 +225,14 @@
                            HorizontalAlignment="Center"/>
             </StackPanel>
 
-            <Border Grid.Column="1"
-                    Width="520"
+            <Border Width="520"
                     Padding="24"
                     Background="White"
                     CornerRadius="10"
                     BorderBrush="#E0E0E0"
                     BorderThickness="1"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
                     IsHitTestVisible="{Binding IsDetailOpen}">
 
                 <Border.Transitions>
@@ -349,41 +350,5 @@
 
         </Grid>
     </Grid>
-    <UserControl.Styles>
-        <Style Selector="Button.MainBtn">
-            <Setter Property="Background" Value="#444A50"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="FontSize" Value="15"/>
-            <Setter Property="Padding" Value="10,5"/>
-        </Style>
-        <Style Selector="Button.MainBtn:pointerover">
-            <Setter Property="Background" Value="#F5C242"/>
-            <Setter Property="Foreground" Value="#222"/>
-        </Style>
-
-        <Style Selector="Button.IconBtn">
-            <Setter Property="Width" Value="40"/>
-            <Setter Property="Height" Value="40"/>
-            <Setter Property="FontSize" Value="18"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Background" Value="#444A50"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="Margin" Value="2"/>
-        </Style>
-        <Style Selector="Button.IconBtn:pointerover">
-            <Setter Property="Background" Value="#F5C242"/>
-            <Setter Property="Foreground" Value="#222"/>
-        </Style>
-        <Style Selector="TextBlock">
-            <Setter Property="Foreground" Value="Black"/>
-        </Style>
-    </UserControl.Styles>
 </UserControl>
 

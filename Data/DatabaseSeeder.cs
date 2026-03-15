@@ -301,7 +301,7 @@ namespace QuadroApp.Data
                     {
                         AfwerkingsGroepId = gId,
                         Naam = "Helder glas 2 mm",
-                        Volgnummer = (char)1,
+                        Volgnummer = '1',
                         KostprijsPerM2 = 18.00m,
                         WinstMarge = 2.50m,
                         AfvalPercentage = 5.0m,
@@ -313,7 +313,7 @@ namespace QuadroApp.Data
                     {
                         AfwerkingsGroepId = gId,
                         Naam = "Ontspiegeld glas 2 mm",
-                        Volgnummer = (char)2,
+                        Volgnummer = '2',
                         KostprijsPerM2 = 26.50m,
                         WinstMarge = 2.50m,
                         AfvalPercentage = 5.0m,
@@ -325,7 +325,7 @@ namespace QuadroApp.Data
                     {
                         AfwerkingsGroepId = gId,
                         Naam = "Museumglas UV-filter",
-                        Volgnummer = (char)3,
+                        Volgnummer = '3',
                         KostprijsPerM2 = 60.00m,
                         WinstMarge = 2.30m,
                         AfvalPercentage = 4.0m,
@@ -339,7 +339,7 @@ namespace QuadroApp.Data
                     {
                         AfwerkingsGroepId = pId,
                         Naam = "Passe-partout wit",
-                        Volgnummer = (char)1,
+                        Volgnummer = '1',
                         KostprijsPerM2 = 12.00m,
                         WinstMarge = 2.40m,
                         AfvalPercentage = 8.0m,
@@ -351,7 +351,7 @@ namespace QuadroApp.Data
                     {
                         AfwerkingsGroepId = pId,
                         Naam = "Passe-partout zwart",
-                        Volgnummer = (char)2,
+                        Volgnummer = '2',
                         KostprijsPerM2 = 13.50m,
                         WinstMarge = 2.40m,
                         AfvalPercentage = 8.0m,
@@ -363,7 +363,7 @@ namespace QuadroApp.Data
                     {
                         AfwerkingsGroepId = pId,
                         Naam = "Dubbele passe-partout",
-                        Volgnummer = (char)3,
+                        Volgnummer = '3',
                         KostprijsPerM2 = 18.00m,
                         WinstMarge = 2.20m,
                         AfvalPercentage = 10.0m,
@@ -377,7 +377,7 @@ namespace QuadroApp.Data
                     {
                         AfwerkingsGroepId = dId,
                         Naam = "Foamboard 5 mm",
-                        Volgnummer = (char)1,
+                        Volgnummer = '1',
                         KostprijsPerM2 = 15.50m,
                         WinstMarge = 2.30m,
                         AfvalPercentage = 5.0m,
@@ -389,7 +389,7 @@ namespace QuadroApp.Data
                     {
                         AfwerkingsGroepId = dId,
                         Naam = "Foamboard 10 mm",
-                        Volgnummer = (char)2,
+                        Volgnummer = '2',
                         KostprijsPerM2 = 19.00m,
                         WinstMarge = 2.30m,
                         AfvalPercentage = 5.0m,
@@ -401,7 +401,7 @@ namespace QuadroApp.Data
                     {
                         AfwerkingsGroepId = dId,
                         Naam = "PVC-kern 5 mm",
-                        Volgnummer = (char)3,
+                        Volgnummer = '3',
                         KostprijsPerM2 = 22.00m,
                         WinstMarge = 2.20m,
                         AfvalPercentage = 5.0m,
@@ -415,7 +415,7 @@ namespace QuadroApp.Data
                     {
                         AfwerkingsGroepId = oId,
                         Naam = "Opkleven zuurvrij",
-                        Volgnummer = (char)1,
+                        Volgnummer = '1',
                         KostprijsPerM2 = 10.00m,
                         WinstMarge = 2.50m,
                         AfvalPercentage = 5.0m,
@@ -427,7 +427,7 @@ namespace QuadroApp.Data
                     {
                         AfwerkingsGroepId = oId,
                         Naam = "Opkleven spray-mount",
-                        Volgnummer = (char)2,
+                        Volgnummer = '2',
                         KostprijsPerM2 = 8.50m,
                         WinstMarge = 2.50m,
                         AfvalPercentage = 5.0m,
@@ -439,7 +439,7 @@ namespace QuadroApp.Data
                     {
                         AfwerkingsGroepId = oId,
                         Naam = "Opkleven film",
-                        Volgnummer = (char)3,
+                        Volgnummer = '3',
                         KostprijsPerM2 = 11.00m,
                         WinstMarge = 2.40m,
                         AfvalPercentage = 6.0m,
@@ -453,7 +453,7 @@ namespace QuadroApp.Data
                     {
                         AfwerkingsGroepId = rId,
                         Naam = "MDF 3 mm",
-                        Volgnummer = (char)1,
+                        Volgnummer = '1',
                         KostprijsPerM2 = 9.00m,
                         WinstMarge = 2.50m,
                         AfvalPercentage = 5.0m,
@@ -465,7 +465,7 @@ namespace QuadroApp.Data
                     {
                         AfwerkingsGroepId = rId,
                         Naam = "Hardboard 3 mm",
-                        Volgnummer = (char)2,
+                        Volgnummer = '2',
                         KostprijsPerM2 = 8.00m,
                         WinstMarge = 2.50m,
                         AfvalPercentage = 5.0m,
@@ -477,7 +477,7 @@ namespace QuadroApp.Data
                     {
                         AfwerkingsGroepId = rId,
                         Naam = "Zuurvrij karton",
-                        Volgnummer = (char)3,
+                        Volgnummer = '3',
                         KostprijsPerM2 = 11.00m,
                         WinstMarge = 2.40m,
                         AfvalPercentage = 6.0m,
@@ -514,9 +514,42 @@ namespace QuadroApp.Data
             EnsureInstelling(db, "DefaultWinstFactor", "0");
             EnsureInstelling(db, "DefaultAfvalPercentage", "0");
 
+            // Fix-up: Correct any AfwerkingsOpties that still have binary control-character
+            // volgnummers (char)1/(char)2/(char)3 instead of the digit chars '1'/'2'/'3'.
+            // This patch runs idempotently on every startup so existing databases are healed.
+            FixVolgnummers(db);
+
             if (db.ChangeTracker.HasChanges())
             {
                 db.SaveChanges();
+            }
+        }
+
+        private static void FixVolgnummers(AppDbContext db)
+        {
+            // Binary control char (char)1 = ASCII 1, digit char '1' = ASCII 49.
+            // Map each bad value to the correct digit character.
+            var mapping = new System.Collections.Generic.Dictionary<char, char>
+            {
+                { (char)1, '1' },
+                { (char)2, '2' },
+                { (char)3, '3' },
+                { (char)4, '4' },
+                { (char)5, '5' },
+                { (char)6, '6' },
+                { (char)7, '7' },
+                { (char)8, '8' },
+                { (char)9, '9' },
+            };
+
+            var badOpties = db.AfwerkingsOpties
+                .Where(a => a.Volgnummer < ' ')   // any control character (ASCII < 32)
+                .ToList();
+
+            foreach (var optie in badOpties)
+            {
+                if (mapping.TryGetValue(optie.Volgnummer, out char correct))
+                    optie.Volgnummer = correct;
             }
         }
 
