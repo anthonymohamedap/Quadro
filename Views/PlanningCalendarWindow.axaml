@@ -1,7 +1,6 @@
 <Window
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:vm="using:QuadroApp.ViewModels"
     x:Class="QuadroApp.Views.PlanningCalendarWindow"
     x:CompileBindings="False"
     MinWidth="1100"
@@ -13,10 +12,8 @@
 
 	<Window.Resources>
 		<!-- ═══════════════════════════════════════════════
-             DESIGN TOKENS — change once, applies everywhere
+             DESIGN TOKENS
         ════════════════════════════════════════════════ -->
-
-		<!-- Surfaces -->
 		<SolidColorBrush x:Key="BgBase"        Color="#0F1117"/>
 		<SolidColorBrush x:Key="BgSurface"     Color="#16181F"/>
 		<SolidColorBrush x:Key="BgElevated"    Color="#1E2029"/>
@@ -24,59 +21,46 @@
 		<SolidColorBrush x:Key="BgCardHover"   Color="#2E3240"/>
 		<SolidColorBrush x:Key="BgHeader"      Color="#13151C"/>
 
-		<!-- Borders -->
 		<SolidColorBrush x:Key="BorderSubtle"  Color="#2A2D38"/>
 		<SolidColorBrush x:Key="BorderMed"     Color="#383C4A"/>
 		<SolidColorBrush x:Key="BorderStrong"  Color="#4A4F61"/>
 
-		<!-- Brand / Accent -->
 		<SolidColorBrush x:Key="AccentGold"    Color="#F5C242"/>
 		<SolidColorBrush x:Key="AccentBlue"    Color="#3B82F6"/>
 		<SolidColorBrush x:Key="AccentBlueDim" Color="#1E3A5F"/>
-		<SolidColorBrush x:Key="AccentRed"     Color="#7C1A1A"/>
 		<SolidColorBrush x:Key="AccentGreen"   Color="#22C55E"/>
 
-		<!-- Text -->
 		<SolidColorBrush x:Key="TextPrimary"   Color="#F0F2F8"/>
 		<SolidColorBrush x:Key="TextSecondary" Color="#9299AE"/>
 		<SolidColorBrush x:Key="TextMuted"     Color="#5A6075"/>
 		<SolidColorBrush x:Key="TextOnAccent"  Color="#0F1117"/>
 
-		<!-- Corner radii -->
-		<CornerRadius x:Key="RadiusSm">4</CornerRadius>
+		<CornerRadius x:Key="RadiusSm">8</CornerRadius>
 		<CornerRadius x:Key="RadiusMd">8</CornerRadius>
 		<CornerRadius x:Key="RadiusLg">12</CornerRadius>
-		<CornerRadius x:Key="RadiusXl">16</CornerRadius>
 	</Window.Resources>
 
 	<Window.Styles>
-		<!-- ═══════════════════════════════════════════════
-             GLOBAL STYLES
-        ════════════════════════════════════════════════ -->
-
-		<!-- Base text -->
 		<Style Selector="TextBlock">
-			<Setter Property="Foreground"  Value="{StaticResource TextPrimary}"/>
-			<Setter Property="FontFamily"  Value="Segoe UI, SF Pro Display, sans-serif"/>
+			<Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+			<Setter Property="FontFamily" Value="Segoe UI, SF Pro Display, sans-serif"/>
 		</Style>
 
-		<!-- ── Icon buttons (prev/next month) ── -->
 		<Style Selector="Button.IconBtn">
-			<Setter Property="Background"       Value="Transparent"/>
-			<Setter Property="Foreground"       Value="{StaticResource TextSecondary}"/>
-			<Setter Property="BorderThickness"  Value="1"/>
-			<Setter Property="BorderBrush"      Value="{StaticResource BorderSubtle}"/>
-			<Setter Property="CornerRadius"     Value="{StaticResource RadiusSm}"/>
-			<Setter Property="Padding"          Value="8,4"/>
-			<Setter Property="FontSize"         Value="13"/>
-			<Setter Property="Cursor"           Value="Hand"/>
+			<Setter Property="Background"      Value="Transparent"/>
+			<Setter Property="Foreground"      Value="{StaticResource TextSecondary}"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="BorderBrush"     Value="{StaticResource BorderSubtle}"/>
+			<Setter Property="CornerRadius"    Value="{StaticResource RadiusSm}"/>
+			<Setter Property="Padding"         Value="8,4"/>
+			<Setter Property="FontSize"        Value="13"/>
+			<Setter Property="Cursor"          Value="Hand"/>
 		</Style>
 		<Style Selector="Button.IconBtn:pointerover /template/ ContentPresenter">
 			<Setter Property="Background" Value="{StaticResource BgCard}"/>
 			<Setter Property="TextElement.Foreground" Value="{StaticResource TextPrimary}"/>
 		</Style>
 
-		<!-- ── Primary action button ── -->
 		<Style Selector="Button.MainBtn">
 			<Setter Property="Background"      Value="{StaticResource AccentGold}"/>
 			<Setter Property="Foreground"      Value="{StaticResource TextOnAccent}"/>
@@ -91,7 +75,6 @@
 			<Setter Property="Background" Value="#FFCE55"/>
 		</Style>
 
-		<!-- ── Secondary / ghost button ── -->
 		<Style Selector="Button.GhostBtn">
 			<Setter Property="Background"      Value="Transparent"/>
 			<Setter Property="Foreground"      Value="{StaticResource TextSecondary}"/>
@@ -106,13 +89,11 @@
 			<Setter Property="Background" Value="{StaticResource BgCard}"/>
 		</Style>
 
-		<!-- ── Day tile hover ── -->
 		<Style Selector="Border.DayTile:pointerover">
-			<Setter Property="Background"   Value="{StaticResource BgCardHover}"/>
-			<Setter Property="BorderBrush"  Value="{StaticResource BorderStrong}"/>
+			<Setter Property="Background"  Value="{StaticResource BgCardHover}"/>
+			<Setter Property="BorderBrush" Value="{StaticResource BorderStrong}"/>
 		</Style>
 
-		<!-- ── ListBox: strip default chrome ── -->
 		<Style Selector="ListBox">
 			<Setter Property="Background"      Value="Transparent"/>
 			<Setter Property="BorderThickness" Value="0"/>
@@ -129,38 +110,32 @@
 			<Setter Property="Background" Value="Transparent"/>
 		</Style>
 
-		<!-- ── Scrollbar thin styling ── -->
 		<Style Selector="ScrollBar">
 			<Setter Property="Width"   Value="4"/>
 			<Setter Property="Opacity" Value="0.4"/>
 		</Style>
 
-		<!-- ── Section label ── -->
 		<Style Selector="TextBlock.SectionLabel">
-			<Setter Property="FontSize"     Value="11"/>
-			<Setter Property="FontWeight"   Value="SemiBold"/>
-			<Setter Property="Foreground"   Value="{StaticResource TextMuted}"/>
+			<Setter Property="FontSize"      Value="11"/>
+			<Setter Property="FontWeight"    Value="SemiBold"/>
+			<Setter Property="Foreground"    Value="{StaticResource TextMuted}"/>
 			<Setter Property="LetterSpacing" Value="1.5"/>
 		</Style>
 
-		<!-- ── Divider ── -->
 		<Style Selector="Rectangle.Divider">
-			<Setter Property="Height"  Value="1"/>
-			<Setter Property="Fill"    Value="{StaticResource BorderSubtle}"/>
-			<Setter Property="Margin"  Value="0,4"/>
+			<Setter Property="Height" Value="1"/>
+			<Setter Property="Fill"   Value="{StaticResource BorderSubtle}"/>
+			<Setter Property="Margin" Value="0,4"/>
 		</Style>
 
-		<!-- ── Chip / badge ── -->
 		<Style Selector="Border.Chip">
-			<Setter Property="CornerRadius"    Value="20"/>
-			<Setter Property="Padding"         Value="8,3"/>
-			<Setter Property="Background"      Value="{StaticResource BgCard}"/>
+			<Setter Property="CornerRadius" Value="20"/>
+			<Setter Property="Padding"      Value="8,3"/>
+			<Setter Property="Background"   Value="{StaticResource BgCard}"/>
 		</Style>
 	</Window.Styles>
 
-	<!-- ═══════════════════════════════════════════════════════════
-         ROOT: Panel wraps Grid + Toast overlay (Window allows 1 child)
-    ══════════════════════════════════════════════════════════════ -->
+	<!-- ROOT: Panel wraps Grid + Toast overlay -->
 	<Panel>
 		<Grid RowDefinitions="64,*">
 
@@ -189,7 +164,7 @@
 						</StackPanel>
 					</StackPanel>
 
-					<!-- Nav: month controls -->
+					<!-- Month navigation -->
 					<StackPanel DockPanel.Dock="Right"
 								Orientation="Horizontal"
 								Spacing="8"
@@ -210,83 +185,13 @@
 				</DockPanel>
 			</Border>
 
-			<!-- ══════════════ BODY: 3-column ══════════════ -->
-			<Grid Grid.Row="1"
-				  ColumnDefinitions="260,*,460"
-				  Margin="0">
+			<!-- ══════════════ BODY: 2-column ══════════════ -->
+			<Grid Grid.Row="1" ColumnDefinitions="*,460">
 
 				<!-- ─────────────────────────────────────────────
-                 LEFT PANEL — Day list
-            ────────────────────────────────────────────── -->
-				<Border Grid.Column="0"
-						Background="{StaticResource BgSurface}"
-						BorderBrush="{StaticResource BorderSubtle}"
-						BorderThickness="0,0,1,0"
-						Padding="12,16">
-					<StackPanel Spacing="8">
-						<TextBlock Text="DEZE WEEK"
-								   Classes="SectionLabel"
-								   Margin="4,0,0,6"/>
-
-						<ListBox ItemsSource="{Binding WeekDayRows}"
-								 SelectedItem="{Binding SelectedDayRow}">
-							<ListBox.ItemTemplate>
-								<DataTemplate>
-									<Border Padding="10,8"
-											Margin="0,2"
-											Background="{StaticResource BgElevated}"
-											BorderBrush="{StaticResource BorderSubtle}"
-											BorderThickness="1"
-											CornerRadius="{StaticResource RadiusMd}"
-											Cursor="Hand">
-										<Grid ColumnDefinitions="28,36,*,Auto">
-											<!-- Week nr badge -->
-											<Border Background="{StaticResource BgCard}"
-													CornerRadius="4"
-													Padding="4,2"
-													VerticalAlignment="Center">
-												<TextBlock Text="{Binding WeekNr}"
-														   FontSize="11"
-														   FontWeight="Bold"
-														   Foreground="{StaticResource TextMuted}"
-														   HorizontalAlignment="Center"/>
-											</Border>
-
-											<!-- Day abbrev -->
-											<TextBlock Grid.Column="1"
-													   Text="{Binding Dag}"
-													   FontWeight="SemiBold"
-													   FontSize="13"
-													   VerticalAlignment="Center"
-													   Margin="6,0,0,0"/>
-
-											<!-- Date -->
-											<TextBlock Grid.Column="2"
-													   Text="{Binding Datum, StringFormat='{}{0:dd/MM/yy}'}"
-													   FontSize="12"
-													   Foreground="{StaticResource TextSecondary}"
-													   VerticalAlignment="Center"
-													   Margin="4,0,0,0"/>
-
-											<!-- Hours -->
-											<TextBlock Grid.Column="3"
-													   Text="{Binding UurMinText}"
-													   Foreground="{Binding Kleur}"
-													   FontWeight="Bold"
-													   FontSize="12"
-													   VerticalAlignment="Center"/>
-										</Grid>
-									</Border>
-								</DataTemplate>
-							</ListBox.ItemTemplate>
-						</ListBox>
-					</StackPanel>
-				</Border>
-
-				<!-- ─────────────────────────────────────────────
-                 CENTRE — Calendar grid
-            ────────────────────────────────────────────── -->
-				<Grid Grid.Column="1"
+                     LEFT — Calendar grid
+                ────────────────────────────────────────────── -->
+				<Grid Grid.Column="0"
 					  RowDefinitions="Auto,*"
 					  Margin="16,16,16,0">
 
@@ -322,17 +227,16 @@
 								<Border Classes="DayTile"
 										Margin="3"
 										Padding="10,8"
-										MinHeight="110"
+										MinHeight="100"
 										Background="{Binding Background}"
 										BorderBrush="{Binding Border}"
-										BorderThickness="1"
+										BorderThickness="2"
 										CornerRadius="{StaticResource RadiusMd}"
 										Cursor="Hand"
-										PointerPressed="DayTile_PointerPressed"
-										DoubleTapped="DayTile_DoubleTapped">
+										PointerPressed="DayTile_PointerPressed">
 
 									<StackPanel Spacing="5">
-										<!-- Day number -->
+										<!-- Day number — gold when selected -->
 										<TextBlock Text="{Binding DayNumber}"
 												   FontWeight="Bold"
 												   FontSize="13"
@@ -347,7 +251,6 @@
 													   RadiusX="2"
 													   RadiusY="2"
 													   Opacity="0.85"/>
-											<!-- Track -->
 											<Rectangle Height="3"
 													   Fill="{StaticResource BorderSubtle}"
 													   RadiusX="2"
@@ -367,9 +270,9 @@
 				</Grid>
 
 				<!-- ─────────────────────────────────────────────
-                 RIGHT PANEL — Details
-            ────────────────────────────────────────────── -->
-				<Border Grid.Column="2"
+                     RIGHT PANEL — Plan + Day details + Week detail
+                ────────────────────────────────────────────── -->
+				<Border Grid.Column="1"
 						Background="{StaticResource BgSurface}"
 						BorderBrush="{StaticResource BorderSubtle}"
 						BorderThickness="1,0,0,0"
@@ -378,56 +281,31 @@
 								  VerticalScrollBarVisibility="Auto">
 						<StackPanel Spacing="0">
 
-							<!-- ── Selected date ── -->
-							<StackPanel Spacing="2" Margin="0,0,0,16">
-								<TextBlock Text="DAG DETAILS" Classes="SectionLabel"/>
-								<TextBlock Text="{Binding SelectedDate, StringFormat='{}{0:dddd dd MMMM yyyy}'}"
-										   FontSize="18"
-										   FontWeight="Bold"
-										   Margin="0,4,0,0"/>
-							</StackPanel>
+							<!-- ══ PLAN REGELS (top — contextual) ══ -->
 
-							<Rectangle Classes="Divider" Margin="0,0,0,14"/>
+							<!-- No-werkbon hint -->
+							<Border IsVisible="{Binding GeenWerkBon}"
+									Background="{StaticResource BgElevated}"
+									BorderBrush="{StaticResource BorderSubtle}"
+									BorderThickness="1"
+									CornerRadius="{StaticResource RadiusMd}"
+									Padding="14,12"
+									Margin="0,0,0,16">
+								<StackPanel Orientation="Horizontal" Spacing="10">
+									<TextBlock Text="📋" FontSize="18" VerticalAlignment="Center"/>
+									<TextBlock Text="Open planning vanuit een werkbon om regels te kunnen plannen."
+											   FontSize="12"
+											   Foreground="{StaticResource TextSecondary}"
+											   TextWrapping="Wrap"
+											   VerticalAlignment="Center"/>
+								</StackPanel>
+							</Border>
 
-							<!-- ── Tasks for this day ── -->
-							<ItemsControl ItemsSource="{Binding TakenVanDag}">
-								<ItemsControl.ItemTemplate>
-									<DataTemplate>
-										<Border Background="{StaticResource BgElevated}"
-												BorderBrush="{StaticResource BorderSubtle}"
-												BorderThickness="1"
-												Padding="12,10"
-												Margin="0,0,0,8"
-												CornerRadius="{StaticResource RadiusMd}">
-											<Grid ColumnDefinitions="*,Auto">
-												<StackPanel Spacing="3">
-													<TextBlock Text="{Binding WerkBon.Id, StringFormat='WerkBon #{0}'}"
-															   FontWeight="Bold"
-															   FontSize="13"/>
-													<TextBlock Text="{Binding WerkBon.Offerte.Klant.Achternaam}"
-															   FontSize="12"
-															   Foreground="{StaticResource TextSecondary}"/>
-													<TextBlock Text="{Binding Omschrijving}"
-															   FontSize="12"
-															   Foreground="{StaticResource TextSecondary}"/>
-												</StackPanel>
-												<!-- Duration badge -->
-												<Border Grid.Column="1"
-														Classes="Chip"
-														VerticalAlignment="Top">
-													<TextBlock Text="{Binding DuurMinuten, StringFormat='{}{0} min'}"
-															   FontSize="11"
-															   Foreground="{StaticResource TextSecondary}"/>
-												</Border>
-											</Grid>
-										</Border>
-									</DataTemplate>
-								</ItemsControl.ItemTemplate>
-							</ItemsControl>
-
-							<!-- ── Plan regels ── -->
-							<StackPanel Spacing="10" Margin="0,6,0,16">
-								<TextBlock Text="REGELS VAN WERKBON" Classes="SectionLabel"/>
+							<!-- Werkbon regels panel -->
+							<StackPanel IsVisible="{Binding HeeftWerkBon}"
+										Spacing="10"
+										Margin="0,0,0,16">
+								<TextBlock Text="WERKBON REGELS" Classes="SectionLabel"/>
 
 								<ListBox ItemsSource="{Binding RegelsVanWerkBon}"
 										 Background="{StaticResource BgElevated}"
@@ -462,7 +340,75 @@
 
 							<Rectangle Classes="Divider" Margin="0,0,0,14"/>
 
-							<!-- ── Week detail ── -->
+							<!-- ══ DAG DETAILS ══ -->
+							<StackPanel Spacing="2" Margin="0,0,0,12">
+								<TextBlock Text="DAG DETAILS" Classes="SectionLabel"/>
+								<TextBlock Text="{Binding SelectedDate, StringFormat='{}{0:dddd dd MMMM yyyy}'}"
+										   FontSize="18"
+										   FontWeight="Bold"
+										   Margin="0,4,0,0"/>
+							</StackPanel>
+
+							<!-- Tasks for selected day -->
+							<ItemsControl ItemsSource="{Binding TakenVanDag}"
+										  Margin="0,0,0,4">
+								<ItemsControl.ItemTemplate>
+									<DataTemplate>
+										<Border Background="{StaticResource BgElevated}"
+												BorderBrush="{StaticResource BorderSubtle}"
+												BorderThickness="1"
+												Padding="12,10"
+												Margin="0,0,0,8"
+												CornerRadius="{StaticResource RadiusMd}"
+												Cursor="Hand">
+
+											<Border.ContextMenu>
+												<ContextMenu>
+													<MenuItem Header="✏ Herplannen"
+															  Click="OnHerplanMenuClick"/>
+													<MenuItem Header="🗑 Verwijderen"
+															  Click="OnVerwijderMenuClick"/>
+												</ContextMenu>
+											</Border.ContextMenu>
+
+											<Grid ColumnDefinitions="*,Auto">
+												<StackPanel Spacing="3">
+													<TextBlock Text="{Binding WerkBon.Id, StringFormat='WerkBon #{0}'}"
+															   FontWeight="Bold"
+															   FontSize="13"/>
+													<TextBlock Text="{Binding WerkBon.Offerte.Klant.Achternaam}"
+															   FontSize="12"
+															   Foreground="{StaticResource TextSecondary}"/>
+													<TextBlock Text="{Binding Omschrijving}"
+															   FontSize="12"
+															   Foreground="{StaticResource TextSecondary}"/>
+													<TextBlock Text="{Binding GeplandVan, StringFormat='{}{0:HH:mm}'}"
+															   FontSize="11"
+															   Foreground="{StaticResource TextMuted}"/>
+												</StackPanel>
+												<Border Grid.Column="1" Classes="Chip" VerticalAlignment="Top">
+													<TextBlock Text="{Binding DuurMinuten, StringFormat='{}{0} min'}"
+															   FontSize="11"
+															   Foreground="{StaticResource TextSecondary}"/>
+												</Border>
+											</Grid>
+										</Border>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
+
+							<!-- Empty day state -->
+							<Border IsVisible="{Binding !TakenVanDag.Count}"
+									Padding="0,8,0,8">
+								<TextBlock Text="Geen taken gepland voor deze dag."
+										   FontSize="12"
+										   Foreground="{StaticResource TextMuted}"
+										   HorizontalAlignment="Center"/>
+							</Border>
+
+							<Rectangle Classes="Divider" Margin="0,4,0,14"/>
+
+							<!-- ══ WEEKDETAIL ══ -->
 							<StackPanel Spacing="10">
 								<DockPanel>
 									<TextBlock Text="WEEKDETAIL" Classes="SectionLabel" VerticalAlignment="Center"/>
@@ -479,7 +425,7 @@
 										Padding="12,10">
 									<StackPanel Spacing="8">
 
-										<!-- Row count badge — replaces yellow debug label -->
+										<!-- Row count badge -->
 										<StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,4">
 											<Border Background="{StaticResource AccentBlueDim}"
 													CornerRadius="20"
@@ -506,126 +452,83 @@
 											</StackPanel>
 										</Border>
 
-										<!-- Table with horizontal scroll -->
-										<ScrollViewer HorizontalScrollBarVisibility="Auto"
-													  VerticalScrollBarVisibility="Disabled"
-													  IsVisible="{Binding WeekRows.Count}">
-											<StackPanel Spacing="4" MinWidth="600">
+										<!-- Week table (6 columns) -->
+										<StackPanel IsVisible="{Binding WeekRows.Count}" Spacing="4">
 
-												<!-- Column headers -->
-												<Grid ColumnDefinitions="40,48,32,50,50,24,28,28,24,24,24,70,90,110,95,95"
-													  Margin="0,0,0,4">
-													<TextBlock Text="Bon"   Classes="SectionLabel"/>
-													<TextBlock Grid.Column="1"  Text="Duur"  Classes="SectionLabel">
-														<ToolTip.Tip>Duur in minuten</ToolTip.Tip>
-													</TextBlock>
-													<TextBlock Grid.Column="2"  Text="St"    Classes="SectionLabel">
-														<ToolTip.Tip>Stuks</ToolTip.Tip>
-													</TextBlock>
-													<TextBlock Grid.Column="3"  Text="B"     Classes="SectionLabel">
-														<ToolTip.Tip>Breedte</ToolTip.Tip>
-													</TextBlock>
-													<TextBlock Grid.Column="4"  Text="H"     Classes="SectionLabel">
-														<ToolTip.Tip>Hoogte</ToolTip.Tip>
-													</TextBlock>
-													<TextBlock Grid.Column="5"  Text="G"     Classes="SectionLabel">
-														<ToolTip.Tip>Gewicht</ToolTip.Tip>
-													</TextBlock>
-													<TextBlock Grid.Column="6"  Text="P1"    Classes="SectionLabel">
-														<ToolTip.Tip>Profiel 1</ToolTip.Tip>
-													</TextBlock>
-													<TextBlock Grid.Column="7"  Text="P2"    Classes="SectionLabel">
-														<ToolTip.Tip>Profiel 2</ToolTip.Tip>
-													</TextBlock>
-													<TextBlock Grid.Column="8"  Text="D"     Classes="SectionLabel">
-														<ToolTip.Tip>Dikte</ToolTip.Tip>
-													</TextBlock>
-													<TextBlock Grid.Column="9"  Text="O"     Classes="SectionLabel">
-														<ToolTip.Tip>Oppervlakte</ToolTip.Tip>
-													</TextBlock>
-													<TextBlock Grid.Column="10" Text="R"     Classes="SectionLabel">
-														<ToolTip.Tip>Randen</ToolTip.Tip>
-													</TextBlock>
-													<TextBlock Grid.Column="11" Text="Inleg1" Classes="SectionLabel"/>
-													<TextBlock Grid.Column="12" Text="Lijst"  Classes="SectionLabel"/>
-													<TextBlock Grid.Column="13" Text="Type"   Classes="SectionLabel"/>
-													<TextBlock Grid.Column="14" Text="Van"    Classes="SectionLabel"/>
-													<TextBlock Grid.Column="15" Text="Tot"    Classes="SectionLabel"/>
-												</Grid>
+											<!-- Column headers -->
+											<Grid ColumnDefinitions="44,90,100,80,110,55" Margin="0,0,0,4">
+												<TextBlock Text="Bon"      Classes="SectionLabel"/>
+												<TextBlock Grid.Column="1" Text="Klant"    Classes="SectionLabel"/>
+												<TextBlock Grid.Column="2" Text="Afmeting" Classes="SectionLabel"/>
+												<TextBlock Grid.Column="3" Text="Lijst"    Classes="SectionLabel"/>
+												<TextBlock Grid.Column="4" Text="Tijdstip" Classes="SectionLabel"/>
+												<TextBlock Grid.Column="5" Text="Duur"     Classes="SectionLabel"/>
+											</Grid>
 
-												<Rectangle Classes="Divider"/>
+											<Rectangle Classes="Divider"/>
 
-												<!-- Data rows -->
-												<ListBox ItemsSource="{Binding WeekRows}"
-														 MaxHeight="280">
-													<ListBox.ItemTemplate>
-														<DataTemplate>
-															<Border Background="{StaticResource BgCard}"
-																	CornerRadius="{StaticResource RadiusSm}"
-																	Padding="0,7"
-																	Margin="0,2">
-																<Grid ColumnDefinitions="40,48,32,50,50,24,28,28,24,24,24,70,90,110,95,95">
-																	<TextBlock Text="{Binding BonNr}"     FontSize="12"/>
-																	<TextBlock Grid.Column="1"  Text="{Binding DuurMin}"  FontSize="12"/>
-																	<TextBlock Grid.Column="2"  Text="{Binding Stuks}"    FontSize="12"/>
-																	<TextBlock Grid.Column="3"  Text="{Binding Breedte}"  FontSize="12"/>
-																	<TextBlock Grid.Column="4"  Text="{Binding Hoogte}"   FontSize="12"/>
-																	<TextBlock Grid.Column="5"  Text="{Binding G}"        FontSize="12"/>
-																	<TextBlock Grid.Column="6"  Text="{Binding P1}"       FontSize="12"/>
-																	<TextBlock Grid.Column="7"  Text="{Binding P2}"       FontSize="12"/>
-																	<TextBlock Grid.Column="8"  Text="{Binding D}"        FontSize="12"/>
-																	<TextBlock Grid.Column="9"  Text="{Binding O}"        FontSize="12"/>
-																	<TextBlock Grid.Column="10" Text="{Binding R}"        FontSize="12"/>
-																	<TextBlock Grid.Column="11" Text="{Binding Inleg1}"   FontSize="12"/>
-																	<TextBlock Grid.Column="12" Text="{Binding Lijst}"    FontSize="12"/>
-																	<TextBlock Grid.Column="13" Text="{Binding LijstType}" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
-																	<TextBlock Grid.Column="14" Text="{Binding Van, StringFormat='{}{0:dd/MM HH:mm}'}" FontSize="11" Foreground="{StaticResource TextMuted}"/>
-																	<TextBlock Grid.Column="15" Text="{Binding Tot, StringFormat='{}{0:dd/MM HH:mm}'}" FontSize="11" Foreground="{StaticResource TextMuted}"/>
-																</Grid>
-															</Border>
-														</DataTemplate>
-													</ListBox.ItemTemplate>
-												</ListBox>
-											</StackPanel>
-										</ScrollViewer>
+											<!-- Data rows -->
+											<ListBox ItemsSource="{Binding WeekRows}" MaxHeight="300">
+												<ListBox.ItemTemplate>
+													<DataTemplate>
+														<Border Background="{StaticResource BgCard}"
+																CornerRadius="{StaticResource RadiusSm}"
+																Padding="0,7"
+																Margin="0,2">
+															<Grid ColumnDefinitions="44,90,100,80,110,55">
+																<TextBlock Text="{Binding BonNr}"     FontSize="12"/>
+																<TextBlock Grid.Column="1" Text="{Binding KlantNaam}" FontSize="12" TextTrimming="CharacterEllipsis"/>
+																<TextBlock Grid.Column="2" Text="{Binding Afmeting}"  FontSize="12"/>
+																<TextBlock Grid.Column="3" Text="{Binding Lijst}"     FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+																<TextBlock Grid.Column="4" Text="{Binding Tijdstip}"  FontSize="11" Foreground="{StaticResource TextMuted}"/>
+																<TextBlock Grid.Column="5" Text="{Binding DuurMin, StringFormat='{}{0}m'}" FontSize="12"/>
+															</Grid>
+														</Border>
+													</DataTemplate>
+												</ListBox.ItemTemplate>
+											</ListBox>
+										</StackPanel>
+
 									</StackPanel>
 								</Border>
 							</StackPanel>
+
 						</StackPanel>
 					</ScrollViewer>
 				</Border>
 			</Grid>
 
-			<!-- ══════════════ TOAST OVERLAY (floats over everything) ══════════════ -->
-			<ItemsControl ItemsSource="{Binding ToastMessages}"
-						  HorizontalAlignment="Right"
-						  VerticalAlignment="Top"
-						  Margin="0,80,24,0"
-						  IsHitTestVisible="False">
-				<ItemsControl.ItemsPanel>
-					<ItemsPanelTemplate>
-						<StackPanel Spacing="8"/>
-					</ItemsPanelTemplate>
-				</ItemsControl.ItemsPanel>
-				<ItemsControl.ItemTemplate>
-					<DataTemplate>
-						<Border Padding="14,10"
-								CornerRadius="{StaticResource RadiusMd}"
-								Background="{Binding BackgroundBrush}"
-								BorderBrush="{StaticResource BorderMed}"
-								BorderThickness="1"
-								MinWidth="220"
-								MaxWidth="340">
-							<TextBlock Text="{Binding Message}"
-									   Foreground="White"
-									   FontWeight="SemiBold"
-									   FontSize="13"
-									   TextWrapping="Wrap"/>
-						</Border>
-					</DataTemplate>
-				</ItemsControl.ItemTemplate>
-			</ItemsControl>
 		</Grid>
-		</Panel>
+
+		<!-- ══════════════ TOAST OVERLAY ══════════════ -->
+		<ItemsControl ItemsSource="{Binding ToastMessages}"
+					  HorizontalAlignment="Right"
+					  VerticalAlignment="Top"
+					  Margin="0,80,24,0"
+					  IsHitTestVisible="False">
+			<ItemsControl.ItemsPanel>
+				<ItemsPanelTemplate>
+					<StackPanel Spacing="8"/>
+				</ItemsPanelTemplate>
+			</ItemsControl.ItemsPanel>
+			<ItemsControl.ItemTemplate>
+				<DataTemplate>
+					<Border Padding="14,10"
+							CornerRadius="{StaticResource RadiusMd}"
+							Background="{Binding BackgroundBrush}"
+							BorderBrush="{StaticResource BorderMed}"
+							BorderThickness="1"
+							MinWidth="220"
+							MaxWidth="340">
+						<TextBlock Text="{Binding Message}"
+								   Foreground="White"
+								   FontWeight="SemiBold"
+								   FontSize="13"
+								   TextWrapping="Wrap"/>
+					</Border>
+				</DataTemplate>
+			</ItemsControl.ItemTemplate>
+		</ItemsControl>
+	</Panel>
 
 </Window>

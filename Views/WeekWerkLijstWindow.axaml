@@ -13,9 +13,9 @@
 
 	<Grid RowDefinitions="Auto,*">
 
-		<!-- HEADER (zelfde als LijstenView) -->
+		<!-- HEADER -->
 		<Border Grid.Row="0" Background="#444A50" Height="70">
-			<DockPanel Margin="20,0">
+			<DockPanel LastChildFill="False" Margin="20,0">
 				<StackPanel DockPanel.Dock="Left"
 							Orientation="Horizontal"
 							VerticalAlignment="Center"
@@ -24,11 +24,11 @@
 					<TextBlock Text="QUADRO"
 							   FontSize="20"
 							   FontWeight="Bold"
-							   Foreground="Black"/>
+							   Foreground="White"/>
 					<TextBlock Text="{Binding Title}"
 							   FontSize="13"
-							   Foreground="Black"
-							   Margin="20,0,0,0"
+							   Foreground="#CCC"
+							   Margin="5,0,0,0"
 							   VerticalAlignment="Center"/>
 				</StackPanel>
 
@@ -36,18 +36,21 @@
 							Orientation="Horizontal"
 							Spacing="10"
 							VerticalAlignment="Center">
-					<TextBlock Text="{Binding Year}" Foreground="Black" VerticalAlignment="Center"/>
-					<TextBlock Text="{Binding WeekNr, StringFormat='Week {0}'}" Foreground="Black" VerticalAlignment="Center"/>
+					<TextBlock Text="{Binding Year}" Foreground="White" VerticalAlignment="Center"/>
+					<TextBlock Text="{Binding WeekNr, StringFormat='Week {0}'}" Foreground="White" VerticalAlignment="Center"/>
 
-					<Button Content="⬅️ Terug"
-        Click="Close_Click"
-        Background="#F5C242"
-        Foreground="Black"
-        FontWeight="Bold"
-        CornerRadius="8"
-        Padding="10,5"
-        Width="100"
-        Height="32"/>
+					<Button Content="Terug"
+							Click="Close_Click"
+							VerticalAlignment="Top"
+							HorizontalAlignment="Right"
+							Margin="0,10,10,0"
+							Background="#F5C242"
+							Foreground="#222"
+							FontWeight="Bold"
+							CornerRadius="8"
+							Padding="10,5"
+							Width="100"
+							Height="32"/>
 				</StackPanel>
 			</DockPanel>
 		</Border>
@@ -168,25 +171,4 @@
 
 	</Grid>
 
-	<!-- Styles: zelfde look als LijstenView -->
-	<Window.Styles>
-		<Style Selector="Button.MainBtn">
-			<Setter Property="Background" Value="#444A50"/>
-			<Setter Property="Foreground" Value="White"/>
-			<Setter Property="FontWeight" Value="Bold"/>
-			<Setter Property="CornerRadius" Value="8"/>
-			<Setter Property="BorderBrush" Value="Transparent"/>
-			<Setter Property="FontSize" Value="15"/>
-			<Setter Property="Padding" Value="10,5"/>
-		</Style>
-
-		<Style Selector="Button.MainBtn:pointerover">
-			<Setter Property="Background" Value="#F5C242"/>
-			<Setter Property="Foreground" Value="Black"/>
-		</Style>
-
-		<Style Selector="TextBlock">
-			<Setter Property="Foreground" Value="Black"/>
-		</Style>
-	</Window.Styles>
 </Window>

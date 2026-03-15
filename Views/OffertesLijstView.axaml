@@ -95,23 +95,6 @@
 						 ScrollViewer.VerticalScrollBarVisibility="Auto"
 						 DoubleTapped="OffertesList_DoubleTapped">
 
-					<ListBox.Styles>
-						<Style Selector="ListBoxItem">
-							<Setter Property="CornerRadius" Value="6"/>
-							<Setter Property="Margin" Value="0,0,0,6"/>
-							<Setter Property="Padding" Value="8"/>
-							<Setter Property="Background" Value="Transparent"/>
-						</Style>
-						<Style Selector="ListBoxItem:pointerover">
-							<Setter Property="Background" Value="#FFF7DA"/>
-						</Style>
-						<Style Selector="ListBoxItem:selected">
-							<Setter Property="Background" Value="#FFF3BF"/>
-							<Setter Property="BorderBrush" Value="#F5C242"/>
-							<Setter Property="BorderThickness" Value="1"/>
-						</Style>
-					</ListBox.Styles>
-
 					<ListBox.ItemTemplate>
 						<DataTemplate x:DataType="m:Offerte">
 							<Grid ColumnDefinitions="0.7*,2*,1.1*,1.1*,1.1*,0.9*,1.1*,1.2*,Auto"
@@ -211,20 +194,5 @@
 
 	</Grid>
 
-	<UserControl.Styles>
-		<Style Selector="Button.MainBtn">
-			<Setter Property="Background" Value="#444A50"/>
-			<Setter Property="Foreground" Value="White"/>
-			<Setter Property="FontWeight" Value="Bold"/>
-			<Setter Property="CornerRadius" Value="8"/>
-			<Setter Property="BorderBrush" Value="Transparent"/>
-			<Setter Property="FontSize" Value="15"/>
-			<Setter Property="Padding" Value="10,5"/>
-		</Style>
-		<Style Selector="Button.MainBtn:pointerover">
-			<Setter Property="Background" Value="#F5C242"/>
-			<Setter Property="Foreground" Value="#222"/>
-		</Style>
-	</UserControl.Styles>
 
 </UserControl>
