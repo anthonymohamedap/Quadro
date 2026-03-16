@@ -1,0 +1,162 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:QuadroApp.ViewModels"
+        x:Class="QuadroApp.Views.PlanningTijdDialog"
+        x:DataType="vm:PlanningTijdDialogViewModel"
+        Title="Tijdstip plannen"
+        Width="420"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="#0F1117">
+
+    <Window.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="#F0F2F8"/>
+            <Setter Property="FontFamily" Value="Segoe UI, sans-serif"/>
+        </Style>
+        <Style Selector="NumericUpDown">
+            <Setter Property="Background"   Value="#1E2029"/>
+            <Setter Property="Foreground"   Value="#F0F2F8"/>
+            <Setter Property="BorderBrush"  Value="#2A2D38"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="FontSize"     Value="22"/>
+            <Setter Property="FontWeight"   Value="Bold"/>
+            <Setter Property="Height"       Value="52"/>
+        </Style>
+        <Style Selector="DatePicker">
+            <Setter Property="Background"   Value="#1E2029"/>
+            <Setter Property="Foreground"   Value="#F0F2F8"/>
+            <Setter Property="BorderBrush"  Value="#2A2D38"/>
+        </Style>
+    </Window.Styles>
+
+    <Border Padding="24" Background="#16181F">
+        <StackPanel Spacing="18">
+
+            <!-- Titel -->
+            <StackPanel Spacing="2">
+                <TextBlock Text="Tijdstip plannen"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           Foreground="#F5C242"/>
+                <TextBlock Text="Kies datum en tijdstip voor de taak."
+                           FontSize="12"
+                           Foreground="#5A6075"/>
+            </StackPanel>
+
+            <!-- Context info -->
+            <Border Background="#1E2029"
+                    BorderBrush="#2A2D38"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12,10">
+                <TextBlock Text="{Binding ContextLabel}"
+                           FontSize="12"
+                           Foreground="#9299AE"
+                           TextWrapping="Wrap"/>
+            </Border>
+
+            <!-- Datum -->
+            <StackPanel Spacing="6">
+                <TextBlock Text="DATUM"
+                           FontSize="11"
+                           FontWeight="SemiBold"
+                           Foreground="#5A6075"
+                           LetterSpacing="1.5"/>
+                <DatePicker SelectedDate="{Binding GeplandeDatum}"
+                            HorizontalAlignment="Stretch"/>
+            </StackPanel>
+
+            <!-- Van / Tot (verticaal gestapeld) -->
+            <StackPanel Spacing="12">
+
+                <!-- Van -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="VAN"
+                               FontSize="11" FontWeight="SemiBold"
+                               Foreground="#5A6075" LetterSpacing="1.5"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <NumericUpDown Value="{Binding VanUur}"
+                                       Minimum="0" Maximum="23"
+                                       FormatString="00"
+                                       Width="100"/>
+                        <TextBlock Text=":" VerticalAlignment="Center"
+                                   FontSize="24" FontWeight="Bold" Foreground="#5A6075"/>
+                        <NumericUpDown Value="{Binding VanMinuut}"
+                                       Minimum="0" Maximum="55"
+                                       Increment="5"
+                                       FormatString="00"
+                                       Width="100"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Tot -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="TOT"
+                               FontSize="11" FontWeight="SemiBold"
+                               Foreground="#5A6075" LetterSpacing="1.5"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <NumericUpDown Value="{Binding TotUur}"
+                                       Minimum="0" Maximum="23"
+                                       FormatString="00"
+                                       Width="100"/>
+                        <TextBlock Text=":" VerticalAlignment="Center"
+                                   FontSize="24" FontWeight="Bold" Foreground="#5A6075"/>
+                        <NumericUpDown Value="{Binding TotMinuut}"
+                                       Minimum="0" Maximum="55"
+                                       Increment="5"
+                                       FormatString="00"
+                                       Width="100"/>
+                    </StackPanel>
+                </StackPanel>
+
+            </StackPanel>
+
+            <!-- Berekende duur -->
+            <Border Background="#1E2029"
+                    BorderBrush="#2A2D38"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="14,10">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="Duur:"
+                               FontSize="12"
+                               Foreground="#9299AE"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding DuurLabel}"
+                               FontSize="15"
+                               FontWeight="Bold"
+                               Foreground="#F5C242"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Knoppen -->
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="10"
+                        Margin="0,4,0,0">
+                <Button Content="Annuleer"
+                        Command="{Binding AnnuleerCommand}"
+                        Background="Transparent"
+                        Foreground="#9299AE"
+                        BorderBrush="#2A2D38"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16,8"
+                        Cursor="Hand"/>
+                <Button Content="Bevestig"
+                        Command="{Binding BevestigCommand}"
+                        Background="#F5C242"
+                        Foreground="#0F1117"
+                        FontWeight="SemiBold"
+                        CornerRadius="8"
+                        Padding="16,8"
+                        Cursor="Hand"/>
+            </StackPanel>
+
+        </StackPanel>
+    </Border>
+</Window>
