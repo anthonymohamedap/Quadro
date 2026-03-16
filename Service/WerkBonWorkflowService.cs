@@ -57,25 +57,33 @@ namespace QuadroApp.Service
             if (werkBon.Status == WerkBonStatus.Afgewerkt || werkBon.Status == WerkBonStatus.Afgehaald)
                 throw new InvalidOperationException("Afgewerkte werkbon kan niet opnieuw gepland worden.");
 
-            var start = dag.Date.AddHours(9);
-            var tot = start.AddMinutes(duurMinuten);
+            // Gebruik het exacte tijdstip als meegegeven; valt terug op 09:00 bij midnight.
+            var start = dag.TimeOfDay == TimeSpan.Zero ? dag.Date.AddHours(9) : dag;
+            var tot   = start.AddMinutes(duurMinuten);
 
-            var exists = await db.WerkTaken.AnyAsync(t =>
-                t.WerkBonId == werkBonId &&
-                t.OfferteRegelId == offerteRegelId &&
-                t.GeplandVan.Date == dag.Date);
+            // Bestaande taak voor dezelfde regel updaten (herplannen) i.p.v. duplicate aanmaken.
+            var bestaand = await db.WerkTaken.FirstOrDefaultAsync(t =>
+                t.WerkBonId      == werkBonId &&
+                t.OfferteRegelId == offerteRegelId);
 
-            if (exists)
+            if (bestaand != null)
+            {
+                bestaand.GeplandVan  = start;
+                bestaand.GeplandTot  = tot;
+                bestaand.DuurMinuten = duurMinuten;
+                if (omschrijving != null) bestaand.Omschrijving = omschrijving;
+                await db.SaveChangesAsync();
                 return;
+            }
 
             db.WerkTaken.Add(new WerkTaak
             {
-                WerkBonId = werkBonId,
+                WerkBonId      = werkBonId,
                 OfferteRegelId = offerteRegelId,
-                GeplandVan = start,
-                GeplandTot = tot,
-                DuurMinuten = duurMinuten,
-                Omschrijving = omschrijving ?? "Werktaak"
+                GeplandVan     = start,
+                GeplandTot     = tot,
+                DuurMinuten    = duurMinuten,
+                Omschrijving   = omschrijving ?? "Werktaak"
             });
 
             await db.SaveChangesAsync();

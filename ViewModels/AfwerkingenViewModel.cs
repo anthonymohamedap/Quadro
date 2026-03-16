@@ -130,6 +130,10 @@ public partial class AfwerkingenViewModel : ObservableObject
                 SelectedOptie.Volgnummer = c;
                 HasChanges = true;
             }
+            else
+            {
+                _toast.Warning($"'{c}' is ongeldig — volgnummer moet 1-9 of A-K zijn.");
+            }
 
             OnPropertyChanged();
         }

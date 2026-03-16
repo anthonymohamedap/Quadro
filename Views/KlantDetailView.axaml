@@ -161,47 +161,4 @@
 		</StackPanel>
 	</Grid>
 
-	<UserControl.Styles>
-		<Style Selector="Button.MainBtn">
-			<Setter Property="Background" Value="#444A50"/>
-			<Setter Property="Foreground" Value="White"/>
-			<Setter Property="FontWeight" Value="Bold"/>
-			<Setter Property="CornerRadius" Value="8"/>
-			<Setter Property="BorderBrush" Value="Transparent"/>
-			<Setter Property="FontSize" Value="14"/>
-			<Setter Property="Padding" Value="10,5"/>
-		</Style>
-		<Style Selector="Button.MainBtn:pointerover">
-			<Setter Property="Background" Value="#F5C242"/>
-			<Setter Property="Foreground" Value="#222"/>
-		</Style>
-		<Style Selector="TextBlock">
-			<Setter Property="Foreground" Value="Black"/>
-		</Style>
-		<Style Selector="DataGrid">
-			<Setter Property="GridLinesVisibility" Value="All"/>
-		</Style>
-
-		<Style Selector="DataGridColumnHeader">
-			<Setter Property="Background" Value="#EAEAEA"/>
-			<Setter Property="Foreground" Value="#222"/>
-			<Setter Property="BorderBrush" Value="#DDD"/>
-			<Setter Property="BorderThickness" Value="0,0,0,1"/>
-		</Style>
-		<Style Selector="Button.MainBtn">
-			<Setter Property="Background" Value="#444A50"/>
-			<Setter Property="Foreground" Value="White"/>
-			<Setter Property="FontWeight" Value="Bold"/>
-			<Setter Property="CornerRadius" Value="8"/>
-			<Setter Property="BorderBrush" Value="Transparent"/>
-			<Setter Property="FontSize" Value="14"/>
-			<Setter Property="Padding" Value="10,5"/>
-		</Style>
-
-		<Style Selector="Button.MainBtn:pointerover">
-			<Setter Property="Background" Value="#F5C242"/>
-			<Setter Property="Foreground" Value="#222"/>
-		</Style>
-
-	</UserControl.Styles>
 </UserControl>

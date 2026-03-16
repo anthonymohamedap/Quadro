@@ -252,23 +252,17 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
         // 👇 voeg dit toe
         FilterKlanten();
 
-        GlasOpties = await LoadOptiesAsync(db, 'G');
-        Passe1Opties = await LoadOptiesAsync(db, 'P');
-        Passe2Opties = await LoadOptiesAsync(db, 'P');
-        DiepteOpties = await LoadOptiesAsync(db, 'D');
+        GlasOpties    = await LoadOptiesAsync(db, 'G');
+        Passe1Opties  = await LoadOptiesAsync(db, 'P');
+        Passe2Opties  = await LoadOptiesAsync(db, 'P');
+        DiepteOpties  = await LoadOptiesAsync(db, 'D');
         OpkleefOpties = await LoadOptiesAsync(db, 'O');
-        RugOpties = await LoadOptiesAsync(db, 'R');
-        Console.WriteLine("---- LoadCatalogAsync ----");
-        Console.WriteLine($"Klanten count: {Klanten.Count}");
-        Console.WriteLine($"GefilterdeKlanten count: {GefilterdeKlanten.Count}");
+        RugOpties     = await LoadOptiesAsync(db, 'R');
+
         FilterKlanten();
-        Console.WriteLine($"[CAT] After load: Klanten={Klanten.Count}, Gefilterde={GefilterdeKlanten.Count}, SelectedKlant={SelectedKlant?.Id}");
         RelinkSelectionsAfterCatalog();
     }
-    public string DebugKlantStatus =>
-    SelectedKlant == null
-        ? "SelectedKlant is NULL"
-        : $"SelectedKlant Id = {SelectedKlant.Id}";
+
     private static async Task<ObservableCollection<AfwerkingsOptie>> LoadOptiesAsync(AppDbContext db, char code)
     {
         var groepId = await db.AfwerkingsGroepen
@@ -284,19 +278,38 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
 
         return new ObservableCollection<AfwerkingsOptie>(list);
     }
-    // properties
-    partial void OnSelectedKlantChanged(Klant? value)
-    {
-        Console.WriteLine($"[UI] SelectedKlant changed -> {value?.Id}");
-    }
+
     private void RelinkSelectionsAfterCatalog()
     {
+        // Klant
         if (Offerte?.KlantId is int kid)
             SelectedKlant = Klanten.FirstOrDefault(k => k.Id == kid);
 
-        // als je SelectedRegel.TypeLijstId gebruikt:
-        if (SelectedRegel?.TypeLijstId is int tid)
-            SelectedRegel.TypeLijst = TypeLijsten.FirstOrDefault(t => t.Id == tid);
+        // Relink all afwerking navigations for every regel so the ComboBox
+        // SelectedItem matches an instance actually present in the catalog collections.
+        foreach (var regel in Regels)
+        {
+            if (regel.TypeLijstId is int tid)
+                regel.TypeLijst = TypeLijsten.FirstOrDefault(t => t.Id == tid);
+
+            if (regel.GlasId is int gid)
+                regel.Glas = GlasOpties.FirstOrDefault(g => g.Id == gid);
+
+            if (regel.PassePartout1Id is int p1id)
+                regel.PassePartout1 = Passe1Opties.FirstOrDefault(p => p.Id == p1id);
+
+            if (regel.PassePartout2Id is int p2id)
+                regel.PassePartout2 = Passe2Opties.FirstOrDefault(p => p.Id == p2id);
+
+            if (regel.DiepteKernId is int did)
+                regel.DiepteKern = DiepteOpties.FirstOrDefault(d => d.Id == did);
+
+            if (regel.OpklevenId is int oid)
+                regel.Opkleven = OpkleefOpties.FirstOrDefault(o => o.Id == oid);
+
+            if (regel.RugId is int rid)
+                regel.Rug = RugOpties.FirstOrDefault(r => r.Id == rid);
+        }
     }
 
 
@@ -335,16 +348,9 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
                 .Include(x => x.Regels)
                 .AsNoTracking()
                 .FirstAsync(x => x.Id == offerteId);
-            Console.WriteLine("---- LoadAsync ----");
-            Console.WriteLine($"Loaded OfferteId: {o.Id}");
-            Console.WriteLine($"Loaded KlantId: {o.KlantId}");
             Offerte = o;
 
-            SelectedKlant = GefilterdeKlanten
-    .FirstOrDefault(k => k.Id == o.KlantId);
-            Console.WriteLine($"SelectedKlant after set: {SelectedKlant?.Id}");
-            Console.WriteLine($"Exists in GefilterdeKlanten: {GefilterdeKlanten.Any(k => k.Id == SelectedKlant?.Id)}");
-            Console.WriteLine($"Reference equal: {GefilterdeKlanten.FirstOrDefault(k => k.Id == SelectedKlant?.Id) == SelectedKlant}");
+            SelectedKlant = GefilterdeKlanten.FirstOrDefault(k => k.Id == o.KlantId);
             Regels = new ObservableCollection<OfferteRegel>();
 
             foreach (var dbRule in o.Regels)

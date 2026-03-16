@@ -69,7 +69,11 @@
 										  MinWidth="140">
 									<ComboBox.ItemTemplate>
 										<DataTemplate x:DataType="m:AfwerkingsGroep">
-											<TextBlock Text="{Binding Code} - {Binding Naam}"/>
+											<TextBlock>
+												<Run Text="{Binding Code}"/>
+												<Run Text=" - "/>
+												<Run Text="{Binding Naam}"/>
+											</TextBlock>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
@@ -119,7 +123,7 @@
 												  HorizontalAlignment="Stretch">
 
 												<Border Background="#E5E7EB" CornerRadius="6" Padding="6,3" VerticalAlignment="Center">
-													<TextBlock Text="{Binding Volgnummer}" FontWeight="SemiBold" Foreground="#111827"/>
+													<TextBlock Text="{Binding Volgnummer, StringFormat='{}{0}'}" FontWeight="SemiBold" Foreground="#111827"/>
 												</Border>
 
 												<StackPanel Grid.Column="1" Orientation="Vertical" Spacing="2">
@@ -327,21 +331,5 @@
 
 	</Grid>
 
-	<!-- ░░ STIJLEN ░░ -->
-	<UserControl.Styles>
-		<Style Selector="Button.MainBtn">
-			<Setter Property="Background" Value="#444A50"/>
-			<Setter Property="Foreground" Value="White"/>
-			<Setter Property="FontWeight" Value="Bold"/>
-			<Setter Property="CornerRadius" Value="8"/>
-			<Setter Property="BorderBrush" Value="Transparent"/>
-			<Setter Property="FontSize" Value="15"/>
-			<Setter Property="Padding" Value="10,5"/>
-		</Style>
-		<Style Selector="Button.MainBtn:pointerover">
-			<Setter Property="Background" Value="#F5C242"/>
-			<Setter Property="Foreground" Value="#222"/>
-		</Style>
-	</UserControl.Styles>
 
 </UserControl>
