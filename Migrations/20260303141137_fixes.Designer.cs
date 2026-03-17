@@ -12,7 +12,7 @@ namespace QuadroApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20260303141137_fixes")]
-    partial class fixes
+    partial class Fixes
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -1,5 +1,4 @@
-// Candidate for removal – requires runtime verification
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Threading;
 using System;
 using Microsoft.Extensions.Logging;
@@ -33,7 +32,6 @@ namespace QuadroApp.Service
             _loggerFactory = loggerFactory;
         }
 
-        [Obsolete("Not used in current startup flow. Remove after runtime verification.")]
         public async Task<bool> ShowImportPreviewAsync(
             ObservableCollection<TypeLijstPreviewRow> previewRows,
             ObservableCollection<ImportIssue> issues)
@@ -86,7 +84,6 @@ namespace QuadroApp.Service
             return result;
         }
 
-        [Obsolete("Not used in current startup flow. Remove after runtime verification.")]
         public async Task<bool> ShowKlantImportPreviewAsync(
             ObservableCollection<KlantPreviewRow> previewRows,
             ObservableCollection<ImportIssue> issues)
@@ -181,7 +178,6 @@ namespace QuadroApp.Service
             return await tcs.Task;
         }
 
-        [Obsolete("Not used in current startup flow. Remove after runtime verification.")]
         public async Task<bool> ShowAfwerkingImportPreviewAsync(
             ObservableCollection<AfwerkingsOptiePreviewRow> previewRows,
             ObservableCollection<ImportIssue> issues)

@@ -35,11 +35,11 @@ public partial class PlanningTijdDialogViewModel : ObservableObject
 
     public bool IsGeldig => DuurMinuten > 0 && GeplandeDatum.HasValue;
 
-    partial void OnVanUurChanged(decimal _)    => Refresh();
-    partial void OnVanMinuutChanged(decimal _) => Refresh();
-    partial void OnTotUurChanged(decimal _)    => Refresh();
-    partial void OnTotMinuutChanged(decimal _) => Refresh();
-    partial void OnGeplandeDatumChanged(DateTimeOffset? _) => Refresh();
+    partial void OnVanUurChanged(decimal value)    => Refresh();
+    partial void OnVanMinuutChanged(decimal value) => Refresh();
+    partial void OnTotUurChanged(decimal value)    => Refresh();
+    partial void OnTotMinuutChanged(decimal value) => Refresh();
+    partial void OnGeplandeDatumChanged(DateTimeOffset? value) => Refresh();
 
     private void Refresh()
     {

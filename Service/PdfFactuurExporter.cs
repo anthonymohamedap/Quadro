@@ -92,7 +92,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     private static void DrawHeader(ColumnDescriptor col, Factuur factuur, byte[]? logoBytes)
     {
         if (logoBytes is not null)
-            col.Item().AlignCenter().Height(60).Image(logoBytes, ImageScaling.FitHeight);
+            col.Item().AlignCenter().Height(60).Image(logoBytes).FitHeight();
 
         col.Item().Row(row =>
         {

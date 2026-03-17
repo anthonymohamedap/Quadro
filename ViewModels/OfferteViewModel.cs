@@ -853,8 +853,6 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
             if (Offerte.Id == 0)
                 await SaveCoreAsync(reloadAfterSave: false);
 
-            var shouldSaveAtEnd = true;
-
             if (Offerte.Id == 0)
             {
                 _toast.Error("Offerte kon niet opgeslagen worden. Bevestigen is gestopt.");
