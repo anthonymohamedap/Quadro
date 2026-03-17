@@ -129,7 +129,7 @@
 														<StackPanel Orientation="Horizontal" Spacing="8">
 															<DatePicker SelectedDate="{Binding BestelDatumInput, Mode=TwoWay}"/>
 															<Button Content="Markeer besteld"
-																Command="{Binding $parent[Window].DataContext.MarkeerBesteldCommand}"
+																Command="{Binding $parent[Window].((vm:WeekWerkLijstViewModel)DataContext).MarkeerBesteldCommand}"
 																CommandParameter="{Binding}"/>
 														</StackPanel>
 													</StackPanel>
@@ -146,7 +146,7 @@
 
 															<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
 																<Button Content="💾 Bewaar"
-																		Command="{Binding $parent[Window].DataContext.SaveNotitieCommand}"
+																		Command="{Binding $parent[Window].((vm:WeekWerkLijstViewModel)DataContext).SaveNotitieCommand}"
 																		CommandParameter="{Binding}"
 																		Classes="MainBtn"
 																		Padding="12,6"/>

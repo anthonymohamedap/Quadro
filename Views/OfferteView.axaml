@@ -81,7 +81,7 @@
 
 									<ComboBox.ItemTemplate>
 										<DataTemplate x:DataType="m:Klant">
-											<TextBlock>
+											<TextBlock Foreground="White">
 												<Run Text="{Binding Voornaam}" />
 												<Run Text=" " />
 												<Run Text="{Binding Achternaam}" />
@@ -198,16 +198,16 @@
                                        FontSize="16"
                                        FontWeight="SemiBold"/>
 
-							<TextBlock Grid.Row="1" Text="Aantal stuks"/>
+							<TextBlock Grid.Row="1" Grid.Column="0" Text="Aantal stuks"/>
 							<NumericUpDown Grid.Row="1"
                                            Grid.Column="1"
-										   			Background="#F5C242"
+										   			
                             Foreground="Black"
                                            Minimum="1"
                                            Maximum="999"
                                            Value="{Binding SelectedRegel.AantalStuks, Mode=TwoWay}"/>
 
-							<TextBlock Grid.Row="2" Text="Type lijst"/>
+							<TextBlock Grid.Row="2" Grid.Column="0" Text="Type lijst"/>
 
 							<StackPanel Grid.Row="2"
                                         Grid.Column="1"
@@ -221,45 +221,46 @@
                                           MaxDropDownHeight="300">
 									<ComboBox.ItemTemplate>
 										<DataTemplate x:DataType="m:TypeLijst">
-											<TextBlock Text="{Binding Artikelnummer}"/>
+											<TextBlock Foreground="White" Text="{Binding Artikelnummer}"/>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 							</StackPanel>
 
-							<TextBlock Grid.Row="3" Text="Breedte (cm)"/>
+							<TextBlock Grid.Row="3" Grid.Column="0" Text="Breedte (cm)"/>
 							<NumericUpDown Grid.Row="3"
-										   			Background="#F5C242"
+										   			
                             Foreground="Black"
                                            Grid.Column="1"
                                            Value="{Binding SelectedRegel.BreedteCm, Mode=TwoWay}"/>
 
-							<TextBlock Grid.Row="4" Text="Hoogte (cm)"/>
+							<TextBlock Grid.Row="4" Grid.Column="0" Text="Hoogte (cm)"/>
 							<NumericUpDown Grid.Row="4"
-										   			Background="#F5C242"
+										   			
                             Foreground="Black"
                                            Grid.Column="1"
                                            Value="{Binding SelectedRegel.HoogteCm, Mode=TwoWay}"/>
 
-							<TextBlock Grid.Row="5" Text="Afgesproken prijs (excl.)"/>
+							<TextBlock Grid.Row="5" Grid.Column="0" Text="Afgesproken prijs (excl.)"/>
 							<TextBox Grid.Row="5"
                                      Grid.Column="1"
                                      Text="{Binding SelectedRegel.AfgesprokenPrijsExcl, Mode=TwoWay}"/>
 
-							<TextBlock Grid.Row="6" Text="Inleg (B × H) cm"/>
+							<TextBlock Grid.Row="6" Grid.Column="0" Text="Inleg (B × H) cm"/>
 							<Grid Grid.Row="6"
                                   Grid.Column="1"
                                   ColumnDefinitions="*,8,*">
-								<NumericUpDown Value="{Binding SelectedRegel.InlegBreedteCm, Mode=TwoWay}"			Background="#F5C242"
+								<NumericUpDown Value="{Binding SelectedRegel.InlegBreedteCm, Mode=TwoWay}"			
                             Foreground="Black"/>
 								<TextBlock Grid.Column="1"
                                            Text="×"
                                            HorizontalAlignment="Center"/>
-								<NumericUpDown Grid.Column="2" 			Background="#F5C242"
+								<NumericUpDown Grid.Column="2" 			
                             Foreground="Black"
                                                Value="{Binding SelectedRegel.InlegHoogteCm, Mode=TwoWay}"/>
 							</Grid>
 							<TextBlock Grid.Row="7"
+           Grid.Column="0"
            VerticalAlignment="Top"
            Text="Opmerking"/>
 
@@ -483,21 +484,21 @@
 
 								<!-- KORTING -->
 								<TextBlock Text="Korting (%)"/>
-								<NumericUpDown Grid.Column="1"
+								<NumericUpDown Grid.Row="0"
+									   Grid.Column="1"
 											   Minimum="0"
-											   			Background="#F5C242"
                             Foreground="Black"
 											   Maximum="100"
 											   Value="{Binding Offerte.KortingPct, Mode=TwoWay}"/>
 
 								<!-- MEERPRIJS -->
-								<TextBlock Grid.Row="1" Text="Meerprijs (incl. BTW)"/>
+								<TextBlock Grid.Row="1" Grid.Column="0" Text="Meerprijs (incl. BTW)"/>
 								<TextBox Grid.Row="1"
 										 Grid.Column="1"
 										 Text="{Binding Offerte.MeerPrijsIncl, Mode=TwoWay}"/>
 
 								<!-- VOORSCHOT -->
-								<TextBlock Grid.Row="2" Text="Voorschot betaald"/>
+								<TextBlock Grid.Row="2" Grid.Column="0" Text="Voorschot betaald"/>
 								<StackPanel Grid.Row="2"
 											Grid.Column="1"
 											Orientation="Horizontal"
@@ -561,17 +562,19 @@
 					  RowSpacing="6">
 
 					<TextBlock Text="Subtotaal"/>
-					<TextBlock Grid.Column="1"
+					<TextBlock Grid.Row="0"
+					   Grid.Column="1"
 							   Text="{Binding OfferteEx, StringFormat=€ {0:N2}}"
 							   HorizontalAlignment="Right"/>
 
-					<TextBlock Grid.Row="1" Text="BTW"/>
+					<TextBlock Grid.Row="1" Grid.Column="0" Text="BTW"/>
 					<TextBlock Grid.Row="1"
 							   Grid.Column="1"
 							   Text="{Binding OfferteBtw, StringFormat=€ {0:N2}}"
 							   HorizontalAlignment="Right"/>
 
 					<TextBlock Grid.Row="2"
+					   Grid.Column="0"
 							   Text="Totaal incl. BTW"
 							   FontWeight="Bold"/>
 
@@ -583,6 +586,7 @@
 							   HorizontalAlignment="Right"/>
 
 					<TextBlock Grid.Row="3"
+					   Grid.Column="0"
 							   Text="Rest te betalen"
 							   Foreground="#C0392B"
 							   FontWeight="SemiBold"/>

@@ -4,7 +4,6 @@
     xmlns:vm="using:QuadroApp.ViewModels"
     xmlns:m="using:QuadroApp.Model.DB"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:design="clr-namespace:Avalonia.Markup.Xaml;assembly=Avalonia.Markup"
     xmlns:conv="using:QuadroApp.Converters"
     x:Class="QuadroApp.Views.WerkBonLijstView"
     x:Name="Root"
@@ -77,11 +76,11 @@
 							   FontWeight="Bold"/>
 
 					<!-- Search + tools -->
-					<Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="10">
+					<Grid ColumnDefinitions="280,Auto" ColumnSpacing="10">
 
 						<TextBox Grid.Column="0"
-								 Width="280"
 								 Height="34"
+								 Foreground="#222"
 								 Watermark="Zoek op bonnr of klant…"
 								 Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
@@ -89,14 +88,14 @@
 									Orientation="Horizontal"
 									Spacing="6"
 									VerticalAlignment="Center">
-							<Button Content="🔄"
+							<Button Content="🔄 Ververs"
 									ToolTip.Tip="Ververs"
 									Command="{Binding RefreshCommand}"
-									Classes="IconBtn"/>
-							<Button Content="📅"
+									Classes="MainBtn"/>
+							<Button Content="📅 Open planning"
 									ToolTip.Tip="Open planning"
 									Command="{Binding OpenPlanningCommand}"
-									Classes="IconBtn"/>
+									Classes="MainBtn"/>
 						</StackPanel>
 
 					</Grid>
@@ -269,9 +268,9 @@
 													<TextBlock Text="Bestellen vereist" Foreground="Black" IsVisible="{Binding !IsOpVoorraad}"/>
 													<TextBlock Text="{Binding BestelDatum, StringFormat='Besteld op: {0:dd/MM/yyyy}'}" Foreground="Black" IsVisible="{Binding IsBesteld}"/>
 													<StackPanel Orientation="Horizontal" Spacing="8">
-														<DatePicker SelectedDate="{Binding #Root.DataContext.GeselecteerdeBestelDatum, Mode=TwoWay}"/>
+														<DatePicker SelectedDate="{Binding #Root.((vm:WerkBonLijstViewModel)DataContext).GeselecteerdeBestelDatum, Mode=TwoWay}"/>
 														<Button Content="Markeer besteld"
-																Command="{Binding #Root.DataContext.MarkeerLijstAlsBesteldCommand}"
+																Command="{Binding #Root.((vm:WerkBonLijstViewModel)DataContext).MarkeerLijstAlsBesteldCommand}"
 																CommandParameter="{Binding}"/>
 													</StackPanel>
 												</StackPanel>
