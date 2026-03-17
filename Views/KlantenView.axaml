@@ -67,8 +67,8 @@
 								</StackPanel>
 								<StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
 									<!-- BELANGRIJK: CommandParameter werkt nu omdat VM overloads heeft -->
-									<Button Content="✏️" Width="32" Height="30" Background="#444A50" Foreground="White" Command="{Binding $parent[UserControl].DataContext.EditCommand}" CommandParameter="{Binding}"/>
-									<Button Content="🗑️" Width="32" Height="30" Background="#AA3333" Foreground="White" Command="{Binding $parent[UserControl].DataContext.DeleteCommand}" CommandParameter="{Binding}"/>
+									<Button Content="✏️" Width="32" Height="30" Background="#444A50" Foreground="White" Command="{Binding $parent[UserControl].((vm:KlantenViewModel)DataContext).EditCommand}" CommandParameter="{Binding}"/>
+									<Button Content="🗑️" Width="32" Height="30" Background="#AA3333" Foreground="White" Command="{Binding $parent[UserControl].((vm:KlantenViewModel)DataContext).DeleteCommand}" CommandParameter="{Binding}"/>
 								</StackPanel>
 							</Grid>
 						</DataTemplate>

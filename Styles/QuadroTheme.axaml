@@ -115,6 +115,10 @@
 		<Setter Property="Margin" Value="0,0,0,6"/>
 		<Setter Property="Padding" Value="10"/>
 		<Setter Property="Background" Value="Transparent"/>
+		<Setter Property="Foreground" Value="#222222"/>
+	</Style>
+	<Style Selector="ListBoxItem /template/ ContentPresenter">
+		<Setter Property="TextElement.Foreground" Value="#222222"/>
 	</Style>
 	<Style Selector="ListBoxItem:pointerover">
 		<Setter Property="Background" Value="#FFF7DA"/>
@@ -153,17 +157,6 @@
 	<Style Selector="ComboBoxItem">
 		<Setter Property="Foreground" Value="#222222"/>
 	</Style>
-	<Style Selector="ComboBoxItem:pointerover /template/ ContentPresenter">
-		<Setter Property="Background" Value="#FFF8D6"/>
-		<Setter Property="TextElement.Foreground" Value="#222222"/>
-	</Style>
-	<Style Selector="ComboBoxItem:selected /template/ ContentPresenter">
-		<Setter Property="Background" Value="#F5C242"/>
-		<Setter Property="TextElement.Foreground" Value="#222222"/>
-	</Style>
-	<Style Selector="ComboBoxItem:selected:pointerover /template/ ContentPresenter">
-		<Setter Property="Background" Value="#FFF8D6"/>
-		<Setter Property="TextElement.Foreground" Value="#222222"/>
-	</Style>
+
 
 </Styles>

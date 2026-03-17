@@ -172,7 +172,7 @@
 									<Button Content="🗑️"
 											Width="32" Height="30"
 											Background="#AA3333" Foreground="White"
-											Command="{Binding DataContext.DeleteCommand, ElementName=OffertesList}"
+											Command="{Binding ((vm:OffertesLijstViewModel)DataContext).DeleteCommand, ElementName=OffertesList}"
 											CommandParameter="{Binding}"/>
 								</StackPanel>
 

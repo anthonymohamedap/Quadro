@@ -8,6 +8,7 @@
 	<Application.Styles>
 		<FluentTheme />
 		<huskui:HuskuiTheme />
+		<StyleInclude Source="avares://QuadroApp/Styles/QuadroTheme.axaml" />
 	</Application.Styles>
 
 	<Application.DataTemplates>
