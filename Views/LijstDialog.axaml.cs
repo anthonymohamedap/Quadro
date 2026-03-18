@@ -23,7 +23,6 @@ public partial class LijstDialog : Window
         _editCopy.Artikelnummer = lijst.Artikelnummer;
         _editCopy.Levcode = lijst.Levcode;
         _editCopy.Soort = lijst.Soort;
-        _editCopy.Serie = lijst.Serie;
         _editCopy.Opmerking = lijst.Opmerking;
         _editCopy.BreedteCm = lijst.BreedteCm;
         _editCopy.PrijsPerMeter = lijst.PrijsPerMeter;

@@ -25,7 +25,6 @@ namespace QuadroApp.Model.DB
         [Required]
         public int BreedteCm { get; set; }
         public string Soort { get; set; } = string.Empty;
-        public string? Serie { get; set; }
         public bool IsDealer { get; set; }
 
         public string Opmerking { get; set; } = string.Empty;
@@ -33,7 +32,13 @@ namespace QuadroApp.Model.DB
         [Precision(10, 2)]
         public decimal PrijsPerMeter { get; set; }
 
-        public bool IsStaaflijst { get; set; }
+        /// <summary>Winstfactor voor deze lijst. Null = gebruik de globale DefaultWinstFactor uit Instellingen.</summary>
+        [Precision(6, 3)]
+        public decimal? WinstFactor { get; set; }
+
+        /// <summary>Afvalpercentage voor deze lijst. Null = gebruik de globale DefaultAfvalPercentage uit Instellingen.</summary>
+        [Precision(5, 2)]
+        public decimal? AfvalPercentage { get; set; }
 
         [Precision(10, 2)]
         public decimal VasteKost { get; set; }

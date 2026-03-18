@@ -11,8 +11,7 @@ public sealed class PricingSettingsProvider : IPricingSettingsProvider
 {
     private const decimal DefaultUurloon = 45m;
     private const decimal DefaultBtwPercent = 21m;
-    private const decimal DefaultStaaflijstWinstFactor = 3.5m;
-    private const decimal DefaultStaaflijstAfvalPercentage = 20m;
+    private const decimal DefaultPrijsPerMeter = 0m;
     private const decimal DefaultWinstFactor = 0m;
     private const decimal DefaultAfvalPercentage = 0m;
 
@@ -29,11 +28,8 @@ public sealed class PricingSettingsProvider : IPricingSettingsProvider
     public async Task<decimal> GetBtwPercentAsync() =>
         await GetDecimalSettingAsync("BtwPercent", DefaultBtwPercent);
 
-    public async Task<decimal> GetStaaflijstWinstFactorAsync() =>
-        await GetDecimalSettingAsync("StaaflijstWinstFactor", DefaultStaaflijstWinstFactor);
-
-    public async Task<decimal> GetStaaflijstAfvalPercentageAsync() =>
-        await GetDecimalSettingAsync("StaaflijstAfvalPercentage", DefaultStaaflijstAfvalPercentage);
+    public async Task<decimal> GetDefaultPrijsPerMeterAsync() =>
+        await GetDecimalSettingAsync("DefaultPrijsPerMeter", DefaultPrijsPerMeter);
 
     public async Task<decimal> GetDefaultWinstFactorAsync() =>
         await GetDecimalSettingAsync("DefaultWinstFactor", DefaultWinstFactor);

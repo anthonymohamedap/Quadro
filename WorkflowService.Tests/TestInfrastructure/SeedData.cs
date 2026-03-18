@@ -45,7 +45,6 @@ public static class SeedData
             Levcode = "A1",
             BreedteCm = 10,
             Soort = "ALU",
-            IsStaaflijst = true,
             PrijsPerMeter = 10m,
             VasteKost = 1m,
             WerkMinuten = 5,

@@ -95,7 +95,6 @@ BEGIN
         [VasteKost] decimal(10,2) NOT NULL,
         [WerkMinuten] int NOT NULL,
         [MachineMinuten] int NOT NULL,
-        [Serie] nvarchar(max) NULL,
         [VoorraadMeter] decimal(10,2) NOT NULL,
         [InventarisKost] decimal(10,2) NOT NULL,
         [LaatstePrijsUpdate] datetime2 NULL,
@@ -491,13 +490,6 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20251018131315_UpdateQuadroPrecisionAndRelations'
 )
 BEGIN
-    DECLARE @var12 sysname;
-    SELECT @var12 = [d].[name]
-    FROM [sys].[default_constraints] [d]
-    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
-    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Lijsten]') AND [c].[name] = N'Serie');
-    IF @var12 IS NOT NULL EXEC(N'ALTER TABLE [Lijsten] DROP CONSTRAINT [' + @var12 + '];');
-    ALTER TABLE [Lijsten] DROP COLUMN [Serie];
 END;
 
 IF NOT EXISTS (
@@ -1109,11 +1101,6 @@ IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20251018183307_typelist'
 )
-BEGIN
-    ALTER TABLE [TypeLijsten] ADD [Serie] nvarchar(max) NULL;
-END;
-
-IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20251018183307_typelist'
 )

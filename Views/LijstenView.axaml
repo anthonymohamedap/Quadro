@@ -97,6 +97,7 @@
                         <Button Content="💾 Opslaan" Command="{Binding SaveCommand}" Classes="MainBtn"/>
                         <Button Content="🔄 Ververs" Command="{Binding RefreshCommand}" Classes="MainBtn"/>
                         <Button Content="📥 Excel import" Command="{Binding ImportExcelCommand}" Classes="MainBtn"/>
+                        <Button Content="🧩 Bulk update" Command="{Binding BulkPrijsUpdateCommand}" Classes="MainBtn"/>
                     </StackPanel>
                 </Grid>
 
@@ -110,27 +111,6 @@
                             Command="{Binding NextPageCommand}"
                             Classes="MainBtn"/>
                 </StackPanel>
-
-                <Border Background="White"
-                        BorderBrush="#DDD"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="12"
-                        Margin="0,2,0,2">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Bulk Update"
-                                   FontSize="16"
-                                   FontWeight="SemiBold"/>
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <Button Content="Bulk Prijs Update"
-                                    Command="{Binding BulkPrijsUpdateCommand}"
-                                    Classes="MainBtn"/>
-                            <Button Content="Herbereken Selectie"
-                                    Command="{Binding HerberekenSelectieCommand}"
-                                    Classes="MainBtn"/>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
 
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <Border Background="White"
@@ -269,7 +249,7 @@
                                     IsVisible="{Binding IsDetailOpen}">
 
                             <Grid ColumnDefinitions="2*,3*"
-                                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                                   RowSpacing="7"
                                   ColumnSpacing="15">
 
@@ -313,23 +293,20 @@
                                 <TextBlock Text="Soort" Grid.Row="4" Grid.Column="0" FontWeight="Bold"/>
                                 <TextBox Foreground="Black" Text="{Binding GeselecteerdeLijst.Soort, Mode=TwoWay}" Grid.Row="4" Grid.Column="1"/>
 
-                                <TextBlock Text="Serie" Grid.Row="5" Grid.Column="0" FontWeight="Bold"/>
-                                <TextBox Foreground="Black" Text="{Binding GeselecteerdeLijst.Serie, Mode=TwoWay}" Grid.Row="5" Grid.Column="1"/>
+                                <TextBlock Text="Voorraad" Grid.Row="5" Grid.Column="0" FontWeight="Bold"/>
+                                <TextBox Foreground="Black" Text="{Binding GeselecteerdeLijst.VoorraadMeter, Mode=TwoWay}" Grid.Row="5" Grid.Column="1"/>
 
-                                <TextBlock Text="Voorraad" Grid.Row="6" Grid.Column="0" FontWeight="Bold"/>
-                                <TextBox Foreground="Black" Text="{Binding GeselecteerdeLijst.VoorraadMeter, Mode=TwoWay}" Grid.Row="6" Grid.Column="1"/>
+                                <TextBlock Text="InventarisKost" Grid.Row="6" Grid.Column="0" FontWeight="Bold"/>
+                                <TextBox Foreground="Black" Text="{Binding GeselecteerdeLijst.InventarisKost, Mode=TwoWay}" Grid.Row="6" Grid.Column="1"/>
 
-                                <TextBlock Text="InventarisKost" Grid.Row="7" Grid.Column="0" FontWeight="Bold"/>
-                                <TextBox Foreground="Black" Text="{Binding GeselecteerdeLijst.InventarisKost, Mode=TwoWay}" Grid.Row="7" Grid.Column="1"/>
+                                <TextBlock Text="PrijsPerMeter" Grid.Row="7" Grid.Column="0" FontWeight="Bold"/>
+                                <TextBox Foreground="Black" Text="{Binding GeselecteerdeLijst.PrijsPerMeter, Mode=TwoWay}" Grid.Row="7" Grid.Column="1"/>
 
-                                <TextBlock Text="PrijsPerMeter" Grid.Row="8" Grid.Column="0" FontWeight="Bold"/>
-                                <TextBox Foreground="Black" Text="{Binding GeselecteerdeLijst.PrijsPerMeter, Mode=TwoWay}" Grid.Row="8" Grid.Column="1"/>
+                                <TextBlock Text="VasteKost" Grid.Row="8" Grid.Column="0" FontWeight="Bold"/>
+                                <TextBox Foreground="Black" Text="{Binding GeselecteerdeLijst.VasteKost, Mode=TwoWay}" Grid.Row="8" Grid.Column="1"/>
 
-                                <TextBlock Text="VasteKost" Grid.Row="9" Grid.Column="0" FontWeight="Bold"/>
-                                <TextBox Foreground="Black" Text="{Binding GeselecteerdeLijst.VasteKost, Mode=TwoWay}" Grid.Row="9" Grid.Column="1"/>
-
-                                <TextBlock Text="WerkMinuten" Grid.Row="10" Grid.Column="0" FontWeight="Bold"/>
-                                <TextBox Foreground="Black" Text="{Binding GeselecteerdeLijst.WerkMinuten, Mode=TwoWay}" Grid.Row="10" Grid.Column="1"/>
+                                <TextBlock Text="WerkMinuten" Grid.Row="9" Grid.Column="0" FontWeight="Bold"/>
+                                <TextBox Foreground="Black" Text="{Binding GeselecteerdeLijst.WerkMinuten, Mode=TwoWay}" Grid.Row="9" Grid.Column="1"/>
                             </Grid>
 
                             <Button Content="Opslaan wijzigingen"

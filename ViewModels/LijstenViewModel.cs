@@ -294,7 +294,6 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
             GeselecteerdeLijst.LeverancierId = SelectedLeverancier?.Id ?? GeselecteerdeLijst.LeverancierId;
             GeselecteerdeLijst.Artikelnummer = (GeselecteerdeLijst.Artikelnummer ?? string.Empty).Trim();
             GeselecteerdeLijst.Soort = (GeselecteerdeLijst.Soort ?? string.Empty).Trim();
-            GeselecteerdeLijst.Serie = (GeselecteerdeLijst.Serie ?? string.Empty).Trim();
             GeselecteerdeLijst.LaatsteUpdate = DateTime.Now;
 
             var vr = await _validator.ValidateUpdateAsync(GeselecteerdeLijst);
@@ -464,7 +463,7 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
     public void UpdateSelectedLijsten(IEnumerable<TypeLijst> selectedItems)
     {
         SelectedLijsten.Clear();
-        foreach (var item in selectedItems.Distinct())
+        foreach (var item in selectedItems.DistinctBy(x => x.Id))
         {
             SelectedLijsten.Add(item);
         }
@@ -473,18 +472,10 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
     [RelayCommand]
     private async Task BulkPrijsUpdateAsync()
     {
-        await OpenBulkWindowAsync(BulkLijstenActionMode.BulkPrijsUpdate);
-    }
-
-    [RelayCommand]
-    private async Task HerberekenSelectieAsync()
-    {
-        await OpenBulkWindowAsync(BulkLijstenActionMode.HerberekenSelectie);
-    }
-
-    private async Task OpenBulkWindowAsync(BulkLijstenActionMode actionMode)
-    {
-        var vm = new BulkLijstenViewModel(_dbFactory, _toast, actionMode);
+        var vm = new BulkLijstenViewModel(_dbFactory, _validator, _toast)
+        {
+            RefreshRequested = async () => await LoadAsync()
+        };
         await vm.InitializeAsync();
 
         var window = new BulkLijstenWindow

@@ -35,7 +35,12 @@ public sealed class TypeLijstValidator : ICrudValidator<TypeLijst>
         if (t.LeverancierId <= 0)
             r.Error(nameof(t.LeverancierId), "Leverancier is verplicht.");
 
-        if (t.BreedteCm > 0)
+        if (string.IsNullOrWhiteSpace(t.Levcode))
+            r.Error(nameof(t.Levcode), "Levcode is verplicht.");
+        else if (t.Levcode.Length > 50)
+            r.Error(nameof(t.Levcode), "Levcode mag max 50 tekens zijn.");
+
+        if (t.BreedteCm < 0)
             r.Error(nameof(t.BreedteCm), "BreedteCm moet groter of gelijk zijn aan 0.");
 
         if (t.PrijsPerMeter < 0) r.Error(nameof(t.PrijsPerMeter), "PrijsPerMeter mag niet negatief zijn.");

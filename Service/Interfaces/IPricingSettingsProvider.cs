@@ -6,8 +6,7 @@ public interface IPricingSettingsProvider
 {
     Task<decimal> GetUurloonAsync();
     Task<decimal> GetBtwPercentAsync();
-    Task<decimal> GetStaaflijstWinstFactorAsync();
-    Task<decimal> GetStaaflijstAfvalPercentageAsync();
+    Task<decimal> GetDefaultPrijsPerMeterAsync();
     Task<decimal> GetDefaultWinstFactorAsync();
     Task<decimal> GetDefaultAfvalPercentageAsync();
 }

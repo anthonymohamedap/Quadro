@@ -26,4 +26,5 @@ public partial class LijstenView : UserControl
 
         vm.UpdateSelectedLijsten(listBox.SelectedItems.OfType<TypeLijst>());
     }
+
 }

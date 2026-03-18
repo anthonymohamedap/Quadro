@@ -17,8 +17,8 @@
             <DockPanel Margin="20,0">
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
                     <Ellipse Width="35" Height="35" Fill="#F5C242"/>
-                    <TextBlock Text="QUADRO" Foreground="White" FontWeight="Bold" FontSize="20"/>
-                    <TextBlock Text="BULK LIJSTEN" Foreground="#CCC" FontSize="13" Margin="20,0,0,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="QUADRO" Foreground="Black" FontWeight="Bold" FontSize="20"/>
+                    <TextBlock Text="BULK LIJSTEN" Foreground="Black" FontSize="13" Margin="20,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <Button Content="Sluiten"
@@ -28,7 +28,7 @@
                         HorizontalAlignment="Right"
                         Margin="0,10,10,0"
                         Background="#F5C242"
-                        Foreground="#222"
+                        Foreground="Black"
                         FontWeight="Bold"
                         CornerRadius="8"
                         Padding="10,5"
@@ -37,135 +37,394 @@
             </DockPanel>
         </Border>
 
-        <Grid Grid.Row="1" Margin="20" RowDefinitions="Auto,*" RowSpacing="12">
-            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Padding="12">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="Selecteer lijsten via filters en voer een bulkactie uit"
-                               FontSize="16"
-                               FontWeight="SemiBold"/>
+        <Grid Grid.Row="1" Margin="20">
+            <Grid DataContext="{Binding}"
+                  x:DataType="vm:BulkLijstenViewModel"
+                  ColumnDefinitions="1.25*,1*"
+                  ColumnSpacing="14">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Height="640">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Kies welke velden je wilt bulk bijwerken"
+                                   Foreground="Black"
+                                   FontWeight="SemiBold"
+                                   FontSize="14"/>
 
-                    <Grid ColumnDefinitions="2*,1*,1*,1*" ColumnSpacing="10">
-                        <TextBox Grid.Column="0"
-                                 Watermark="Zoek op artikelnummer of leverancier"
-                                 Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Border Background="#F0F6FF"
+                                BorderBrush="#BFDBFE"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="10">
+                            <StackPanel Spacing="8">
+                                <CheckBox Content="Artikelnummer bijwerken"
+                                          Foreground="Black"
+                                          IsChecked="{Binding BijwerkArtikelnummer}"/>
+                                <TextBox Text="{Binding NieuwArtikelnummer, Mode=TwoWay}"
+                                         Foreground = "Black"  Watermark="Nieuw artikelnummer"/>
+                            </StackPanel>
+                        </Border>
 
-                        <ComboBox Grid.Column="1"
-                                  ItemsSource="{Binding SoortOptions}"
-								  Foreground="White"
-                                  SelectedItem="{Binding SoortFilter, Mode=TwoWay}"/>
+                        <Border Background="#F0F6FF"
+                                BorderBrush="#BFDBFE"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="10">
+                            <StackPanel Spacing="8">
+                                <CheckBox Content="Levcode bijwerken"
+                                          Foreground="Black"
+                                          IsChecked="{Binding BijwerkLevcode}"/>
+                                <TextBox Text="{Binding NieuweLevcode, Mode=TwoWay}"
+                                         Foreground = "Black"  Watermark="Nieuwe levcode"/>
+                            </StackPanel>
+                        </Border>
 
-                        <ComboBox Grid.Column="2"
-                                  ItemsSource="{Binding SerieOptions}"
-								  Foreground="White"
-                                  SelectedItem="{Binding SerieFilter, Mode=TwoWay}"/>
-
-                        <ComboBox Grid.Column="3"
-                                  ItemsSource="{Binding ActionModes}"
-								  Foreground="White"
-                                  SelectedItem="{Binding SelectedAction, Mode=TwoWay}"/>
-                    </Grid>
-
-                    <!-- Price input panel — only visible for BulkPrijsUpdate -->
-                    <Border IsVisible="{Binding IsPrijsUpdateMode}"
-                            Background="#F0F6FF"
-                            BorderBrush="#93C5FD"
-                            BorderThickness="1"
-                            CornerRadius="6"
-                            Padding="12,10">
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="Prijs aanpassing" FontWeight="SemiBold" FontSize="13"/>
-
-                            <!-- Toggle absolute / percentage -->
-                            <CheckBox Content="Gebruik percentage (%)"
-                                      Foreground="Black"
-                                      IsChecked="{Binding GebruikPercentage, Mode=TwoWay}"/>
-
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
-
-                                <!-- Absolute new price -->
-                                <StackPanel Grid.Column="0"
-                                            IsVisible="{Binding IsAbsolutePrijs}"
-                                            Spacing="4">
-                                    <TextBlock Text="Nieuwe prijs per meter (€)" FontSize="12" Foreground="#555"/>
-                                    <NumericUpDown Value="{Binding NieuwePrijsPerMeter, Mode=TwoWay}"
-                                                   Minimum="0"
-                                                   Increment="0.50"
-                                                   FormatString="0.00"
-                                                   Watermark="bv. 12.50"
-                                                   HorizontalAlignment="Stretch"/>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Border Grid.Column="0"
+                                    Background="#F0F6FF"
+                                    BorderBrush="#BFDBFE"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="10">
+                                <StackPanel Spacing="8">
+                                    <CheckBox Content="Leverancier bijwerken"
+                                              IsChecked="{Binding BijwerkLeverancier}" Foreground = "Black" />
+                                    <ComboBox ItemsSource="{Binding BulkLeveranciers}" Foreground = "Black" 
+                                              SelectedItem="{Binding GeselecteerdeBulkLeverancier, Mode=TwoWay}"
+                                              HorizontalAlignment="Stretch">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="m:Leverancier">
+                                                <TextBlock Foreground = "Black"  Text="{Binding Naam}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
                                 </StackPanel>
+                            </Border>
 
-                                <!-- Percentage change -->
-                                <StackPanel Grid.Column="1"
-                                            IsVisible="{Binding GebruikPercentage}"
-                                            Spacing="4">
-                                    <TextBlock Text="Wijziging (%)" FontSize="12" Foreground="#555"/>
-                                    <NumericUpDown Value="{Binding PrijsWijzigingPct, Mode=TwoWay}"
+                            <Border Grid.Column="1"
+                                    Background="#F0F6FF"
+                                    BorderBrush="#BFDBFE"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="10">
+                                <StackPanel Spacing="8">
+                                    <CheckBox Content="Breedte (cm) bijwerken"
+                                              Foreground="Black"
+                                              IsChecked="{Binding BijwerkBreedteCm}"/>
+                                    <NumericUpDown Value="{Binding NieuweBreedteCm, Mode=TwoWay}"
+                                                   Foreground="Black"
                                                    Increment="1"
-                                                   FormatString="0.00"
-                                                   Watermark="bv. 5 of -3"
-                                                   HorizontalAlignment="Stretch"/>
+                                                   FormatString="0"
+                                                   Minimum="0"/>
                                 </StackPanel>
-
-                            </Grid>
-                        </StackPanel>
-                    </Border>
-
-                    <TextBlock Text="{Binding SelectedCount, StringFormat='Geselecteerd: {0}'}"
-                               Foreground="#666"/>
-                </StackPanel>
-            </Border>
-
-            <Border Grid.Row="1" Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Padding="0">
-                <Grid RowDefinitions="Auto,*,Auto">
-                    <Border Background="#F3F4F6" Padding="10,6" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1">
-                        <Grid ColumnDefinitions="1.4*,1.4*,0.8*,0.9*,0.8*,0.8*" ColumnSpacing="12">
-                            <TextBlock Text="Artikelnummer" FontWeight="SemiBold"/>
-                            <TextBlock Grid.Column="1" Text="Leverancier" FontWeight="SemiBold"/>
-                            <TextBlock Grid.Column="2" Text="Soort" FontWeight="SemiBold"/>
-                            <TextBlock Grid.Column="3" Text="Serie" FontWeight="SemiBold"/>
-                            <TextBlock Grid.Column="4" Text="Voorraad" FontWeight="SemiBold"/>
-                            <TextBlock Grid.Column="5" Text="Prijs/m" FontWeight="SemiBold"/>
+                            </Border>
                         </Grid>
-                    </Border>
 
-                    <ListBox Grid.Row="1"
-                             x:Name="BulkLijstenList"
-                             ItemsSource="{Binding FilteredLijsten}"
-                             SelectionMode="Multiple"
-                             SelectionChanged="BulkLijstenList_SelectionChanged"
-                             BorderThickness="0"
-                             Background="Transparent">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="m:TypeLijst">
-                                <Border Padding="10,6">
-                                    <Grid ColumnDefinitions="1.4*,1.4*,0.8*,0.9*,0.8*,0.8*" ColumnSpacing="12">
-                                        <TextBlock Text="{Binding Artikelnummer}" FontWeight="Bold"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding Leverancier.Naam}"/>
-                                        <TextBlock Grid.Column="2" Text="{Binding Soort}"/>
-                                        <TextBlock Grid.Column="3" Text="{Binding Serie}"/>
-                                        <TextBlock Grid.Column="4" Text="{Binding VoorraadMeter, StringFormat='{}{0:0.##}'}"/>
-                                        <TextBlock Grid.Column="5" Text="{Binding PrijsPerMeter, StringFormat='{}{0:0.00}'}"/>
+                        <Border Background="#F0F6FF"
+                                BorderBrush="#BFDBFE"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="10">
+                            <StackPanel Spacing="8">
+                                <CheckBox Content="Soort bijwerken"
+                                          Foreground="Black"
+                                          IsChecked="{Binding BijwerkSoort}"/>
+                                <TextBox Text="{Binding NieuweSoort, Mode=TwoWay}"
+                                         Foreground="Black"
+                                         Watermark="Nieuwe soort"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Border Grid.Column="0"
+                                    Background="#F0F6FF"
+                                    BorderBrush="#BFDBFE"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="10">
+                                <StackPanel Spacing="8">
+                                    <CheckBox Content="Dealerstatus bijwerken"
+                                              Foreground="Black"
+                                              IsChecked="{Binding BijwerkIsDealer}"/>
+                                    <CheckBox Content="Instellen als dealer"
+                                              Foreground="Black"
+                                              IsChecked="{Binding NieuweIsDealer}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1"
+                                    Background="#F0F6FF"
+                                    BorderBrush="#BFDBFE"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="10">
+                                <StackPanel Spacing="8">
+                                    <CheckBox Content="Opmerking bijwerken"
+                                              Foreground="Black"
+                                              IsChecked="{Binding BijwerkOpmerking}"/>
+                                    <TextBox Text="{Binding NieuweOpmerking, Mode=TwoWay}"
+                                             Foreground="Black"
+                                             Watermark="Nieuwe opmerking"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Border Background="#ECFDF5"
+                                BorderBrush="#A7F3D0"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="10">
+                            <StackPanel Spacing="8">
+                                <CheckBox Content="Prijs per meter bijwerken"
+                                          Foreground="Black"
+                                          IsChecked="{Binding BijwerkPrijsPerMeter}"/>
+                                <CheckBox Content="Gebruik percentage (%)"
+                                          Foreground="Black"
+                                          IsChecked="{Binding GebruikPercentage, Mode=TwoWay}"/>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                    <StackPanel Grid.Column="0"
+                                                IsVisible="{Binding IsAbsolutePrijs}"
+                                                Spacing="4">
+                                        <TextBlock Text="Nieuwe prijs per meter (€)" FontSize="12" Foreground="Black"/>
+                                        <NumericUpDown Value="{Binding NieuwePrijsPerMeter, Mode=TwoWay}"
+                                                       Foreground="Black"
+                                                       Minimum="0"
+                                                       Increment="0.50"
+                                                       FormatString="0.00"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1"
+                                                IsVisible="{Binding GebruikPercentage}"
+                                                Spacing="4">
+                                        <TextBlock Text="Prijswijziging (%)" FontSize="12" Foreground="Black"/>
+                                        <NumericUpDown Value="{Binding PrijsWijzigingPct, Mode=TwoWay}"
+                                                       Foreground="Black"
+                                                       Increment="1"
+                                                       FormatString="0.00"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Border Grid.Column="0"
+                                    Background="#F0F6FF"
+                                    BorderBrush="#BFDBFE"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="10">
+                                <StackPanel Spacing="8">
+                                    <CheckBox Content="Winstfactor bijwerken"
+                                              Foreground="Black"
+                                              IsChecked="{Binding BijwerkWinstFactor}"/>
+                                    <CheckBox Content="Winstfactor leegmaken"
+                                              Foreground="Black"
+                                              IsChecked="{Binding WinstFactorLeegmaken}"/>
+                                    <NumericUpDown Value="{Binding NieuweWinstFactor, Mode=TwoWay}"
+                                                   Foreground="Black"
+                                                   IsEnabled="{Binding !WinstFactorLeegmaken}"
+                                                   Increment="0.05"
+                                                   FormatString="0.000"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1"
+                                    Background="#F0F6FF"
+                                    BorderBrush="#BFDBFE"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="10">
+                                <StackPanel Spacing="8">
+                                    <CheckBox Content="Afvalpercentage bijwerken"
+                                              Foreground="Black"
+                                              IsChecked="{Binding BijwerkAfvalPercentage}"/>
+                                    <CheckBox Content="Afvalpercentage leegmaken"
+                                              Foreground="Black"
+                                              IsChecked="{Binding AfvalPercentageLeegmaken}"/>
+                                    <NumericUpDown Value="{Binding NieuwAfvalPercentage, Mode=TwoWay}"
+                                                   Foreground="Black"
+                                                   IsEnabled="{Binding !AfvalPercentageLeegmaken}"
+                                                   Increment="0.25"
+                                                   FormatString="0.00"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Border Grid.Column="0"
+                                    Background="#F0F6FF"
+                                    BorderBrush="#BFDBFE"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="10">
+                                <StackPanel Spacing="8">
+                                    <CheckBox Content="Vaste kost bijwerken"
+                                              Foreground="Black"
+                                              IsChecked="{Binding BijwerkVasteKost}"/>
+                                    <NumericUpDown Value="{Binding NieuweVasteKost, Mode=TwoWay}"
+                                                   Foreground="Black"
+                                                   Increment="0.50"
+                                                   FormatString="0.00"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1"
+                                    Background="#F0F6FF"
+                                    BorderBrush="#BFDBFE"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="10">
+                                <StackPanel Spacing="8">
+                                    <CheckBox Content="Werkminuten bijwerken"
+                                              Foreground="Black"
+                                              IsChecked="{Binding BijwerkWerkMinuten}"/>
+                                    <NumericUpDown Value="{Binding NieuweWerkMinuten, Mode=TwoWay}"
+                                                   Foreground="Black"
+                                                   Increment="1"
+                                                   FormatString="0"
+                                                   Minimum="0"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Border Grid.Column="0"
+                                    Background="#F0F6FF"
+                                    BorderBrush="#BFDBFE"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="10">
+                                <StackPanel Spacing="8">
+                                    <CheckBox Content="Voorraad bijwerken"
+                                              Foreground="Black"
+                                              IsChecked="{Binding BijwerkVoorraadMeter}"/>
+                                    <NumericUpDown Value="{Binding NieuweVoorraadMeter, Mode=TwoWay}"
+                                                   Foreground="Black"
+                                                   Increment="0.50"
+                                                   FormatString="0.00"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1"
+                                    Background="#F0F6FF"
+                                    BorderBrush="#BFDBFE"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="10">
+                                <StackPanel Spacing="8">
+                                    <CheckBox Content="Inventariskost bijwerken"
+                                              Foreground="Black"
+                                              IsChecked="{Binding BijwerkInventarisKost}"/>
+                                    <NumericUpDown Value="{Binding NieuweInventarisKost, Mode=TwoWay}"
+                                                   Foreground="Black"
+                                                   Increment="0.50"
+                                                   FormatString="0.00"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Border Background="#F0F6FF"
+                                BorderBrush="#BFDBFE"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="10">
+                            <StackPanel Spacing="8">
+                                <CheckBox Content="Minimumvoorraad bijwerken"
+                                          Foreground="Black"
+                                          IsChecked="{Binding BijwerkMinimumVoorraad}"/>
+                                <NumericUpDown Value="{Binding NieuweMinimumVoorraad, Mode=TwoWay}"
+                                               Foreground="Black"
+                                               Increment="0.50"
+                                               FormatString="0.00"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <Border Grid.Column="1"
+                        Background="White"
+                        BorderBrush="#DDD"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="10">
+                    <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
+                        <TextBlock Text="Selecteer doel-lijsten"
+                                   Foreground="Black"
+                                   FontWeight="SemiBold"
+                                   FontSize="14"/>
+
+                        <StackPanel Grid.Row="1" Spacing="8">
+                            <TextBox Watermark="Zoek op artikelnummer of leverancier"
+                                     Foreground="Black"
+                                     Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            <ComboBox ItemsSource="{Binding SoortOptions}"
+                                      Foreground="Black"
+                                      SelectedItem="{Binding SoortFilter, Mode=TwoWay}"/>
+                            <TextBlock Text="{Binding SelectedCount, StringFormat='Geselecteerd: {0}'}"
+                                       Foreground="Black"/>
+                        </StackPanel>
+
+                        <Border Grid.Row="2"
+                                Background="#F9FAFB"
+                                BorderBrush="#E5E7EB"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="0">
+                            <Grid RowDefinitions="Auto,*">
+                                <Border Background="#F3F4F6"
+                                        Padding="10,6"
+                                        BorderBrush="#E5E7EB"
+                                        BorderThickness="0,0,0,1">
+                                    <Grid ColumnDefinitions="1.3*,1.2*,0.9*,0.8*" ColumnSpacing="10">
+                                        <TextBlock Text="Artikelnummer" Foreground="Black" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Leverancier" Foreground="Black" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="2" Text="Soort" Foreground="Black" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="3" Text="Prijs/m" Foreground="Black" FontWeight="SemiBold"/>
                                     </Grid>
                                 </Border>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
 
-                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="12">
-                        <TextBlock Text="{Binding SelectedCount, StringFormat='({0} geselecteerd)'}"
-                                   VerticalAlignment="Center"
-                                   Foreground="#666"
-                                   Margin="0,0,8,0"/>
-                        <Button Content="Uitvoeren"
-                                Command="{Binding ExecuteActionCommand}"
-                                Classes="MainBtn"/>
-                        <Button Content="Annuleren"
-                                Command="{Binding SluitenCommand}"
-                                Classes="MainBtn"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
+                                <ListBox Grid.Row="1"
+                                         x:Name="BulkLijstenList"
+                                         ItemsSource="{Binding FilteredLijsten}"
+                                         SelectionMode="Multiple"
+                                         SelectionChanged="BulkLijstenList_SelectionChanged"
+                                         BorderThickness="0"
+                                         Background="Transparent">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="m:TypeLijst">
+                                            <Border Padding="10,6">
+                                                <Grid ColumnDefinitions="1.3*,1.2*,0.9*,0.8*" ColumnSpacing="10">
+                                                    <TextBlock Text="{Binding Artikelnummer}" Foreground="Black" FontWeight="Bold"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Leverancier.Naam}" Foreground="Black"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding Soort}" Foreground="Black"/>
+                                                    <TextBlock Grid.Column="3" Text="{Binding PrijsPerMeter, StringFormat='{}{0:0.00}'}" Foreground="Black"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Grid>
+                        </Border>
+
+                        <StackPanel Grid.Row="3"
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    Spacing="10">
+                            <Button Content="Reset velden"
+                                    Command="{Binding ResetBulkVeldenCommand}"
+                                    Foreground="Black"
+                                    Classes="MainBtn"/>
+                            <Button Content="Uitvoeren"
+                                    Command="{Binding ExecuteActionCommand}"
+                                    Foreground="Black"
+                                    Classes="MainBtn"/>
+                            <Button Content="Annuleren"
+                                    Command="{Binding SluitenCommand}"
+                                    Foreground="Black"
+                                    Classes="MainBtn"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
         </Grid>
     </Grid>
 

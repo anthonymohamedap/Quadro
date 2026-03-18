@@ -35,6 +35,7 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
     [ObservableProperty] private ObservableCollection<Klant> filteredKlanten = new();
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(OpenKlantDetailCommand))]
     [NotifyCanExecuteChangedFor(nameof(EditCommand))]
     [NotifyCanExecuteChangedFor(nameof(DeleteCommand))]
     private Klant? selectedKlant;
@@ -43,7 +44,6 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
     [ObservableProperty] private bool isLoading;
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? zoekterm;
-    [ObservableProperty] private bool hasChanges;
 
     public KlantenViewModel(
         IDbContextFactory<AppDbContext> dbFactory,
@@ -103,6 +103,17 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
             IsBusy = false;
         }
     }
+
+    private void NotifyActionCommands()
+    {
+        ImportExcelCommand.NotifyCanExecuteChanged();
+        NewCommand.NotifyCanExecuteChanged();
+        OpenKlantDetailCommand.NotifyCanExecuteChanged();
+        EditCommand.NotifyCanExecuteChanged();
+        DeleteCommand.NotifyCanExecuteChanged();
+        RefreshCommand.NotifyCanExecuteChanged();
+    }
+
     public async Task InitializeAsync() => await LoadAsync();
 
     partial void OnZoektermChanged(string? value) => ApplyFilter();
@@ -134,12 +145,7 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
         finally
         {
             IsBusy = false;
-            ImportExcelCommand.NotifyCanExecuteChanged();
-            NewCommand.NotifyCanExecuteChanged();
-            EditCommand.NotifyCanExecuteChanged();
-            DeleteCommand.NotifyCanExecuteChanged();
-            RefreshCommand.NotifyCanExecuteChanged();
-            SaveCommand.NotifyCanExecuteChanged();
+            NotifyActionCommands();
         }
     }
 
@@ -268,7 +274,6 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
                 db.Klanten.Add(result);
                 await db.SaveChangesAsync();
 
-                HasChanges = false;
                 Klanten.Add(result);
                 ApplyFilter();
                 SelectedKlant = result;
@@ -276,12 +281,7 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
             successMessage: "Klant aangemaakt."
         );
 
-        ImportExcelCommand.NotifyCanExecuteChanged();
-        NewCommand.NotifyCanExecuteChanged();
-        EditCommand.NotifyCanExecuteChanged();
-        DeleteCommand.NotifyCanExecuteChanged();
-        RefreshCommand.NotifyCanExecuteChanged();
-        SaveCommand.NotifyCanExecuteChanged();
+        NotifyActionCommands();
     }
 
     private bool CanEdit() => SelectedKlant is not null && CanRunAction();
@@ -293,9 +293,12 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
     [RelayCommand(CanExecute = nameof(CanEdit))]
     private async Task EditAsync(Klant? klant)
     {
-        if (klant is null || !CanRunAction()) return;
+        if (!CanRunAction()) return;
 
-        var kopie = Clone(klant);
+        var target = klant ?? SelectedKlant;
+        if (target is null) return;
+
+        var kopie = Clone(target);
         var result = await _klantDialog.EditAsync(kopie);
         if (result is null) return;
 
@@ -310,17 +313,11 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
                 await db.SaveChangesAsync();
 
                 ReplaceInCollections(result);
-                HasChanges = false;
             },
             successMessage: "Klant aangepast."
         );
 
-        ImportExcelCommand.NotifyCanExecuteChanged();
-        NewCommand.NotifyCanExecuteChanged();
-        EditCommand.NotifyCanExecuteChanged();
-        DeleteCommand.NotifyCanExecuteChanged();
-        RefreshCommand.NotifyCanExecuteChanged();
-        SaveCommand.NotifyCanExecuteChanged();
+        NotifyActionCommands();
     }
 
     // Button in itemtemplate gebruikt CommandParameter -> overload nodig
@@ -329,9 +326,12 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
     [RelayCommand(CanExecute = nameof(CanDelete))]
     private async Task DeleteAsync(Klant? klant)
     {
-        if (klant is null || !CanRunAction()) return;
+        if (!CanRunAction()) return;
 
-        var displayNaam = $"{klant.Voornaam} {klant.Achternaam}".Trim();
+        var target = klant ?? SelectedKlant;
+        if (target is null) return;
+
+        var displayNaam = $"{target.Voornaam} {target.Achternaam}".Trim();
 
         var ok = await _dialogs.ConfirmAsync(
             "Klant verwijderen",
@@ -347,10 +347,10 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
 
             await using var db = await _dbFactory.CreateDbContextAsync();
 
-            db.Klanten.Remove(new Klant { Id = klant.Id });
+            db.Klanten.Remove(new Klant { Id = target.Id });
             await db.SaveChangesAsync();
 
-            var id = klant.Id;
+            var id = target.Id;
 
             // UI verwijderen
             var inAll = Klanten.FirstOrDefault(k => k.Id == id);
@@ -362,7 +362,6 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
             if (SelectedKlant?.Id == id)
                 SelectedKlant = null;
 
-            HasChanges = false;
         }
         catch (DbUpdateException dbex)
         {
@@ -379,45 +378,8 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
         finally
         {
             IsBusy = false;
-            ImportExcelCommand.NotifyCanExecuteChanged();
-            NewCommand.NotifyCanExecuteChanged();
-            EditCommand.NotifyCanExecuteChanged();
-            DeleteCommand.NotifyCanExecuteChanged();
-            RefreshCommand.NotifyCanExecuteChanged();
-            SaveCommand.NotifyCanExecuteChanged();
+            NotifyActionCommands();
         }
-    }
-
-    [RelayCommand(CanExecute = nameof(CanRunAction))]
-    private async Task SaveAsync()
-    {
-        if (!CanRunAction()) return;
-        await LoadAsync();
-        HasChanges = false;
-    }
-
-    public void MarkDirty() => HasChanges = true;
-
-    // ---------------- Validation ----------------
-
-    private static bool ValidateKlant(Klant k, out string message)
-    {
-        // Minimale demo-proof validaties (pas gerust aan)
-        if (string.IsNullOrWhiteSpace(k.Achternaam) && string.IsNullOrWhiteSpace(k.Voornaam))
-        {
-            message = "Voornaam of achternaam is verplicht.";
-            return false;
-        }
-
-        if (!string.IsNullOrWhiteSpace(k.Email) && !k.Email.Contains('@', StringComparison.Ordinal))
-        {
-            message = "Email adres lijkt ongeldig.";
-            return false;
-        }
-
-        // Postcode/nummer zijn vaak int? -> laat leeg toe; geen harde fout
-        message = "";
-        return true;
     }
 
     // ---------------- Helpers ----------------

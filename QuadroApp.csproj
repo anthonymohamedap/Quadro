@@ -75,13 +75,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Assets\Quadro_logo2012_ZW1.jpg">
-      <CopyToOutputDirectory>AvaloniaResource</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-
-  <ItemGroup>
     <Compile Remove="WorkflowService.Tests\**\*.cs" />
     <EmbeddedResource Remove="WorkflowService.Tests\**\*" />
     <None Remove="WorkflowService.Tests\**\*" />

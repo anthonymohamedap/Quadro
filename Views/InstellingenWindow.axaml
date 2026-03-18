@@ -40,29 +40,24 @@
             <StackPanel Margin="20" Spacing="16">
                 <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="10" Padding="18">
                     <StackPanel Spacing="12">
-                        <TextBlock Text="Staaflijst Pricing" FontSize="18" FontWeight="SemiBold" Foreground ="Black"/>
+                        <TextBlock Text="Prijsinstellingen (globale standaard)" FontSize="18" FontWeight="SemiBold" Foreground="Black"/>
 
-                        <Grid ColumnDefinitions="2*,3*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="8">
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="StaaflijstWinstFactor" FontWeight="Bold" Foreground ="Black"/>
-                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding StaaflijstWinstFactor, Mode=TwoWay}" Foreground ="Black"/>
+                        <Grid ColumnDefinitions="2*,3*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="8">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Uurloon (€)" FontWeight="Bold" Foreground="Black"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Uurloon, Mode=TwoWay}" Foreground="Black"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="StaaflijstAfvalPercentage" FontWeight="Bold" Foreground ="Black"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding StaaflijstAfvalPercentage, Mode=TwoWay}" Foreground ="Black"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Standaard prijs per meter (€)" FontWeight="Bold" Foreground="Black"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding DefaultPrijsPerMeter, Mode=TwoWay}" Foreground="Black"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Standaard winstfactor" FontWeight="Bold" Foreground="Black"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding DefaultWinstFactor, Mode=TwoWay}" Foreground="Black"/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Standaard afvalpercentage (%)" FontWeight="Bold" Foreground="Black"/>
+                            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding DefaultAfvalPercentage, Mode=TwoWay}" Foreground="Black"/>
                         </Grid>
-                    </StackPanel>
-                </Border>
 
-                <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="10" Padding="18">
-                    <StackPanel Spacing="12">
-                        <TextBlock Text="Default Pricing" FontSize="18" FontWeight="SemiBold"/>
-
-                        <Grid ColumnDefinitions="2*,3*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="8">
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="DefaultWinstFactor" FontWeight="Bold" Foreground ="Black"/>
-                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding DefaultWinstFactor, Mode=TwoWay}" Foreground ="Black"/>
-
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="DefaultAfvalPercentage" FontWeight="Bold" Foreground ="Black"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding DefaultAfvalPercentage, Mode=TwoWay}" Foreground ="Black"/>
-                        </Grid>
+                        <TextBlock Text="Tip: per lijst kan je een eigen prijs per meter, winstfactor en afvalpercentage instellen via 'Lijst bewerken'. Gebruik de standaardwaarde als fallback."
+                                   FontSize="11" Foreground="#888" TextWrapping="Wrap"/>
                     </StackPanel>
                 </Border>
 

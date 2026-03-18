@@ -10,8 +10,7 @@ namespace QuadroApp.Service;
 
 public sealed class AppSettingsProvider : IAppSettingsProvider
 {
-    private const decimal DefaultStaaflijstWinstFactor = 3.5m;
-    private const decimal DefaultStaaflijstAfvalPercentage = 20m;
+    private const decimal DefaultPrijsPerMeter = 0m;
     private const decimal DefaultWinstFactor = 0m;
     private const decimal DefaultAfvalPercentage = 0m;
 
@@ -22,11 +21,11 @@ public sealed class AppSettingsProvider : IAppSettingsProvider
         _dbFactory = dbFactory;
     }
 
-    public async Task<decimal> GetStaaflijstWinstFactorAsync() =>
-        await ReadDecimalAsync("StaaflijstWinstFactor", DefaultStaaflijstWinstFactor);
+    public async Task<decimal> GetUurloon() =>
+        await ReadDecimalAsync("Uurloon", 60);
 
-    public async Task<decimal> GetStaaflijstAfvalPercentageAsync() =>
-        await ReadDecimalAsync("StaaflijstAfvalPercentage", DefaultStaaflijstAfvalPercentage);
+    public async Task<decimal> GetDefaultPrijsPerMeterAsync() =>
+        await ReadDecimalAsync("DefaultPrijsPerMeter", DefaultPrijsPerMeter);
 
     public async Task<decimal> GetDefaultWinstFactorAsync() =>
         await ReadDecimalAsync("DefaultWinstFactor", DefaultWinstFactor);
@@ -35,15 +34,14 @@ public sealed class AppSettingsProvider : IAppSettingsProvider
         await ReadDecimalAsync("DefaultAfvalPercentage", DefaultAfvalPercentage);
 
     public async Task SavePricingSettingsAsync(
-        decimal staaflijstWinstFactor,
-        decimal staaflijstAfvalPercentage,
+        decimal uurloon,
+        decimal defaultPrijsPerMeter,
         decimal defaultWinstFactor,
         decimal defaultAfvalPercentage)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
-
-        SaveDecimal(db, "StaaflijstWinstFactor", staaflijstWinstFactor);
-        SaveDecimal(db, "StaaflijstAfvalPercentage", staaflijstAfvalPercentage);
+        SaveDecimal(db, "Uurloon", uurloon);
+        SaveDecimal(db, "DefaultPrijsPerMeter", defaultPrijsPerMeter);
         SaveDecimal(db, "DefaultWinstFactor", defaultWinstFactor);
         SaveDecimal(db, "DefaultAfvalPercentage", defaultAfvalPercentage);
 

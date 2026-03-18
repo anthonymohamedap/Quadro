@@ -21,12 +21,13 @@ public class PricingSettingsProviderTests
 
         await using (var db = await factory.CreateDbContextAsync())
         {
-            db.Instellingen.Add(new Instelling { Sleutel = "StaaflijstWinstFactor", Waarde = "invalid" });
+            db.Instellingen.Add(new Instelling { Sleutel = "DefaultWinstFactor", Waarde = "invalid" });
             await db.SaveChangesAsync();
         }
 
         var sut = new PricingSettingsProvider(factory);
-        Assert.Equal(3.5m, await sut.GetStaaflijstWinstFactorAsync());
-        Assert.Equal(20m, await sut.GetStaaflijstAfvalPercentageAsync());
+        Assert.Equal(0m, await sut.GetDefaultPrijsPerMeterAsync());
+        Assert.Equal(0m, await sut.GetDefaultWinstFactorAsync());
+        Assert.Equal(0m, await sut.GetDefaultAfvalPercentageAsync());
     }
 }

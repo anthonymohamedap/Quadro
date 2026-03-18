@@ -9,7 +9,7 @@ public class PricingEngineTests
     private readonly PricingEngine _sut = new();
 
     [Fact]
-    public void Calculate_Staaflijst_UsesGlobalSettings()
+    public void Calculate_LijstWithOwnPricing_UsesLijstValues()
     {
         var offerte = new Offerte
         {
@@ -24,7 +24,8 @@ public class PricingEngineTests
                     {
                         BreedteCm = 5,
                         Soort = "HOU",
-                        IsStaaflijst = true,
+                        WinstFactor = 3.5m,
+                        AfvalPercentage = 20m,
                         PrijsPerMeter = 10m,
                         VasteKost = 1m,
                         WerkMinuten = 30
@@ -33,14 +34,14 @@ public class PricingEngineTests
             ]
         };
 
-        var result = _sut.Calculate(offerte, 60m, 21m, 3.5m, 20m, 0m, 0m);
+        var result = _sut.Calculate(offerte, 60m, 21m, 0m, 1m, 10m);
 
         var regel = Assert.Single(result.Regels);
         Assert.Equal(101.30m, regel.TotaalExcl);
     }
 
     [Fact]
-    public void Calculate_NonStaaflijst_UsesDefaultSettings()
+    public void Calculate_LijstWithoutPricing_FallsBackToDefault()
     {
         var offerte = new Offerte
         {
@@ -55,7 +56,8 @@ public class PricingEngineTests
                     {
                         BreedteCm = 5,
                         Soort = "ALU",
-                        IsStaaflijst = false,
+                        WinstFactor = null,
+                        AfvalPercentage = null,
                         PrijsPerMeter = 10m,
                         VasteKost = 1m,
                         WerkMinuten = 30
@@ -64,7 +66,7 @@ public class PricingEngineTests
             ]
         };
 
-        var result = _sut.Calculate(offerte, 60m, 21m, 3.5m, 20m, 1m, 10m);
+        var result = _sut.Calculate(offerte, 60m, 21m, 0m, 1m, 10m);
 
         var regel = Assert.Single(result.Regels);
         Assert.Equal(51.90m, regel.TotaalExcl);
@@ -94,7 +96,7 @@ public class PricingEngineTests
             ]
         };
 
-        var result = _sut.Calculate(offerte, 60m, 21m, 3.5m, 20m, 1m, 10m);
+        var result = _sut.Calculate(offerte, 60m, 21m, 0m, 1m, 10m);
 
         var regel = Assert.Single(result.Regels);
         Assert.Equal(44m, regel.TotaalExcl);
@@ -120,7 +122,8 @@ public class PricingEngineTests
                     {
                         BreedteCm = 5,
                         Soort = "HOU",
-                        IsStaaflijst = true,
+                        WinstFactor = 3.5m,
+                        AfvalPercentage = 20m,
                         PrijsPerMeter = 10m,
                         VasteKost = 1m,
                         WerkMinuten = 30
@@ -137,9 +140,41 @@ public class PricingEngineTests
             ]
         };
 
-        var result = _sut.Calculate(offerte, 60m, 21m, 3.5m, 20m, 1m, 10m);
+        var result = _sut.Calculate(offerte, 60m, 21m, 0m, 1m, 10m);
 
         var regel = Assert.Single(result.Regels);
         Assert.Equal(50m, regel.TotaalExcl);
+    }
+
+    [Fact]
+    public void Calculate_LijstWithoutPrijsPerMeter_FallsBackToDefaultPrijsPerMeter()
+    {
+        var offerte = new Offerte
+        {
+            Regels =
+            [
+                new OfferteRegel
+                {
+                    AantalStuks = 1,
+                    BreedteCm = 30m,
+                    HoogteCm = 40m,
+                    TypeLijst = new TypeLijst
+                    {
+                        BreedteCm = 5,
+                        Soort = "ALU",
+                        WinstFactor = null,
+                        AfvalPercentage = null,
+                        PrijsPerMeter = 0m,
+                        VasteKost = 1m,
+                        WerkMinuten = 30
+                    }
+                }
+            ]
+        };
+
+        var result = _sut.Calculate(offerte, 60m, 21m, 10m, 1m, 10m);
+
+        var regel = Assert.Single(result.Regels);
+        Assert.Equal(51.90m, regel.TotaalExcl);
     }
 }

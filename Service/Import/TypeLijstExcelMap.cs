@@ -21,8 +21,7 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
         Decimal("MinimumVoorraad", false, "Minstock", "MinimumVoorraad"),
         Decimal("InventarisKost", false, "Inventariskost", "InventarisKost"),
         Text("Opmerking1", false, "Opmerking1"),
-        Text("Opmerking2", false, "Opmerking2"),
-        Text("Serie", false, "Serie")
+        Text("Opmerking2", false, "Opmerking2")
     ];
 
     public TypeLijst Create() => new();
@@ -65,9 +64,6 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
             case "Opmerking2":
                 target.Opmerking = MergeOpmerking(cellText, target.Opmerking, 2);
                 break;
-            case "Serie":
-                target.Serie = string.IsNullOrWhiteSpace(cellText) ? null : cellText.Trim();
-                break;
         }
     }
 
@@ -83,7 +79,6 @@ public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
         "InventarisKost" => source.InventarisKost.ToString(CultureInfo.InvariantCulture),
         "Opmerking1" => source.Opmerking,
         "Opmerking2" => string.Empty,
-        "Serie" => source.Serie,
         _ => null
     };
 

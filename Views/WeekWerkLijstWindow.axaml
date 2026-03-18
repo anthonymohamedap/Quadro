@@ -116,42 +116,73 @@
 
 														<!-- Rechter kolom: inleg/artikel -->
 														<StackPanel Grid.Column="1" Spacing="4">
-															<TextBlock Text="{Binding Inleg1, StringFormat='inleg 1 : {0}'}"/>
-															<TextBlock Text="{Binding Inleg2, StringFormat='inleg 2 : {0}'}"/>
+															<TextBlock Text="{Binding Inleg1, StringFormat='inleg 1 : {0}'}" Foreground="Black"/>
+															<TextBlock Text="{Binding Inleg2, StringFormat='inleg 2 : {0}'}" Foreground="Black"/>
 															<TextBlock Text="artikel 1 :" Foreground="Black"/>
 															<TextBlock Text="artikel 2 :" Foreground="Black"/>
 														</StackPanel>
 
-														<StackPanel Grid.Row="1" Grid.Column="0" Margin="0,10,0,0" Spacing="6">
-														<TextBlock Text="Op voorraad" Foreground="Black" IsVisible="{Binding IsOpVoorraad}"/>
-														<TextBlock Text="Bestellen vereist" Foreground="Black" IsVisible="{Binding !IsOpVoorraad}"/>
-														<TextBlock Text="{Binding BestelDatum, StringFormat='Besteld op: {0:dd/MM/yyyy}'}" Foreground="Black" IsVisible="{Binding IsBesteld}"/>
-														<StackPanel Orientation="Horizontal" Spacing="8">
-															<DatePicker SelectedDate="{Binding BestelDatumInput, Mode=TwoWay}"/>
-															<Button Content="Markeer besteld"
-																Command="{Binding $parent[Window].((vm:WeekWerkLijstViewModel)DataContext).MarkeerBesteldCommand}"
-																CommandParameter="{Binding}"/>
-														</StackPanel>
-													</StackPanel>
+														<Grid Grid.Row="1"
+															  Grid.ColumnSpan="2"
+															  ColumnDefinitions="300,*"
+															  ColumnSpacing="12"
+															  Margin="0,12,0,0">
+															<Border Grid.Column="0"
+																	Background="#F9FAFB"
+																	BorderBrush="#E5E7EB"
+																	BorderThickness="1"
+																	CornerRadius="6"
+																	Padding="10">
+																<StackPanel Spacing="6">
+																	<TextBlock Text="Bestellen"
+																			   FontWeight="Bold"
+																			   Foreground="Black"/>
+																	<TextBlock Text="Op voorraad"
+																			   Foreground="Black"
+																			   IsVisible="{Binding IsOpVoorraad}"/>
+																	<TextBlock Text="Bestellen vereist"
+																			   Foreground="Black"
+																			   IsVisible="{Binding !IsOpVoorraad}"/>
+																	<TextBlock Text="{Binding BestelDatum, StringFormat='Besteld op: {0:dd/MM/yyyy}'}"
+																			   Foreground="Black"
+																			   IsVisible="{Binding IsBesteld}"/>
+																	<StackPanel Orientation="Horizontal" Spacing="8">
+																		<DatePicker SelectedDate="{Binding BestelDatumInput, Mode=TwoWay}"/>
+																		<Button Content="Markeer besteld"
+																				Command="{Binding $parent[Window].((vm:WeekWerkLijstViewModel)DataContext).MarkeerBesteldCommand}"
+																				CommandParameter="{Binding}"/>
+																	</StackPanel>
+																</StackPanel>
+															</Border>
 
-													<!-- Notitie -->
-														<StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,10,0,0" Spacing="6">
-															<TextBlock Text="Notitie (blijft bewaard)" FontWeight="Bold" Foreground="Black"/>
-															<TextBox Text="{Binding Notitie, Mode=TwoWay}"
-																	 AcceptsReturn="True"
-																	 TextWrapping="Wrap"
-																	 MinHeight="70"
-																	 MaxHeight="160"
-																	 Padding="8"/>
+															<Border Grid.Column="1"
+																	Background="#F9FAFB"
+																	BorderBrush="#E5E7EB"
+																	BorderThickness="1"
+																	CornerRadius="6"
+																	Padding="10">
+																<StackPanel Spacing="6">
+																	<TextBlock Text="Notitie (blijft bewaard)"
+																			   FontWeight="Bold"
+																			   Foreground="Black"/>
+																	<TextBox Text="{Binding Notitie, Mode=TwoWay}"
+																			 AcceptsReturn="True"
+																			 TextWrapping="Wrap"
+																			 MinHeight="70"
+																			 MaxHeight="160"
+																			 Padding="8"
+																			 Foreground="Black"/>
 
-															<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-																<Button Content="💾 Bewaar"
-																		Command="{Binding $parent[Window].((vm:WeekWerkLijstViewModel)DataContext).SaveNotitieCommand}"
-																		CommandParameter="{Binding}"
-																		Classes="MainBtn"
-																		Padding="12,6"/>
-															</StackPanel>
-														</StackPanel>
+																	<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+																		<Button Content="💾 Bewaar"
+																				Command="{Binding $parent[Window].((vm:WeekWerkLijstViewModel)DataContext).SaveNotitieCommand}"
+																				CommandParameter="{Binding}"
+																				Classes="MainBtn"
+																				Padding="12,6"/>
+																	</StackPanel>
+																</StackPanel>
+															</Border>
+														</Grid>
 
 													</Grid>
 

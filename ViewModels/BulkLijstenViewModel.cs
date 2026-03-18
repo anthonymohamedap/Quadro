@@ -4,37 +4,96 @@ using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
+using QuadroApp.Validation;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace QuadroApp.ViewModels;
-
-public enum BulkLijstenActionMode
-{
-    BulkPrijsUpdate,
-    HerberekenSelectie
-}
 
 public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializable
 {
     private const string AllOption = "Alle";
 
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
+    private readonly ICrudValidator<TypeLijst> _validator;
     private readonly IToastService _toast;
     private List<TypeLijst> _allLijsten = new();
 
     public Action<bool>? RequestClose { get; set; }
+    public Func<Task>? RefreshRequested { get; set; }
 
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string zoekterm = string.Empty;
     [ObservableProperty] private string soortFilter = AllOption;
-    [ObservableProperty] private string serieFilter = AllOption;
-    [ObservableProperty] private BulkLijstenActionMode selectedAction;
 
-    // Price update inputs
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool gebruikPercentage;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool bijwerkArtikelnummer;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private string nieuwArtikelnummer = string.Empty;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool bijwerkLevcode;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private string nieuweLevcode = string.Empty;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool bijwerkLeverancier;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private Leverancier? geselecteerdeBulkLeverancier;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool bijwerkBreedteCm;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private decimal? nieuweBreedteCm;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool bijwerkSoort;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private string nieuweSoort = string.Empty;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool bijwerkIsDealer;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool nieuweIsDealer;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool bijwerkOpmerking;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private string nieuweOpmerking = string.Empty;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool bijwerkPrijsPerMeter;
+
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
     private decimal? nieuwePrijsPerMeter;
@@ -43,42 +102,93 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
     [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
     private decimal? prijsWijzigingPct;
 
-    [ObservableProperty] private bool gebruikPercentage;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool bijwerkWinstFactor;
 
-    // Computed visibility helpers for the UI
-    public bool IsPrijsUpdateMode => SelectedAction == BulkLijstenActionMode.BulkPrijsUpdate;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private decimal? nieuweWinstFactor;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool winstFactorLeegmaken;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool bijwerkAfvalPercentage;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private decimal? nieuwAfvalPercentage;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool afvalPercentageLeegmaken;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool bijwerkVasteKost;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private decimal? nieuweVasteKost;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool bijwerkWerkMinuten;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private decimal? nieuweWerkMinuten;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool bijwerkVoorraadMeter;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private decimal? nieuweVoorraadMeter;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool bijwerkInventarisKost;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private decimal? nieuweInventarisKost;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private bool bijwerkMinimumVoorraad;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExecuteActionCommand))]
+    private decimal? nieuweMinimumVoorraad;
+
     public bool IsAbsolutePrijs => !GebruikPercentage;
 
     [ObservableProperty] private ObservableCollection<TypeLijst> filteredLijsten = new();
     [ObservableProperty] private ObservableCollection<TypeLijst> selectedLijsten = new();
     [ObservableProperty] private ObservableCollection<string> soortOptions = new();
-    [ObservableProperty] private ObservableCollection<string> serieOptions = new();
-
-    public Array ActionModes => Enum.GetValues(typeof(BulkLijstenActionMode));
+    [ObservableProperty] private ObservableCollection<Leverancier> bulkLeveranciers = new();
 
     public int SelectedCount => SelectedLijsten.Count;
 
     public BulkLijstenViewModel(
         IDbContextFactory<AppDbContext> dbFactory,
-        IToastService toast,
-        BulkLijstenActionMode initialAction)
+        ICrudValidator<TypeLijst> validator,
+        IToastService toast)
     {
         _dbFactory = dbFactory;
+        _validator = validator;
         _toast = toast;
-        SelectedAction = initialAction;
     }
 
     public async Task InitializeAsync() => await LoadAsync();
 
     partial void OnZoektermChanged(string value) => ApplyFilters();
     partial void OnSoortFilterChanged(string value) => ApplyFilters();
-    partial void OnSerieFilterChanged(string value) => ApplyFilters();
-
-    partial void OnSelectedActionChanged(BulkLijstenActionMode value)
-    {
-        OnPropertyChanged(nameof(IsPrijsUpdateMode));
-        ExecuteActionCommand.NotifyCanExecuteChanged();
-    }
 
     partial void OnGebruikPercentageChanged(bool value)
     {
@@ -88,7 +198,10 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
 
     private async Task LoadAsync()
     {
-        if (IsBusy) return;
+        if (IsBusy)
+        {
+            return;
+        }
 
         try
         {
@@ -101,6 +214,12 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
                 .OrderBy(x => x.Artikelnummer)
                 .ToListAsync();
 
+            BulkLeveranciers = new ObservableCollection<Leverancier>(
+                await db.Leveranciers
+                    .AsNoTracking()
+                    .OrderBy(x => x.Naam)
+                    .ToListAsync());
+
             SoortOptions = new ObservableCollection<string>(
                 new[] { AllOption }
                     .Concat(_allLijsten
@@ -109,16 +228,8 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
                         .Distinct(StringComparer.OrdinalIgnoreCase)
                         .OrderBy(x => x)));
 
-            SerieOptions = new ObservableCollection<string>(
-                new[] { AllOption }
-                    .Concat(_allLijsten
-                        .Select(x => x.Serie)
-                        .Where(x => !string.IsNullOrWhiteSpace(x))
-                        .Select(x => x!)
-                        .Distinct(StringComparer.OrdinalIgnoreCase)
-                        .OrderBy(x => x)));
-
             ApplyFilters();
+            UpdateSelectedLijsten(Array.Empty<TypeLijst>());
         }
         finally
         {
@@ -139,10 +250,9 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
         }
 
         if (!string.Equals(SoortFilter, AllOption, StringComparison.OrdinalIgnoreCase))
+        {
             query = query.Where(x => string.Equals(x.Soort, SoortFilter, StringComparison.OrdinalIgnoreCase));
-
-        if (!string.Equals(SerieFilter, AllOption, StringComparison.OrdinalIgnoreCase))
-            query = query.Where(x => string.Equals(x.Serie, SerieFilter, StringComparison.OrdinalIgnoreCase));
+        }
 
         FilteredLijsten = new ObservableCollection<TypeLijst>(query);
     }
@@ -150,8 +260,10 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
     public void UpdateSelectedLijsten(IEnumerable<TypeLijst> selectedItems)
     {
         SelectedLijsten.Clear();
-        foreach (var item in selectedItems.Distinct())
+        foreach (var item in selectedItems.DistinctBy(x => x.Id))
+        {
             SelectedLijsten.Add(item);
+        }
 
         OnPropertyChanged(nameof(SelectedCount));
         ExecuteActionCommand.NotifyCanExecuteChanged();
@@ -159,32 +271,174 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
 
     private bool CanExecuteBulkAction()
     {
-        if (SelectedLijsten.Count == 0) return false;
-
-        if (SelectedAction == BulkLijstenActionMode.BulkPrijsUpdate)
+        if (SelectedLijsten.Count == 0)
         {
-            return GebruikPercentage
-                ? PrijsWijzigingPct.HasValue
-                : NieuwePrijsPerMeter.HasValue && NieuwePrijsPerMeter.Value >= 0;
+            return false;
         }
 
-        // HerberekenSelectie only needs items selected
-        return true;
+        var anyFieldSelected = false;
+
+        if (BijwerkArtikelnummer)
+        {
+            anyFieldSelected = true;
+            if (string.IsNullOrWhiteSpace(NieuwArtikelnummer))
+            {
+                return false;
+            }
+        }
+
+        if (BijwerkLevcode)
+        {
+            anyFieldSelected = true;
+            if (string.IsNullOrWhiteSpace(NieuweLevcode))
+            {
+                return false;
+            }
+        }
+
+        if (BijwerkLeverancier)
+        {
+            anyFieldSelected = true;
+            if (GeselecteerdeBulkLeverancier is null)
+            {
+                return false;
+            }
+        }
+
+        if (BijwerkBreedteCm)
+        {
+            anyFieldSelected = true;
+            if (!HasWholeNumber(NieuweBreedteCm))
+            {
+                return false;
+            }
+        }
+
+        if (BijwerkSoort)
+        {
+            anyFieldSelected = true;
+            if (string.IsNullOrWhiteSpace(NieuweSoort))
+            {
+                return false;
+            }
+        }
+
+        if (BijwerkIsDealer)
+        {
+            anyFieldSelected = true;
+        }
+
+        if (BijwerkOpmerking)
+        {
+            anyFieldSelected = true;
+        }
+
+        if (BijwerkPrijsPerMeter)
+        {
+            anyFieldSelected = true;
+            if (GebruikPercentage && !PrijsWijzigingPct.HasValue)
+            {
+                return false;
+            }
+
+            if (!GebruikPercentage && !NieuwePrijsPerMeter.HasValue)
+            {
+                return false;
+            }
+        }
+
+        if (BijwerkWinstFactor)
+        {
+            anyFieldSelected = true;
+            if (!WinstFactorLeegmaken && !NieuweWinstFactor.HasValue)
+            {
+                return false;
+            }
+        }
+
+        if (BijwerkAfvalPercentage)
+        {
+            anyFieldSelected = true;
+            if (!AfvalPercentageLeegmaken && !NieuwAfvalPercentage.HasValue)
+            {
+                return false;
+            }
+        }
+
+        if (BijwerkVasteKost)
+        {
+            anyFieldSelected = true;
+            if (!NieuweVasteKost.HasValue)
+            {
+                return false;
+            }
+        }
+
+        if (BijwerkWerkMinuten)
+        {
+            anyFieldSelected = true;
+            if (!HasWholeNumber(NieuweWerkMinuten))
+            {
+                return false;
+            }
+        }
+
+        if (BijwerkVoorraadMeter)
+        {
+            anyFieldSelected = true;
+            if (!NieuweVoorraadMeter.HasValue)
+            {
+                return false;
+            }
+        }
+
+        if (BijwerkInventarisKost)
+        {
+            anyFieldSelected = true;
+            if (!NieuweInventarisKost.HasValue)
+            {
+                return false;
+            }
+        }
+
+        if (BijwerkMinimumVoorraad)
+        {
+            anyFieldSelected = true;
+            if (!NieuweMinimumVoorraad.HasValue)
+            {
+                return false;
+            }
+        }
+
+        return anyFieldSelected;
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteBulkAction))]
     private async Task ExecuteActionAsync()
     {
-        if (SelectedLijsten.Count == 0) return;
+        if (SelectedLijsten.Count == 0)
+        {
+            return;
+        }
 
         try
         {
             IsBusy = true;
 
-            if (SelectedAction == BulkLijstenActionMode.BulkPrijsUpdate)
-                await VoerPrijsUpdateUitAsync();
+            var applied = await VoerBulkUpdateUitAsync();
+            if (!applied)
+            {
+                return;
+            }
+
+            if (RefreshRequested is not null)
+            {
+                await RefreshRequested();
+            }
             else
-                await VoerHerberekenUitAsync();
+            {
+                await LoadAsync();
+            }
 
             RequestClose?.Invoke(true);
         }
@@ -198,51 +452,289 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
         }
     }
 
-    private async Task VoerPrijsUpdateUitAsync()
+    private async Task<bool> VoerBulkUpdateUitAsync()
     {
         var ids = SelectedLijsten.Select(x => x.Id).ToHashSet();
 
         await using var db = await _dbFactory.CreateDbContextAsync();
         var lijsten = await db.TypeLijsten
+            .Include(x => x.Leverancier)
             .Where(x => ids.Contains(x.Id))
             .ToListAsync();
 
         foreach (var lijst in lijsten)
+        {
+            PasBulkVeldenToe(lijst);
+            lijst.LaatsteUpdate = DateTime.Now;
+        }
+
+        var batchDuplicaten = lijsten
+            .GroupBy(x => x.Artikelnummer.Trim(), StringComparer.OrdinalIgnoreCase)
+            .Where(x => x.Count() > 1)
+            .Select(x => x.Key)
+            .ToList();
+
+        if (batchDuplicaten.Count > 0)
+        {
+            _toast.Error($"Bulk update geblokkeerd: dubbele artikelnummer(s) in selectie: {string.Join(", ", batchDuplicaten)}.");
+            return false;
+        }
+
+        var foutmeldingen = new List<string>();
+        var waarschuwingen = new List<string>();
+
+        foreach (var lijst in lijsten)
+        {
+            var vr = await _validator.ValidateUpdateAsync(lijst);
+            if (!vr.IsValid)
+            {
+                var errors = vr.Items
+                    .Where(x => x.Severity == ValidationSeverity.Error)
+                    .Select(x => $"{x.Field}: {x.Message}");
+
+                foutmeldingen.Add($"{lijst.Artikelnummer}: {string.Join("; ", errors)}");
+            }
+
+            var warns = vr.Items
+                .Where(x => x.Severity == ValidationSeverity.Warning)
+                .Select(x => $"{lijst.Artikelnummer} - {x.Field}: {x.Message}");
+
+            waarschuwingen.AddRange(warns);
+        }
+
+        if (foutmeldingen.Count > 0)
+        {
+            _toast.Error("Bulk update geblokkeerd:" + Environment.NewLine + string.Join(Environment.NewLine, foutmeldingen.Take(5)));
+            return false;
+        }
+
+        await db.SaveChangesAsync();
+
+        var waarschuwingLijst = waarschuwingen.Distinct().Take(3).ToList();
+        if (waarschuwingLijst.Count > 0)
+        {
+            _toast.Warning(string.Join(Environment.NewLine, waarschuwingLijst));
+        }
+
+        var lageVoorraad = lijsten.Count(x => x.VoorraadMeter < x.MinimumVoorraad);
+        if (lageVoorraad > 0)
+        {
+            _toast.Warning($"{lageVoorraad} lijst(en) zitten onder minimumvoorraad na de bulk update.");
+        }
+
+        _toast.Success($"{string.Join(", ", SelectedFieldLabels())} bijgewerkt voor {lijsten.Count} lijst(en).");
+        return true;
+    }
+
+    private void PasBulkVeldenToe(TypeLijst lijst)
+    {
+        if (BijwerkArtikelnummer)
+        {
+            lijst.Artikelnummer = NieuwArtikelnummer.Trim();
+        }
+
+        if (BijwerkLevcode)
+        {
+            lijst.Levcode = NieuweLevcode.Trim();
+        }
+
+        if (BijwerkLeverancier && GeselecteerdeBulkLeverancier is not null)
+        {
+            lijst.LeverancierId = GeselecteerdeBulkLeverancier.Id;
+            lijst.Leverancier = GeselecteerdeBulkLeverancier;
+        }
+
+        if (BijwerkBreedteCm && NieuweBreedteCm.HasValue)
+        {
+            lijst.BreedteCm = Decimal.ToInt32(NieuweBreedteCm.Value);
+        }
+
+        if (BijwerkSoort)
+        {
+            lijst.Soort = NieuweSoort.Trim();
+        }
+
+        if (BijwerkIsDealer)
+        {
+            lijst.IsDealer = NieuweIsDealer;
+        }
+
+        if (BijwerkOpmerking)
+        {
+            lijst.Opmerking = NieuweOpmerking.Trim();
+        }
+
+        if (BijwerkPrijsPerMeter)
         {
             if (GebruikPercentage && PrijsWijzigingPct.HasValue)
             {
                 var factor = 1m + (PrijsWijzigingPct.Value / 100m);
-                lijst.PrijsPerMeter = Math.Round(lijst.PrijsPerMeter * factor, 2);
+                lijst.PrijsPerMeter = Math.Round(lijst.PrijsPerMeter * factor, 2, MidpointRounding.AwayFromZero);
             }
             else if (!GebruikPercentage && NieuwePrijsPerMeter.HasValue)
             {
-                lijst.PrijsPerMeter = NieuwePrijsPerMeter.Value;
+                lijst.PrijsPerMeter = Decimal.Round(NieuwePrijsPerMeter.Value, 2, MidpointRounding.AwayFromZero);
             }
-
-            lijst.LaatsteUpdate = DateTime.Now;
         }
 
-        await db.SaveChangesAsync();
-        _toast.Success($"Prijs per meter bijgewerkt voor {lijsten.Count} lijst(en).");
+        if (BijwerkWinstFactor)
+        {
+            lijst.WinstFactor = WinstFactorLeegmaken
+                ? null
+                : NieuweWinstFactor;
+        }
+
+        if (BijwerkAfvalPercentage)
+        {
+            lijst.AfvalPercentage = AfvalPercentageLeegmaken
+                ? null
+                : NieuwAfvalPercentage;
+        }
+
+        if (BijwerkVasteKost && NieuweVasteKost.HasValue)
+        {
+            lijst.VasteKost = Decimal.Round(NieuweVasteKost.Value, 2, MidpointRounding.AwayFromZero);
+        }
+
+        if (BijwerkWerkMinuten && NieuweWerkMinuten.HasValue)
+        {
+            lijst.WerkMinuten = Decimal.ToInt32(NieuweWerkMinuten.Value);
+        }
+
+        if (BijwerkVoorraadMeter && NieuweVoorraadMeter.HasValue)
+        {
+            lijst.VoorraadMeter = Decimal.Round(NieuweVoorraadMeter.Value, 2, MidpointRounding.AwayFromZero);
+        }
+
+        if (BijwerkInventarisKost && NieuweInventarisKost.HasValue)
+        {
+            lijst.InventarisKost = Decimal.Round(NieuweInventarisKost.Value, 2, MidpointRounding.AwayFromZero);
+        }
+
+        if (BijwerkMinimumVoorraad && NieuweMinimumVoorraad.HasValue)
+        {
+            lijst.MinimumVoorraad = Decimal.Round(NieuweMinimumVoorraad.Value, 2, MidpointRounding.AwayFromZero);
+        }
     }
 
-    private async Task VoerHerberekenUitAsync()
+    private IEnumerable<string> SelectedFieldLabels()
     {
-        var ids = SelectedLijsten.Select(x => x.Id).ToHashSet();
-
-        await using var db = await _dbFactory.CreateDbContextAsync();
-        var lijsten = await db.TypeLijsten
-            .Where(x => ids.Contains(x.Id))
-            .ToListAsync();
-
-        foreach (var lijst in lijsten)
+        if (BijwerkArtikelnummer)
         {
-            lijst.IsStaaflijst = string.Equals(lijst.Soort, "HOU", StringComparison.OrdinalIgnoreCase);
-            lijst.LaatsteUpdate = DateTime.Now;
+            yield return "artikelnummer";
         }
 
-        await db.SaveChangesAsync();
-        _toast.Success($"IsStaaflijst vlag herberekend voor {lijsten.Count} lijst(en).");
+        if (BijwerkLevcode)
+        {
+            yield return "levcode";
+        }
+
+        if (BijwerkLeverancier)
+        {
+            yield return "leverancier";
+        }
+
+        if (BijwerkBreedteCm)
+        {
+            yield return "breedte";
+        }
+
+        if (BijwerkSoort)
+        {
+            yield return "soort";
+        }
+
+        if (BijwerkIsDealer)
+        {
+            yield return "dealerstatus";
+        }
+
+        if (BijwerkOpmerking)
+        {
+            yield return "opmerking";
+        }
+
+        if (BijwerkPrijsPerMeter)
+        {
+            yield return "prijs per meter";
+        }
+
+        if (BijwerkWinstFactor)
+        {
+            yield return "winstfactor";
+        }
+
+        if (BijwerkAfvalPercentage)
+        {
+            yield return "afvalpercentage";
+        }
+
+        if (BijwerkVasteKost)
+        {
+            yield return "vaste kost";
+        }
+
+        if (BijwerkWerkMinuten)
+        {
+            yield return "werkminuten";
+        }
+
+        if (BijwerkVoorraadMeter)
+        {
+            yield return "voorraad";
+        }
+
+        if (BijwerkInventarisKost)
+        {
+            yield return "inventariskost";
+        }
+
+        if (BijwerkMinimumVoorraad)
+        {
+            yield return "minimumvoorraad";
+        }
+    }
+
+    private static bool HasWholeNumber(decimal? value) =>
+        value.HasValue && value.Value == decimal.Truncate(value.Value);
+
+    [RelayCommand]
+    private void ResetBulkVelden()
+    {
+        BijwerkArtikelnummer = false;
+        NieuwArtikelnummer = string.Empty;
+        BijwerkLevcode = false;
+        NieuweLevcode = string.Empty;
+        BijwerkLeverancier = false;
+        GeselecteerdeBulkLeverancier = null;
+        BijwerkBreedteCm = false;
+        NieuweBreedteCm = null;
+        BijwerkSoort = false;
+        NieuweSoort = string.Empty;
+        BijwerkIsDealer = false;
+        NieuweIsDealer = false;
+        BijwerkOpmerking = false;
+        NieuweOpmerking = string.Empty;
+        BijwerkPrijsPerMeter = false;
+        GebruikPercentage = false;
+        NieuwePrijsPerMeter = null;
+        PrijsWijzigingPct = null;
+        BijwerkWinstFactor = false;
+        NieuweWinstFactor = null;
+        WinstFactorLeegmaken = false;
+        BijwerkAfvalPercentage = false;
+        NieuwAfvalPercentage = null;
+        AfvalPercentageLeegmaken = false;
+        BijwerkVasteKost = false;
+        NieuweVasteKost = null;
+        BijwerkWerkMinuten = false;
+        NieuweWerkMinuten = null;
+        BijwerkVoorraadMeter = false;
+        NieuweVoorraadMeter = null;
+        BijwerkInventarisKost = false;
+        NieuweInventarisKost = null;
+        BijwerkMinimumVoorraad = false;
+        NieuweMinimumVoorraad = null;
     }
 
     [RelayCommand]

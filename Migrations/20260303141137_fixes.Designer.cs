@@ -615,9 +615,6 @@ namespace QuadroApp.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Serie")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Soort")
                         .IsRequired()
                         .HasColumnType("TEXT");

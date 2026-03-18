@@ -244,7 +244,6 @@ public class WorkflowServiceTests
             BreedteCm = 10,
             Soort = "HOUT",
             PrijsPerMeter = 10m,
-            IsStaaflijst = true,
             VasteKost = 0m,
             WerkMinuten = 5,
             VoorraadMeter = voorraadMeter,

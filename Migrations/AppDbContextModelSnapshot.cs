@@ -576,6 +576,10 @@ namespace QuadroApp.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal?>("AfvalPercentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("BreedteCm")
                         .HasColumnType("INTEGER");
 
@@ -584,9 +588,6 @@ namespace QuadroApp.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsDealer")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsStaaflijst")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("LaatsteUpdate")
@@ -612,9 +613,6 @@ namespace QuadroApp.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Serie")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Soort")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -629,6 +627,10 @@ namespace QuadroApp.Migrations
 
                     b.Property<int>("WerkMinuten")
                         .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("WinstFactor")
+                        .HasPrecision(6, 3)
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 

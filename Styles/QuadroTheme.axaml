@@ -73,7 +73,7 @@
 		<Setter Property="Background" Value="#F5C242"/>
 		<Setter Property="Foreground" Value="#222"/>
 	</Style>
-
+	
 	<!-- Buttons: MainBtn (globaal) -->
 	<Style Selector="Button.MainBtn">
 		<Setter Property="Background" Value="#444A50"/>
@@ -123,8 +123,10 @@
 	<Style Selector="ListBoxItem:pointerover">
 		<Setter Property="Background" Value="#FFF7DA"/>
 	</Style>
+	
 	<Style Selector="ListBoxItem:selected /template/ ContentPresenter">
 		<Setter Property="Background" Value="#F5C242"/>
+		<Setter  Property="CornerRadius"  Value="8"/>
 		<Setter Property="TextElement.Foreground" Value="#222"/>
 	</Style>
 	<Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter">
@@ -147,15 +149,30 @@
 		<Setter Property="Opacity" Value="0.5"/>
 	</Style>
 
-	<!-- ComboBox: zwarte tekst, licht geel op hover -->
+	<!-- ComboBox: witte achtergrond, zwarte tekst, licht geel op hover -->
 	<Style Selector="ComboBox">
+		<Setter Property="Background" Value="White"/>
 		<Setter Property="Foreground" Value="#222222"/>
+		<Setter Property="BorderBrush" Value="#CCCCCC"/>
+	</Style>
+	<Style Selector="ComboBox:pointerover">
+		<Setter Property="Background" Value="#FFFDE7"/>
+	</Style>
+	<Style Selector="ComboBox /template/ Border#Background">
+		<Setter Property="Background" Value="White"/>
 	</Style>
 	<Style Selector="ComboBox /template/ ContentPresenter">
 		<Setter Property="TextElement.Foreground" Value="#222222"/>
 	</Style>
 	<Style Selector="ComboBoxItem">
+		<Setter Property="Background" Value="White"/>
 		<Setter Property="Foreground" Value="#222222"/>
+	</Style>
+	<Style Selector="ComboBoxItem:pointerover /template/ ContentPresenter">
+		<Setter Property="TextElement.Foreground" Value="#222222"/>
+	</Style>
+	<Style Selector="ComboBoxItem:selected /template/ ContentPresenter">
+		<Setter Property="TextElement.Foreground" Value="#222222"/>
 	</Style>
 
 

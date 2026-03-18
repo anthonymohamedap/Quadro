@@ -195,7 +195,6 @@ namespace QuadroApp.Migrations
                     LeverancierId = table.Column<int>(type: "INTEGER", nullable: false),
                     BreedteCm = table.Column<int>(type: "INTEGER", nullable: false),
                     Soort = table.Column<string>(type: "TEXT", nullable: false),
-                    Serie = table.Column<string>(type: "TEXT", nullable: true),
                     IsDealer = table.Column<bool>(type: "INTEGER", nullable: false),
                     Opmerking = table.Column<string>(type: "TEXT", nullable: false),
                     PrijsPerMeter = table.Column<decimal>(type: "TEXT", precision: 10, scale: 2, nullable: false),

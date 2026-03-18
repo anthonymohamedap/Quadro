@@ -5,7 +5,7 @@ namespace QuadroApp.Service.Pricing;
 
 public sealed class PricingEngine
 {
-    public PricingResult Calculate(Offerte offerte, decimal uurloon, decimal btwPercent, decimal staaflijstWinstFactor, decimal staaflijstAfvalPercentage, decimal defaultWinstFactor, decimal defaultAfvalPercentage)
+    public PricingResult Calculate(Offerte offerte, decimal uurloon, decimal btwPercent, decimal defaultPrijsPerMeter, decimal defaultWinstFactor, decimal defaultAfvalPercentage)
     {
         var btwFactor = btwPercent / 100m;
         var regelResults = new System.Collections.Generic.List<PricingRegelResult>();
@@ -46,8 +46,7 @@ public sealed class PricingEngine
                         r.BreedteCm,
                         r.HoogteCm,
                         uurloon,
-                        staaflijstWinstFactor,
-                        staaflijstAfvalPercentage,
+                        defaultPrijsPerMeter,
                         defaultWinstFactor,
                         defaultAfvalPercentage)
                     : 0m;
@@ -114,17 +113,18 @@ public sealed class PricingEngine
         decimal breedteCm,
         decimal hoogteCm,
         decimal uurloon,
-        decimal staaflijstWinstFactor,
-        decimal staaflijstAfvalPercentage,
+        decimal defaultPrijsPerMeter,
         decimal defaultWinstFactor,
         decimal defaultAfvalPercentage)
     {
         var lengteM = (((breedteCm + hoogteCm) * 2m) + (lijst.BreedteCm * 10m)) / 100m;
 
-        var kost = lijst.PrijsPerMeter * lengteM;
-        var isStaaflijst = IsStaaflijst(lijst);
-        var afvalPercentage = isStaaflijst ? staaflijstAfvalPercentage : defaultAfvalPercentage;
-        var winstFactor = isStaaflijst ? staaflijstWinstFactor : defaultWinstFactor;
+        var prijsPerMeter = lijst.PrijsPerMeter > 0m
+            ? lijst.PrijsPerMeter
+            : defaultPrijsPerMeter;
+        var kost = prijsPerMeter * lengteM;
+        var winstFactor = lijst.WinstFactor ?? defaultWinstFactor;
+        var afvalPercentage = lijst.AfvalPercentage ?? defaultAfvalPercentage;
         var afval = kost * (afvalPercentage / 100m);
         var arbeid = (lijst.WerkMinuten / 60m) * uurloon;
 
@@ -135,7 +135,4 @@ public sealed class PricingEngine
             + arbeid,
             2);
     }
-
-    private static bool IsStaaflijst(TypeLijst lijst) =>
-        lijst.IsStaaflijst || string.Equals(lijst.Soort, "HOU", StringComparison.OrdinalIgnoreCase);
 }

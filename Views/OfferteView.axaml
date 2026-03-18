@@ -81,7 +81,7 @@
 
 									<ComboBox.ItemTemplate>
 										<DataTemplate x:DataType="m:Klant">
-											<TextBlock Foreground="White">
+											<TextBlock>
 												<Run Text="{Binding Voornaam}" />
 												<Run Text=" " />
 												<Run Text="{Binding Achternaam}" />
@@ -142,7 +142,6 @@
 							<!-- TABEL HEADERS -->
 							<Grid ColumnDefinitions="60,80,90,*,110"
                                   Opacity="0.6">
-								<TextBlock Text="#" />
 								<TextBlock Grid.Column="1" Text="Aantal"/>
 								<TextBlock Grid.Column="2" Text="Breedte"/>
 								<TextBlock Grid.Column="3" Text="Type lijst"/>
@@ -162,7 +161,6 @@
 									<DataTemplate x:DataType="m:OfferteRegel">
 										<Border Padding="6">
 											<Grid ColumnDefinitions="60,80,90,*,110">
-												<TextBlock Text="{Binding Id}" Opacity="0.6"/>
 												<TextBlock Grid.Column="1" Text="{Binding AantalStuks}"/>
 												<TextBlock Grid.Column="2"
                                                            Text="{Binding BreedteCm, StringFormat={}{0} cm}"/>
@@ -221,7 +219,7 @@
                                           MaxDropDownHeight="300">
 									<ComboBox.ItemTemplate>
 										<DataTemplate x:DataType="m:TypeLijst">
-											<TextBlock Foreground="White" Text="{Binding Artikelnummer}"/>
+											<TextBlock Text="{Binding Artikelnummer}"/>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
@@ -323,7 +321,7 @@
 									<DataTemplate x:DataType="m:AfwerkingsOptie">
 										<!-- 👇 ZWART ipv white -->
 										<TextBlock Text="{Binding Naam}"
-												   Foreground="White"/>
+												   />
 									</DataTemplate>
 								</ComboBox.ItemTemplate>
 							</ComboBox>
@@ -347,7 +345,7 @@
 								<ComboBox.ItemTemplate>
 									<DataTemplate x:DataType="m:AfwerkingsOptie">
 										<TextBlock Text="{Binding Naam}"
-												   Foreground="White"/>
+												   />
 									</DataTemplate>
 								</ComboBox.ItemTemplate>
 							</ComboBox>
@@ -371,7 +369,7 @@
 								<ComboBox.ItemTemplate>
 									<DataTemplate x:DataType="m:AfwerkingsOptie">
 										<TextBlock Text="{Binding Naam}"
-												   Foreground="White"/>
+												   />
 									</DataTemplate>
 								</ComboBox.ItemTemplate>
 							</ComboBox>
@@ -394,7 +392,7 @@
 								<ComboBox.ItemTemplate>
 									<DataTemplate x:DataType="m:AfwerkingsOptie">
 										<TextBlock Text="{Binding Naam}"
-												   Foreground="White"/>
+												   />
 									</DataTemplate>
 								</ComboBox.ItemTemplate>
 							</ComboBox>
@@ -418,7 +416,7 @@
 								<ComboBox.ItemTemplate>
 									<DataTemplate x:DataType="m:AfwerkingsOptie">
 										<TextBlock Text="{Binding Naam}"
-												   Foreground="White"/>
+												   />
 									</DataTemplate>
 								</ComboBox.ItemTemplate>
 							</ComboBox>
@@ -440,7 +438,7 @@
 								<ComboBox.ItemTemplate>
 									<DataTemplate x:DataType="m:AfwerkingsOptie">
 										<TextBlock Text="{Binding Naam}"
-												   Foreground="White"/>
+												   />
 									</DataTemplate>
 								</ComboBox.ItemTemplate>
 							</ComboBox>

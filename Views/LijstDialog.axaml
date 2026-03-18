@@ -29,9 +29,6 @@
                 <TextBlock Text="Soort" FontWeight="Bold"/>
                 <TextBox Text="{Binding Soort}"/>
 
-                <TextBlock Text="Serie" FontWeight="Bold"/>
-                <TextBox Text="{Binding Serie}"/>
-
                 <TextBlock Text="Voorraad" FontWeight="Bold"/>
                 <NumericUpDown Value="{Binding VoorraadMeter}" Increment="0.5"/>
 
@@ -40,6 +37,12 @@
 
                 <TextBlock Text="PrijsPerMeter" FontWeight="Bold"/>
                 <NumericUpDown Value="{Binding PrijsPerMeter}" Increment="0.1"/>
+
+                <TextBlock Text="Winstfactor (leeg = gebruik standaard)" FontWeight="Bold"/>
+                <NumericUpDown Value="{Binding WinstFactor}" Increment="0.1" Minimum="0" Watermark="Standaard"/>
+
+                <TextBlock Text="Afvalpercentage % (leeg = gebruik standaard)" FontWeight="Bold"/>
+                <NumericUpDown Value="{Binding AfvalPercentage}" Increment="0.5" Minimum="0" Watermark="Standaard"/>
 
                 <TextBlock Text="VasteKost" FontWeight="Bold"/>
                 <NumericUpDown Value="{Binding VasteKost}" Increment="0.5"/>

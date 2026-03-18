@@ -4,14 +4,14 @@ namespace QuadroApp.Service.Interfaces;
 
 public interface IAppSettingsProvider
 {
-    Task<decimal> GetStaaflijstWinstFactorAsync();
-    Task<decimal> GetStaaflijstAfvalPercentageAsync();
+    Task<decimal> GetUurloon();
+    Task<decimal> GetDefaultPrijsPerMeterAsync();
     Task<decimal> GetDefaultWinstFactorAsync();
     Task<decimal> GetDefaultAfvalPercentageAsync();
 
     Task SavePricingSettingsAsync(
-        decimal staaflijstWinstFactor,
-        decimal staaflijstAfvalPercentage,
+        decimal uurloon,
+        decimal defaultPrijsPerMeter,
         decimal defaultWinstFactor,
         decimal defaultAfvalPercentage);
 }

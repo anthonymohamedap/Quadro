@@ -66,7 +66,6 @@ public class TypeLijstImportCommitterTests
             Assert.Equal(12m, saved.VasteKost);
             Assert.Equal(20, saved.WerkMinuten);
             Assert.Equal(5m, saved.VoorraadMeter);
-            Assert.True(saved.IsStaaflijst);
         }
     }
 }

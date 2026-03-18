@@ -11,10 +11,10 @@ public partial class InstellingenViewModel : ObservableObject, IAsyncInitializab
     private readonly IDialogService _dialogs;
     private readonly IToastService _toast;
 
-    [ObservableProperty] private decimal staaflijstWinstFactor;
-    [ObservableProperty] private decimal staaflijstAfvalPercentage;
     [ObservableProperty] private decimal defaultWinstFactor;
     [ObservableProperty] private decimal defaultAfvalPercentage;
+    [ObservableProperty] private decimal defaultPrijsPerMeter;
+    [ObservableProperty] private decimal uurloon;
 
     [ObservableProperty] private bool isBusy;
 
@@ -38,8 +38,8 @@ public partial class InstellingenViewModel : ObservableObject, IAsyncInitializab
         try
         {
             IsBusy = true;
-            StaaflijstWinstFactor = await _settings.GetStaaflijstWinstFactorAsync();
-            StaaflijstAfvalPercentage = await _settings.GetStaaflijstAfvalPercentageAsync();
+            uurloon = await _settings.GetUurloon();
+            DefaultPrijsPerMeter = await _settings.GetDefaultPrijsPerMeterAsync();
             DefaultWinstFactor = await _settings.GetDefaultWinstFactorAsync();
             DefaultAfvalPercentage = await _settings.GetDefaultAfvalPercentageAsync();
         }
@@ -52,15 +52,15 @@ public partial class InstellingenViewModel : ObservableObject, IAsyncInitializab
     [RelayCommand]
     private async Task SaveAsync()
     {
-        if (StaaflijstWinstFactor < 0 || StaaflijstAfvalPercentage < 0 || DefaultWinstFactor < 0 || DefaultAfvalPercentage < 0)
+        if (DefaultPrijsPerMeter < 0 || DefaultWinstFactor < 0 || DefaultAfvalPercentage < 0)
         {
             await _dialogs.ShowErrorAsync("Ongeldige instellingen", "Waarden moeten groter dan of gelijk aan 0 zijn.");
             return;
         }
 
         await _settings.SavePricingSettingsAsync(
-            StaaflijstWinstFactor,
-            StaaflijstAfvalPercentage,
+            uurloon,
+            DefaultPrijsPerMeter,
             DefaultWinstFactor,
             DefaultAfvalPercentage);
 

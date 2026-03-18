@@ -75,8 +75,7 @@ public sealed class PricingService : IPricingService
         return new PricingParameters(
             await _settingsProvider.GetUurloonAsync(),
             await _settingsProvider.GetBtwPercentAsync(),
-            await _settingsProvider.GetStaaflijstWinstFactorAsync(),
-            await _settingsProvider.GetStaaflijstAfvalPercentageAsync(),
+            await _settingsProvider.GetDefaultPrijsPerMeterAsync(),
             await _settingsProvider.GetDefaultWinstFactorAsync(),
             await _settingsProvider.GetDefaultAfvalPercentageAsync());
     }
@@ -86,8 +85,7 @@ public sealed class PricingService : IPricingService
             offerte,
             parameters.Uurloon,
             parameters.BtwPercent,
-            parameters.StaaflijstWinstFactor,
-            parameters.StaaflijstAfvalPercentage,
+            parameters.DefaultPrijsPerMeter,
             parameters.DefaultWinstFactor,
             parameters.DefaultAfvalPercentage);
 
@@ -118,8 +116,7 @@ public sealed class PricingService : IPricingService
     private sealed record PricingParameters(
         decimal Uurloon,
         decimal BtwPercent,
-        decimal StaaflijstWinstFactor,
-        decimal StaaflijstAfvalPercentage,
+        decimal DefaultPrijsPerMeter,
         decimal DefaultWinstFactor,
         decimal DefaultAfvalPercentage);
 }

@@ -63,7 +63,8 @@ public class OffertePricingDraftTests
         {
             BreedteCm = 5,
             Soort = "HOU",
-            IsStaaflijst = true,
+            WinstFactor = 3.5m,
+            AfvalPercentage = 20m,
             PrijsPerMeter = 10m,
             VasteKost = 1m,
             WerkMinuten = 30
@@ -102,8 +103,7 @@ public class OffertePricingDraftTests
     {
         public Task<decimal> GetUurloonAsync() => Task.FromResult(60m);
         public Task<decimal> GetBtwPercentAsync() => Task.FromResult(21m);
-        public Task<decimal> GetStaaflijstWinstFactorAsync() => Task.FromResult(3.5m);
-        public Task<decimal> GetStaaflijstAfvalPercentageAsync() => Task.FromResult(20m);
+        public Task<decimal> GetDefaultPrijsPerMeterAsync() => Task.FromResult(0m);
         public Task<decimal> GetDefaultWinstFactorAsync() => Task.FromResult(1m);
         public Task<decimal> GetDefaultAfvalPercentageAsync() => Task.FromResult(10m);
     }
