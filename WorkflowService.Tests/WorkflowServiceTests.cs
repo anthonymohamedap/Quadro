@@ -80,7 +80,7 @@ public class WorkflowServiceTests
     }
 
     [Fact]
-    public async Task Stock_decreases_correctly_when_sufficient_stock()
+    public async Task Stock_is_reserved_when_sufficient_stock()
     {
         var factory = CreateFactory();
         var toast = new TestToastService();
@@ -94,8 +94,10 @@ public class WorkflowServiceTests
         var lijst = await db.TypeLijsten.FirstAsync();
         var taak = await db.WerkTaken.FirstAsync();
 
-        Assert.Equal(15m, lijst.VoorraadMeter);
+        Assert.Equal(20m, lijst.VoorraadMeter);
+        Assert.Equal(5m, lijst.GereserveerdeVoorraadMeter);
         Assert.True(taak.IsOpVoorraad);
+        Assert.Equal(VoorraadStatus.Reserved, taak.VoorraadStatus);
         Assert.Contains(toast.SuccessMessages, m => m.Contains("Lijst succesvol gereserveerd", StringComparison.Ordinal));
     }
 
@@ -116,6 +118,7 @@ public class WorkflowServiceTests
 
         Assert.Equal(2m, lijst.VoorraadMeter);
         Assert.False(taak.IsOpVoorraad);
+        Assert.Equal(VoorraadStatus.Shortage, taak.VoorraadStatus);
         Assert.Contains(toast.WarningMessages, m => m.Contains("Onvoldoende voorraad", StringComparison.Ordinal));
     }
 
@@ -138,7 +141,7 @@ public class WorkflowServiceTests
     {
         var factory = CreateFactory();
         var toast = new TestToastService();
-        var werkBonId = await SeedWerkBonWithStockAsync(factory, voorraadMeter: 20m, minimumVoorraad: 2m, benodigdeMeter: 5m);
+        var werkBonId = await SeedWerkBonWithStockAsync(factory, voorraadMeter: 0m, minimumVoorraad: 2m, benodigdeMeter: 5m);
 
         await using var db = await factory.CreateDbContextAsync();
         var taakId = await db.WerkTaken.Select(t => t.Id).FirstAsync();
@@ -150,10 +153,18 @@ public class WorkflowServiceTests
 
         await using var checkDb = await factory.CreateDbContextAsync();
         var taak = await checkDb.WerkTaken.FirstAsync(t => t.Id == taakId);
+        var lijst = await checkDb.TypeLijsten.FirstAsync();
+        var bestellijn = await checkDb.LeverancierBestelLijnen.FirstAsync();
+        var bestelling = await checkDb.LeverancierBestellingen.FirstAsync();
 
         Assert.True(taak.IsBesteld);
         Assert.Equal(date, taak.BestelDatum);
-        Assert.Contains(toast.SuccessMessages, m => m.Contains("gemarkeerd als besteld", StringComparison.Ordinal));
+        Assert.Equal(VoorraadStatus.Ordered, taak.VoorraadStatus);
+        Assert.NotNull(taak.LeverancierBestelLijnId);
+        Assert.Equal(5m, lijst.InBestellingMeter);
+        Assert.Equal(5m, bestellijn.AantalMeterBesteld);
+        Assert.Equal(LeverancierBestellingStatus.Besteld, bestelling.Status);
+        Assert.Contains(toast.SuccessMessages, m => m.Contains("Bestelling", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -170,11 +181,44 @@ public class WorkflowServiceTests
 
         await using var db = await factory.CreateDbContextAsync();
         var lijst = await db.TypeLijsten.FirstAsync();
-        Assert.Equal(15m, lijst.VoorraadMeter);
+        Assert.Equal(20m, lijst.VoorraadMeter);
+        Assert.Equal(5m, lijst.GereserveerdeVoorraadMeter);
     }
 
     [Fact]
-    public async Task Validation_throws_when_benodigde_meter_is_invalid()
+    public async Task Receiving_supplier_order_updates_stock_and_reserves_task()
+    {
+        var factory = CreateFactory();
+        var toast = new TestToastService();
+        var werkBonId = await SeedWerkBonWithStockAsync(factory, voorraadMeter: 0m, minimumVoorraad: 1m, benodigdeMeter: 5m);
+
+        await using var db = await factory.CreateDbContextAsync();
+        var taakId = await db.WerkTaken.Select(t => t.Id).FirstAsync();
+
+        var workflow = CreateSut(factory, toast);
+        await workflow.MarkLijstAsBesteldAsync(taakId, new DateTime(2026, 1, 15));
+
+        await using var orderDb = await factory.CreateDbContextAsync();
+        var lijnId = await orderDb.LeverancierBestelLijnen.Select(x => x.Id).FirstAsync();
+
+        var stock = new QuadroApp.Service.StockService(factory, toast);
+        await stock.ReceiveSupplierOrderLineAsync(lijnId);
+
+        await using var checkDb = await factory.CreateDbContextAsync();
+        var lijst = await checkDb.TypeLijsten.FirstAsync();
+        var taak = await checkDb.WerkTaken.FirstAsync();
+        var bestelling = await checkDb.LeverancierBestellingen.FirstAsync();
+
+        Assert.Equal(5m, lijst.VoorraadMeter);
+        Assert.Equal(5m, lijst.GereserveerdeVoorraadMeter);
+        Assert.Equal(0m, lijst.InBestellingMeter);
+        Assert.True(taak.IsOpVoorraad);
+        Assert.Equal(VoorraadStatus.Reserved, taak.VoorraadStatus);
+        Assert.Equal(LeverancierBestellingStatus.VolledigOntvangen, bestelling.Status);
+    }
+
+    [Fact]
+    public async Task Missing_benodigde_meter_is_recalculated_from_regel()
     {
         var factory = CreateFactory();
         var toast = new TestToastService();
@@ -182,7 +226,12 @@ public class WorkflowServiceTests
 
         var sut = CreateSut(factory, toast);
 
-        await Assert.ThrowsAsync<ValidationException>(() => sut.ReserveStockForWerkBonAsync(werkBonId));
+        await sut.ReserveStockForWerkBonAsync(werkBonId);
+
+        await using var db = await factory.CreateDbContextAsync();
+        var taak = await db.WerkTaken.FirstAsync();
+        Assert.True(taak.BenodigdeMeter > 0m);
+        Assert.Equal(VoorraadStatus.Reserved, taak.VoorraadStatus);
     }
 
     private static QuadroApp.Service.WorkflowService CreateSut(IDbContextFactory<AppDbContext> factory, IToastService toast) =>

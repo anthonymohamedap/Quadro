@@ -5,7 +5,6 @@ using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
 namespace QuadroApp.Service
@@ -16,6 +15,7 @@ namespace QuadroApp.Service
         private readonly ILogger<WorkflowService> _logger;
         private readonly IToastService _toast;
         private readonly IFactuurWorkflowService _factuurWorkflow;
+        private readonly IStockService _stock;
 
         private sealed class NoOpFactuurWorkflowService : IFactuurWorkflowService
         {
@@ -31,6 +31,24 @@ namespace QuadroApp.Service
             public Task SaveDraftAsync(Factuur factuur) => Task.CompletedTask;
 
             public Task HerberekenTotalenAsync(int factuurId) => Task.CompletedTask;
+        }
+
+        private sealed class FallbackStockService : IStockService
+        {
+            private readonly StockService _inner;
+
+            public FallbackStockService(IDbContextFactory<AppDbContext> factory, IToastService toast)
+            {
+                _inner = new StockService(factory, toast);
+            }
+
+            public Task ReserveStockForWerkBonAsync(int werkBonId) => _inner.ReserveStockForWerkBonAsync(werkBonId);
+            public Task ConsumeReservationsForWerkBonAsync(int werkBonId) => _inner.ConsumeReservationsForWerkBonAsync(werkBonId);
+            public Task ReleaseReservationsForWerkBonAsync(int werkBonId, bool cancelOpenOrders = false) => _inner.ReleaseReservationsForWerkBonAsync(werkBonId, cancelOpenOrders);
+            public Task PlaceSupplierOrderForWerkTaakAsync(int werkTaakId, DateTime bestelDatum) => _inner.PlaceSupplierOrderForWerkTaakAsync(werkTaakId, bestelDatum);
+            public Task ReceiveSupplierOrderLineAsync(int bestelLijnId, decimal? aantalMeter = null) => _inner.ReceiveSupplierOrderLineAsync(bestelLijnId, aantalMeter);
+            public Task CancelSupplierOrderAsync(int bestellingId) => _inner.CancelSupplierOrderAsync(bestellingId);
+            public Task RefreshAlertsAsync() => _inner.RefreshAlertsAsync();
         }
 
         private static readonly IReadOnlyDictionary<OfferteStatus, HashSet<OfferteStatus>> OfferteTransitions =
@@ -56,12 +74,14 @@ namespace QuadroApp.Service
             IDbContextFactory<AppDbContext> factory,
             ILogger<WorkflowService> logger,
             IToastService toast,
-            IFactuurWorkflowService factuurWorkflow)
+            IFactuurWorkflowService factuurWorkflow,
+            IStockService stock)
         {
             _factory = factory ?? throw new ArgumentNullException(nameof(factory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _toast = toast ?? throw new ArgumentNullException(nameof(toast));
             _factuurWorkflow = factuurWorkflow ?? throw new ArgumentNullException(nameof(factuurWorkflow));
+            _stock = stock ?? throw new ArgumentNullException(nameof(stock));
         }
 
         // Backward-compatible constructor for older test/setup code paths
@@ -69,7 +89,16 @@ namespace QuadroApp.Service
             IDbContextFactory<AppDbContext> factory,
             ILogger<WorkflowService> logger,
             IToastService toast)
-            : this(factory, logger, toast, new NoOpFactuurWorkflowService())
+            : this(factory, logger, toast, new NoOpFactuurWorkflowService(), new FallbackStockService(factory, toast))
+        {
+        }
+
+        public WorkflowService(
+            IDbContextFactory<AppDbContext> factory,
+            ILogger<WorkflowService> logger,
+            IToastService toast,
+            IFactuurWorkflowService factuurWorkflow)
+            : this(factory, logger, toast, factuurWorkflow, new FallbackStockService(factory, toast))
         {
         }
 
@@ -92,6 +121,12 @@ namespace QuadroApp.Service
 
             offerte.Status = newStatus;
 
+            if (newStatus == OfferteStatus.Geannuleerd && offerte.WerkBon is not null)
+            {
+                await _stock.ReleaseReservationsForWerkBonAsync(offerte.WerkBon.Id, cancelOpenOrders: true);
+            }
+
+            var createdWerkBonId = 0;
             if (newStatus == OfferteStatus.Goedgekeurd && offerte.WerkBon is null)
             {
                 var existingWerkBon = await db.WerkBonnen
@@ -109,12 +144,17 @@ namespace QuadroApp.Service
 
                     db.WerkBonnen.Add(werkBon);
                     await db.SaveChangesAsync();
-                    await ReserveStockForWerkBonInternalAsync(db, werkBon.Id);
+                    createdWerkBonId = werkBon.Id;
                 }
             }
 
             await db.SaveChangesAsync();
             await tx.CommitAsync();
+
+            if (createdWerkBonId > 0)
+            {
+                await _stock.ReserveStockForWerkBonAsync(createdWerkBonId);
+            }
 
             _logger.LogInformation(
                 "Offerte {OfferteId} status changed from {OldStatus} to {NewStatus} at {Timestamp}",
@@ -142,6 +182,7 @@ namespace QuadroApp.Service
 
             if (newStatus == WerkBonStatus.Afgewerkt)
             {
+                await _stock.ConsumeReservationsForWerkBonAsync(werkBonId);
                 await _factuurWorkflow.MaakFactuurVanWerkBonAsync(werkBonId);
             }
 
@@ -155,98 +196,12 @@ namespace QuadroApp.Service
 
         public async Task ReserveStockForWerkBonAsync(int werkBonId)
         {
-            await using var db = await _factory.CreateDbContextAsync();
-            await using var tx = await db.Database.BeginTransactionAsync();
-
-            await ReserveStockForWerkBonInternalAsync(db, werkBonId);
-
-            await db.SaveChangesAsync();
-            await tx.CommitAsync();
+            await _stock.ReserveStockForWerkBonAsync(werkBonId);
         }
 
         public async Task MarkLijstAsBesteldAsync(int werkTaakId, DateTime bestelDatum)
         {
-            await using var db = await _factory.CreateDbContextAsync();
-
-            var taak = await db.WerkTaken.FirstOrDefaultAsync(t => t.Id == werkTaakId);
-            if (taak is null)
-            {
-                _toast.Error("Werktaak niet gevonden.");
-                throw new InvalidOperationException("Werktaak niet gevonden.");
-            }
-
-            taak.IsBesteld = true;
-            taak.BestelDatum = bestelDatum;
-            ValidateWerkTaakForStock(taak);
-
-            await db.SaveChangesAsync();
-            _toast.Success($"Lijst voor werktaak {werkTaakId} gemarkeerd als besteld.");
-        }
-
-        private async Task ReserveStockForWerkBonInternalAsync(AppDbContext db, int werkBonId)
-        {
-            var werkBon = await db.WerkBonnen
-                .Include(w => w.Taken)
-                    .ThenInclude(t => t.OfferteRegel)
-                        .ThenInclude(r => r!.TypeLijst)
-                .FirstOrDefaultAsync(w => w.Id == werkBonId);
-
-            if (werkBon is null)
-            {
-                _toast.Error("Werkbon niet gevonden.");
-                throw new InvalidOperationException("Werkbon niet gevonden.");
-            }
-
-            if (werkBon.StockReservationProcessed)
-            {
-                _logger.LogInformation("Stock reservation skipped for WerkBon {WerkBonId}; already processed.", werkBonId);
-                return;
-            }
-
-            foreach (var taak in werkBon.Taken)
-            {
-                ValidateWerkTaakForStock(taak);
-
-                var typeLijst = taak.OfferteRegel?.TypeLijst;
-                if (typeLijst is null)
-                {
-                    _toast.Warning($"Geen lijst gekoppeld aan werktaak {taak.Id}; voorraadcontrole overgeslagen.");
-                    taak.IsOpVoorraad = false;
-                    continue;
-                }
-
-                if (typeLijst.VoorraadMeter >= taak.BenodigdeMeter)
-                {
-                    typeLijst.VoorraadMeter -= taak.BenodigdeMeter;
-                    taak.IsOpVoorraad = true;
-                    _toast.Success($"Lijst succesvol gereserveerd voor {typeLijst.Artikelnummer}");
-
-                    if (typeLijst.VoorraadMeter < typeLijst.MinimumVoorraad)
-                    {
-                        _toast.Warning($"Voorraad bijna op voor lijst {typeLijst.Artikelnummer}");
-                    }
-                }
-                else
-                {
-                    taak.IsOpVoorraad = false;
-                    _toast.Warning($"Onvoldoende voorraad voor lijst {typeLijst.Artikelnummer}");
-                }
-            }
-
-            werkBon.StockReservationProcessed = true;
-        }
-
-        private static void ValidateWerkTaakForStock(WerkTaak taak)
-        {
-            if (taak.BenodigdeMeter <= 0)
-            {
-                throw new ValidationException("BenodigdeMeter moet groter zijn dan 0.");
-            }
-
-            if (taak.IsBesteld && taak.BestelDatum is null)
-            {
-                throw new ValidationException("BestelDatum is verplicht wanneer IsBesteld=true.");
-            }
+            await _stock.PlaceSupplierOrderForWerkTaakAsync(werkTaakId, bestelDatum);
         }
 
         private static void ValidateOfferteTransition(OfferteStatus oldStatus, OfferteStatus newStatus)

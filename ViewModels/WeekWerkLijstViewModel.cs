@@ -50,12 +50,15 @@ public partial class WeekWerkLijstViewModel : ObservableObject
                     .ThenInclude(o => o.Klant)
             .Include(t => t.OfferteRegel)
                 .ThenInclude(r => r.TypeLijst)
+                    .ThenInclude(l => l.Leverancier)
             .Include(t => t.OfferteRegel).ThenInclude(r => r.Glas)
             .Include(t => t.OfferteRegel).ThenInclude(r => r.PassePartout1)
             .Include(t => t.OfferteRegel).ThenInclude(r => r.PassePartout2)
             .Include(t => t.OfferteRegel).ThenInclude(r => r.DiepteKern)
             .Include(t => t.OfferteRegel).ThenInclude(r => r.Opkleven)
             .Include(t => t.OfferteRegel).ThenInclude(r => r.Rug)
+            .Include(t => t.LeverancierBestelLijn)
+                .ThenInclude(l => l!.LeverancierBestelling)
             .Where(t => t.GeplandVan >= start && t.GeplandVan < end)
             .OrderBy(t => t.WerkBonId)
             .ThenBy(t => t.GeplandVan)
@@ -131,10 +134,19 @@ public partial class WeekWerkItem : ObservableObject
     [ObservableProperty] private DateTime? bestelDatum;
     [ObservableProperty] private bool isOpVoorraad;
     [ObservableProperty] private DateTimeOffset? bestelDatumInput;
+    [ObservableProperty] private VoorraadStatus voorraadStatus;
+    [ObservableProperty] private string voorraadStatusText = string.Empty;
+    [ObservableProperty] private string? bestellingNummer;
+    [ObservableProperty] private DateTime? verwachteLeverdatum;
+    [ObservableProperty] private string? leverancierNaam;
+
+    public bool CanPlaceOrder => VoorraadStatus == VoorraadStatus.Shortage || (!IsOpVoorraad && !IsBesteld);
+    public bool HasOrder => !string.IsNullOrWhiteSpace(BestellingNummer);
 
     public static WeekWerkItem FromTaak(WerkTaak t)
     {
         var r = t.OfferteRegel;
+        var bestelling = t.LeverancierBestelLijn?.LeverancierBestelling;
 
         return new WeekWerkItem
         {
@@ -153,7 +165,23 @@ public partial class WeekWerkItem : ObservableObject
             IsBesteld = t.IsBesteld,
             BestelDatum = t.BestelDatum,
             IsOpVoorraad = t.IsOpVoorraad,
-            BestelDatumInput = (t.BestelDatum ?? DateTime.Today)
+            BestelDatumInput = (t.BestelDatum ?? DateTime.Today),
+            VoorraadStatus = t.VoorraadStatus,
+            VoorraadStatusText = GetVoorraadStatusText(t),
+            BestellingNummer = bestelling?.BestelNummer,
+            VerwachteLeverdatum = bestelling?.VerwachteLeverdatum,
+            LeverancierNaam = r?.TypeLijst?.Leverancier?.Naam
         };
     }
+
+    private static string GetVoorraadStatusText(WerkTaak taak) =>
+        taak.VoorraadStatus switch
+        {
+            VoorraadStatus.Reserved => "Gereserveerd uit voorraad",
+            VoorraadStatus.Shortage => "Tekort - bestellen vereist",
+            VoorraadStatus.Ordered => "Besteld bij leverancier",
+            VoorraadStatus.Ready => "Voorraad verwerkt",
+            _ when taak.IsOpVoorraad => "Op voorraad",
+            _ => "Nog niet gecontroleerd"
+        };
 }

@@ -145,6 +145,72 @@
 							</ListBox>
 						</StackPanel>
 					</Border>
+
+					<Separator Margin="0,8,0,4"/>
+					<TextBlock Text="Open bestellingen" FontSize="16" FontWeight="SemiBold"/>
+					<Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="10" Background="#FAFAFA">
+						<ItemsControl ItemsSource="{Binding OpenBestellingen}">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate x:DataType="m:LeverancierBestelling">
+									<Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,8" Background="White">
+										<StackPanel Spacing="6">
+											<TextBlock Text="{Binding BestelNummer}" FontWeight="Bold"/>
+											<TextBlock Text="{Binding Status, StringFormat='Status: {0}'}"/>
+											<TextBlock Text="{Binding BesteldOp, StringFormat='Besteld op: {0:dd/MM/yyyy}'}"/>
+											<TextBlock Text="{Binding VerwachteLeverdatum, StringFormat='Verwacht: {0:dd/MM/yyyy}'}"/>
+											<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+												<Button Content="Annuleer bestelling"
+														Command="{Binding $parent[UserControl].((vm:LeveranciersViewModel)DataContext).AnnuleerBestellingCommand}"
+														CommandParameter="{Binding}"/>
+											</StackPanel>
+
+											<ItemsControl ItemsSource="{Binding Lijnen}">
+												<ItemsControl.ItemTemplate>
+													<DataTemplate x:DataType="m:LeverancierBestelLijn">
+														<Border BorderBrush="#F0F0F0" BorderThickness="1" CornerRadius="6" Padding="8" Background="#F9FAFB">
+															<StackPanel Spacing="4">
+																<TextBlock Text="{Binding TypeLijst.Artikelnummer}" FontWeight="SemiBold"/>
+																<TextBlock Text="{Binding AantalMeterBesteld, StringFormat='Besteld: {0:0.##} m'}"/>
+																<TextBlock Text="{Binding AantalMeterOntvangen, StringFormat='Ontvangen: {0:0.##} m'}"/>
+																<TextBlock Text="{Binding ResterendTeOntvangenMeter, StringFormat='Resterend: {0:0.##} m'}"/>
+																<StackPanel Orientation="Horizontal" Spacing="8">
+																	<NumericUpDown Width="110"
+																				   Minimum="0.01"
+																				   Maximum="{Binding ResterendTeOntvangenMeter}"
+																				   Value="{Binding OntvangstInputMeter, Mode=TwoWay}"
+																				   FormatString="0.00"/>
+																	<Button Content="Ontvang"
+																			Command="{Binding $parent[UserControl].((vm:LeveranciersViewModel)DataContext).OntvangBestelLijnCommand}"
+																			CommandParameter="{Binding}"/>
+																</StackPanel>
+															</StackPanel>
+														</Border>
+													</DataTemplate>
+												</ItemsControl.ItemTemplate>
+											</ItemsControl>
+										</StackPanel>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</Border>
+
+					<Separator Margin="0,8,0,4"/>
+					<TextBlock Text="Stock alerts" FontSize="16" FontWeight="SemiBold"/>
+					<Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="10" Background="#FAFAFA">
+						<ItemsControl ItemsSource="{Binding LeverancierAlerts}">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate x:DataType="m:VoorraadAlert">
+									<Border BorderBrush="#F3D27A" BorderThickness="1" CornerRadius="6" Padding="8" Background="#FFF8E6" Margin="0,0,0,8">
+										<StackPanel Spacing="3">
+											<TextBlock Text="{Binding AlertType}" FontWeight="SemiBold"/>
+											<TextBlock Text="{Binding Bericht}" TextWrapping="Wrap"/>
+										</StackPanel>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</Border>
 				</StackPanel>
 			</Border>
 		</Grid>

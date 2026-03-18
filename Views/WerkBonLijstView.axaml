@@ -264,12 +264,13 @@
 													<TextBlock Text="{Binding GeplandVan, StringFormat='Van: {0:dd/MM HH:mm}'}" Foreground="Black"/>
 													<TextBlock Text="{Binding GeplandTot, StringFormat='Tot: {0:dd/MM HH:mm}'}" Foreground="Black"/>
 													<TextBlock Text="{Binding OfferteRegel.TypeLijst.Artikelnummer, StringFormat='Lijst: {0}'}" Foreground="Black"/>
+													<TextBlock Text="{Binding VoorraadStatus, StringFormat='Status: {0}'}" Foreground="Black"/>
 													<TextBlock Text="Op voorraad" Foreground="Black" IsVisible="{Binding IsOpVoorraad}"/>
 													<TextBlock Text="Bestellen vereist" Foreground="Black" IsVisible="{Binding !IsOpVoorraad}"/>
 													<TextBlock Text="{Binding BestelDatum, StringFormat='Besteld op: {0:dd/MM/yyyy}'}" Foreground="Black" IsVisible="{Binding IsBesteld}"/>
 													<StackPanel Orientation="Horizontal" Spacing="8">
 														<DatePicker SelectedDate="{Binding #Root.((vm:WerkBonLijstViewModel)DataContext).GeselecteerdeBestelDatum, Mode=TwoWay}"/>
-														<Button Content="Markeer besteld"
+														<Button Content="Plaats bestelling"
 																Command="{Binding #Root.((vm:WerkBonLijstViewModel)DataContext).MarkeerLijstAlsBesteldCommand}"
 																CommandParameter="{Binding}"/>
 													</StackPanel>

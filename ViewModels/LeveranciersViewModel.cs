@@ -18,12 +18,15 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
     private readonly INavigationService _nav;
     private readonly IDialogService _dialogs;
     private readonly IToastService _toast;
+    private readonly IStockService _stock;
 
     private List<Leverancier> _allLeveranciers = new();
     private List<TypeLijst> _allLijstenVanLeverancier = new();
 
     [ObservableProperty] private ObservableCollection<Leverancier> leveranciers = new();
     [ObservableProperty] private ObservableCollection<TypeLijst> lijstenVanLeverancier = new();
+    [ObservableProperty] private ObservableCollection<LeverancierBestelling> openBestellingen = new();
+    [ObservableProperty] private ObservableCollection<VoorraadAlert> leverancierAlerts = new();
     [ObservableProperty] private Leverancier? selectedLeverancier;
     [ObservableProperty] private bool isDetailOpen;
     [ObservableProperty] private string? zoekterm;
@@ -48,12 +51,14 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
         IDbContextFactory<AppDbContext> dbFactory,
         INavigationService nav,
         IDialogService dialogs,
-        IToastService toast)
+        IToastService toast,
+        IStockService stock)
     {
         _dbFactory = dbFactory;
         _nav = nav;
         _dialogs = dialogs;
         _toast = toast;
+        _stock = stock;
     }
 
     public async Task InitializeAsync() => await LoadLeveranciersAsync();
@@ -100,6 +105,8 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
         {
             _allLijstenVanLeverancier = new List<TypeLijst>();
             LijstenVanLeverancier = new ObservableCollection<TypeLijst>();
+            OpenBestellingen = new ObservableCollection<LeverancierBestelling>();
+            LeverancierAlerts = new ObservableCollection<VoorraadAlert>();
             LijstenCurrentPage = 1;
             IsDetailOpen = leverancier is not null;
             NotifyLijstenPagingChanged();
@@ -114,8 +121,28 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
             .OrderBy(x => x.Artikelnummer)
             .ToListAsync();
 
+        var bestellingen = await db.LeverancierBestellingen
+            .AsNoTracking()
+            .Include(x => x.Lijnen)
+                .ThenInclude(x => x.TypeLijst)
+            .Where(x => x.LeverancierId == leverancier.Id)
+            .OrderByDescending(x => x.BesteldOp)
+            .ToListAsync();
+
+        var typeLijstIds = _allLijstenVanLeverancier.Select(x => x.Id).ToList();
+        var alerts = await db.VoorraadAlerts
+            .AsNoTracking()
+            .Include(x => x.TypeLijst)
+            .Where(x => x.Status == VoorraadAlertStatus.Open
+                && x.TypeLijstId.HasValue
+                && typeLijstIds.Contains(x.TypeLijstId.Value))
+            .OrderByDescending(x => x.AangemaaktOp)
+            .ToListAsync();
+
         LijstenCurrentPage = 1;
         UpdateLijstenPage();
+        OpenBestellingen = new ObservableCollection<LeverancierBestelling>(bestellingen);
+        LeverancierAlerts = new ObservableCollection<VoorraadAlert>(alerts);
         IsDetailOpen = true;
     }
 
@@ -204,6 +231,8 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
                 IsDetailOpen = false;
                 _allLijstenVanLeverancier = new List<TypeLijst>();
                 LijstenVanLeverancier = new ObservableCollection<TypeLijst>();
+                OpenBestellingen = new ObservableCollection<LeverancierBestelling>();
+                LeverancierAlerts = new ObservableCollection<VoorraadAlert>();
                 LijstenCurrentPage = 1;
                 NotifyLijstenPagingChanged();
             }
@@ -331,6 +360,8 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
             IsDetailOpen = false;
             _allLijstenVanLeverancier = new List<TypeLijst>();
             LijstenVanLeverancier = new ObservableCollection<TypeLijst>();
+            OpenBestellingen = new ObservableCollection<LeverancierBestelling>();
+            LeverancierAlerts = new ObservableCollection<VoorraadAlert>();
             LijstenCurrentPage = 1;
             NotifyLijstenPagingChanged();
 
@@ -353,8 +384,58 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
         SelectedLeverancier = null;
         _allLijstenVanLeverancier = new List<TypeLijst>();
         LijstenVanLeverancier = new ObservableCollection<TypeLijst>();
+        OpenBestellingen = new ObservableCollection<LeverancierBestelling>();
+        LeverancierAlerts = new ObservableCollection<VoorraadAlert>();
         LijstenCurrentPage = 1;
         NotifyLijstenPagingChanged();
+    }
+
+    [RelayCommand]
+    private async Task OntvangBestelLijnAsync(LeverancierBestelLijn? lijn)
+    {
+        if (lijn is null)
+            return;
+
+        try
+        {
+            IsBusy = true;
+            await _stock.ReceiveSupplierOrderLineAsync(lijn.Id, lijn.OntvangstInputMeter);
+
+            if (SelectedLeverancier is not null)
+                await LoadTypeLijstenForSelectedAsync(SelectedLeverancier);
+        }
+        catch (Exception ex)
+        {
+            _toast.Error($"Ontvangst mislukt: {ex.InnerException?.Message ?? ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task AnnuleerBestellingAsync(LeverancierBestelling? bestelling)
+    {
+        if (bestelling is null)
+            return;
+
+        try
+        {
+            IsBusy = true;
+            await _stock.CancelSupplierOrderAsync(bestelling.Id);
+
+            if (SelectedLeverancier is not null)
+                await LoadTypeLijstenForSelectedAsync(SelectedLeverancier);
+        }
+        catch (Exception ex)
+        {
+            _toast.Error($"Annuleren mislukt: {ex.InnerException?.Message ?? ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanPrevLeveranciersPage))]

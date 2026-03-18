@@ -49,9 +49,16 @@ namespace QuadroApp.Model.DB
         public decimal VoorraadMeter { get; set; }
 
         [Precision(10, 2)]
+        public decimal GereserveerdeVoorraadMeter { get; set; }
+
+        [Precision(10, 2)]
+        public decimal InBestellingMeter { get; set; }
+
+        [Precision(10, 2)]
         public decimal InventarisKost { get; set; }
 
         public DateTime LaatsteUpdate { get; set; }
+        public DateTime? LaatsteVoorraadCheckOp { get; set; }
 
         public TypeLijst()
         {
@@ -61,6 +68,16 @@ namespace QuadroApp.Model.DB
 
         [Precision(10, 2)]
         public decimal MinimumVoorraad { get; set; }
+
+        [Precision(10, 2)]
+        public decimal? HerbestelNiveauMeter { get; set; }
+
+        [NotMapped]
+        public decimal BeschikbareVoorraadMeter => Math.Max(0m, VoorraadMeter - GereserveerdeVoorraadMeter);
+
+        public ICollection<LeverancierBestelLijn> LeverancierBestelLijnen { get; set; } = new List<LeverancierBestelLijn>();
+        public ICollection<VoorraadMutatie> VoorraadMutaties { get; set; } = new List<VoorraadMutatie>();
+        public ICollection<VoorraadAlert> VoorraadAlerts { get; set; } = new List<VoorraadAlert>();
 
     }
 }

@@ -17,6 +17,10 @@ namespace QuadroApp.Data
         public DbSet<OfferteRegel> OfferteRegels { get; set; } = default!;
         public DbSet<Instelling> Instellingen => Set<Instelling>();
         public DbSet<Leverancier> Leveranciers => Set<Leverancier>();
+        public DbSet<LeverancierBestelling> LeverancierBestellingen => Set<LeverancierBestelling>();
+        public DbSet<LeverancierBestelLijn> LeverancierBestelLijnen => Set<LeverancierBestelLijn>();
+        public DbSet<VoorraadMutatie> VoorraadMutaties => Set<VoorraadMutatie>();
+        public DbSet<VoorraadAlert> VoorraadAlerts => Set<VoorraadAlert>();
 
         public DbSet<Klant> Klanten => Set<Klant>();
         public DbSet<ImportSession> ImportSessions => Set<ImportSession>();
@@ -38,8 +42,11 @@ namespace QuadroApp.Data
                 entity.Property(x => x.PrijsPerMeter).HasPrecision(10, 2);
                 entity.Property(x => x.VasteKost).HasPrecision(10, 2);
                 entity.Property(x => x.VoorraadMeter).HasPrecision(10, 2);
+                entity.Property(x => x.GereserveerdeVoorraadMeter).HasPrecision(10, 2);
+                entity.Property(x => x.InBestellingMeter).HasPrecision(10, 2);
                 entity.Property(x => x.InventarisKost).HasPrecision(10, 2);
                 entity.Property(x => x.MinimumVoorraad).HasPrecision(10, 2);
+                entity.Property(x => x.HerbestelNiveauMeter).HasPrecision(10, 2);
 
                 entity.HasOne(x => x.Leverancier)
                       .WithMany(l => l.TypeLijsten)
@@ -81,6 +88,74 @@ namespace QuadroApp.Data
                     .HasMaxLength(3)
                     .IsRequired();
                 entity.HasIndex(x => x.Naam).IsUnique();
+            });
+
+            b.Entity<LeverancierBestelling>(entity =>
+            {
+                entity.Property(x => x.BestelNummer).HasMaxLength(40).IsRequired();
+                entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(30);
+                entity.Property(x => x.Opmerking).HasMaxLength(2000);
+                entity.Property(x => x.AangemaaktDoor).HasMaxLength(100);
+                entity.HasOne(x => x.Leverancier)
+                    .WithMany(x => x.Bestellingen)
+                    .HasForeignKey(x => x.LeverancierId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            b.Entity<LeverancierBestelLijn>(entity =>
+            {
+                entity.Property(x => x.AantalMeterBesteld).HasPrecision(10, 2);
+                entity.Property(x => x.AantalMeterOntvangen).HasPrecision(10, 2);
+                entity.Property(x => x.RedenType).HasConversion<string>().HasMaxLength(40);
+                entity.Property(x => x.Opmerking).HasMaxLength(2000);
+                entity.HasOne(x => x.LeverancierBestelling)
+                    .WithMany(x => x.Lijnen)
+                    .HasForeignKey(x => x.LeverancierBestellingId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(x => x.TypeLijst)
+                    .WithMany(x => x.LeverancierBestelLijnen)
+                    .HasForeignKey(x => x.TypeLijstId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(x => x.WerkBon)
+                    .WithMany()
+                    .HasForeignKey(x => x.WerkBonId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            b.Entity<VoorraadMutatie>(entity =>
+            {
+                entity.Property(x => x.MutatieType).HasConversion<string>().HasMaxLength(30);
+                entity.Property(x => x.AantalMeter).HasPrecision(10, 2);
+                entity.Property(x => x.Referentie).HasMaxLength(120);
+                entity.Property(x => x.Opmerking).HasMaxLength(2000);
+                entity.HasOne(x => x.TypeLijst)
+                    .WithMany(x => x.VoorraadMutaties)
+                    .HasForeignKey(x => x.TypeLijstId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(x => x.WerkBon)
+                    .WithMany()
+                    .HasForeignKey(x => x.WerkBonId)
+                    .OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne(x => x.WerkTaak)
+                    .WithMany()
+                    .HasForeignKey(x => x.WerkTaakId)
+                    .OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne(x => x.LeverancierBestelLijn)
+                    .WithMany(x => x.VoorraadMutaties)
+                    .HasForeignKey(x => x.LeverancierBestelLijnId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            b.Entity<VoorraadAlert>(entity =>
+            {
+                entity.Property(x => x.AlertType).HasConversion<string>().HasMaxLength(40);
+                entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+                entity.Property(x => x.BronReferentie).HasMaxLength(120);
+                entity.Property(x => x.Bericht).HasMaxLength(500);
+                entity.HasOne(x => x.TypeLijst)
+                    .WithMany(x => x.VoorraadAlerts)
+                    .HasForeignKey(x => x.TypeLijstId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             b.Entity<Offerte>(entity =>
@@ -180,6 +255,11 @@ namespace QuadroApp.Data
                 entity.Property(t => t.Omschrijving).HasMaxLength(200);
                 entity.Property(t => t.Resource).HasMaxLength(80);
                 entity.Property(t => t.BenodigdeMeter).HasPrecision(10, 2);
+                entity.Property(t => t.VoorraadStatus).HasConversion<string>().HasMaxLength(20);
+                entity.HasOne(t => t.LeverancierBestelLijn)
+                    .WithMany()
+                    .HasForeignKey(t => t.LeverancierBestelLijnId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
             // OfferteRegel entity
             b.Entity<OfferteRegel>(entity =>

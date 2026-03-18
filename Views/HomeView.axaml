@@ -1,6 +1,7 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:QuadroApp.ViewModels"
+             xmlns:m="using:QuadroApp.Model.DB"
              x:Class="QuadroApp.Views.HomeView"
              x:DataType="vm:HomeViewModel"
              Background="#F7F8FA">
@@ -114,6 +115,51 @@
                                FontSize="14"
                                Foreground="#5F6C7B"/>
                 </StackPanel>
+
+				<Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="12" Padding="18">
+					<StackPanel Spacing="12">
+						<TextBlock Text="Stock overzicht" FontSize="18" FontWeight="Bold" Foreground="Black"/>
+						<Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="10">
+							<Border Grid.Column="0" Background="#FFF7ED" CornerRadius="8" Padding="12">
+								<StackPanel>
+									<TextBlock Text="Alerts open" Foreground="#7C2D12"/>
+									<TextBlock Text="{Binding OpenAlertCount}" FontSize="22" FontWeight="Bold" Foreground="Black"/>
+								</StackPanel>
+							</Border>
+							<Border Grid.Column="1" Background="#FEF2F2" CornerRadius="8" Padding="12">
+								<StackPanel>
+									<TextBlock Text="Lage voorraad" Foreground="#991B1B"/>
+									<TextBlock Text="{Binding LowStockCount}" FontSize="22" FontWeight="Bold" Foreground="Black"/>
+								</StackPanel>
+							</Border>
+							<Border Grid.Column="2" Background="#EFF6FF" CornerRadius="8" Padding="12">
+								<StackPanel>
+									<TextBlock Text="Open tekorten" Foreground="#1D4ED8"/>
+									<TextBlock Text="{Binding OpenShortageCount}" FontSize="22" FontWeight="Bold" Foreground="Black"/>
+								</StackPanel>
+							</Border>
+							<Border Grid.Column="3" Background="#FDF4FF" CornerRadius="8" Padding="12">
+								<StackPanel>
+									<TextBlock Text="Te late bestellingen" Foreground="#7E22CE"/>
+									<TextBlock Text="{Binding OverdueOrderCount}" FontSize="22" FontWeight="Bold" Foreground="Black"/>
+								</StackPanel>
+							</Border>
+						</Grid>
+
+						<ItemsControl ItemsSource="{Binding OpenAlerts}">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate x:DataType="m:VoorraadAlert">
+									<Border Background="#F9FAFB" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
+										<StackPanel Spacing="3">
+											<TextBlock Text="{Binding AlertType}" FontWeight="SemiBold" Foreground="Black"/>
+											<TextBlock Text="{Binding Bericht}" Foreground="Black" TextWrapping="Wrap"/>
+										</StackPanel>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</StackPanel>
+				</Border>
 
 				<UniformGrid Columns="2">
 

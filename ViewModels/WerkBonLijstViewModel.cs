@@ -5,6 +5,7 @@ using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -203,8 +204,21 @@ namespace QuadroApp.ViewModels
             if (taak is null)
                 return;
 
-            var bestelDatum = (GeselecteerdeBestelDatum ?? DateTimeOffset.Now.Date).Date;
-            await _statusWorkflow.MarkLijstAsBesteldAsync(taak.Id, bestelDatum);
+            try
+            {
+                var bestelDatum = (GeselecteerdeBestelDatum ?? DateTimeOffset.Now.Date).Date;
+                await _statusWorkflow.MarkLijstAsBesteldAsync(taak.Id, bestelDatum);
+            }
+            catch (ValidationException ex)
+            {
+                _toast.Error(ex.Message);
+                return;
+            }
+            catch (InvalidOperationException ex)
+            {
+                _toast.Error(ex.Message);
+                return;
+            }
 
             var selectedWerkBonId = SelectedWerkBon?.Id;
             await LoadAsync();
