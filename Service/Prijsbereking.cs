@@ -1,6 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using QuadroApp.Data;
+using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
 using System;
 using System.Diagnostics;
@@ -34,13 +35,7 @@ public sealed class PricingService : IPricingService
 
         await using var db = await _dbFactory.CreateDbContextAsync();
 
-        var uurloon = await _settingsProvider.GetUurloonAsync();
-        var btwPct = await _settingsProvider.GetBtwPercentAsync();
-
-        var staaflijstWinstFactor = await _settingsProvider.GetStaaflijstWinstFactorAsync();
-        var staaflijstAfvalPercentage = await _settingsProvider.GetStaaflijstAfvalPercentageAsync();
-        var defaultWinstFactor = await _settingsProvider.GetDefaultWinstFactorAsync();
-        var defaultAfvalPercentage = await _settingsProvider.GetDefaultAfvalPercentageAsync();
+        var parameters = await LoadParametersAsync();
 
         var offerte = await db.Offertes
             .Include(x => x.Regels).ThenInclude(r => r.TypeLijst)
@@ -52,31 +47,7 @@ public sealed class PricingService : IPricingService
             .Include(x => x.Regels).ThenInclude(r => r.Rug)
             .FirstAsync(x => x.Id == offerteId);
 
-        var result = _engine.Calculate(
-            offerte,
-            uurloon,
-            btwPct,
-            staaflijstWinstFactor,
-            staaflijstAfvalPercentage,
-            defaultWinstFactor,
-            defaultAfvalPercentage);
-
-        foreach (var regel in offerte.Regels)
-        {
-            var regelResult = result.Regels.FirstOrDefault(x => x.RegelId == regel.Id);
-            if (regelResult is null)
-                continue;
-
-            regel.TotaalExcl = regelResult.TotaalExcl;
-            regel.SubtotaalExBtw = regelResult.SubtotaalExBtw;
-            regel.BtwBedrag = regelResult.BtwBedrag;
-            regel.TotaalInclBtw = regelResult.TotaalInclBtw;
-        }
-
-        offerte.SubtotaalExBtw = result.SubtotaalExBtw;
-        offerte.BtwBedrag = result.BtwBedrag;
-        offerte.TotaalInclBtw = result.TotaalInclBtw;
-        offerte.VoorschotBedrag = result.VoorschotBedrag;
+        ApplyResult(offerte, Calculate(offerte, parameters));
 
         await db.SaveChangesAsync();
 
@@ -90,4 +61,65 @@ public sealed class PricingService : IPricingService
             offerte.TotaalInclBtw,
             sw.ElapsedMilliseconds);
     }
+
+    public async Task BerekenAsync(Offerte offerte)
+    {
+        ArgumentNullException.ThrowIfNull(offerte);
+
+        var parameters = await LoadParametersAsync();
+        ApplyResult(offerte, Calculate(offerte, parameters));
+    }
+
+    private async Task<PricingParameters> LoadParametersAsync()
+    {
+        return new PricingParameters(
+            await _settingsProvider.GetUurloonAsync(),
+            await _settingsProvider.GetBtwPercentAsync(),
+            await _settingsProvider.GetStaaflijstWinstFactorAsync(),
+            await _settingsProvider.GetStaaflijstAfvalPercentageAsync(),
+            await _settingsProvider.GetDefaultWinstFactorAsync(),
+            await _settingsProvider.GetDefaultAfvalPercentageAsync());
+    }
+
+    private PricingResult Calculate(Offerte offerte, PricingParameters parameters) =>
+        _engine.Calculate(
+            offerte,
+            parameters.Uurloon,
+            parameters.BtwPercent,
+            parameters.StaaflijstWinstFactor,
+            parameters.StaaflijstAfvalPercentage,
+            parameters.DefaultWinstFactor,
+            parameters.DefaultAfvalPercentage);
+
+    private static void ApplyResult(Offerte offerte, PricingResult result)
+    {
+        var regels = offerte.Regels.ToList();
+        if (regels.Count != result.Regels.Count)
+        {
+            throw new InvalidOperationException("Pricing result does not match the number of offerte regels.");
+        }
+
+        for (var i = 0; i < regels.Count; i++)
+        {
+            var regel = regels[i];
+            var regelResult = result.Regels[i];
+            regel.TotaalExcl = regelResult.TotaalExcl;
+            regel.SubtotaalExBtw = regelResult.SubtotaalExBtw;
+            regel.BtwBedrag = regelResult.BtwBedrag;
+            regel.TotaalInclBtw = regelResult.TotaalInclBtw;
+        }
+
+        offerte.SubtotaalExBtw = result.SubtotaalExBtw;
+        offerte.BtwBedrag = result.BtwBedrag;
+        offerte.TotaalInclBtw = result.TotaalInclBtw;
+        offerte.VoorschotBedrag = result.VoorschotBedrag;
+    }
+
+    private sealed record PricingParameters(
+        decimal Uurloon,
+        decimal BtwPercent,
+        decimal StaaflijstWinstFactor,
+        decimal StaaflijstAfvalPercentage,
+        decimal DefaultWinstFactor,
+        decimal DefaultAfvalPercentage);
 }

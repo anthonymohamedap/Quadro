@@ -133,7 +133,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
         _klantDialog = klantDialog;
         _toast = toast;
 
-        BerekenCommand = new AsyncRelayCommand(BerekenAsync);
+        BerekenCommand = new AsyncRelayCommand(() => BerekenAsync(showFeedback: true));
         NieuweKlantCommand = new AsyncRelayCommand(NieuweKlantAsync);
         RegelDuplicerenCommand = new RelayCommand(RegelDupliceren, () => SelectedRegel is not null);
         ApplyLegacyCodeCommand = new AsyncRelayCommand(ApplyLegacyCodeAsync, () => SelectedRegel is not null);
@@ -166,7 +166,24 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
     }
     private Offerte BuildSnapshotForValidation()
     {
-        var o = Offerte ?? new Offerte();
+        var source = Offerte ?? new Offerte();
+        var o = new Offerte
+        {
+            Id = source.Id,
+            Datum = source.Datum,
+            Opmerking = source.Opmerking,
+            GeplandeDatum = source.GeplandeDatum,
+            DeadlineDatum = source.DeadlineDatum,
+            GeschatteMinuten = source.GeschatteMinuten,
+            Status = source.Status,
+            KortingPct = source.KortingPct,
+            MeerPrijsIncl = source.MeerPrijsIncl,
+            IsVoorschotBetaald = source.IsVoorschotBetaald,
+            VoorschotBedrag = source.VoorschotBedrag,
+            SubtotaalExBtw = source.SubtotaalExBtw,
+            BtwBedrag = source.BtwBedrag,
+            TotaalInclBtw = source.TotaalInclBtw
+        };
 
         // datum fix je hier al (warning komt ook via validator)
         if (o.Datum == default)
@@ -175,9 +192,24 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
         o.KlantId = SelectedKlant?.Id;
 
         // zet regels als "disconnected"
-        o.Regels = Regels.Select(r => new OfferteRegel
+        o.Regels = Regels.Select(r => CloneRegelForSnapshot(r)).ToList();
+
+        return o;
+    }
+
+    private Offerte BuildSnapshotForPricing()
+    {
+        var snapshot = BuildSnapshotForValidation();
+        snapshot.Regels = Regels.Select(r => CloneRegelForSnapshot(r, includeNavigations: true)).ToList();
+        return snapshot;
+    }
+
+    private static OfferteRegel CloneRegelForSnapshot(OfferteRegel r, bool includeNavigations = false)
+    {
+        return new OfferteRegel
         {
             Id = r.Id,
+            OfferteId = r.OfferteId,
             AantalStuks = r.AantalStuks,
             BreedteCm = r.BreedteCm,
             HoogteCm = r.HoogteCm,
@@ -191,29 +223,79 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
             DiepteKernId = r.DiepteKern?.Id ?? r.DiepteKernId,
             OpklevenId = r.Opkleven?.Id ?? r.OpklevenId,
             RugId = r.Rug?.Id ?? r.RugId,
-
             AfgesprokenPrijsExcl = r.AfgesprokenPrijsExcl,
             ExtraWerkMinuten = r.ExtraWerkMinuten,
             ExtraPrijs = r.ExtraPrijs,
             Korting = r.Korting,
-            LegacyCode = r.LegacyCode
-        }).ToList();
-
-        return o;
+            LegacyCode = r.LegacyCode,
+            TotaalExcl = r.TotaalExcl,
+            SubtotaalExBtw = r.SubtotaalExBtw,
+            BtwBedrag = r.BtwBedrag,
+            TotaalInclBtw = r.TotaalInclBtw,
+            TypeLijst = includeNavigations ? r.TypeLijst : null,
+            Glas = includeNavigations ? r.Glas : null,
+            PassePartout1 = includeNavigations ? r.PassePartout1 : null,
+            PassePartout2 = includeNavigations ? r.PassePartout2 : null,
+            DiepteKern = includeNavigations ? r.DiepteKern : null,
+            Opkleven = includeNavigations ? r.Opkleven : null,
+            Rug = includeNavigations ? r.Rug : null
+        };
     }
 
-    private async Task<bool> RunValidationOrToastAsync(Func<Offerte, Task<ValidationResult>> validate)
+    private void ApplyPricingSnapshot(Offerte snapshot)
+    {
+        if (Offerte is null)
+            return;
+
+        _suppressRecalc = true;
+        try
+        {
+            Offerte.SubtotaalExBtw = snapshot.SubtotaalExBtw;
+            Offerte.BtwBedrag = snapshot.BtwBedrag;
+            Offerte.TotaalInclBtw = snapshot.TotaalInclBtw;
+            Offerte.VoorschotBedrag = snapshot.VoorschotBedrag;
+
+            var selectedIndex = SelectedRegel is null ? -1 : Regels.IndexOf(SelectedRegel);
+            var selectedRuleId = SelectedRegel?.Id;
+            var updatedRegels = snapshot.Regels.Select(r => CloneRegelForSnapshot(r, includeNavigations: true)).ToList();
+
+            while (Regels.Count > updatedRegels.Count)
+                Regels.RemoveAt(Regels.Count - 1);
+
+            for (var i = 0; i < updatedRegels.Count; i++)
+            {
+                if (i < Regels.Count)
+                    Regels[i] = updatedRegels[i];
+                else
+                    Regels.Add(updatedRegels[i]);
+            }
+
+            SelectedRegel =
+                (selectedRuleId.HasValue ? Regels.FirstOrDefault(r => r.Id == selectedRuleId.Value) : null)
+                ?? (selectedIndex >= 0 && selectedIndex < Regels.Count ? Regels[selectedIndex] : null)
+                ?? Regels.FirstOrDefault();
+
+            RefreshTotals();
+        }
+        finally
+        {
+            _suppressRecalc = false;
+        }
+    }
+
+    private async Task<bool> RunValidationOrToastAsync(Func<Offerte, Task<ValidationResult>> validate, bool showFeedback)
     {
         var snapshot = BuildSnapshotForValidation();
         var vr = await validate(snapshot);
 
         var warn = vr.WarningText();
-        if (!string.IsNullOrWhiteSpace(warn))
+        if (showFeedback && !string.IsNullOrWhiteSpace(warn))
             _toast.Warning(warn);
 
         if (!vr.IsValid)
         {
-            _toast.Error(vr.ErrorText());
+            if (showFeedback)
+                _toast.Error(vr.ErrorText());
             return false;
         }
 
@@ -496,7 +578,11 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
                         ExtraWerkMinuten = vmRule.ExtraWerkMinuten,
                         ExtraPrijs = vmRule.ExtraPrijs,
                         Korting = vmRule.Korting,
-                        LegacyCode = vmRule.LegacyCode
+                        LegacyCode = vmRule.LegacyCode,
+                        TotaalExcl = vmRule.TotaalExcl,
+                        SubtotaalExBtw = vmRule.SubtotaalExBtw,
+                        BtwBedrag = vmRule.BtwBedrag,
+                        TotaalInclBtw = vmRule.TotaalInclBtw
                     };
 
                     db.OfferteRegels.Add(newRule);
@@ -523,7 +609,10 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
                     KortingPct = Offerte.KortingPct,
                     MeerPrijsIncl = Offerte.MeerPrijsIncl,
                     IsVoorschotBetaald = Offerte.IsVoorschotBetaald,
-                    VoorschotBedrag = Offerte.VoorschotBedrag
+                    VoorschotBedrag = Offerte.VoorschotBedrag,
+                    SubtotaalExBtw = Offerte.SubtotaalExBtw,
+                    BtwBedrag = Offerte.BtwBedrag,
+                    TotaalInclBtw = Offerte.TotaalInclBtw
                 };
 
                 db.Offertes.Attach(offerteStub);
@@ -570,7 +659,11 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
                             ExtraWerkMinuten = vmRule.ExtraWerkMinuten,
                             ExtraPrijs = vmRule.ExtraPrijs,
                             Korting = vmRule.Korting,
-                            LegacyCode = vmRule.LegacyCode
+                            LegacyCode = vmRule.LegacyCode,
+                            TotaalExcl = vmRule.TotaalExcl,
+                            SubtotaalExBtw = vmRule.SubtotaalExBtw,
+                            BtwBedrag = vmRule.BtwBedrag,
+                            TotaalInclBtw = vmRule.TotaalInclBtw
                         };
 
                         db.OfferteRegels.Add(newRule);
@@ -598,6 +691,10 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
                         dbRule.ExtraPrijs = vmRule.ExtraPrijs;
                         dbRule.Korting = vmRule.Korting;
                         dbRule.LegacyCode = vmRule.LegacyCode;
+                        dbRule.TotaalExcl = vmRule.TotaalExcl;
+                        dbRule.SubtotaalExBtw = vmRule.SubtotaalExBtw;
+                        dbRule.BtwBedrag = vmRule.BtwBedrag;
+                        dbRule.TotaalInclBtw = vmRule.TotaalInclBtw;
                     }
                 }
             }
@@ -732,7 +829,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
         LegacyCode = code;
     }
 
-    // ====== 2) Validatie: TypeLijst verplicht voor berekening ======
+    // ====== 2) Validatie: minimale checks voor berekening ======
     private bool ValidateBeforePricing(out string message)
     {
         if (Offerte is null)
@@ -744,18 +841,6 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
         if (Regels.Count == 0)
         {
             message = "Voeg minstens één regel toe.";
-            return false;
-        }
-
-        var missing = Regels
-            .Select((r, idx) => new { r, idx })
-            .Where(x => (x.r.TypeLijst?.Id ?? x.r.TypeLijstId) is null)
-            .Select(x => x.idx + 1)
-            .ToList();
-
-        if (missing.Count > 0)
-        {
-            message = $"Selecteer een lijsttype (TypeLijst) voor regel(s): {string.Join(", ", missing)}.";
             return false;
         }
 
@@ -776,17 +861,9 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
             await Task.Delay(350, token); // debounce
             if (token.IsCancellationRequested) return;
 
-            // Auto pricing alleen als offerte al bestaat én valid is
-            // (anders krijg je errors bij nieuwe offertes zonder TypeLijst)
             if (Offerte is null) return;
             if (!ValidateBeforePricing(out _)) return;
-
-            // Als je nog geen Id hebt, niet automatisch saven (dat kan vervelend zijn).
-            // -> Als je dit wél wil: uncomment SaveAsync()
-            // if (Offerte.Id == 0) await SaveAsync();
-
-            if (Offerte.Id > 0)
-                await BerekenAsync();
+            await BerekenAsync(showFeedback: false);
         }
         catch (TaskCanceledException)
         {
@@ -795,43 +872,31 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
     }
 
     // ====== Pricing ======
-    private async Task BerekenAsync()
+    private async Task BerekenAsync(bool showFeedback)
     {
         if (Offerte is null) return;
         if (IsBusy) return;
 
         // ✅ pricing-validatie (strenger)
-        var ok = await RunValidationOrToastAsync(o => _validator.ValidateForPricingAsync(o));
+        var ok = await RunValidationOrToastAsync(o => _validator.ValidateForPricingAsync(o), showFeedback);
         if (!ok) return;
 
         try
         {
             IsBusy = true;
 
-            if (Offerte.Id == 0)
-                await SaveCoreAsync(reloadAfterSave: false);
+            var snapshot = BuildSnapshotForPricing();
+            await _pricing.BerekenAsync(snapshot);
+            ApplyPricingSnapshot(snapshot);
 
-            if (Offerte.Id == 0)
-                return;
-
-            await _pricing.BerekenAsync(Offerte.Id);
-
-            _suppressRecalc = true;
-            try
-            {
-                await LoadAsync(Offerte.Id, reloadCatalog: false);
-            }
-            finally
-            {
-                _suppressRecalc = false;
-            }
-
-            _toast.Success("Berekening uitgevoerd");
+            if (showFeedback)
+                _toast.Success("Berekening uitgevoerd");
         }
         catch (Exception ex)
         {
             Foutmelding = ex.InnerException?.Message ?? ex.Message;
-            await _dialogs.ShowErrorAsync("Berekenen mislukt", Foutmelding);
+            if (showFeedback)
+                await _dialogs.ShowErrorAsync("Berekenen mislukt", Foutmelding);
         }
         finally
         {

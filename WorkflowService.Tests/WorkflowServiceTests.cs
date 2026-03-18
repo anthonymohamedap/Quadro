@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Logging.Abstractions;
 using QuadroApp.Data;
@@ -191,6 +192,7 @@ public class WorkflowServiceTests
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .ConfigureWarnings(warnings => warnings.Ignore(InMemoryEventId.TransactionIgnoredWarning))
             .Options;
 
         return new PooledDbContextFactory<AppDbContext>(options);
@@ -238,6 +240,7 @@ public class WorkflowServiceTests
         {
             Artikelnummer = "ART-001",
             Leverancier = leverancier,
+            Levcode = "LEV-001",
             BreedteCm = 10,
             Soort = "HOUT",
             PrijsPerMeter = 10m,

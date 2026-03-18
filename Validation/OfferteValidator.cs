@@ -88,12 +88,12 @@ public sealed class OfferteValidator : IOfferteValidator
         }
 
         // Klant
-        if (mode is "pricing" or "confirm")
+        if (mode is "confirm")
         {
             if (!entity.KlantId.HasValue)
                 vr.Error(nameof(Offerte.KlantId), "Selecteer een klant.");
         }
-        else
+        else if (mode is not "pricing")
         {
             // bij save mag draft zonder klant, maar geef warning
             if (!entity.KlantId.HasValue)
@@ -113,13 +113,15 @@ public sealed class OfferteValidator : IOfferteValidator
             if (r.BreedteCm <= 0 || r.HoogteCm <= 0)
                 vr.Error($"{prefix}.Afmetingen", "Breedte en hoogte moeten groter zijn dan 0.");
 
-            // TypeLijst: voor pricing/confirm verplicht. Voor save: warning.
+            // TypeLijst: voor confirm verplicht. Voor save: warning. Voor pricing mag
+            // de berekening partieel doorgaan zonder lijstprofiel.
             var tlId = r.TypeLijstId;
-            if (!tlId.HasValue)
+            var heeftVastePrijs = r.AfgesprokenPrijsExcl.HasValue;
+            if (!tlId.HasValue && !heeftVastePrijs)
             {
-                if (mode is "pricing" or "confirm")
+                if (mode is "confirm")
                     vr.Error($"{prefix}.{nameof(OfferteRegel.TypeLijstId)}", "Selecteer een TypeLijst.");
-                else
+                else if (mode is not "pricing")
                     vr.Warn($"{prefix}.{nameof(OfferteRegel.TypeLijstId)}", "Geen TypeLijst geselecteerd.");
             }
 

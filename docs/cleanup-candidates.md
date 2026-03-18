@@ -21,13 +21,14 @@ Verify:
 - Unified import preview flow opens for klanten/lijsten/afwerkingen.
 - No runtime path calls legacy windows anymore.
 
-## Legacy import services (DI registrations)
+## Legacy import services (status)
+Removed:
 - `IExcelImportService` / `ExcelImportService`
 - `KlantExcelImportService`
 - `AfwerkingsOptieExcelImportService`
 
-Verify:
-- Enterprise import pipeline fully covers all import use-cases in production.
+Follow-up:
+- Review whether `EPPlus` is still needed anywhere else now that the legacy import path is gone.
 
 ## Runtime smoke checklist
 1. App launches.

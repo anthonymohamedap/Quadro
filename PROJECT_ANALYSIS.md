@@ -170,7 +170,7 @@ Generic, interface-driven pipeline:
 - `ImportService` orchestrates: **DryRun** (validation only) then **Commit** (transactional, with audit logging to `ImportSession`/`ImportRowLog`)
 - **Implemented for all 3 entity types:** `Klant`, `TypeLijst`, `AfwerkingsOptie`
 
-**Legacy import services** (`ExcelImportService`, `KlantExcelImportService`, `AfwerkingsOptieExcelImportService`) still registered — candidates for cleanup.
+The legacy import services have been removed; the Enterprise import pipeline is now the active import path.
 
 ### Other Services
 - **NavigationService:** Service-locator navigation using `IServiceProvider`; supports typed navigation with parameter passing via `IParameterReceiver<TParam>` and `IAsyncInitializable`
@@ -307,11 +307,9 @@ xUnit test project targeting `net9.0`. Uses **in-memory EF Core** (`UseInMemoryD
 
 ### ⚠️ Moderate Issues
 
-3. **Legacy import services still registered** — `ExcelImportService`, `KlantExcelImportService`, `AfwerkingsOptieExcelImportService` are still DI-registered alongside the Enterprise pipeline. Remove once Enterprise pipeline is runtime-verified.
+3. **Two Excel libraries** — Both `ClosedXML` (Enterprise) and `EPPlus` are present. With the legacy import path removed, `EPPlus` should be reviewed and removed if no other runtime path still needs it.
 
-4. **Two Excel libraries** — Both `ClosedXML` (Enterprise) and `EPPlus` (legacy) are present. Once legacy is removed, EPPlus can be dropped.
-
-5. **`Klant` has no explicit MaxLength on most string fields** — unlike other entities. May cause issues if switching to SQL Server.
+4. **`Klant` has no explicit MaxLength on most string fields** — unlike other entities. May cause issues if switching to SQL Server.
 
 6. **`OfferteRegel` stores computed price fields** (`SubtotaalExBtw`, `BtwBedrag`, `TotaalInclBtw`) redundantly — re-derived by `PricingEngine`. Risk of stale data if not kept in sync.
 

@@ -124,11 +124,6 @@ public partial class App : Application
         services.AddTransient<IImportCommitter<AfwerkingsOptie>, AfwerkingsOptieImportCommitter>();
         services.AddTransient<AfwerkingsOptieImportDefinition>();
 
-        // Import (legacy path; candidate for removal after runtime verification)
-        services.AddTransient<IExcelImportService, ExcelImportService>();
-        services.AddTransient<KlantExcelImportService>();
-        services.AddTransient<AfwerkingsOptieExcelImportService>();
-
         // Validators
         services.AddScoped<ICrudValidator<TypeLijst>, TypeLijstValidator>();
         services.AddScoped<ICrudValidator<Klant>, KlantValidator>();

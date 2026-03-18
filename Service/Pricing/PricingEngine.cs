@@ -26,41 +26,48 @@ public sealed class PricingEngine
                 if (opt is null) return 0m;
 
                 var m2 = SurfaceM2();
-                var kost = opt.KostprijsPerM2 * m2 + opt.VasteKost;
+                var kost = opt.KostprijsPerM2 * m2;
                 var afval = kost * (opt.AfvalPercentage / 100m);
                 var arbeid = (opt.WerkMinuten / 60m) * uurloon;
 
-                return Math.Round((kost + afval) * (1m + opt.WinstMarge) + arbeid, 2);
+                return Math.Round((kost * opt.WinstMarge) + afval + opt.VasteKost + arbeid, 2);
             }
 
-            decimal lijstPrijs = r.AfgesprokenPrijsExcl ?? 0m;
-
-            if (!r.AfgesprokenPrijsExcl.HasValue && r.TypeLijst is not null)
+            decimal lineEx;
+            if (r.AfgesprokenPrijsExcl.HasValue)
             {
-                lijstPrijs = CalculateLijstPrijsExcl(
-                    r.TypeLijst,
-                    r.BreedteCm,
-                    r.HoogteCm,
-                    uurloon,
-                    staaflijstWinstFactor,
-                    staaflijstAfvalPercentage,
-                    defaultWinstFactor,
-                    defaultAfvalPercentage);
+                lineEx = r.AfgesprokenPrijsExcl.Value;
+            }
+            else
+            {
+                var lijstPrijs = r.TypeLijst is not null
+                    ? CalculateLijstPrijsExcl(
+                        r.TypeLijst,
+                        r.BreedteCm,
+                        r.HoogteCm,
+                        uurloon,
+                        staaflijstWinstFactor,
+                        staaflijstAfvalPercentage,
+                        defaultWinstFactor,
+                        defaultAfvalPercentage)
+                    : 0m;
+
+                var optiesEx =
+                    CalcOpt(r.Glas) +
+                    CalcOpt(r.PassePartout1) +
+                    CalcOpt(r.PassePartout2) +
+                    CalcOpt(r.DiepteKern) +
+                    CalcOpt(r.Opkleven) +
+                    CalcOpt(r.Rug);
+
+                lineEx = lijstPrijs + optiesEx;
+                lineEx += (r.ExtraWerkMinuten / 60m) * uurloon;
+                lineEx += r.ExtraPrijs;
+                lineEx -= r.Korting;
+                lineEx = Math.Max(0m, lineEx);
             }
 
-            var optiesEx =
-                CalcOpt(r.Glas) +
-                CalcOpt(r.PassePartout1) +
-                CalcOpt(r.PassePartout2) +
-                CalcOpt(r.DiepteKern) +
-                CalcOpt(r.Opkleven) +
-                CalcOpt(r.Rug);
-
-            decimal lineEx = lijstPrijs + optiesEx;
-            lineEx += (r.ExtraWerkMinuten / 60m) * uurloon;
-            lineEx += r.ExtraPrijs;
-            lineEx -= r.Korting;
-            lineEx = Math.Max(0m, lineEx) * Math.Max(1, r.AantalStuks);
+            lineEx *= Math.Max(1, r.AantalStuks);
 
             var btwBedrag = Math.Round(lineEx * btwFactor, 2);
             var incl = Math.Round(lineEx + btwBedrag, 2);
@@ -112,8 +119,7 @@ public sealed class PricingEngine
         decimal defaultWinstFactor,
         decimal defaultAfvalPercentage)
     {
-        var perimMm = (breedteCm + hoogteCm) * 2m * 10m + (lijst.BreedteCm * 10m);
-        var lengteM = perimMm / 1000m;
+        var lengteM = (((breedteCm + hoogteCm) * 2m) + (lijst.BreedteCm * 10m)) / 100m;
 
         var kost = lijst.PrijsPerMeter * lengteM;
         var isStaaflijst = IsStaaflijst(lijst);
@@ -123,7 +129,8 @@ public sealed class PricingEngine
         var arbeid = (lijst.WerkMinuten / 60m) * uurloon;
 
         return Math.Round(
-            (kost + afval) * (1m + winstFactor)
+            (kost * winstFactor)
+            + afval
             + lijst.VasteKost
             + arbeid,
             2);
