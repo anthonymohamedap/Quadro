@@ -2,6 +2,7 @@
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
+using QuadroApp.Service.Pricing;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -60,6 +61,14 @@ namespace QuadroApp.Service
             // Gebruik het exacte tijdstip als meegegeven; valt terug op 09:00 bij midnight.
             var start = dag.TimeOfDay == TimeSpan.Zero ? dag.Date.AddHours(9) : dag;
             var tot   = start.AddMinutes(duurMinuten);
+            var regel = await db.OfferteRegels
+                .Include(r => r.TypeLijst)
+                .FirstOrDefaultAsync(r => r.Id == offerteRegelId);
+
+            if (regel is null)
+                throw new InvalidOperationException("Offerteregel niet gevonden.");
+
+            var benodigdeMeter = CalculateBenodigdeMeter(regel);
 
             // Bestaande taak voor dezelfde regel updaten (herplannen) i.p.v. duplicate aanmaken.
             var bestaand = await db.WerkTaken.FirstOrDefaultAsync(t =>
@@ -71,6 +80,7 @@ namespace QuadroApp.Service
                 bestaand.GeplandVan  = start;
                 bestaand.GeplandTot  = tot;
                 bestaand.DuurMinuten = duurMinuten;
+                bestaand.BenodigdeMeter = benodigdeMeter;
                 if (omschrijving != null) bestaand.Omschrijving = omschrijving;
                 await db.SaveChangesAsync();
                 return;
@@ -83,7 +93,8 @@ namespace QuadroApp.Service
                 GeplandVan     = start,
                 GeplandTot     = tot,
                 DuurMinuten    = duurMinuten,
-                Omschrijving   = omschrijving ?? "Werktaak"
+                Omschrijving   = omschrijving ?? "Werktaak",
+                BenodigdeMeter = benodigdeMeter
             });
 
             await db.SaveChangesAsync();
@@ -133,7 +144,8 @@ namespace QuadroApp.Service
                 GeplandVan = start,
                 GeplandTot = start.AddMinutes(duurMinuten),
                 DuurMinuten = duurMinuten,
-                Omschrijving = omschrijving ?? "Werktaak"
+                Omschrijving = omschrijving ?? "Werktaak",
+                BenodigdeMeter = 0.01m
             });
 
             await db.SaveChangesAsync();
@@ -167,6 +179,16 @@ namespace QuadroApp.Service
             var allesKlaar = werkBon.Taken.All(t => t.Resource == "Voltooid");
             if (allesKlaar && werkBon.Status == WerkBonStatus.InUitvoering)
                 await _workflow.ChangeWerkBonStatusAsync(werkBon.Id, WerkBonStatus.Afgewerkt);
+        }
+
+        private static decimal CalculateBenodigdeMeter(OfferteRegel regel)
+        {
+            if (regel.TypeLijst is null)
+                return 0.01m;
+
+            var stuks = Math.Max(1, regel.AantalStuks);
+            var lengtePerStuk = (((regel.BreedteCm + regel.HoogteCm) * 2m) + (regel.TypeLijst.BreedteCm * 10m)) / 100m;
+            return Math.Round(Math.Max(0.01m, lengtePerStuk * stuks), 2, MidpointRounding.AwayFromZero);
         }
     }
 }

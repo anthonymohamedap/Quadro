@@ -12,5 +12,6 @@ namespace QuadroApp.Model.DB
         public string Naam { get; set; } = null!;
 
         public ICollection<TypeLijst> TypeLijsten { get; set; } = new List<TypeLijst>();
+        public ICollection<LeverancierBestelling> Bestellingen { get; set; } = new List<LeverancierBestelling>();
     }
 }

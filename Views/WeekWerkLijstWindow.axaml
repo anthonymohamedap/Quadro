@@ -137,20 +137,27 @@
 																	<TextBlock Text="Bestellen"
 																			   FontWeight="Bold"
 																			   Foreground="Black"/>
-																	<TextBlock Text="Op voorraad"
+																	<TextBlock Text="{Binding VoorraadStatusText}"
 																			   Foreground="Black"
-																			   IsVisible="{Binding IsOpVoorraad}"/>
-																	<TextBlock Text="Bestellen vereist"
-																			   Foreground="Black"
-																			   IsVisible="{Binding !IsOpVoorraad}"/>
+																			   FontWeight="SemiBold"/>
 																	<TextBlock Text="{Binding BestelDatum, StringFormat='Besteld op: {0:dd/MM/yyyy}'}"
 																			   Foreground="Black"
 																			   IsVisible="{Binding IsBesteld}"/>
+																	<TextBlock Text="{Binding BestellingNummer, StringFormat='Bestelnummer: {0}'}"
+																			   Foreground="Black"
+																			   IsVisible="{Binding HasOrder}"/>
+																	<TextBlock Text="{Binding LeverancierNaam, StringFormat='Leverancier: {0}'}"
+																			   Foreground="Black"
+																			   IsVisible="{Binding HasOrder}"/>
+																	<TextBlock Text="{Binding VerwachteLeverdatum, StringFormat='Verwacht: {0:dd/MM/yyyy}'}"
+																			   Foreground="Black"
+																			   IsVisible="{Binding HasOrder}"/>
 																	<StackPanel Orientation="Horizontal" Spacing="8">
 																		<DatePicker SelectedDate="{Binding BestelDatumInput, Mode=TwoWay}"/>
-																		<Button Content="Markeer besteld"
+																		<Button Content="Plaats bestelling"
 																				Command="{Binding $parent[Window].((vm:WeekWerkLijstViewModel)DataContext).MarkeerBesteldCommand}"
-																				CommandParameter="{Binding}"/>
+																				CommandParameter="{Binding}"
+																				IsVisible="{Binding CanPlaceOrder}"/>
 																	</StackPanel>
 																</StackPanel>
 															</Border>

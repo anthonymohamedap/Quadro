@@ -4,6 +4,15 @@ using System.ComponentModel.DataAnnotations;
 
 namespace QuadroApp.Model.DB
 {
+    public enum VoorraadStatus
+    {
+        Unknown = 0,
+        Reserved = 1,
+        Shortage = 2,
+        Ordered = 3,
+        Ready = 4
+    }
+
     [Index(nameof(GeplandVan))]
     [Index(nameof(WerkBonId))]
     public class WerkTaak
@@ -36,6 +45,10 @@ namespace QuadroApp.Model.DB
         public bool IsBesteld { get; set; }
         public DateTime? BestelDatum { get; set; }
         public bool IsOpVoorraad { get; set; }
+        public VoorraadStatus VoorraadStatus { get; set; } = VoorraadStatus.Unknown;
+
+        public int? LeverancierBestelLijnId { get; set; }
+        public LeverancierBestelLijn? LeverancierBestelLijn { get; set; }
 
         [Precision(10, 2)]
         public decimal BenodigdeMeter { get; set; }

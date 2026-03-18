@@ -1,15 +1,19 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using QuadroApp.Model.DB;
 using QuadroApp.Data;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Views;
 using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace QuadroApp.ViewModels
 {
-    public sealed class HomeViewModel
+    public sealed partial class HomeViewModel : ObservableObject, IAsyncInitializable
     {
         private readonly INavigationService _nav;
         private readonly IDbContextFactory<AppDbContext> _factory;
@@ -17,6 +21,12 @@ namespace QuadroApp.ViewModels
         private readonly IToastService _toast;
         private readonly IWorkflowService _statusWorkflow;
         private readonly IServiceProvider _services;
+
+        [ObservableProperty] private int openAlertCount;
+        [ObservableProperty] private int lowStockCount;
+        [ObservableProperty] private int openShortageCount;
+        [ObservableProperty] private int overdueOrderCount;
+        [ObservableProperty] private ObservableCollection<VoorraadAlert> openAlerts = new();
 
         public IAsyncRelayCommand OpenKlantenCommand { get; }
         public IAsyncRelayCommand OpenLijstenCommand { get; }
@@ -55,6 +65,26 @@ namespace QuadroApp.ViewModels
             OpenOfferteCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OfferteViewModel>());
             OpenOffertesLijstCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OffertesLijstViewModel>());
             OpenFacturenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<FacturenViewModel>());
+        }
+
+        public async Task InitializeAsync() => await LoadDashboardAsync();
+
+        private async Task LoadDashboardAsync()
+        {
+            await using var db = await _factory.CreateDbContextAsync();
+
+            var alerts = await db.VoorraadAlerts
+                .AsNoTracking()
+                .Include(x => x.TypeLijst)
+                .Where(x => x.Status == VoorraadAlertStatus.Open)
+                .OrderByDescending(x => x.AangemaaktOp)
+                .ToListAsync();
+
+            OpenAlerts = new ObservableCollection<VoorraadAlert>(alerts.Take(6));
+            OpenAlertCount = alerts.Count;
+            LowStockCount = alerts.Count(x => x.AlertType is VoorraadAlertType.LowStock or VoorraadAlertType.BelowMinimum);
+            OpenShortageCount = alerts.Count(x => x.AlertType == VoorraadAlertType.OpenShortage);
+            OverdueOrderCount = alerts.Count(x => x.AlertType == VoorraadAlertType.OrderOverdue);
         }
 
         private async Task OpenPlanningAsync()
