@@ -46,6 +46,7 @@ namespace QuadroApp.Service
             public Task ConsumeReservationsForWerkBonAsync(int werkBonId) => _inner.ConsumeReservationsForWerkBonAsync(werkBonId);
             public Task ReleaseReservationsForWerkBonAsync(int werkBonId, bool cancelOpenOrders = false) => _inner.ReleaseReservationsForWerkBonAsync(werkBonId, cancelOpenOrders);
             public Task PlaceSupplierOrderForWerkTaakAsync(int werkTaakId, DateTime bestelDatum) => _inner.PlaceSupplierOrderForWerkTaakAsync(werkTaakId, bestelDatum);
+            public Task CreateSupplierOrderAsync(int typeLijstId, decimal aantalMeter, DateTime bestelDatum, string? opmerking = null) => _inner.CreateSupplierOrderAsync(typeLijstId, aantalMeter, bestelDatum, opmerking);
             public Task ReceiveSupplierOrderLineAsync(int bestelLijnId, decimal? aantalMeter = null) => _inner.ReceiveSupplierOrderLineAsync(bestelLijnId, aantalMeter);
             public Task CancelSupplierOrderAsync(int bestellingId) => _inner.CancelSupplierOrderAsync(bestellingId);
             public Task RefreshAlertsAsync() => _inner.RefreshAlertsAsync();

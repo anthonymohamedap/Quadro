@@ -195,66 +195,100 @@ namespace QuadroApp.Service
                     return;
                 }
 
-                var leverancier = typeLijst.Leverancier;
-                var bestelling = await db.Set<LeverancierBestelling>()
-                    .Include(b => b.Lijnen)
-                    .Where(b => b.LeverancierId == leverancier.Id
-                        && b.Status != LeverancierBestellingStatus.VolledigOntvangen
-                        && b.Status != LeverancierBestellingStatus.Geannuleerd)
-                    .OrderByDescending(b => b.BesteldOp)
-                    .FirstOrDefaultAsync();
+                var bestelling = await GetOrCreateOpenSupplierOrderAsync(db, typeLijst.Leverancier, bestelDatum);
 
-            if (bestelling is null)
-            {
-                bestelling = new LeverancierBestelling
+                var lijn = taak.LeverancierBestelLijnId.HasValue
+                    ? await db.Set<LeverancierBestelLijn>().FirstOrDefaultAsync(x => x.Id == taak.LeverancierBestelLijnId.Value)
+                    : null;
+
+                if (lijn is null)
                 {
-                    LeverancierId = leverancier.Id,
-                    BestelNummer = await GenerateBestelNummerAsync(db, leverancier.Naam),
-                    BesteldOp = bestelDatum,
-                    VerwachteLeverdatum = bestelDatum.Date.AddDays(7),
-                    Status = LeverancierBestellingStatus.Besteld
-                };
+                    lijn = new LeverancierBestelLijn
+                    {
+                        LeverancierBestelling = bestelling,
+                        TypeLijstId = typeLijst.Id,
+                        WerkBonId = taak.WerkBonId,
+                        AantalMeterBesteld = taak.BenodigdeMeter,
+                        AantalMeterOntvangen = 0m,
+                        RedenType = LeverancierBestelRedenType.TekortWerkTaak,
+                        Opmerking = $"Automatisch aangemaakt voor werktaak {taak.Id}"
+                    };
 
-                db.Set<LeverancierBestelling>().Add(bestelling);
+                    db.Set<LeverancierBestelLijn>().Add(lijn);
+                    typeLijst.InBestellingMeter += taak.BenodigdeMeter;
+                }
+
+                taak.IsBesteld = true;
+                taak.BestelDatum = bestelDatum;
+                taak.IsOpVoorraad = false;
+                taak.VoorraadStatus = VoorraadStatus.Ordered;
+
+                await db.SaveChangesAsync();
+
+                taak.LeverancierBestelLijnId = lijn.Id;
+                await RefreshAlertsInternalAsync(db);
+                await db.SaveChangesAsync();
+                await tx.CommitAsync();
+
+                _toast.Success($"Bestelling {bestelling.BestelNummer} geplaatst voor {typeLijst.Artikelnummer}.");
             }
-            else if (bestelling.Status == LeverancierBestellingStatus.Concept)
+            catch (DbUpdateConcurrencyException ex)
             {
-                bestelling.Status = LeverancierBestellingStatus.Besteld;
-                bestelling.BesteldOp = bestelDatum;
+                throw new InvalidOperationException("Bestelling kon niet geplaatst worden omdat de voorraad of bestelling intussen gewijzigd is.", ex);
             }
+        }
 
-            var lijn = taak.LeverancierBestelLijnId.HasValue
-                ? await db.Set<LeverancierBestelLijn>().FirstOrDefaultAsync(x => x.Id == taak.LeverancierBestelLijnId.Value)
-                : null;
+        public async Task CreateSupplierOrderAsync(int typeLijstId, decimal aantalMeter, DateTime bestelDatum, string? opmerking = null)
+        {
+            if (aantalMeter <= 0m)
+                throw new InvalidOperationException("Aantal meter moet groter zijn dan 0.");
 
-            if (lijn is null)
+            try
             {
-                lijn = new LeverancierBestelLijn
+                await using var db = await _factory.CreateDbContextAsync();
+                await using var tx = await db.Database.BeginTransactionAsync();
+
+                var typeLijst = await db.TypeLijsten
+                    .Include(x => x.Leverancier)
+                    .FirstOrDefaultAsync(x => x.Id == typeLijstId);
+
+                if (typeLijst is null)
+                    throw new InvalidOperationException("TypeLijst niet gevonden.");
+
+                var bestelling = await GetOrCreateOpenSupplierOrderAsync(db, typeLijst.Leverancier, bestelDatum);
+
+                var lijn = bestelling.Lijnen.FirstOrDefault(x =>
+                    x.TypeLijstId == typeLijst.Id &&
+                    x.WerkBonId is null &&
+                    x.RedenType == LeverancierBestelRedenType.MinimumVoorraadAanvulling &&
+                    x.AantalMeterOntvangen == 0m);
+
+                if (lijn is null)
                 {
-                    LeverancierBestelling = bestelling,
-                    TypeLijstId = typeLijst.Id,
-                    WerkBonId = taak.WerkBonId,
-                    AantalMeterBesteld = taak.BenodigdeMeter,
-                    AantalMeterOntvangen = 0m,
-                    RedenType = LeverancierBestelRedenType.TekortWerkTaak,
-                    Opmerking = $"Automatisch aangemaakt voor werktaak {taak.Id}"
-                };
+                    lijn = new LeverancierBestelLijn
+                    {
+                        LeverancierBestelling = bestelling,
+                        TypeLijstId = typeLijst.Id,
+                        AantalMeterBesteld = aantalMeter,
+                        AantalMeterOntvangen = 0m,
+                        RedenType = LeverancierBestelRedenType.MinimumVoorraadAanvulling,
+                        Opmerking = string.IsNullOrWhiteSpace(opmerking) ? "Handmatig aangemaakt vanuit leveranciersoverzicht" : opmerking.Trim()
+                    };
 
-                db.Set<LeverancierBestelLijn>().Add(lijn);
-                typeLijst.InBestellingMeter += taak.BenodigdeMeter;
-            }
+                    db.Set<LeverancierBestelLijn>().Add(lijn);
+                }
+                else
+                {
+                    lijn.AantalMeterBesteld += aantalMeter;
+                    if (!string.IsNullOrWhiteSpace(opmerking))
+                        lijn.Opmerking = opmerking.Trim();
+                }
 
-            taak.IsBesteld = true;
-            taak.BestelDatum = bestelDatum;
-            taak.IsOpVoorraad = false;
-            taak.VoorraadStatus = VoorraadStatus.Ordered;
+                typeLijst.InBestellingMeter += aantalMeter;
 
-            await db.SaveChangesAsync();
-
-            taak.LeverancierBestelLijnId = lijn.Id;
-            await RefreshAlertsInternalAsync(db);
-            await db.SaveChangesAsync();
-            await tx.CommitAsync();
+                await RefreshAlertsInternalAsync(db);
+                await db.SaveChangesAsync();
+                await tx.CommitAsync();
 
                 _toast.Success($"Bestelling {bestelling.BestelNummer} geplaatst voor {typeLijst.Artikelnummer}.");
             }
@@ -493,13 +527,13 @@ namespace QuadroApp.Service
                 var herbestelNiveau = lijst.HerbestelNiveauMeter ?? lijst.MinimumVoorraad;
                 if (lijst.MinimumVoorraad > 0m && lijst.BeschikbareVoorraadMeter < lijst.MinimumVoorraad)
                 {
-                    UpsertAlert(alerts, desiredKeys, lijst.Id, VoorraadAlertType.BelowMinimum,
+                    UpsertAlert(db, alerts, desiredKeys, lijst.Id, VoorraadAlertType.BelowMinimum,
                         $"TypeLijst:{lijst.Id}:BelowMinimum",
                         $"Voorraad onder minimum voor {lijst.Artikelnummer} ({lijst.BeschikbareVoorraadMeter:0.##} m beschikbaar).");
                 }
                 else if (herbestelNiveau > 0m && lijst.BeschikbareVoorraadMeter <= herbestelNiveau)
                 {
-                    UpsertAlert(alerts, desiredKeys, lijst.Id, VoorraadAlertType.LowStock,
+                    UpsertAlert(db, alerts, desiredKeys, lijst.Id, VoorraadAlertType.LowStock,
                         $"TypeLijst:{lijst.Id}:LowStock",
                         $"Voorraad bijna op voor {lijst.Artikelnummer} ({lijst.BeschikbareVoorraadMeter:0.##} m beschikbaar).");
                 }
@@ -514,7 +548,7 @@ namespace QuadroApp.Service
             foreach (var taak in shortageTaken)
             {
                 var artikel = taak.OfferteRegel?.TypeLijst?.Artikelnummer ?? "onbekend artikel";
-                UpsertAlert(alerts, desiredKeys, taak.OfferteRegel?.TypeLijstId, VoorraadAlertType.OpenShortage,
+                UpsertAlert(db, alerts, desiredKeys, taak.OfferteRegel?.TypeLijstId, VoorraadAlertType.OpenShortage,
                     $"WerkTaak:{taak.Id}:OpenShortage",
                     $"Open tekort voor werktaak {taak.Id} ({artikel}).");
             }
@@ -529,14 +563,14 @@ namespace QuadroApp.Service
             {
                 if (bestelling.VerwachteLeverdatum.HasValue && bestelling.VerwachteLeverdatum.Value.Date < DateTime.Today)
                 {
-                    UpsertAlert(alerts, desiredKeys, null, VoorraadAlertType.OrderOverdue,
+                    UpsertAlert(db, alerts, desiredKeys, null, VoorraadAlertType.OrderOverdue,
                         $"Bestelling:{bestelling.Id}:OrderOverdue",
                         $"Bestelling {bestelling.BestelNummer} voor leverancier {bestelling.Leverancier.Naam} is over tijd.");
                 }
 
                 if (bestelling.Status == LeverancierBestellingStatus.DeelsOntvangen)
                 {
-                    UpsertAlert(alerts, desiredKeys, null, VoorraadAlertType.PartialReceiptPending,
+                    UpsertAlert(db, alerts, desiredKeys, null, VoorraadAlertType.PartialReceiptPending,
                         $"Bestelling:{bestelling.Id}:PartialReceiptPending",
                         $"Bestelling {bestelling.BestelNummer} is deels ontvangen en nog niet afgerond.");
                 }
@@ -551,6 +585,7 @@ namespace QuadroApp.Service
         }
 
         private static void UpsertAlert(
+            AppDbContext db,
             List<VoorraadAlert> alerts,
             ISet<string> desiredKeys,
             int? typeLijstId,
@@ -564,7 +599,7 @@ namespace QuadroApp.Service
             var alert = alerts.FirstOrDefault(a => a.BronReferentie == bronReferentie && a.AlertType == alertType);
             if (alert is null)
             {
-                alerts.Add(new VoorraadAlert
+                alert = new VoorraadAlert
                 {
                     TypeLijstId = typeLijstId,
                     AlertType = alertType,
@@ -573,7 +608,9 @@ namespace QuadroApp.Service
                     Bericht = bericht,
                     LaatstHerinnerdOp = DateTime.UtcNow,
                     VolgendeHerinneringOp = GetNextReminder(alertType)
-                });
+                };
+                alerts.Add(alert);
+                db.Set<VoorraadAlert>().Add(alert);
                 return;
             }
 
@@ -597,6 +634,41 @@ namespace QuadroApp.Service
                 VoorraadAlertType.OrderOverdue => now.AddDays(1),
                 _ => now.AddDays(3)
             };
+        }
+
+        private async Task<LeverancierBestelling> GetOrCreateOpenSupplierOrderAsync(AppDbContext db, Leverancier leverancier, DateTime bestelDatum)
+        {
+            var bestelling = await db.Set<LeverancierBestelling>()
+                .Include(b => b.Lijnen)
+                .Where(b => b.LeverancierId == leverancier.Id
+                    && b.Status != LeverancierBestellingStatus.VolledigOntvangen
+                    && b.Status != LeverancierBestellingStatus.Geannuleerd)
+                .OrderByDescending(b => b.BesteldOp)
+                .FirstOrDefaultAsync();
+
+            if (bestelling is null)
+            {
+                bestelling = new LeverancierBestelling
+                {
+                    LeverancierId = leverancier.Id,
+                    BestelNummer = await GenerateBestelNummerAsync(db, leverancier.Naam),
+                    BesteldOp = bestelDatum,
+                    VerwachteLeverdatum = bestelDatum.Date.AddDays(7),
+                    Status = LeverancierBestellingStatus.Besteld
+                };
+
+                db.Set<LeverancierBestelling>().Add(bestelling);
+                return bestelling;
+            }
+
+            if (bestelling.Status == LeverancierBestellingStatus.Concept)
+            {
+                bestelling.Status = LeverancierBestellingStatus.Besteld;
+                bestelling.BesteldOp = bestelDatum;
+                bestelling.VerwachteLeverdatum ??= bestelDatum.Date.AddDays(7);
+            }
+
+            return bestelling;
         }
 
         private async Task<string> GenerateBestelNummerAsync(AppDbContext db, string leverancierCode)

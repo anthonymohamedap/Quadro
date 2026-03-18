@@ -455,6 +455,7 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
     private async Task<bool> VoerBulkUpdateUitAsync()
     {
         var ids = SelectedLijsten.Select(x => x.Id).ToHashSet();
+        var relevanteVelden = GetBulkValidationFields();
 
         await using var db = await _dbFactory.CreateDbContextAsync();
         var lijsten = await db.TypeLijsten
@@ -486,16 +487,24 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
         foreach (var lijst in lijsten)
         {
             var vr = await _validator.ValidateUpdateAsync(lijst);
+            var relevanteItems = vr.Items
+                .Where(x => relevanteVelden.Contains(x.Field))
+                .ToList();
+
+            var heeftRelevanteFouten = relevanteItems.Any(x => x.Severity == ValidationSeverity.Error);
             if (!vr.IsValid)
             {
-                var errors = vr.Items
+                var errors = relevanteItems
                     .Where(x => x.Severity == ValidationSeverity.Error)
                     .Select(x => $"{x.Field}: {x.Message}");
 
-                foutmeldingen.Add($"{lijst.Artikelnummer}: {string.Join("; ", errors)}");
+                if (heeftRelevanteFouten)
+                {
+                    foutmeldingen.Add($"{lijst.Artikelnummer}: {string.Join("; ", errors)}");
+                }
             }
 
-            var warns = vr.Items
+            var warns = relevanteItems
                 .Where(x => x.Severity == ValidationSeverity.Warning)
                 .Select(x => $"{lijst.Artikelnummer} - {x.Field}: {x.Message}");
 
@@ -693,6 +702,58 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
         {
             yield return "minimumvoorraad";
         }
+    }
+
+    private HashSet<string> GetBulkValidationFields()
+    {
+        var fields = new HashSet<string>(StringComparer.Ordinal);
+
+        if (BijwerkArtikelnummer)
+        {
+            fields.Add(nameof(TypeLijst.Artikelnummer));
+        }
+
+        if (BijwerkLevcode)
+        {
+            fields.Add(nameof(TypeLijst.Levcode));
+        }
+
+        if (BijwerkLeverancier)
+        {
+            fields.Add(nameof(TypeLijst.LeverancierId));
+        }
+
+        if (BijwerkBreedteCm)
+        {
+            fields.Add(nameof(TypeLijst.BreedteCm));
+        }
+
+        if (BijwerkPrijsPerMeter)
+        {
+            fields.Add(nameof(TypeLijst.PrijsPerMeter));
+        }
+
+        if (BijwerkVasteKost)
+        {
+            fields.Add(nameof(TypeLijst.VasteKost));
+        }
+
+        if (BijwerkWerkMinuten)
+        {
+            fields.Add(nameof(TypeLijst.WerkMinuten));
+        }
+
+        if (BijwerkVoorraadMeter)
+        {
+            fields.Add(nameof(TypeLijst.VoorraadMeter));
+        }
+
+        if (BijwerkMinimumVoorraad)
+        {
+            fields.Add(nameof(TypeLijst.MinimumVoorraad));
+        }
+
+        return fields;
     }
 
     private static bool HasWholeNumber(decimal? value) =>

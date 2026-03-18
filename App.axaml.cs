@@ -157,6 +157,7 @@ public partial class App : Application
         try
         {
             InitializeDatabaseAsync(Services).GetAwaiter().GetResult();
+            RunStartupTasksAsync(Services).GetAwaiter().GetResult();
         }
         catch (Exception ex)
         {
@@ -220,7 +221,6 @@ public partial class App : Application
         await using var db = await factory.CreateDbContextAsync();
 
         Console.WriteLine("[DB] Resetting demo database...");
-        await db.Database.EnsureDeletedAsync();
         await db.Database.EnsureCreatedAsync();
 
         // Seed data (single source of truth)
@@ -229,6 +229,15 @@ public partial class App : Application
         Console.WriteLine("[DB] Klanten rows = " + await db.Klanten.CountAsync());
         Console.WriteLine("[DB] TypeLijsten rows = " + await db.TypeLijsten.CountAsync());
         Console.WriteLine("[DB] Offertes rows = " + await db.Offertes.CountAsync());
+    }
+
+    private static async Task RunStartupTasksAsync(IServiceProvider provider)
+    {
+        using var scope = provider.CreateScope();
+        var stockService = scope.ServiceProvider.GetRequiredService<IStockService>();
+
+        Console.WriteLine("[Startup] Refreshing voorraad alerts...");
+        await stockService.RefreshAlertsAsync();
     }
 
 

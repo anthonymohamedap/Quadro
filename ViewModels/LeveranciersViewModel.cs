@@ -25,12 +25,17 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
 
     [ObservableProperty] private ObservableCollection<Leverancier> leveranciers = new();
     [ObservableProperty] private ObservableCollection<TypeLijst> lijstenVanLeverancier = new();
+    [ObservableProperty] private ObservableCollection<TypeLijst> bestelbareLijsten = new();
     [ObservableProperty] private ObservableCollection<LeverancierBestelling> openBestellingen = new();
     [ObservableProperty] private ObservableCollection<VoorraadAlert> leverancierAlerts = new();
     [ObservableProperty] private Leverancier? selectedLeverancier;
+    [ObservableProperty] private TypeLijst? selectedBestelTypeLijst;
     [ObservableProperty] private bool isDetailOpen;
     [ObservableProperty] private string? zoekterm;
     [ObservableProperty] private bool isBusy;
+    [ObservableProperty] private decimal? nieuwBestelAantalMeter = 1m;
+    [ObservableProperty] private DateTimeOffset? nieuweBestellingDatum = DateTimeOffset.Now.Date;
+    [ObservableProperty] private string nieuweBestellingOpmerking = string.Empty;
 
     [ObservableProperty] private int leveranciersCurrentPage = 1;
     [ObservableProperty] private int leveranciersPageSize = 10;
@@ -105,8 +110,10 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
         {
             _allLijstenVanLeverancier = new List<TypeLijst>();
             LijstenVanLeverancier = new ObservableCollection<TypeLijst>();
+            BestelbareLijsten = new ObservableCollection<TypeLijst>();
             OpenBestellingen = new ObservableCollection<LeverancierBestelling>();
             LeverancierAlerts = new ObservableCollection<VoorraadAlert>();
+            SelectedBestelTypeLijst = null;
             LijstenCurrentPage = 1;
             IsDetailOpen = leverancier is not null;
             NotifyLijstenPagingChanged();
@@ -141,6 +148,11 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
 
         LijstenCurrentPage = 1;
         UpdateLijstenPage();
+        BestelbareLijsten = new ObservableCollection<TypeLijst>(_allLijstenVanLeverancier);
+        SelectedBestelTypeLijst = BestelbareLijsten.FirstOrDefault();
+        NieuwBestelAantalMeter = 1m;
+        NieuweBestellingDatum = DateTimeOffset.Now.Date;
+        NieuweBestellingOpmerking = string.Empty;
         OpenBestellingen = new ObservableCollection<LeverancierBestelling>(bestellingen);
         LeverancierAlerts = new ObservableCollection<VoorraadAlert>(alerts);
         IsDetailOpen = true;
@@ -231,8 +243,10 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
                 IsDetailOpen = false;
                 _allLijstenVanLeverancier = new List<TypeLijst>();
                 LijstenVanLeverancier = new ObservableCollection<TypeLijst>();
+                BestelbareLijsten = new ObservableCollection<TypeLijst>();
                 OpenBestellingen = new ObservableCollection<LeverancierBestelling>();
                 LeverancierAlerts = new ObservableCollection<VoorraadAlert>();
+                SelectedBestelTypeLijst = null;
                 LijstenCurrentPage = 1;
                 NotifyLijstenPagingChanged();
             }
@@ -253,6 +267,11 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
         SelectedLeverancier = new Leverancier();
         _allLijstenVanLeverancier = new List<TypeLijst>();
         LijstenVanLeverancier = new ObservableCollection<TypeLijst>();
+        BestelbareLijsten = new ObservableCollection<TypeLijst>();
+        SelectedBestelTypeLijst = null;
+        NieuwBestelAantalMeter = 1m;
+        NieuweBestellingDatum = DateTimeOffset.Now.Date;
+        NieuweBestellingOpmerking = string.Empty;
         LijstenCurrentPage = 1;
         NotifyLijstenPagingChanged();
         IsDetailOpen = true;
@@ -360,8 +379,10 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
             IsDetailOpen = false;
             _allLijstenVanLeverancier = new List<TypeLijst>();
             LijstenVanLeverancier = new ObservableCollection<TypeLijst>();
+            BestelbareLijsten = new ObservableCollection<TypeLijst>();
             OpenBestellingen = new ObservableCollection<LeverancierBestelling>();
             LeverancierAlerts = new ObservableCollection<VoorraadAlert>();
+            SelectedBestelTypeLijst = null;
             LijstenCurrentPage = 1;
             NotifyLijstenPagingChanged();
 
@@ -384,8 +405,13 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
         SelectedLeverancier = null;
         _allLijstenVanLeverancier = new List<TypeLijst>();
         LijstenVanLeverancier = new ObservableCollection<TypeLijst>();
+        BestelbareLijsten = new ObservableCollection<TypeLijst>();
         OpenBestellingen = new ObservableCollection<LeverancierBestelling>();
         LeverancierAlerts = new ObservableCollection<VoorraadAlert>();
+        SelectedBestelTypeLijst = null;
+        NieuwBestelAantalMeter = 1m;
+        NieuweBestellingDatum = DateTimeOffset.Now.Date;
+        NieuweBestellingOpmerking = string.Empty;
         LijstenCurrentPage = 1;
         NotifyLijstenPagingChanged();
     }
@@ -431,6 +457,51 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
         catch (Exception ex)
         {
             _toast.Error($"Annuleren mislukt: {ex.InnerException?.Message ?? ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task MaakLeverancierBestellingAsync()
+    {
+        if (SelectedLeverancier is null || SelectedLeverancier.Id == 0)
+        {
+            _toast.Error("Selecteer eerst een leverancier.");
+            return;
+        }
+
+        if (SelectedBestelTypeLijst is null)
+        {
+            _toast.Error("Selecteer eerst een lijst.");
+            return;
+        }
+
+        if (!NieuwBestelAantalMeter.HasValue || NieuwBestelAantalMeter.Value <= 0m)
+        {
+            _toast.Error("Aantal meter moet groter zijn dan 0.");
+            return;
+        }
+
+        try
+        {
+            IsBusy = true;
+
+            var bestelDatum = (NieuweBestellingDatum ?? DateTimeOffset.Now.Date).Date;
+            await _stock.CreateSupplierOrderAsync(
+                SelectedBestelTypeLijst.Id,
+                decimal.Round(NieuwBestelAantalMeter.Value, 2, MidpointRounding.AwayFromZero),
+                bestelDatum,
+                NieuweBestellingOpmerking);
+
+            if (SelectedLeverancier is not null)
+                await LoadTypeLijstenForSelectedAsync(SelectedLeverancier);
+        }
+        catch (Exception ex)
+        {
+            _toast.Error($"Bestelling aanmaken mislukt: {ex.InnerException?.Message ?? ex.Message}");
         }
         finally
         {

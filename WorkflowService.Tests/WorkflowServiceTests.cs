@@ -137,6 +137,81 @@ public class WorkflowServiceTests
     }
 
     [Fact]
+    public async Task RefreshAlerts_scans_all_lijsten_and_creates_expected_stock_alerts()
+    {
+        var factory = CreateFactory();
+        var toast = new TestToastService();
+
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            var leverancier = new Leverancier { Naam = "LEV" };
+            db.Leveranciers.Add(leverancier);
+
+            db.TypeLijsten.AddRange(
+                new TypeLijst
+                {
+                    Artikelnummer = "ART-MIN",
+                    Leverancier = leverancier,
+                    Levcode = "LEV-MIN",
+                    BreedteCm = 10,
+                    Soort = "HOUT",
+                    PrijsPerMeter = 10m,
+                    VasteKost = 0m,
+                    WerkMinuten = 5,
+                    VoorraadMeter = 4m,
+                    InventarisKost = 0m,
+                    MinimumVoorraad = 5m
+                },
+                new TypeLijst
+                {
+                    Artikelnummer = "ART-LOW",
+                    Leverancier = leverancier,
+                    Levcode = "LEV-LOW",
+                    BreedteCm = 12,
+                    Soort = "ALU",
+                    PrijsPerMeter = 10m,
+                    VasteKost = 0m,
+                    WerkMinuten = 5,
+                    VoorraadMeter = 8m,
+                    InventarisKost = 0m,
+                    MinimumVoorraad = 3m,
+                    HerbestelNiveauMeter = 8m
+                },
+                new TypeLijst
+                {
+                    Artikelnummer = "ART-OK",
+                    Leverancier = leverancier,
+                    Levcode = "LEV-OK",
+                    BreedteCm = 15,
+                    Soort = "PVC",
+                    PrijsPerMeter = 10m,
+                    VasteKost = 0m,
+                    WerkMinuten = 5,
+                    VoorraadMeter = 25m,
+                    InventarisKost = 0m,
+                    MinimumVoorraad = 5m,
+                    HerbestelNiveauMeter = 10m
+                });
+
+            await db.SaveChangesAsync();
+        }
+
+        var stockService = new QuadroApp.Service.StockService(factory, toast);
+        await stockService.RefreshAlertsAsync();
+
+        await using var checkDb = await factory.CreateDbContextAsync();
+        var alerts = await checkDb.VoorraadAlerts
+            .Where(x => x.Status == VoorraadAlertStatus.Open)
+            .OrderBy(x => x.Bericht)
+            .ToListAsync();
+
+        Assert.Equal(2, alerts.Count);
+        Assert.Contains(alerts, x => x.AlertType == VoorraadAlertType.BelowMinimum && x.Bericht.Contains("ART-MIN", StringComparison.Ordinal));
+        Assert.Contains(alerts, x => x.AlertType == VoorraadAlertType.LowStock && x.Bericht.Contains("ART-LOW", StringComparison.Ordinal));
+        Assert.DoesNotContain(alerts, x => x.Bericht.Contains("ART-OK", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task WerkTaak_can_be_marked_as_besteld()
     {
         var factory = CreateFactory();
@@ -164,6 +239,55 @@ public class WorkflowServiceTests
         Assert.Equal(5m, lijst.InBestellingMeter);
         Assert.Equal(5m, bestellijn.AantalMeterBesteld);
         Assert.Equal(LeverancierBestellingStatus.Besteld, bestelling.Status);
+        Assert.Contains(toast.SuccessMessages, m => m.Contains("Bestelling", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Manual_supplier_order_reuses_open_order_for_same_supplier()
+    {
+        var factory = CreateFactory();
+        var toast = new TestToastService();
+
+        int lijstId;
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            var leverancier = new Leverancier { Naam = "MAN" };
+            var lijst = new TypeLijst
+            {
+                Artikelnummer = "ART-MAN-01",
+                Leverancier = leverancier,
+                Levcode = "MAN-01",
+                BreedteCm = 10,
+                Soort = "HOUT",
+                PrijsPerMeter = 10m,
+                VasteKost = 0m,
+                WerkMinuten = 5,
+                VoorraadMeter = 1m,
+                InventarisKost = 0m,
+                MinimumVoorraad = 8m
+            };
+
+            db.TypeLijsten.Add(lijst);
+            await db.SaveChangesAsync();
+            lijstId = lijst.Id;
+        }
+
+        var stock = new QuadroApp.Service.StockService(factory, toast);
+        var date = new DateTime(2026, 3, 18);
+
+        await stock.CreateSupplierOrderAsync(lijstId, 6m, date, "Eerste aanvulling");
+        await stock.CreateSupplierOrderAsync(lijstId, 2.5m, date, "Tweede aanvulling");
+
+        await using var checkDb = await factory.CreateDbContextAsync();
+        var lijstCheck = await checkDb.TypeLijsten.SingleAsync(x => x.Id == lijstId);
+        var bestellingen = await checkDb.LeverancierBestellingen.Include(x => x.Lijnen).ToListAsync();
+
+        Assert.Single(bestellingen);
+        Assert.Single(bestellingen[0].Lijnen);
+        Assert.Equal(LeverancierBestellingStatus.Besteld, bestellingen[0].Status);
+        Assert.Equal(8.5m, bestellingen[0].Lijnen.First().AantalMeterBesteld);
+        Assert.Equal(LeverancierBestelRedenType.MinimumVoorraadAanvulling, bestellingen[0].Lijnen.First().RedenType);
+        Assert.Equal(8.5m, lijstCheck.InBestellingMeter);
         Assert.Contains(toast.SuccessMessages, m => m.Contains("Bestelling", StringComparison.Ordinal));
     }
 

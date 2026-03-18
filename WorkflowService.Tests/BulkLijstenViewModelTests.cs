@@ -82,4 +82,38 @@ public sealed class BulkLijstenViewModelTests
         Assert.Equal("ART-200", dbLijst2!.Artikelnummer);
         Assert.Contains(toast.ErrorMessages, message => message.Contains("dubbele artikelnummer", System.StringComparison.OrdinalIgnoreCase));
     }
+
+    [Fact]
+    public async Task ExecuteActionAsync_werkt_minimumvoorraad_bij_ondanks_ontbrekende_levcode()
+    {
+        var factory = DbFactoryBuilder.CreateInMemoryFactory();
+        var validator = new TypeLijstValidator(factory);
+        var toast = new TestToastService();
+
+        var lijst = await SeedData.AddTypeLijstAsync(factory, "ART-300");
+
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            var dbLijst = await db.TypeLijsten.FindAsync(lijst.Id);
+            dbLijst!.Levcode = string.Empty;
+            await db.SaveChangesAsync();
+        }
+
+        var vm = new BulkLijstenViewModel(factory, validator, toast);
+        await vm.InitializeAsync();
+        vm.UpdateSelectedLijsten(vm.FilteredLijsten.Where(x => x.Id == lijst.Id));
+
+        vm.BijwerkMinimumVoorraad = true;
+        vm.NieuweMinimumVoorraad = 12.5m;
+
+        await vm.ExecuteActionCommand.ExecuteAsync(null);
+
+        await using var checkDb = await factory.CreateDbContextAsync();
+        var bijgewerkteLijst = await checkDb.TypeLijsten.FindAsync(lijst.Id);
+
+        Assert.NotNull(bijgewerkteLijst);
+        Assert.Equal(12.5m, bijgewerkteLijst!.MinimumVoorraad);
+        Assert.DoesNotContain(toast.ErrorMessages, message => message.Contains("Levcode is verplicht", System.StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(toast.SuccessMessages, message => message.Contains("minimumvoorraad", System.StringComparison.OrdinalIgnoreCase));
+    }
 }

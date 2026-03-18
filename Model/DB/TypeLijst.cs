@@ -75,6 +75,23 @@ namespace QuadroApp.Model.DB
         [NotMapped]
         public decimal BeschikbareVoorraadMeter => Math.Max(0m, VoorraadMeter - GereserveerdeVoorraadMeter);
 
+        [NotMapped]
+        public decimal EffectiefHerbestelNiveauMeter => HerbestelNiveauMeter ?? MinimumVoorraad;
+
+        [NotMapped]
+        public double VoorraadStatusRatio =>
+            MinimumVoorraad > 0m && BeschikbareVoorraadMeter < MinimumVoorraad ? 1.0 :
+            EffectiefHerbestelNiveauMeter > 0m && BeschikbareVoorraadMeter <= EffectiefHerbestelNiveauMeter ? 0.75 :
+            InBestellingMeter > 0m ? 0.5 :
+            0.25;
+
+        [NotMapped]
+        public string VoorraadStatusLabel =>
+            MinimumVoorraad > 0m && BeschikbareVoorraadMeter < MinimumVoorraad ? "Onder minimum" :
+            EffectiefHerbestelNiveauMeter > 0m && BeschikbareVoorraadMeter <= EffectiefHerbestelNiveauMeter ? "Bijna op" :
+            InBestellingMeter > 0m ? "In bestelling" :
+            "Op voorraad";
+
         public ICollection<LeverancierBestelLijn> LeverancierBestelLijnen { get; set; } = new List<LeverancierBestelLijn>();
         public ICollection<VoorraadMutatie> VoorraadMutaties { get; set; } = new List<VoorraadMutatie>();
         public ICollection<VoorraadAlert> VoorraadAlerts { get; set; } = new List<VoorraadAlert>();
