@@ -60,7 +60,7 @@ namespace QuadroApp.Service
 
             // Gebruik het exacte tijdstip als meegegeven; valt terug op 09:00 bij midnight.
             var start = dag.TimeOfDay == TimeSpan.Zero ? dag.Date.AddHours(9) : dag;
-            var tot   = start.AddMinutes(duurMinuten);
+            var tot = start.AddMinutes(duurMinuten);
             var regel = await db.OfferteRegels
                 .Include(r => r.TypeLijst)
                 .FirstOrDefaultAsync(r => r.Id == offerteRegelId);
@@ -72,13 +72,13 @@ namespace QuadroApp.Service
 
             // Bestaande taak voor dezelfde regel updaten (herplannen) i.p.v. duplicate aanmaken.
             var bestaand = await db.WerkTaken.FirstOrDefaultAsync(t =>
-                t.WerkBonId      == werkBonId &&
+                t.WerkBonId == werkBonId &&
                 t.OfferteRegelId == offerteRegelId);
 
             if (bestaand != null)
             {
-                bestaand.GeplandVan  = start;
-                bestaand.GeplandTot  = tot;
+                bestaand.GeplandVan = start;
+                bestaand.GeplandTot = tot;
                 bestaand.DuurMinuten = duurMinuten;
                 bestaand.BenodigdeMeter = benodigdeMeter;
                 if (omschrijving != null) bestaand.Omschrijving = omschrijving;
@@ -88,12 +88,12 @@ namespace QuadroApp.Service
 
             db.WerkTaken.Add(new WerkTaak
             {
-                WerkBonId      = werkBonId,
+                WerkBonId = werkBonId,
                 OfferteRegelId = offerteRegelId,
-                GeplandVan     = start,
-                GeplandTot     = tot,
-                DuurMinuten    = duurMinuten,
-                Omschrijving   = omschrijving ?? "Werktaak",
+                GeplandVan = start,
+                GeplandTot = tot,
+                DuurMinuten = duurMinuten,
+                Omschrijving = omschrijving ?? "Werktaak",
                 BenodigdeMeter = benodigdeMeter
             });
 

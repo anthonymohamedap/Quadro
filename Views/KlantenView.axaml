@@ -20,18 +20,18 @@
 				<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
 					<Button Content="➕ Nieuw" Command="{Binding NewCommand}" Classes="MainBtn"/>
 					<Button Content="✏️ Bewerken" Command="{Binding EditCommand}" Classes="MainBtn"/>
-					<Button Content="📂 Details" Command="{Binding OpenKlantDetailCommand}" CommandParameter="{Binding SelectedKlant}" Classes="MainBtn"/>
+					<Button Content="📂 Details bekijken" Command="{Binding OpenKlantDetailCommand}" CommandParameter="{Binding SelectedKlant}" Classes="MainBtn"/>
 					<Button Content="🗑️ Verwijderen" Command="{Binding DeleteCommand}" Classes="MainBtn"/>
 					<Button Content="🔄 Ververs" Command="{Binding RefreshCommand}" Classes="MainBtn"/>
-					<Button Content="📥 Excel import" Command="{Binding ImportExcelCommand}" Classes="MainBtn"/>
+					<Button Content="📥 Excel-import" Command="{Binding ImportExcelCommand}" Classes="MainBtn"/>
 				</StackPanel>
 			</Grid>
 			<Border Background="#FFF8E1" BorderBrush="#F5C242" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
-				<TextBlock Foreground="#333" Text="Selecteer een klant en gebruik ‘Bewerken’ of ‘Details’. Dubbelklik op een rij om meteen naar details te gaan."/>
+				<TextBlock Foreground="#333" Text="Selecteer een klant en gebruik ‘Bewerken’ of ‘Details bekijken’. Dubbelklik op een rij om meteen naar de details te gaan."/>
 			</Border>
 			<Grid ColumnDefinitions="2*,2.5*,1.5*,3*,2*,3*" Margin="6,0,6,6">
 				<TextBlock Text="Naam" Grid.Column="0" FontWeight="Bold" Foreground="#000"/>
-				<TextBlock Text="Email" Grid.Column="1" FontWeight="Bold" Foreground="#000"/>
+				<TextBlock Text="E-mail" Grid.Column="1" FontWeight="Bold" Foreground="#000"/>
 				<TextBlock Text="Telefoon" Grid.Column="2" FontWeight="Bold" Foreground="#000"/>
 				<TextBlock Text="Opmerking" Grid.Column="3" FontWeight="Bold" Foreground="#000"/>
 				<TextBlock Text="Btw-nummer" Grid.Column="4" FontWeight="Bold" Foreground="#000"/>

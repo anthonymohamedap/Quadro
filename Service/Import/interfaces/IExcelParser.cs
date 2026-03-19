@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace QuadroApp.Service.Import.Enterprise;
+namespace QuadroApp.Service.Import;
 
 public interface IExcelParser
 {

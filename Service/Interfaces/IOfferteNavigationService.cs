@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace QuadroApp.Service
+namespace QuadroApp.Service.Interfaces
 {
     public interface IOfferteNavigationService
     {

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Model.Import;
-using QuadroApp.Service.Import.Enterprise;
+using QuadroApp.Service.Import;
 using System;
 using System.Collections.Generic;
 using System.Threading;

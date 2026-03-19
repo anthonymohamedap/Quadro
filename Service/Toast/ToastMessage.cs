@@ -1,8 +1,7 @@
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
-using QuadroApp.Service.Toast;
 
-namespace QuadroApp.Model.Toast
+namespace QuadroApp.Service.Toast
 {
     public partial class ToastMessage : ObservableObject
     {
@@ -23,9 +22,9 @@ namespace QuadroApp.Model.Toast
         public IBrush BackgroundBrush => Type switch
         {
             ToastType.Success => new SolidColorBrush(Color.Parse("#52c41a")),
-            ToastType.Error   => new SolidColorBrush(Color.Parse("#ff4d4f")),
+            ToastType.Error => new SolidColorBrush(Color.Parse("#ff4d4f")),
             ToastType.Warning => new SolidColorBrush(Color.Parse("#faad14")),
-            _                 => new SolidColorBrush(Color.Parse("#1677ff"))
+            _ => new SolidColorBrush(Color.Parse("#1677ff"))
         };
 
         [ObservableProperty]

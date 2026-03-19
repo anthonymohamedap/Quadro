@@ -51,7 +51,7 @@
 					<Button Content="➕ Nieuw"       Command="{Binding NewAsyncCommand}"      Classes="MainBtn"/>
 					<Button Content="💾 Opslaan"     Command="{Binding SaveAsyncCommand}"     Classes="MainBtn"/>
 					<Button Content="🗑️ Verwijderen" Command="{Binding DeleteAsyncCommand}"   Classes="MainBtn"/>
-					<Button Content="📥 Excel import" Command="{Binding ImportExcelCommand}"  Classes="MainBtn"/>
+					<Button Content="📥 Excel-import" Command="{Binding ImportExcelCommand}"  Classes="MainBtn"/>
 				</StackPanel>
 
 				<!-- Twee kolommen -->
@@ -294,7 +294,7 @@
 
 									<!-- Preview -->
 									<StackPanel>
-										<TextBlock Text="Prijsberekening (preview)" FontSize="18" FontWeight="SemiBold" Foreground="#222" Margin="0,6,0,10"/>
+																									<TextBlock Text="Prijsberekening (voorbeeld)" FontSize="18" FontWeight="SemiBold" Foreground="#222" Margin="0,6,0,10"/>
 
 										<Grid ColumnDefinitions="200,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="10">
 											<TextBlock Grid.Row="0" Grid.Column="0" Text="Breedte (cm)" Foreground="#555" FontSize="12" Margin="0,6,0,4"/>

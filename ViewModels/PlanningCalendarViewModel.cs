@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model;
 using QuadroApp.Model.DB;
-using QuadroApp.Model.Toast;
+using QuadroApp.Service.Toast;
 using QuadroApp.Service.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -54,7 +54,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
     }
 
     public bool HeeftWerkBon => WerkBonId != 0;
-    public bool GeenWerkBon  => WerkBonId == 0;
+    public bool GeenWerkBon => WerkBonId == 0;
 
     public PlanningCalendarViewModel(
         IDbContextFactory<AppDbContext> factory,
@@ -62,16 +62,16 @@ public partial class PlanningCalendarViewModel : ObservableObject
         IToastService toast,
         IWorkflowService statusWorkflow)
     {
-        _factory        = factory;
-        _workflow       = workflow;
-        _toast          = toast;
+        _factory = factory;
+        _workflow = workflow;
+        _toast = toast;
         _statusWorkflow = statusWorkflow;
 
         ToastMessages = toast.Messages;
 
-        PrevMonthCommand         = new RelayCommand(PrevMonth);
-        NextMonthCommand         = new RelayCommand(NextMonth);
-        TodayCommand             = new RelayCommand(SetToday);
+        PrevMonthCommand = new RelayCommand(PrevMonth);
+        NextMonthCommand = new RelayCommand(NextMonth);
+        TodayCommand = new RelayCommand(SetToday);
         OpenWeekWerkLijstCommand = new AsyncRelayCommand(OpenWeekWerkLijstAsync);
 
         UpdateMonthTitle();
@@ -82,7 +82,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
     private async Task OpenWeekWerkLijstAsync()
     {
         var weekNr = ISOWeek.GetWeekOfYear(SelectedDate);
-        var year   = SelectedDate.Year;
+        var year = SelectedDate.Year;
 
         var vm = new WeekWerkLijstViewModel(_factory, _statusWorkflow);
         await vm.InitializeAsync(year, weekNr);
@@ -174,7 +174,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
     private static IBrush ComputeTileBorder(DateTime date, bool isSelected)
     {
-        if (isSelected)              return new SolidColorBrush(Color.Parse("#F5C242"));
+        if (isSelected) return new SolidColorBrush(Color.Parse("#F5C242"));
         if (date.Date == DateTime.Today) return Brushes.DeepSkyBlue;
         return new SolidColorBrush(Color.FromRgb(70, 70, 70));
     }
@@ -195,7 +195,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
     public async Task InitializeGlobalAsync()
     {
-        WerkBonId        = 0;
+        WerkBonId = 0;
         RegelsVanWerkBon = new ObservableCollection<RegelPlanItem>();
         await LoadAsync();
         await LoadTakenVanDagAsync();
@@ -239,8 +239,8 @@ public partial class PlanningCalendarViewModel : ObservableObject
         RegelsVanWerkBon = new ObservableCollection<RegelPlanItem>(
             regels.Select(r => new RegelPlanItem
             {
-                RegelId    = r.Id,
-                Label      = $"{r.AantalStuks}x {r.BreedteCm}×{r.HoogteCm} — {r.TypeLijst?.Artikelnummer ?? "?"}",
+                RegelId = r.Id,
+                Label = $"{r.AantalStuks}x {r.BreedteCm}×{r.HoogteCm} — {r.TypeLijst?.Artikelnummer ?? "?"}",
                 IsSelected = false
             })
         );
@@ -249,13 +249,13 @@ public partial class PlanningCalendarViewModel : ObservableObject
     private static int CalcMinutenVoorRegel(OfferteRegel r)
     {
         int min = 0;
-        min += r.TypeLijst?.WerkMinuten    ?? 0;
-        min += r.Glas?.WerkMinuten         ?? 0;
+        min += r.TypeLijst?.WerkMinuten ?? 0;
+        min += r.Glas?.WerkMinuten ?? 0;
         min += r.PassePartout1?.WerkMinuten ?? 0;
         min += r.PassePartout2?.WerkMinuten ?? 0;
-        min += r.DiepteKern?.WerkMinuten   ?? 0;
-        min += r.Opkleven?.WerkMinuten     ?? 0;
-        min += r.Rug?.WerkMinuten          ?? 0;
+        min += r.DiepteKern?.WerkMinuten ?? 0;
+        min += r.Opkleven?.WerkMinuten ?? 0;
+        min += r.Rug?.WerkMinuten ?? 0;
         min += r.ExtraWerkMinuten;
 
         int stuks = r.AantalStuks <= 0 ? 1 : r.AantalStuks;
@@ -289,7 +289,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
             var dialogVm = new PlanningTijdDialogViewModel
             {
-                ContextLabel  = $"WerkBon #{WerkBonId} — {werkBonLabel} · {selectedIds.Count} regel(s)",
+                ContextLabel = $"WerkBon #{WerkBonId} — {werkBonLabel} · {selectedIds.Count} regel(s)",
                 GeplandeDatum = new DateTimeOffset(SelectedDate.Date),
             };
 
@@ -321,7 +321,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
             .ToListAsync();
 
         int totaal = dagTaken.Sum(t => t.DuurMinuten);
-        int extra  = regels.Sum(CalcMinutenVoorRegel);
+        int extra = regels.Sum(CalcMinutenVoorRegel);
 
         if (totaal + extra > CapaciteitMinuten)
             _toast.Warning($"Let op: dag heeft {(totaal + extra) / 60}u {(totaal + extra) % 60}m gepland (max {CapaciteitMinuten / 60}u).");
@@ -345,12 +345,12 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
         var dialogVm = new PlanningTijdDialogViewModel
         {
-            ContextLabel  = $"WerkBon #{taak.WerkBonId} — {taak.Omschrijving}",
+            ContextLabel = $"WerkBon #{taak.WerkBonId} — {taak.Omschrijving}",
             GeplandeDatum = new DateTimeOffset(taak.GeplandVan.Date),
-            VanUur        = taak.GeplandVan.Hour,
-            VanMinuut     = taak.GeplandVan.Minute,
-            TotUur        = taak.GeplandTot.Hour,
-            TotMinuut     = taak.GeplandTot.Minute,
+            VanUur = taak.GeplandVan.Hour,
+            VanMinuut = taak.GeplandVan.Minute,
+            TotUur = taak.GeplandTot.Hour,
+            TotMinuut = taak.GeplandTot.Minute,
         };
 
         bool ok = await ShowTijdDialogAsync(dialogVm);
@@ -363,8 +363,8 @@ public partial class PlanningCalendarViewModel : ObservableObject
         var dbTaak = await db.WerkTaken.FindAsync(taak.Id);
         if (dbTaak is null) return;
 
-        dbTaak.GeplandVan  = nieuweVan;
-        dbTaak.GeplandTot  = nieuweTot;
+        dbTaak.GeplandVan = nieuweVan;
+        dbTaak.GeplandTot = nieuweTot;
         dbTaak.DuurMinuten = dialogVm.DuurMinuten;
 
         await db.SaveChangesAsync();
@@ -422,10 +422,10 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
     // ───────── MAAND OVERZICHT ─────────
 
-    public ObservableCollection<DayTile>     MonthDays     { get; } = new();
+    public ObservableCollection<DayTile> MonthDays { get; } = new();
     public ObservableCollection<WeekSummary> WeekSummaries { get; } = new();
 
-    [ObservableProperty] private ObservableCollection<DayRow>  dayRows  = new();
+    [ObservableProperty] private ObservableCollection<DayRow> dayRows = new();
     [ObservableProperty] private ObservableCollection<WeekRow> weekRows = new();
 
     public async Task LoadAsync()
@@ -434,8 +434,8 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
         var firstOfMonth = new DateTime(Year, Month, 1);
         int offset = ((int)firstOfMonth.DayOfWeek + 6) % 7;
-        var start  = firstOfMonth.AddDays(-offset);
-        var end    = start.AddDays(35);
+        var start = firstOfMonth.AddDays(-offset);
+        var end = start.AddDays(35);
 
         var taken = await db.WerkTaken
             .Where(t => t.GeplandVan >= start && t.GeplandVan < end)
@@ -447,22 +447,22 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
         for (int i = 0; i < 35; i++)
         {
-            var date     = start.AddDays(i);
+            var date = start.AddDays(i);
             var dagTaken = taken.Where(t => t.GeplandVan.Date == date.Date).ToList();
-            var used     = dagTaken.Sum(x => x.DuurMinuten);
-            var util     = Math.Clamp((double)used / CapaciteitMinuten, 0, 1);
+            var used = dagTaken.Sum(x => x.DuurMinuten);
+            var util = Math.Clamp((double)used / CapaciteitMinuten, 0, 1);
 
             var kleur = util switch
             {
-                <= 0.5  => Brushes.LimeGreen,
+                <= 0.5 => Brushes.LimeGreen,
                 <= 0.75 => Brushes.Goldenrod,
-                <= 0.9  => Brushes.OrangeRed,
-                _       => Brushes.Red
+                <= 0.9 => Brushes.OrangeRed,
+                _ => Brushes.Red
             };
 
-            bool isVandaag     = date.Date == DateTime.Today;
+            bool isVandaag = date.Date == DateTime.Today;
             bool isAndereMaand = date.Month != Month;
-            bool isWeekend     = date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+            bool isWeekend = date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
 
             IBrush bg =
                 isVandaag
@@ -482,24 +482,24 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
             MonthDays.Add(new DayTile
             {
-                Date       = date,
-                DayNumber  = date.Day.ToString(),
-                BusyLabel  = busyLabel,
-                Busy       = util,
-                BusyColor  = kleur,
+                Date = date,
+                DayNumber = date.Day.ToString(),
+                BusyLabel = busyLabel,
+                Busy = util,
+                BusyColor = kleur,
                 Background = bg,
-                Border     = ComputeTileBorder(date, isSelected),
+                Border = ComputeTileBorder(date, isSelected),
                 IsSelected = isSelected
             });
 
             DayRows.Add(new DayRow
             {
-                WeekNr  = ISOWeek.GetWeekOfYear(date),
-                Dag     = date.ToString("ddd", CultureInfo.CurrentCulture),
-                Datum   = date.Date,
-                Uren    = used / 60,
+                WeekNr = ISOWeek.GetWeekOfYear(date),
+                Dag = date.ToString("ddd", CultureInfo.CurrentCulture),
+                Datum = date.Date,
+                Uren = used / 60,
                 Minuten = used % 60,
-                Kleur   = kleur
+                Kleur = kleur
             });
         }
 
@@ -507,17 +507,17 @@ public partial class PlanningCalendarViewModel : ObservableObject
         var weekStart = start;
         while (weekStart < end)
         {
-            var weekEnd     = weekStart.AddDays(7);
+            var weekEnd = weekStart.AddDays(7);
             var weekMinutes = MonthDays
                 .Where(x => x.Date >= weekStart && x.Date < weekEnd)
                 .Sum(x => (int)(x.Busy * CapaciteitMinuten));
 
             WeekSummaries.Add(new WeekSummary
             {
-                Title      = $"Week {ISOWeek.GetWeekOfYear(weekStart)}",
-                Range      = $"{weekStart:dd/MM} - {weekEnd.AddDays(-1):dd/MM}",
+                Title = $"Week {ISOWeek.GetWeekOfYear(weekStart)}",
+                Range = $"{weekStart:dd/MM} - {weekEnd.AddDays(-1):dd/MM}",
                 TotalLabel = $"{weekMinutes / 60}u {weekMinutes % 60}m",
-                Color      = Brushes.LightGray
+                Color = Brushes.LightGray
             });
             weekStart = weekEnd;
         }
@@ -529,9 +529,9 @@ public partial class PlanningCalendarViewModel : ObservableObject
     {
         await using var db = await _factory.CreateDbContextAsync();
 
-        var y         = SelectedDate.Year;
+        var y = SelectedDate.Year;
         var weekStart = ISOWeek.ToDateTime(y, weekNr, DayOfWeek.Monday);
-        var weekEnd   = weekStart.AddDays(7);
+        var weekEnd = weekStart.AddDays(7);
 
         var taken = await db.WerkTaken
             .Include(t => t.WerkBon)
@@ -550,14 +550,14 @@ public partial class PlanningCalendarViewModel : ObservableObject
             var r = t.OfferteRegel;
             WeekRows.Add(new WeekRow
             {
-                BonNr     = t.WerkBonId,
-                DuurMin   = t.DuurMinuten,
+                BonNr = t.WerkBonId,
+                DuurMin = t.DuurMinuten,
                 KlantNaam = t.WerkBon?.Offerte?.Klant?.Achternaam ?? "",
-                Afmeting  = r is null ? "" : $"{r.AantalStuks}× {r.BreedteCm}×{r.HoogteCm}",
-                Lijst     = r?.TypeLijst?.Artikelnummer ?? "",
+                Afmeting = r is null ? "" : $"{r.AantalStuks}× {r.BreedteCm}×{r.HoogteCm}",
+                Lijst = r?.TypeLijst?.Artikelnummer ?? "",
                 LijstType = r?.TypeLijst?.Soort ?? "",
-                Van       = t.GeplandVan,
-                Tot       = t.GeplandTot
+                Van = t.GeplandVan,
+                Tot = t.GeplandTot
             });
         }
     }
@@ -567,46 +567,46 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
 public partial class DayTile : ObservableObject
 {
-    public DateTime Date      { get; set; }
-    public string DayNumber   { get; set; } = "";
-    public string BusyLabel   { get; set; } = "";
-    public double Busy        { get; set; }
-    public IBrush BusyColor   { get; set; } = Brushes.LimeGreen;
+    public DateTime Date { get; set; }
+    public string DayNumber { get; set; } = "";
+    public string BusyLabel { get; set; } = "";
+    public double Busy { get; set; }
+    public IBrush BusyColor { get; set; } = Brushes.LimeGreen;
     public double BusyBarWidth => Busy * 120;
 
     [ObservableProperty] private IBrush background = Brushes.Transparent;
-    [ObservableProperty] private IBrush border      = Brushes.Gray;
-    [ObservableProperty] private bool   isSelected;
+    [ObservableProperty] private IBrush border = Brushes.Gray;
+    [ObservableProperty] private bool isSelected;
 }
 
 public class WeekSummary
 {
-    public string Title      { get; set; } = "";
-    public string Range      { get; set; } = "";
+    public string Title { get; set; } = "";
+    public string Range { get; set; } = "";
     public string TotalLabel { get; set; } = "";
-    public IBrush Color      { get; set; } = Brushes.Gray;
+    public IBrush Color { get; set; } = Brushes.Gray;
 }
 
 public class DayRow
 {
-    public int      WeekNr  { get; set; }
-    public string   Dag     { get; set; } = "";
-    public DateTime Datum   { get; set; }
-    public int      Uren    { get; set; }
-    public int      Minuten { get; set; }
-    public IBrush   Kleur   { get; set; } = Brushes.Gray;
-    public string   UurMinText => $"{Uren:00}:{Minuten:00}";
+    public int WeekNr { get; set; }
+    public string Dag { get; set; } = "";
+    public DateTime Datum { get; set; }
+    public int Uren { get; set; }
+    public int Minuten { get; set; }
+    public IBrush Kleur { get; set; } = Brushes.Gray;
+    public string UurMinText => $"{Uren:00}:{Minuten:00}";
 }
 
 public class WeekRow
 {
-    public int      BonNr     { get; set; }
-    public int      DuurMin   { get; set; }
-    public string   KlantNaam { get; set; } = "";
-    public string   Afmeting  { get; set; } = "";
-    public string   Lijst     { get; set; } = "";
-    public string   LijstType { get; set; } = "";
-    public DateTime Van       { get; set; }
-    public DateTime Tot       { get; set; }
-    public string   Tijdstip  => $"{Van:HH:mm} – {Tot:HH:mm}";
+    public int BonNr { get; set; }
+    public int DuurMin { get; set; }
+    public string KlantNaam { get; set; } = "";
+    public string Afmeting { get; set; } = "";
+    public string Lijst { get; set; } = "";
+    public string LijstType { get; set; } = "";
+    public DateTime Van { get; set; }
+    public DateTime Tot { get; set; }
+    public string Tijdstip => $"{Van:HH:mm} – {Tot:HH:mm}";
 }

@@ -5,7 +5,7 @@
         x:DataType="vm:KlantExcelPreviewViewModel"
         Width="900"
         Height="600"
-        Title="Excel import">
+        Title="Excel-import">
 
 
 	<DockPanel Margin="10"   Background="#F5F5F5">
@@ -34,7 +34,7 @@
 				<DataGridTextColumn Header="Achternaam"
                                     Binding="{Binding Achternaam}" />
 
-				<DataGridTextColumn Header="Email"
+        <DataGridTextColumn Header="E-mail"
                                     Binding="{Binding Email}" />
 
 				<DataGridTextColumn Header="Status"

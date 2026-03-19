@@ -1,7 +1,7 @@
 using QuadroApp.Model.Import;
 using System.Collections.Generic;
 
-namespace QuadroApp.Service.Import.Enterprise;
+namespace QuadroApp.Service.Import;
 
 public interface IExcelMap<T>
 {

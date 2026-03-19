@@ -96,8 +96,8 @@
                         <Button Content="🗑️ Verwijderen" Command="{Binding DeleteCommand}" Classes="MainBtn"/>
                         <Button Content="💾 Opslaan" Command="{Binding SaveCommand}" Classes="MainBtn"/>
                         <Button Content="🔄 Ververs" Command="{Binding RefreshCommand}" Classes="MainBtn"/>
-                        <Button Content="📥 Excel import" Command="{Binding ImportExcelCommand}" Classes="MainBtn"/>
-                        <Button Content="🧩 Bulk update" Command="{Binding BulkPrijsUpdateCommand}" Classes="MainBtn"/>
+                        <Button Content="📥 Excel-import" Command="{Binding ImportExcelCommand}" Classes="MainBtn"/>
+                        <Button Content="🧩 Bulk bijwerken" Command="{Binding BulkPrijsUpdateCommand}" Classes="MainBtn"/>
                     </StackPanel>
                 </Grid>
 

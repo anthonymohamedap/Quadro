@@ -48,6 +48,31 @@ public sealed class FilePickerService : IFilePickerService
             ?? selectedFile.Name;
     }
 
+    public async Task<string?> PickFolderAsync(string title)
+    {
+        var storageProvider = ResolveStorageProvider();
+        if (storageProvider is null || !storageProvider.CanPickFolder)
+        {
+            return null;
+        }
+
+        var folders = await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = title,
+            AllowMultiple = false
+        });
+
+        var selectedFolder = folders.Count > 0 ? folders[0] : null;
+        if (selectedFolder is null)
+        {
+            return null;
+        }
+
+        return selectedFolder.TryGetLocalPath()
+            ?? selectedFolder.Path?.LocalPath
+            ?? selectedFolder.Name;
+    }
+
     private static IStorageProvider? ResolveStorageProvider()
     {
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)

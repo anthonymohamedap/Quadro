@@ -9,7 +9,7 @@
         MinWidth="980"
         MinHeight="680"
         WindowStartupLocation="CenterOwner"
-        Title="Bulk Lijsten"
+        Title="Bulklijsten"
         Background="#F5F5F5">
 
     <Grid RowDefinitions="Auto,*">
@@ -46,7 +46,7 @@
                               HorizontalScrollBarVisibility="Disabled"
                               Height="640">
                     <StackPanel Spacing="10">
-                        <TextBlock Text="Kies welke velden je wilt bulk bijwerken"
+                        <TextBlock Text="Kies welke velden je in bulk wilt bijwerken"
                                    Foreground="Black"
                                    FontWeight="SemiBold"
                                    FontSize="14"/>

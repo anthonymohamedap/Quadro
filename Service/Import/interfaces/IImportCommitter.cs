@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace QuadroApp.Service.Import.Enterprise;
+namespace QuadroApp.Service.Import;
 
 public interface IImportCommitter<T>
 {

@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Converters;
@@ -12,7 +12,6 @@ using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service;
 using QuadroApp.Service.Import;
-using QuadroApp.Service.Import.Enterprise;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Service.Pricing;
 using QuadroApp.Service.Toast;
@@ -39,12 +38,12 @@ public partial class App : Application
         // 1️⃣ GLOBAL EXCEPTION HANDLING
         // ==============================
 
-        AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
             LogException(e.ExceptionObject as Exception);
         };
 
-        TaskScheduler.UnobservedTaskException += (sender, e) =>
+        TaskScheduler.UnobservedTaskException += (_, e) =>
         {
             LogException(e.Exception);
             e.SetObserved();
@@ -99,6 +98,7 @@ public partial class App : Application
         services.AddScoped<IWerkBonWorkflowService, WerkBonWorkflowService>();
         services.AddScoped<IFactuurWorkflowService, FactuurWorkflowService>();
         services.AddScoped<IFactuurExportService, FactuurExportService>();
+        services.AddScoped<ICentralExcelExportService, CentralExcelExportService>();
         services.AddScoped<IFactuurExporter, PdfFactuurExporter>();
 
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
@@ -146,6 +146,7 @@ public partial class App : Application
         services.AddTransient<KlantDetailViewModel>();
         services.AddTransient<WerkBonLijstViewModel>();
         services.AddTransient<FacturenViewModel>();
+        services.AddTransient<ExportCenterViewModel>();
         services.AddTransient<InstellingenViewModel>();
 
         Services = services.BuildServiceProvider();
@@ -243,7 +244,7 @@ public partial class App : Application
 
     public class ToastColorConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type? targetType, object? parameter, CultureInfo culture)
         {
             return value switch
             {
@@ -254,7 +255,7 @@ public partial class App : Application
             };
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type? targetType, object? parameter, CultureInfo culture)
             => throw new NotImplementedException();
     }
 

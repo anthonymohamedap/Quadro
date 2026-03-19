@@ -2,7 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using QuadroApp.Model.Import;
-using QuadroApp.Service.Import.Enterprise;
+using QuadroApp.Service.Import;
 using QuadroApp.Service.Interfaces;
 using System;
 using System.Collections.Generic;

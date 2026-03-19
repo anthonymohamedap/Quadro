@@ -25,7 +25,7 @@
 			<Border Background="White" CornerRadius="8" Padding="12" BorderBrush="#DDD" BorderThickness="1">
 				<Grid ColumnDefinitions="1.6*,1.6*,2*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="6">
 					<TextBlock Grid.Row="0" Grid.Column="0" Text="Naam" FontWeight="Bold"/>
-					<TextBlock Grid.Row="0" Grid.Column="1" Text="Email" FontWeight="Bold"/>
+					<TextBlock Grid.Row="0" Grid.Column="1" Text="E-mail" FontWeight="Bold"/>
 					<TextBlock Grid.Row="0" Grid.Column="2" Text="Adres" FontWeight="Bold"/>
 
 					<TextBlock Grid.Row="1" Grid.Column="0">
@@ -58,7 +58,7 @@
 						<DockPanel LastChildFill="False">
 							<TextBlock Text="📄 Offertes" FontSize="18" FontWeight="Bold" DockPanel.Dock="Left"/>
 							<StackPanel Orientation="Horizontal" Spacing="6" DockPanel.Dock="Right">
-								<Button Content="Open" Command="{Binding OpenOfferteCommand}" CommandParameter="{Binding SelectedOfferte}" Classes="MainBtn"/>
+								<Button Content="Openen" Command="{Binding OpenOfferteCommand}" CommandParameter="{Binding SelectedOfferte}" Classes="MainBtn"/>
 								<Button Content="➕ Nieuw" Command="{Binding NieuweOfferteCommand}" Classes="MainBtn"/>
 							</StackPanel>
 						</DockPanel>
@@ -110,7 +110,7 @@
 
 				<Border Grid.Column="1" Background="White" CornerRadius="8" Padding="10" BorderBrush="#DDD" BorderThickness="1">
 					<StackPanel Spacing="8">
-						<TextBlock Text="🧾 WerkBonnen"
+						<TextBlock Text="🧾 Werkbonnen"
 			   FontSize="18"
 			   FontWeight="Bold"/>
 

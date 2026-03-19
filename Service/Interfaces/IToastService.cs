@@ -1,4 +1,3 @@
-using QuadroApp.Model.Toast;
 using QuadroApp.Service.Toast;
 using System.Collections.ObjectModel;
 
@@ -8,7 +7,7 @@ namespace QuadroApp.Service.Interfaces
     {
         /// <summary>
         /// Live collection of active toast messages. Entries are removed automatically
-        /// after <paramref name="durationMs"/> milliseconds. Bind UI overlays to this.
+        /// after the duration specified in <see cref="Show"/>. Bind UI overlays to this.
         /// </summary>
         ReadOnlyObservableCollection<ToastMessage> Messages { get; }
 

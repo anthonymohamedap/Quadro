@@ -5,7 +5,7 @@
         x:Class="QuadroApp.Views.ImportPreviewWindow"
         x:DataType="vm:ImportPreviewViewModel"
         Width="1100" Height="700"
-        Title="Import preview">
+        Title="Importvoorbeeld">
 
   <Window.Styles>
     <Style Selector="TextBlock">
@@ -16,7 +16,7 @@
   <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="2*,1*" Margin="12">
 
     <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Spacing="6">
-      <TextBlock Text="Excel import preview" FontSize="20" FontWeight="Bold"/>
+      <TextBlock Text="Voorbeeld van Excel-import" FontSize="20" FontWeight="Bold"/>
       <TextBlock Text="{Binding SummaryText}" Opacity="0.8"/>
       <TextBlock Text="{Binding WarningText}" IsVisible="{Binding HasWarnings}"/>
     </StackPanel>
@@ -50,7 +50,7 @@
 
     <Border Grid.Row="1" Grid.Column="1" Margin="0,12,0,12" CornerRadius="8" BorderThickness="1">
       <StackPanel>
-        <TextBlock Text="Issues" FontSize="16" FontWeight="Bold" Margin="10,10,10,6"/>
+        <TextBlock Text="Problemen" FontSize="16" FontWeight="Bold" Margin="10,10,10,6"/>
         <ListBox ItemsSource="{Binding Issues}" Margin="10,0,10,10">
           <ListBox.ItemTemplate>
             <DataTemplate x:DataType="imp:ImportIssue">
@@ -65,7 +65,7 @@
     </Border>
 
     <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-      <Button Content="Annuleer" Command="{Binding CancelCommand}" />
+      <Button Content="Annuleren" Command="{Binding CancelCommand}" />
       <Button Content="Importeer"
               Command="{Binding ConfirmCommand}"
               IsEnabled="{Binding CanConfirm}" />

@@ -471,8 +471,8 @@ public class WorkflowServiceTests
         public List<string> WarningMessages { get; } = new();
 
         // Not used in tests — satisfy the interface contract
-        public ReadOnlyObservableCollection<QuadroApp.Model.Toast.ToastMessage> Messages { get; } =
-            new(new ObservableCollection<QuadroApp.Model.Toast.ToastMessage>());
+        public ReadOnlyObservableCollection<QuadroApp.Service.Toast.ToastMessage> Messages { get; } =
+            new(new ObservableCollection<QuadroApp.Service.Toast.ToastMessage>());
 
         public void Show(string message, QuadroApp.Service.Toast.ToastType type, int durationMs = 3000)
         {

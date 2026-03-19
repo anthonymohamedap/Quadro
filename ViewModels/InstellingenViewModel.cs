@@ -38,7 +38,7 @@ public partial class InstellingenViewModel : ObservableObject, IAsyncInitializab
         try
         {
             IsBusy = true;
-            uurloon = await _settings.GetUurloon();
+            Uurloon = await _settings.GetUurloon();
             DefaultPrijsPerMeter = await _settings.GetDefaultPrijsPerMeterAsync();
             DefaultWinstFactor = await _settings.GetDefaultWinstFactorAsync();
             DefaultAfvalPercentage = await _settings.GetDefaultAfvalPercentageAsync();
@@ -59,7 +59,7 @@ public partial class InstellingenViewModel : ObservableObject, IAsyncInitializab
         }
 
         await _settings.SavePricingSettingsAsync(
-            uurloon,
+Uurloon,
             DefaultPrijsPerMeter,
             DefaultWinstFactor,
             DefaultAfvalPercentage);

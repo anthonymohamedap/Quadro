@@ -1,8 +1,8 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuadroApp.Model.DB;
 using QuadroApp.Model.Import;
-using QuadroApp.Service.Import.Enterprise;
+using QuadroApp.Service.Import;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Validation;
 using System;
@@ -65,7 +65,9 @@ public partial class AfwerkingenViewModel : ObservableObject
                 DeleteAsyncCommand.NotifyCanExecuteChanged();
                 SaveAsyncCommand.NotifyCanExecuteChanged();
                 SyncSelectedOptieBindings();
+                OnPropertyChanged(nameof(VolgnummerText));
                 OnPropertyChanged(nameof(PreviewPrijsText));
+                OnPropertyChanged(nameof(HeeftSelectie));
                 OnPropertyChanged(nameof(HeeftGeenSelectie));
             }
         }
@@ -305,7 +307,7 @@ public partial class AfwerkingenViewModel : ObservableObject
         get
         {
             var o = SelectedOptie;
-            if (o is null) return "Selecteer een optie voor preview.";
+            if (o is null) return "Selecteer een optie voor voorbeeld.";
 
             if (PreviewBreedteCm <= 0 || PreviewHoogteCm <= 0)
                 return "Afmetingen ongeldig.";
@@ -323,7 +325,7 @@ public partial class AfwerkingenViewModel : ObservableObject
             var afval = kost * (afvalPct / 100m);
             var excl = (kost + afval) * (1m + winstmarge);
 
-            return $"Preview: € {excl:F2} excl. btw (voor {PreviewBreedteCm}×{PreviewHoogteCm} cm)";
+            return $"Voorbeeld: € {excl:F2} excl. btw (voor {PreviewBreedteCm}x{PreviewHoogteCm} cm)";
         }
     }
 

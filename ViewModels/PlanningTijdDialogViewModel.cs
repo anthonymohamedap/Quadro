@@ -10,9 +10,9 @@ public partial class PlanningTijdDialogViewModel : ObservableObject
     [ObservableProperty] private DateTimeOffset? geplandeDatum;
 
     // decimal voor Avalonia NumericUpDown compatibiliteit
-    [ObservableProperty] private decimal vanUur    = 8;
+    [ObservableProperty] private decimal vanUur = 8;
     [ObservableProperty] private decimal vanMinuut = 0;
-    [ObservableProperty] private decimal totUur    = 10;
+    [ObservableProperty] private decimal totUur = 10;
     [ObservableProperty] private decimal totMinuut = 0;
 
     public Action<bool>? RequestClose { get; set; }
@@ -35,9 +35,9 @@ public partial class PlanningTijdDialogViewModel : ObservableObject
 
     public bool IsGeldig => DuurMinuten > 0 && GeplandeDatum.HasValue;
 
-    partial void OnVanUurChanged(decimal value)    => Refresh();
+    partial void OnVanUurChanged(decimal value) => Refresh();
     partial void OnVanMinuutChanged(decimal value) => Refresh();
-    partial void OnTotUurChanged(decimal value)    => Refresh();
+    partial void OnTotUurChanged(decimal value) => Refresh();
     partial void OnTotMinuutChanged(decimal value) => Refresh();
     partial void OnGeplandeDatumChanged(DateTimeOffset? value) => Refresh();
 

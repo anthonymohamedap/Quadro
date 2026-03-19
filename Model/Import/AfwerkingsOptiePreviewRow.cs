@@ -1,4 +1,6 @@
-﻿public sealed class AfwerkingsOptiePreviewRow
+﻿namespace QuadroApp.Model.Import;
+
+public sealed class AfwerkingsOptiePreviewRow
 {
     public int RowNumber { get; init; }
     public bool IsValid { get; set; }

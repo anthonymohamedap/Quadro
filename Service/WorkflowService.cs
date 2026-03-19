@@ -209,7 +209,7 @@ namespace QuadroApp.Service
         {
             if (!OfferteTransitions.TryGetValue(oldStatus, out var allowed) || !allowed.Contains(newStatus))
             {
-                throw new InvalidOperationException("Invalid status transition");
+                throw new InvalidOperationException("Ongeldige statusovergang");
             }
         }
 
@@ -217,7 +217,7 @@ namespace QuadroApp.Service
         {
             if (!WerkBonTransitions.TryGetValue(oldStatus, out var allowed) || !allowed.Contains(newStatus))
             {
-                throw new InvalidOperationException("Invalid status transition");
+                throw new InvalidOperationException("Ongeldige statusovergang");
             }
         }
     }

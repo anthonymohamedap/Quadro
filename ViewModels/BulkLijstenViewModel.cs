@@ -477,7 +477,7 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
 
         if (batchDuplicaten.Count > 0)
         {
-            _toast.Error($"Bulk update geblokkeerd: dubbele artikelnummer(s) in selectie: {string.Join(", ", batchDuplicaten)}.");
+            _toast.Error($"Bulkbijwerking geblokkeerd: dubbele artikelnummers in selectie: {string.Join(", ", batchDuplicaten)}.");
             return false;
         }
 
@@ -513,7 +513,7 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
 
         if (foutmeldingen.Count > 0)
         {
-            _toast.Error("Bulk update geblokkeerd:" + Environment.NewLine + string.Join(Environment.NewLine, foutmeldingen.Take(5)));
+            _toast.Error("Bulkbijwerking geblokkeerd:" + Environment.NewLine + string.Join(Environment.NewLine, foutmeldingen.Take(5)));
             return false;
         }
 
@@ -528,7 +528,7 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
         var lageVoorraad = lijsten.Count(x => x.VoorraadMeter < x.MinimumVoorraad);
         if (lageVoorraad > 0)
         {
-            _toast.Warning($"{lageVoorraad} lijst(en) zitten onder minimumvoorraad na de bulk update.");
+            _toast.Warning($"{lageVoorraad} lijst(en) zitten onder minimumvoorraad na de bulkbijwerking.");
         }
 
         _toast.Success($"{string.Join(", ", SelectedFieldLabels())} bijgewerkt voor {lijsten.Count} lijst(en).");

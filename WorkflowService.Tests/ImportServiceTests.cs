@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Model.Import;
-using QuadroApp.Service.Import.Enterprise;
+using QuadroApp.Service.Import;
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -33,7 +33,7 @@ public class ImportServiceTests
         Assert.Equal(1, result.Summary.InvalidRows);
         Assert.Contains(result.GlobalIssues, i => i.ColumnName == "__EntityName" && i.Message == "TypeLijst");
 
-        var invalidRow = Assert.Single(result.Rows.Where(r => !r.IsValid));
+        var invalidRow = Assert.Single(result.Rows, r => !r.IsValid);
         Assert.Contains(invalidRow.Issues, i => i.ColumnName == "Artikelnummer");
     }
 

@@ -37,6 +37,7 @@ namespace QuadroApp.ViewModels
         public IAsyncRelayCommand OpenAfwerkingsOptiesCommand { get; }
         public IAsyncRelayCommand OpenLeveranciersCommand { get; }
         public IAsyncRelayCommand OpenFacturenCommand { get; }
+        public IAsyncRelayCommand OpenExportCenterCommand { get; }
         public IAsyncRelayCommand OpenInstellingenCommand { get; }
 
         public HomeViewModel(
@@ -65,6 +66,7 @@ namespace QuadroApp.ViewModels
             OpenOfferteCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OfferteViewModel>());
             OpenOffertesLijstCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OffertesLijstViewModel>());
             OpenFacturenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<FacturenViewModel>());
+            OpenExportCenterCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<ExportCenterViewModel>());
         }
 
         public async Task InitializeAsync() => await LoadDashboardAsync();

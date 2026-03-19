@@ -1,6 +1,5 @@
-using QuadroApp.Model.Toast;
-using QuadroApp.Service.Interfaces;
 using QuadroApp.Service.Toast;
+using QuadroApp.Service.Interfaces;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 

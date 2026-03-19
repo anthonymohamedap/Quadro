@@ -3,7 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using Huskui.Avalonia.Controls;
 using Huskui.Avalonia.Models;
-using QuadroApp.Model.Toast;
+using QuadroApp.Service.Toast;
 using QuadroApp.Service.Interfaces;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -37,14 +37,14 @@ namespace QuadroApp.Service.Toast
                 var level = type switch
                 {
                     ToastType.Success => GrowlLevel.Success,
-                    ToastType.Error   => GrowlLevel.Danger,
+                    ToastType.Error => GrowlLevel.Danger,
                     ToastType.Warning => GrowlLevel.Warning,
-                    _                 => GrowlLevel.Information
+                    _ => GrowlLevel.Information
                 };
 
                 appWindow.PopGrowl(new GrowlItem
                 {
-                    Level   = level,
+                    Level = level,
                     Content = message
                 });
             }
@@ -64,8 +64,8 @@ namespace QuadroApp.Service.Toast
         }
 
         public void Success(string message) => Show(message, ToastType.Success);
-        public void Error(string message)   => Show(message, ToastType.Error);
+        public void Error(string message) => Show(message, ToastType.Error);
         public void Warning(string message) => Show(message, ToastType.Warning);
-        public void Info(string message)    => Show(message, ToastType.Info);
+        public void Info(string message) => Show(message, ToastType.Info);
     }
 }

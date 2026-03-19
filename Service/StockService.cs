@@ -305,65 +305,65 @@ namespace QuadroApp.Service
                 await using var db = await _factory.CreateDbContextAsync();
                 await using var tx = await db.Database.BeginTransactionAsync();
 
-            var lijn = await db.Set<LeverancierBestelLijn>()
-                .Include(l => l.LeverancierBestelling)
-                    .ThenInclude(b => b.Lijnen)
-                .Include(l => l.TypeLijst)
-                .FirstOrDefaultAsync(l => l.Id == bestelLijnId);
+                var lijn = await db.Set<LeverancierBestelLijn>()
+                    .Include(l => l.LeverancierBestelling)
+                        .ThenInclude(b => b.Lijnen)
+                    .Include(l => l.TypeLijst)
+                    .FirstOrDefaultAsync(l => l.Id == bestelLijnId);
 
-            if (lijn is null)
-                throw new InvalidOperationException("Bestellijn niet gevonden.");
+                if (lijn is null)
+                    throw new InvalidOperationException("Bestellijn niet gevonden.");
 
-            var resterend = lijn.AantalMeterBesteld - lijn.AantalMeterOntvangen;
-            if (resterend <= 0m)
-                return;
+                var resterend = lijn.AantalMeterBesteld - lijn.AantalMeterOntvangen;
+                if (resterend <= 0m)
+                    return;
 
-            var ontvangst = Math.Min(aantalMeter ?? resterend, resterend);
-            if (ontvangst <= 0m)
-                throw new ValidationException("Ontvangsthoeveelheid moet groter zijn dan 0.");
+                var ontvangst = Math.Min(aantalMeter ?? resterend, resterend);
+                if (ontvangst <= 0m)
+                    throw new ValidationException("Ontvangsthoeveelheid moet groter zijn dan 0.");
 
-            lijn.AantalMeterOntvangen += ontvangst;
-            lijn.TypeLijst.VoorraadMeter += ontvangst;
-            lijn.TypeLijst.InBestellingMeter = Math.Max(0m, lijn.TypeLijst.InBestellingMeter - ontvangst);
-            lijn.TypeLijst.LaatsteVoorraadCheckOp = DateTime.UtcNow;
+                lijn.AantalMeterOntvangen += ontvangst;
+                lijn.TypeLijst.VoorraadMeter += ontvangst;
+                lijn.TypeLijst.InBestellingMeter = Math.Max(0m, lijn.TypeLijst.InBestellingMeter - ontvangst);
+                lijn.TypeLijst.LaatsteVoorraadCheckOp = DateTime.UtcNow;
 
-            db.Set<VoorraadMutatie>().Add(new VoorraadMutatie
-            {
-                TypeLijstId = lijn.TypeLijstId,
-                LeverancierBestelLijnId = lijn.Id,
-                WerkBonId = lijn.WerkBonId,
-                MutatieType = VoorraadMutatieType.Receipt,
-                AantalMeter = ontvangst,
-                Referentie = lijn.LeverancierBestelling.BestelNummer,
-                Opmerking = $"Ontvangst op bestelling {lijn.LeverancierBestelling.BestelNummer}"
-            });
+                db.Set<VoorraadMutatie>().Add(new VoorraadMutatie
+                {
+                    TypeLijstId = lijn.TypeLijstId,
+                    LeverancierBestelLijnId = lijn.Id,
+                    WerkBonId = lijn.WerkBonId,
+                    MutatieType = VoorraadMutatieType.Receipt,
+                    AantalMeter = ontvangst,
+                    Referentie = lijn.LeverancierBestelling.BestelNummer,
+                    Opmerking = $"Ontvangst op bestelling {lijn.LeverancierBestelling.BestelNummer}"
+                });
 
-            var alleLijnen = lijn.LeverancierBestelling.Lijnen;
-            if (alleLijnen.All(x => x.AantalMeterOntvangen >= x.AantalMeterBesteld))
-            {
-                lijn.LeverancierBestelling.Status = LeverancierBestellingStatus.VolledigOntvangen;
-                lijn.LeverancierBestelling.OntvangenOp = DateTime.UtcNow;
-            }
-            else if (alleLijnen.Any(x => x.AantalMeterOntvangen > 0m))
-            {
-                lijn.LeverancierBestelling.Status = LeverancierBestellingStatus.DeelsOntvangen;
-            }
+                var alleLijnen = lijn.LeverancierBestelling.Lijnen;
+                if (alleLijnen.All(x => x.AantalMeterOntvangen >= x.AantalMeterBesteld))
+                {
+                    lijn.LeverancierBestelling.Status = LeverancierBestellingStatus.VolledigOntvangen;
+                    lijn.LeverancierBestelling.OntvangenOp = DateTime.UtcNow;
+                }
+                else if (alleLijnen.Any(x => x.AantalMeterOntvangen > 0m))
+                {
+                    lijn.LeverancierBestelling.Status = LeverancierBestellingStatus.DeelsOntvangen;
+                }
 
-            var gekoppeldeTaak = await db.WerkTaken
-                .Include(t => t.OfferteRegel)
-                    .ThenInclude(r => r!.TypeLijst)
-                .FirstOrDefaultAsync(t => t.LeverancierBestelLijnId == lijn.Id);
+                var gekoppeldeTaak = await db.WerkTaken
+                    .Include(t => t.OfferteRegel)
+                        .ThenInclude(r => r!.TypeLijst)
+                    .FirstOrDefaultAsync(t => t.LeverancierBestelLijnId == lijn.Id);
 
-            if (gekoppeldeTaak is not null
-                && gekoppeldeTaak.VoorraadStatus == VoorraadStatus.Ordered
-                && lijn.TypeLijst.BeschikbareVoorraadMeter >= gekoppeldeTaak.BenodigdeMeter)
-            {
-                await ReserveTaakInternalAsync(db, gekoppeldeTaak, lijn.TypeLijst);
-            }
+                if (gekoppeldeTaak is not null
+                    && gekoppeldeTaak.VoorraadStatus == VoorraadStatus.Ordered
+                    && lijn.TypeLijst.BeschikbareVoorraadMeter >= gekoppeldeTaak.BenodigdeMeter)
+                {
+                    await ReserveTaakInternalAsync(db, gekoppeldeTaak, lijn.TypeLijst);
+                }
 
-            await RefreshAlertsInternalAsync(db);
-            await db.SaveChangesAsync();
-            await tx.CommitAsync();
+                await RefreshAlertsInternalAsync(db);
+                await db.SaveChangesAsync();
+                await tx.CommitAsync();
 
                 _toast.Success($"Ontvangst geboekt voor bestelling {lijn.LeverancierBestelling.BestelNummer}.");
             }

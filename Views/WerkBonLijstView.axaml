@@ -92,8 +92,8 @@
 									ToolTip.Tip="Ververs"
 									Command="{Binding RefreshCommand}"
 									Classes="MainBtn"/>
-							<Button Content="📅 Open planning"
-									ToolTip.Tip="Open planning"
+							<Button Content="📅 Planning openen"
+									ToolTip.Tip="Planning openen"
 									Command="{Binding OpenPlanningCommand}"
 									Classes="MainBtn"/>
 						</StackPanel>
@@ -236,7 +236,7 @@
 										Padding="12,6"/>
 							</StackPanel>
 
-							<TextBlock Text="🛠 WerkTaken"
+							<TextBlock Text="🛠 Werktaken"
 									   FontSize="18"
 									   FontWeight="SemiBold"
 									   Foreground="Black"/>

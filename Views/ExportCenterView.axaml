@@ -1,0 +1,131 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:QuadroApp.ViewModels"
+             x:Class="QuadroApp.Views.ExportCenterView"
+             x:DataType="vm:ExportCenterViewModel"
+             Background="#F5F5F5">
+
+    <Grid RowDefinitions="Auto,*">
+        <Border Background="#444A50" Height="70">
+            <DockPanel LastChildFill="False" Margin="20,0">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
+                    <Ellipse Width="35" Height="35" Fill="#F5C242"/>
+                    <TextBlock Text="QUADRO" Foreground="White" FontWeight="Bold" FontSize="20" VerticalAlignment="Center"/>
+                    <TextBlock Text="Excel exportcenter" Foreground="#CCC" FontSize="13" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <Button Content="⬅️ Terug"
+                        Command="{Binding GaTerugCommand}"
+                        DockPanel.Dock="Right"
+                        Margin="0,10,10,0"
+                        Background="#F5C242"
+                        Foreground="#222"
+                        FontWeight="Bold"
+                        CornerRadius="8"
+                        Padding="10,5"
+                        Width="100"
+                        Height="32"/>
+            </DockPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="20" Spacing="18">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Centrale Excel-export"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               Foreground="#222"/>
+                    <TextBlock Text="Exporteer klanten, lijsten, afwerkingen en leveranciers vanuit één centrale view."
+                               Foreground="#5F6C7B"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="12" Padding="16">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Exportmap" FontWeight="SemiBold" Foreground="#111827"/>
+                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding ExportFolder}"
+                                     IsReadOnly="True"
+                                     Watermark="Selecteer een map"/>
+                            <Button Grid.Column="1"
+                                    Content="📁 Kies map"
+                                    Command="{Binding ChooseExportFolderCommand}"
+                                    Classes="MainBtn"/>
+                            <Button Grid.Column="2"
+                                    Content="📦 Exporteer alles"
+                                    Command="{Binding ExportAllesCommand}"
+                                    Classes="MainBtn"/>
+                        </Grid>
+                        <TextBlock Text="{Binding StatusMessage}" Foreground="#374151" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding LastExportPath, StringFormat='Laatste bestand: {0}'}"
+                                   IsVisible="{Binding HasLastExportPath}"
+                                   Foreground="#6B7280"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+                <UniformGrid Columns="2">
+                    <Border Classes="ExportCard">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Klanten" FontSize="18" FontWeight="Bold" Foreground="#111827"/>
+                            <TextBlock Text="Exporteer alle klantgegevens, contactinformatie en adressen naar Excel."
+                                       Foreground="#5F6C7B"
+                                       TextWrapping="Wrap"/>
+                            <Button Content="📤 Exporteer klanten"
+                                    Command="{Binding ExportKlantenCommand}"
+                                    Classes="MainBtn"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="ExportCard">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Lijsten" FontSize="18" FontWeight="Bold" Foreground="#111827"/>
+                            <TextBlock Text="Exporteer type-lijsten met voorraad, prijzen, leverancier en opmerkingen."
+                                       Foreground="#5F6C7B"
+                                       TextWrapping="Wrap"/>
+                            <Button Content="📤 Exporteer lijsten"
+                                    Command="{Binding ExportLijstenCommand}"
+                                    Classes="MainBtn"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="ExportCard">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Afwerkingen" FontSize="18" FontWeight="Bold" Foreground="#111827"/>
+                            <TextBlock Text="Exporteer afwerkingsopties inclusief groep, leverancier en kostparameters."
+                                       Foreground="#5F6C7B"
+                                       TextWrapping="Wrap"/>
+                            <Button Content="📤 Exporteer afwerkingen"
+                                    Command="{Binding ExportAfwerkingenCommand}"
+                                    Classes="MainBtn"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="ExportCard">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Leveranciers" FontSize="18" FontWeight="Bold" Foreground="#111827"/>
+                            <TextBlock Text="Exporteer leverancierscodes met gekoppelde tellingen van lijsten en bestellingen."
+                                       Foreground="#5F6C7B"
+                                       TextWrapping="Wrap"/>
+                            <Button Content="📤 Exporteer leveranciers"
+                                    Command="{Binding ExportLeveranciersCommand}"
+                                    Classes="MainBtn"/>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+
+    <UserControl.Styles>
+        <Style Selector="Border.ExportCard">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#E5E7EB"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="18"/>
+            <Setter Property="Margin" Value="0,0,18,18"/>
+        </Style>
+    </UserControl.Styles>
+</UserControl>

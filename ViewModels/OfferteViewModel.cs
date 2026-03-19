@@ -334,12 +334,12 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
         // 👇 voeg dit toe
         FilterKlanten();
 
-        GlasOpties    = await LoadOptiesAsync(db, 'G');
-        Passe1Opties  = await LoadOptiesAsync(db, 'P');
-        Passe2Opties  = await LoadOptiesAsync(db, 'P');
-        DiepteOpties  = await LoadOptiesAsync(db, 'D');
+        GlasOpties = await LoadOptiesAsync(db, 'G');
+        Passe1Opties = await LoadOptiesAsync(db, 'P');
+        Passe2Opties = await LoadOptiesAsync(db, 'P');
+        DiepteOpties = await LoadOptiesAsync(db, 'D');
         OpkleefOpties = await LoadOptiesAsync(db, 'O');
-        RugOpties     = await LoadOptiesAsync(db, 'R');
+        RugOpties = await LoadOptiesAsync(db, 'R');
 
         FilterKlanten();
         RelinkSelectionsAfterCatalog();

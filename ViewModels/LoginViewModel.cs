@@ -1,5 +1,5 @@
 // Candidate for removal – requires runtime verification
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Threading.Tasks;
@@ -36,7 +36,7 @@ namespace QuadroApp.ViewModels
 
             if (string.IsNullOrWhiteSpace(envPassword))
             {
-                ErrorMessage = "Environment variable niet ingesteld.";
+                ErrorMessage = "Omgevingsvariabele is niet ingesteld.";
                 return;
             }
 

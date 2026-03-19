@@ -100,7 +100,7 @@
 				</Border.Opacity>
 
 				<Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="12">
-					<TextBlock Text="Leverancier detail" FontSize="22" FontWeight="Bold"/>
+					<TextBlock Text="Leveranciersdetail" FontSize="22" FontWeight="Bold"/>
 
 					<Grid Grid.Row="1" ColumnDefinitions="2*,3*" RowDefinitions="Auto" ColumnSpacing="14">
 						<TextBlock Text="Naam (3 tekens)" Grid.Column="0" FontWeight="Bold"/>
@@ -113,9 +113,9 @@
 					</StackPanel>
 
 					<TabControl Grid.Row="3" Margin="0,6,0,0">
-						<TabItem Header="TypeLijsten">
+						<TabItem Header="Typelijsten">
 							<Grid Margin="0,12,0,0" RowDefinitions="Auto,Auto,*" RowSpacing="10">
-								<TextBlock Text="Gekoppelde TypeLijsten" FontSize="16" FontWeight="SemiBold"/>
+								<TextBlock Text="Gekoppelde typelijsten" FontSize="16" FontWeight="SemiBold"/>
 
 								<StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
 									<Button Content="◀ Vorige" Command="{Binding PrevLijstenPageCommand}" Classes="MainBtn"/>
@@ -126,7 +126,7 @@
 
 								<Grid Grid.Row="2" RowDefinitions="Auto,*" RowSpacing="12">
 									<TextBlock Margin="0,0,0,12"
-                                               Text="Geen gekoppelde TypeLijsten voor deze leverancier."
+													Text="Geen gekoppelde typelijsten voor deze leverancier."
                                                Foreground="#6B7280"
                                                IsVisible="{Binding LijstenVanLeverancier.Count, Converter={StaticResource EmptyCountToBool}}"/>
 
@@ -265,13 +265,13 @@
 							</Grid>
 						</TabItem>
 
-						<TabItem Header="Alerts">
+						<TabItem Header="Waarschuwingen">
 							<Grid Margin="0,12,0,0" RowDefinitions="Auto,*" RowSpacing="10">
-								<TextBlock Text="Stock alerts" FontSize="16" FontWeight="SemiBold"/>
+								<TextBlock Text="Voorraadwaarschuwingen" FontSize="16" FontWeight="SemiBold"/>
 
 								<Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="12">
 									<TextBlock Margin="0,0,0,12"
-                                               Text="Geen open stock alerts voor deze leverancier."
+													Text="Geen open voorraadwaarschuwingen voor deze leverancier."
                                                Foreground="#6B7280"
                                                IsVisible="{Binding LeverancierAlerts.Count, Converter={StaticResource EmptyCountToBool}}"/>
 

@@ -5,7 +5,7 @@ using QuadroApp.Model.Import;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace QuadroApp.Service.Import.Enterprise;
+namespace QuadroApp.Service.Import;
 
 public sealed class KlantImportValidator : IImportValidator<Klant>
 {

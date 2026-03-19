@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace QuadroApp.Service.Import.Enterprise;
+namespace QuadroApp.Service.Import;
 
 public sealed class TypeLijstExcelMap : IExcelMap<TypeLijst>
 {

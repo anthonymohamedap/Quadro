@@ -6,5 +6,6 @@ namespace QuadroApp.Service.Import
     public interface IFilePickerService
     {
         Task<string?> PickExcelFileAsync();
+        Task<string?> PickFolderAsync(string title);
     }
 }

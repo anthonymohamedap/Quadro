@@ -48,9 +48,13 @@
 			<views:WerkBonLijstView/>
 		</DataTemplate>
 
-		<DataTemplate DataType="{x:Type vm:FacturenViewModel}">
-			<views:FacturenView/>
+ 		<DataTemplate DataType="{x:Type vm:FacturenViewModel}">
+ 			<views:FacturenView/>
+ 		</DataTemplate>
+
+		<DataTemplate DataType="{x:Type vm:ExportCenterViewModel}">
+			<views:ExportCenterView/>
 		</DataTemplate>
-	</Application.DataTemplates>
+ 	</Application.DataTemplates>
 
 </Application>

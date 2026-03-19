@@ -1,9 +1,9 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
-using QuadroApp.Service.Import.Enterprise;
+using QuadroApp.Service.Import;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Validation;
 using System;

@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore.Design;
 using QuadroApp.Data;
 
+namespace QuadroApp.Data;
+
 public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 {
     public AppDbContext CreateDbContext(string[] args)

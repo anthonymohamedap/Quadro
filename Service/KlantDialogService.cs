@@ -6,6 +6,8 @@ using QuadroApp.Service.Interfaces;
 using QuadroApp.Views;
 using System.Threading.Tasks;
 
+namespace QuadroApp.Service;
+
 public sealed class KlantDialogService : IKlantDialogService
 {
     public async Task<Klant?> EditAsync(Klant klant)

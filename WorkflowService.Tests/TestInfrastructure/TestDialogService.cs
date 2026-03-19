@@ -1,5 +1,5 @@
 using QuadroApp.Model.Import;
-using QuadroApp.Service.Import.Enterprise;
+using QuadroApp.Service.Import;
 using QuadroApp.Service.Interfaces;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
