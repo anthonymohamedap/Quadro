@@ -1,4 +1,5 @@
 # Solution Structure Analysis
+https://we.tl/t-jGnosv3yne
 
 This repository contains a single desktop application solution built with **.NET 9**, **Avalonia UI**, and **Entity Framework Core**.
 
