@@ -62,7 +62,7 @@ namespace QuadroApp.ViewModels
 
             var query = db.WerkBonnen
                 .Include(w => w.Offerte).ThenInclude(o => o.Klant)
-                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r.TypeLijst)
+                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.TypeLijst)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(Zoekterm))

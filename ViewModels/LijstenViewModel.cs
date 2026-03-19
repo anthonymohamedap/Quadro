@@ -162,8 +162,13 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
             return;
         }
 
+        if (value is null)
+        {
+            return;
+        }
+
         GeselecteerdeLijst.Leverancier = value;
-        GeselecteerdeLijst.LeverancierId = value?.Id ?? GeselecteerdeLijst.LeverancierId;
+        GeselecteerdeLijst.LeverancierId = value.Id;
     }
 
     partial void OnLeverancierZoektermChanged(string? value) => FilterLeveranciers();

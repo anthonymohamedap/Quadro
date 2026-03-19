@@ -284,7 +284,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
             await using var dbPreview = await _factory.CreateDbContextAsync();
             var werkBonLabel = await dbPreview.WerkBonnen
                 .Where(w => w.Id == WerkBonId)
-                .Select(w => w.Offerte.Klant.Achternaam)
+                .Select(w => w.Offerte.Klant != null ? w.Offerte.Klant.Achternaam : null)
                 .FirstOrDefaultAsync() ?? $"WerkBon #{WerkBonId}";
 
             var dialogVm = new PlanningTijdDialogViewModel
@@ -412,7 +412,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
                 .ThenInclude(w => w.Offerte)
                     .ThenInclude(o => o.Klant)
             .Include(t => t.OfferteRegel)
-                .ThenInclude(r => r.TypeLijst)
+                .ThenInclude(r => r!.TypeLijst)
             .Where(t => t.GeplandVan.Date == SelectedDate.Date)
             .OrderBy(t => t.GeplandVan)
             .ToListAsync();
@@ -538,7 +538,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
                 .ThenInclude(w => w.Offerte)
                     .ThenInclude(o => o.Klant)
             .Include(t => t.OfferteRegel)
-                .ThenInclude(r => r.TypeLijst)
+                .ThenInclude(r => r!.TypeLijst)
             .Where(t => t.GeplandVan >= weekStart && t.GeplandVan < weekEnd)
             .OrderBy(t => t.GeplandVan)
             .ToListAsync();

@@ -171,7 +171,7 @@ namespace QuadroApp.Service
                 var taak = await db.WerkTaken
                     .Include(t => t.WerkBon)
                     .Include(t => t.OfferteRegel)
-                        .ThenInclude(r => r!.TypeLijst)
+                        .ThenInclude(r => r!.TypeLijst!)
                             .ThenInclude(l => l.Leverancier)
                     .FirstOrDefaultAsync(t => t.Id == werkTaakId);
 
