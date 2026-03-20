@@ -31,6 +31,21 @@ public static class FactuurSchemaUpgrade
 
             if (!columns.Contains("AangenomenDoorInitialen", StringComparer.OrdinalIgnoreCase))
                 await ExecuteNonQueryAsync(conn, "ALTER TABLE Facturen ADD COLUMN AangenomenDoorInitialen TEXT NULL;");
+
+            if (!columns.Contains("OfferteId", StringComparer.OrdinalIgnoreCase))
+                await ExecuteNonQueryAsync(conn, "ALTER TABLE Facturen ADD COLUMN OfferteId INTEGER NULL;");
+
+            await ExecuteNonQueryAsync(conn, """
+                UPDATE Facturen
+                SET OfferteId = (
+                    SELECT WerkBonnen.OfferteId
+                    FROM WerkBonnen
+                    WHERE WerkBonnen.Id = Facturen.WerkBonId
+                )
+                WHERE OfferteId IS NULL;
+                """);
+
+            await ExecuteNonQueryAsync(conn, "CREATE UNIQUE INDEX IF NOT EXISTS IX_Facturen_OfferteId ON Facturen(OfferteId) WHERE OfferteId IS NOT NULL;");
         }
         finally
         {

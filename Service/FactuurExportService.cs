@@ -59,4 +59,20 @@ public sealed class FactuurExportService : IFactuurExportService
 
         return result;
     }
+
+    public async Task<ExportResult> GeneratePreviewAsync(int factuurId, ExportFormaat formaat, string exportFolder)
+    {
+        _logger?.LogInformation("Factuur preview gestart. FactuurId={FactuurId}, Formaat={Formaat}, Folder={Folder}", factuurId, formaat, exportFolder);
+
+        await using var db = await _factory.CreateDbContextAsync();
+        await FactuurSchemaUpgrade.EnsureAsync(db);
+        var factuur = await db.Facturen.Include(x => x.Lijnen.OrderBy(l => l.Sortering)).FirstOrDefaultAsync(x => x.Id == factuurId);
+        if (factuur is null)
+            throw new InvalidOperationException("Factuur niet gevonden.");
+
+        if (!_exporters.TryGetValue(formaat, out var exporter))
+            throw new InvalidOperationException($"Geen exporter geregistreerd voor formaat {formaat}.");
+
+        return await exporter.ExportAsync(factuur, exportFolder);
+    }
 }

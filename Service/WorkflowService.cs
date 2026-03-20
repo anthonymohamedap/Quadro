@@ -19,10 +19,15 @@ namespace QuadroApp.Service
 
         private sealed class NoOpFactuurWorkflowService : IFactuurWorkflowService
         {
+            public Task<Factuur> MaakFactuurVanOfferteAsync(int offerteId) =>
+                Task.FromResult(new Factuur { OfferteId = offerteId });
+
             public Task<Factuur> MaakFactuurVanWerkBonAsync(int werkBonId) =>
                 Task.FromResult(new Factuur { WerkBonId = werkBonId });
 
             public Task<Factuur?> GetFactuurAsync(int factuurId) => Task.FromResult<Factuur?>(null);
+
+            public Task<Factuur?> GetFactuurVoorOfferteAsync(int offerteId) => Task.FromResult<Factuur?>(null);
 
             public Task MarkeerKlaarVoorExportAsync(int factuurId) => Task.CompletedTask;
 

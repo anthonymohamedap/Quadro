@@ -530,26 +530,38 @@
 				  ColumnSpacing="30">
 
 				<!-- LINKS ACTIES -->
-				<StackPanel Orientation="Horizontal"
-							Spacing="12">
+				<StackPanel Spacing="6">
+					<StackPanel Orientation="Horizontal"
+								Spacing="12">
 
-					<Button Content="Berekenen"
-							Command="{Binding BerekenCommand}"
-							Background="#F5C242"
-							Foreground="Black"
-							FontWeight="Bold"/>
+						<Button Content="Berekenen"
+								Command="{Binding BerekenCommand}"
+								Background="#F5C242"
+								Foreground="Black"
+								FontWeight="Bold"/>
 
-					<Button Content="Opslaan"
-							Command="{Binding SaveCommand}"
-							Background="#F5C242"
-							Foreground="Black"
-							FontWeight="Bold"/>
+						<Button Content="Opslaan"
+								Command="{Binding SaveCommand}"
+								Background="#F5C242"
+								Foreground="Black"
+								FontWeight="Bold"/>
 
-					<Button Content="Bevestigen → Bestelling"
-							Command="{Binding BevestigenCommand}"
-							Background="#F5C242"
-							Foreground="Black"
-							FontWeight="Bold"/>
+						<Button Content="{Binding FactuurButtonText}"
+								Command="{Binding FactuurCommand}"
+								Background="#D9EAFE"
+								Foreground="#123B68"
+								FontWeight="Bold"/>
+
+						<Button Content="Bevestigen → Bestelling"
+								Command="{Binding BevestigenCommand}"
+								Background="#F5C242"
+								Foreground="Black"
+								FontWeight="Bold"/>
+					</StackPanel>
+
+					<TextBlock Text="{Binding FactuurStatusText}"
+							   FontSize="12"
+							   Foreground="#5F6B7A"/>
 				</StackPanel>
 
 				<!-- RECHTS PRIJZEN -->

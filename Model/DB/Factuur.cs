@@ -15,13 +15,17 @@ public enum FactuurStatus
 }
 
 [Index(nameof(WerkBonId), IsUnique = true)]
+[Index(nameof(OfferteId), IsUnique = true)]
 [Index(nameof(Jaar), nameof(VolgNr), IsUnique = true)]
 public class Factuur
 {
     public int Id { get; set; }
 
-    public int WerkBonId { get; set; }
-    public WerkBon WerkBon { get; set; } = null!;
+    public int? WerkBonId { get; set; }
+    public WerkBon? WerkBon { get; set; }
+
+    public int? OfferteId { get; set; }
+    public Offerte? Offerte { get; set; }
 
     public int Jaar { get; set; }
     public int VolgNr { get; set; }
