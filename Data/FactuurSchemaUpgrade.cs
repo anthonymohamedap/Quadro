@@ -35,6 +35,9 @@ public static class FactuurSchemaUpgrade
             if (!columns.Contains("OfferteId", StringComparer.OrdinalIgnoreCase))
                 await ExecuteNonQueryAsync(conn, "ALTER TABLE Facturen ADD COLUMN OfferteId INTEGER NULL;");
 
+            if (!columns.Contains("VoorschotBedrag", StringComparer.OrdinalIgnoreCase))
+                await ExecuteNonQueryAsync(conn, "ALTER TABLE Facturen ADD COLUMN VoorschotBedrag TEXT NOT NULL DEFAULT '0';");
+
             await ExecuteNonQueryAsync(conn, """
                 UPDATE Facturen
                 SET OfferteId = (

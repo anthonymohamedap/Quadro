@@ -251,6 +251,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
             HoogteCm = r.HoogteCm,
             InlegBreedteCm = r.InlegBreedteCm,
             InlegHoogteCm = r.InlegHoogteCm,
+            Titel = r.Titel,
             Opmerking = r.Opmerking,
             TypeLijstId = r.TypeLijst?.Id ?? r.TypeLijstId,
             GlasId = r.Glas?.Id ?? r.GlasId,
@@ -483,6 +484,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
                     HoogteCm = dbRule.HoogteCm,
                     InlegBreedteCm = dbRule.InlegBreedteCm,
                     InlegHoogteCm = dbRule.InlegHoogteCm,
+                    Titel = dbRule.Titel,
                     Opmerking = dbRule.Opmerking,
                     TypeLijstId = dbRule.TypeLijstId,
                     GlasId = dbRule.GlasId,
@@ -605,6 +607,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
                         HoogteCm = vmRule.HoogteCm,
                         InlegBreedteCm = vmRule.InlegBreedteCm,
                         InlegHoogteCm = vmRule.InlegHoogteCm,
+                        Titel = vmRule.Titel,
                         Opmerking = vmRule.Opmerking,
                         TypeLijstId = vmRule.TypeLijst?.Id,
                         GlasId = vmRule.Glas?.Id,
@@ -686,6 +689,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
                             HoogteCm = vmRule.HoogteCm,
                             InlegBreedteCm = vmRule.InlegBreedteCm,
                             InlegHoogteCm = vmRule.InlegHoogteCm,
+                            Titel = vmRule.Titel,
                             Opmerking = vmRule.Opmerking,
                             TypeLijstId = vmRule.TypeLijst?.Id,
                             GlasId = vmRule.Glas?.Id,
@@ -717,6 +721,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
                         dbRule.HoogteCm = vmRule.HoogteCm;
                         dbRule.InlegBreedteCm = vmRule.InlegBreedteCm;
                         dbRule.InlegHoogteCm = vmRule.InlegHoogteCm;
+                        dbRule.Titel = vmRule.Titel;
                         dbRule.Opmerking = vmRule.Opmerking;
                         dbRule.TypeLijstId = vmRule.TypeLijst?.Id;
                         dbRule.GlasId = vmRule.Glas?.Id;
@@ -796,6 +801,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
             HoogteCm = s.HoogteCm,
             InlegBreedteCm = s.InlegBreedteCm,
             InlegHoogteCm = s.InlegHoogteCm,
+            Titel = s.Titel,
             Opmerking = s.Opmerking,
             TypeLijstId = s.TypeLijst?.Id ?? s.TypeLijstId,
             GlasId = s.Glas?.Id ?? s.GlasId,
@@ -1287,6 +1293,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
             TotaalExclBtw = factuur.TotaalExclBtw,
             TotaalBtw = factuur.TotaalBtw,
             TotaalInclBtw = factuur.TotaalInclBtw,
+            VoorschotBedrag = factuur.VoorschotBedrag,
             ExportPad = factuur.ExportPad,
             Status = factuur.Status,
             AangemaaktOp = factuur.AangemaaktOp,

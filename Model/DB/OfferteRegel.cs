@@ -17,6 +17,11 @@ namespace QuadroApp.Model.DB
         [MaxLength(500)]
         public string? Opmerking { get; set; }
 
+        /// <summary>Vrije titel die op de bestelbon/factuur verschijnt (bv "Poster A3", "Trouwfoto").
+        /// Als leeg → valt terug op TypeLijst.Artikelnummer.</summary>
+        [MaxLength(200)]
+        public string? Titel { get; set; }
+
         // ========================
         // Basis invoer
         // ========================

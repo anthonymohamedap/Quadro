@@ -18,8 +18,8 @@ namespace QuadroApp.Service;
 public sealed class PdfFactuurExporter : IFactuurExporter
 {
     private const float Margin = 36;
-    private const float ItemHeightEstimate = 122;
-    private const float FooterReserve = 210;
+    private const float ItemHeightEstimate = 140;
+    private const float FooterReserve = 230;
 
     private readonly ILogger<PdfFactuurExporter>? _logger;
 
@@ -37,15 +37,17 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         var path = Path.Combine(exportFolder, $"{factuur.DocumentType}-{safeNumber}.pdf");
         _logger?.LogInformation("PDF export map gegarandeerd: {Folder}", exportFolder);
 
-        var logoPath = Path.GetFullPath("Assets/Quadro_logo2012_RGB.jpg");
-        var logoBytes = File.Exists(logoPath) ? File.ReadAllBytes(logoPath) : null;
+        // Logo's laden
+        var logoBytes      = LoadAsset("Assets/Quadro_logo2012_RGB.jpg");
+        var hibLogoBytes   = LoadAsset("Assets/hib logo 7.4 Kb.jpg");
+        var guildLogoBytes = LoadAsset("Assets/Guild Certified Framer logo 125px.png");
 
         var items = factuur.Lijnen
             .OrderBy(x => x.Sortering)
             .Select((lijn, index) => BuildRenderItem(lijn, index + 1))
             .ToList();
 
-        var voorschot = 0m;
+        var voorschot = factuur.VoorschotBedrag;
         var teBetalenBijAfhalen = factuur.TotaalInclBtw - voorschot;
 
         var doc = Document.Create(container =>
@@ -61,6 +63,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
                     col.Spacing(8);
 
                     DrawHeader(col, factuur, logoBytes);
+                    DrawSpecialeMededeling(col, factuur.Opmerking);
                     DrawCustomerBlock(col, factuur);
 
                     float currentY = 300;
@@ -73,7 +76,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
                     DrawSignature(col);
                 });
 
-                page.Footer().Element(c => DrawFooter(c));
+                page.Footer().Element(c => DrawFooter(c, hibLogoBytes, guildLogoBytes));
             });
         });
 
@@ -89,6 +92,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         return Task.FromResult(ExportResult.Ok(path, $"Export gelukt: {path}"));
     }
 
+    // ═══════════════════ HEADER ═══════════════════
     private static void DrawHeader(ColumnDescriptor col, Factuur factuur, byte[]? logoBytes)
     {
         if (logoBytes is not null)
@@ -120,6 +124,23 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         col.Item().PaddingTop(4).Text("OPENINGSUREN: DINSDAG TOT VRIJDAG: 10-12U / 13-18U\nZATERDAG: 10-16U DOORLOPEND\nZONDAG EN MAANDAG GESLOTEN").Italic();
     }
 
+    // ═══════════════════ SPECIALE MEDEDELING (Factuur.Opmerking) ═══════════════════
+    private static void DrawSpecialeMededeling(ColumnDescriptor col, string? opmerking)
+    {
+        if (string.IsNullOrWhiteSpace(opmerking))
+            return;
+
+        col.Item().PaddingTop(4).PaddingBottom(4)
+            .Border(0.5f).BorderColor(Colors.Grey.Lighten2)
+            .Padding(8)
+            .Column(block =>
+            {
+                block.Item().Text("SPECIALE MEDEDELING:").SemiBold().FontSize(10);
+                block.Item().Text(opmerking).FontSize(10);
+            });
+    }
+
+    // ═══════════════════ KLANTBLOK ═══════════════════
     private static void DrawCustomerBlock(ColumnDescriptor col, Factuur factuur)
     {
         col.Item().PaddingTop(2).Column(c =>
@@ -135,6 +156,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         });
     }
 
+    // ═══════════════════ ITEM BLOK ═══════════════════
     private static void DrawItemBlock(ColumnDescriptor col, RenderItem item, int index, ref float currentY)
     {
         if (currentY + ItemHeightEstimate > PageSizes.A4.Height - FooterReserve)
@@ -147,28 +169,48 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         {
             block.Spacing(3);
 
-            block.Item().Text($"{index} stuk in te lijsten : {item.Title}").SemiBold();
+            // Titel: gebruik Titel als beschikbaar, anders artikelnummer
+            var titelTekst = $"{index} stuk in te lijsten : {item.Title}";
+            if (!string.IsNullOrWhiteSpace(item.RegelOpmerking))
+                titelTekst += $"  —  {item.RegelOpmerking}";
+            block.Item().Text(titelTekst).SemiBold();
 
+            // Als er een custom titel is, toon artikelnummer apart
+            if (!string.IsNullOrWhiteSpace(item.Titel) && !string.IsNullOrWhiteSpace(item.LijstCode))
+                block.Item().Text($"lijst: {item.LijstCode}").FontSize(10);
+
+            // Afmetingen
             var metaLine1 = JoinMeta(
                 item.BreedteCm is null ? null : $"breedte : {item.BreedteCm:0.##} cm",
-                string.IsNullOrWhiteSpace(item.AfwCode) ? null : $"afw. : {item.AfwCode}",
+                string.IsNullOrWhiteSpace(item.LijstCode) || !string.IsNullOrWhiteSpace(item.Titel)
+                    ? null : $"lijst : {item.LijstCode}",
                 string.IsNullOrWhiteSpace(item.Inleg1) ? null : $"inleg 1: {item.Inleg1}");
             if (!string.IsNullOrWhiteSpace(metaLine1))
                 block.Item().Text(metaLine1);
 
             var metaLine2 = JoinMeta(
                 item.HoogteCm is null ? null : $"hoogte : {item.HoogteCm:0.##} cm",
-                string.IsNullOrWhiteSpace(item.LijstCode) ? null : $"lijst : {item.LijstCode}",
+                null,
                 string.IsNullOrWhiteSpace(item.Inleg2) ? null : $"inleg 2: {item.Inleg2}");
             if (!string.IsNullOrWhiteSpace(metaLine2))
                 block.Item().Text(metaLine2);
 
+            // Afwerkingen
+            foreach (var afw in item.Afwerkingen)
+                block.Item().Text($"    \u2022 {afw}").FontSize(10);
+
+            // TypeLijst opmerking
+            if (!string.IsNullOrWhiteSpace(item.LijstOpmerking))
+                block.Item().Text($"    lijst opmerking: {item.LijstOpmerking}").Italic().FontSize(10);
+
+            // Operatie-regels (backward compat voor oude data)
             foreach (var operation in item.OperationLines)
                 block.Item().Text(operation);
 
             if (!string.IsNullOrWhiteSpace(item.AfhalenOp))
                 block.Item().Text($"afhalen op {item.AfhalenOp}");
 
+            // Prijs rechts
             block.Item().PaddingTop(2).Row(r =>
             {
                 r.RelativeItem();
@@ -180,6 +222,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         currentY += ItemHeightEstimate;
     }
 
+    // ═══════════════════ TOTALEN ═══════════════════
     private static void DrawTotals(ColumnDescriptor col, decimal totaal, decimal voorschot, decimal teBetalen)
     {
         col.Item().PaddingTop(12).Row(row =>
@@ -203,32 +246,49 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         col.Item().PaddingTop(20).Text("VOOR AKKOORD : ______________________");
     }
 
-    private static void DrawFooter(IContainer container)
+    // ═══════════════════ FOOTER met logo's ═══════════════════
+    private static void DrawFooter(IContainer container, byte[]? hibLogo, byte[]? guildLogo)
     {
-        container.AlignCenter().Column(col =>
+        container.Column(col =>
         {
-            col.Item().Text("Liersesteenweg 64 - 3200 Aarschot - T 016 57 08 72 - kaders@quadro.be - www.quadro.be").FontSize(9);
-            col.Item().Text("BTW BE 0636 525 975 - BE28 7343 0100 1820 - BIC KREDBEBB").FontSize(9);
-            col.Item().Text("Openingsuren : Di t/m Vr 10-12 & 13-18.00 - Za doorlopend 10-17 - Zo/Ma gesloten").FontSize(9);
+            // Logo-rij onderaan
+            if (hibLogo is not null || guildLogo is not null)
+            {
+                col.Item().PaddingBottom(6).Row(row =>
+                {
+                    row.RelativeItem();
+                    if (hibLogo is not null)
+                        row.ConstantItem(55).Height(28).Image(hibLogo).FitArea();
+                    row.ConstantItem(14);
+                    if (guildLogo is not null)
+                        row.ConstantItem(55).Height(28).Image(guildLogo).FitArea();
+                    row.RelativeItem();
+                });
+            }
+
+            col.Item().AlignCenter().Text("Liersesteenweg 64 - 3200 Aarschot - T 016 57 08 72 - kaders@quadro.be - www.quadro.be").FontSize(9);
+            col.Item().AlignCenter().Text("BTW BE 0636 525 975 - BE28 7343 0100 1820 - BIC KREDBEBB").FontSize(9);
+            col.Item().AlignCenter().Text("Openingsuren : Di t/m Vr 10-12 & 13-18.00 - Za doorlopend 10-17 - Zo/Ma gesloten").FontSize(9);
         });
     }
 
+    // ═══════════════════ BuildRenderItem — tagged parsing ═══════════════════
     private static RenderItem BuildRenderItem(FactuurLijn lijn, int index)
     {
         var parts = lijn.Omschrijving
             .Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
             .ToList();
 
-        var eerste = parts.ElementAtOrDefault(0);
-        var tweede = parts.ElementAtOrDefault(1);
-        var derde = parts.ElementAtOrDefault(2);
+        var artikelnummer = parts.ElementAtOrDefault(0);
+        var dimsPart      = parts.ElementAtOrDefault(1);
 
+        // Afmetingen parsen
         decimal? breedte = null;
         decimal? hoogte = null;
 
-        if (!string.IsNullOrWhiteSpace(tweede))
+        if (!string.IsNullOrWhiteSpace(dimsPart))
         {
-            var match = Regex.Match(tweede, @"(?<w>\d+(?:[\.,]\d+)?)\s*x\s*(?<h>\d+(?:[\.,]\d+)?)", RegexOptions.IgnoreCase);
+            var match = Regex.Match(dimsPart, @"(?<w>\d+(?:[\.,]\d+)?)\s*x\s*(?<h>\d+(?:[\.,]\d+)?)", RegexOptions.IgnoreCase);
             if (match.Success)
             {
                 if (decimal.TryParse(match.Groups["w"].Value.Replace(',', '.'), NumberStyles.Number, CultureInfo.InvariantCulture, out var b))
@@ -238,40 +298,106 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             }
         }
 
+        // Tagged segmenten (vanaf index 2) uitpakken
+        var afwerkingen = new List<string>();
+        string? titel = null;
+        string? regelOpmerking = null;
+        string? lijstOpmerking = null;
         var operations = new List<string>();
-        if (!string.IsNullOrWhiteSpace(derde))
-            operations.Add(derde);
 
-        foreach (var part in parts.Skip(3))
+        var knownTags = new[] { "titel:", "glas:", "pp1:", "pp2:", "diepte:", "opkleven:", "rug:", "lijst_opm:", "opm:" };
+        var tagLabels = new Dictionary<string, string>
         {
-            if (!string.IsNullOrWhiteSpace(part))
+            ["glas:"]     = "Glas",
+            ["pp1:"]      = "Passe-partout 1",
+            ["pp2:"]      = "Passe-partout 2",
+            ["diepte:"]   = "Dieptekern",
+            ["opkleven:"] = "Opkleven",
+            ["rug:"]      = "Rug"
+        };
+
+        foreach (var part in parts.Skip(2))
+        {
+            if (string.IsNullOrWhiteSpace(part)) continue;
+
+            var matchedTag = knownTags.FirstOrDefault(t => part.StartsWith(t, StringComparison.OrdinalIgnoreCase));
+            if (matchedTag is not null)
+            {
+                var value = part[matchedTag.Length..].Trim();
+                if (string.IsNullOrWhiteSpace(value)) continue;
+
+                if (matchedTag == "titel:")
+                    titel = value;
+                else if (matchedTag == "opm:")
+                    regelOpmerking = value;
+                else if (matchedTag == "lijst_opm:")
+                    lijstOpmerking = value;
+                else if (tagLabels.TryGetValue(matchedTag, out var label))
+                    afwerkingen.Add($"{label}: {value}");
+            }
+            else
+            {
+                // Backward-compat: untagged segment → operation line
                 operations.Add(part);
+            }
         }
 
-        if (operations.Count == 0)
+        if (operations.Count == 0 && afwerkingen.Count == 0)
             operations.Add("Lijstwerk volgens bestelbon.");
 
-        var title = !string.IsNullOrWhiteSpace(derde)
-            ? derde
-            : !string.IsNullOrWhiteSpace(eerste) ? eerste : $"Werkstuk {index}";
+        // Titel-logica: als Titel ingevuld → gebruik die, anders artikelnummer
+        var displayTitle = !string.IsNullOrWhiteSpace(titel)
+            ? titel
+            : !string.IsNullOrWhiteSpace(artikelnummer) ? artikelnummer : $"Werkstuk {index}";
 
         return new RenderItem(
-            Title: title,
+            Title: displayTitle,
             BreedteCm: breedte,
             HoogteCm: hoogte,
-            AfwCode: eerste,
-            LijstCode: eerste,
+            AfwCode: null,
+            LijstCode: artikelnummer,
             Inleg1: null,
             Inleg2: null,
             OperationLines: operations,
+            Afwerkingen: afwerkingen,
+            RegelOpmerking: regelOpmerking,
+            LijstOpmerking: lijstOpmerking,
+            Titel: titel,
             AfhalenOp: null,
             ItemTotal: lijn.TotaalIncl);
+    }
+
+    // ═══════════════════ Helpers ═══════════════════
+    private static byte[]? LoadAsset(string relativePath)
+    {
+        // Probeer eerst relatief aan app-directory (bin/Debug/net9.0/)
+        var basePath = Path.Combine(AppContext.BaseDirectory, relativePath);
+        if (File.Exists(basePath))
+            return File.ReadAllBytes(basePath);
+
+        // Fallback: relatief aan working directory
+        var cwdPath = Path.GetFullPath(relativePath);
+        if (File.Exists(cwdPath))
+            return File.ReadAllBytes(cwdPath);
+
+        // Fallback: relatief aan project root (2-3 niveaus omhoog)
+        var dir = AppContext.BaseDirectory;
+        for (var i = 0; i < 5; i++)
+        {
+            dir = Path.GetDirectoryName(dir);
+            if (dir is null) break;
+            var candidate = Path.Combine(dir, relativePath);
+            if (File.Exists(candidate))
+                return File.ReadAllBytes(candidate);
+        }
+
+        return null;
     }
 
     private static string JoinMeta(string? left, string? middle, string? right)
         => string.Join("      ", new[] { left, middle, right }.Where(x => !string.IsNullOrWhiteSpace(x))!);
 
-    private static string Eur(decimal value) => $"€ {value.ToString("0.00", CultureInfo.InvariantCulture)}";
+    private static string Eur(decimal value) => $"\u20ac {value.ToString("0.00", CultureInfo.InvariantCulture)}";
 
     private sealed record RenderItem(
         string Title,
@@ -282,6 +408,10 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         string? Inleg1,
         string? Inleg2,
         IReadOnlyList<string> OperationLines,
+        IReadOnlyList<string> Afwerkingen,
+        string? RegelOpmerking,
+        string? LijstOpmerking,
+        string? Titel,
         string? AfhalenOp,
         decimal ItemTotal);
 }

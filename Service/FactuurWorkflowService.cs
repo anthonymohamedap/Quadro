@@ -37,11 +37,14 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         await FactuurSchemaUpgrade.EnsureAsync(db);
 
         var werkbon = await db.WerkBonnen
-            .Include(w => w.Offerte)
-                .ThenInclude(o => o!.Klant)
-            .Include(w => w.Offerte)
-                .ThenInclude(o => o!.Regels)
-                    .ThenInclude(r => r.TypeLijst)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Klant)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.TypeLijst)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.Glas)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.PassePartout1)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.PassePartout2)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.DiepteKern)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.Opkleven)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.Rug)
             .FirstOrDefaultAsync(w => w.Id == werkBonId);
 
         if (werkbon is null)
@@ -119,6 +122,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         factuur.VervalDatum = updated.VervalDatum;
         factuur.Opmerking = updated.Opmerking;
         factuur.AangenomenDoorInitialen = updated.AangenomenDoorInitialen;
+        factuur.VoorschotBedrag = updated.VoorschotBedrag;
 
         foreach (var lijn in updated.Lijnen.Where(l => l.Id == 0))
         {
@@ -152,12 +156,41 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         {
             var qty = Math.Max(1, r.AantalStuks);
             var unitEx = qty == 0 ? r.TotaalExcl : Math.Round(r.TotaalExcl / qty, 2);
-            var omschrijving = string.Join(" | ", new[]
+
+            // Bouw verrijkte pipe-string met tagged segmenten
+            var segments = new List<string>
             {
                 r.TypeLijst?.Artikelnummer ?? "Lijstwerk",
-                $"{r.BreedteCm.ToString("0.##", CultureInfo.InvariantCulture)}x{r.HoogteCm.ToString("0.##", CultureInfo.InvariantCulture)} cm",
-                r.Opmerking
-            }.Where(x => !string.IsNullOrWhiteSpace(x)));
+                $"{r.BreedteCm.ToString("0.##", CultureInfo.InvariantCulture)}x{r.HoogteCm.ToString("0.##", CultureInfo.InvariantCulture)} cm"
+            };
+
+            // Titel (tagged)
+            if (!string.IsNullOrWhiteSpace(r.Titel))
+                segments.Add($"titel:{r.Titel}");
+
+            // Afwerkingen (tagged)
+            if (r.Glas is not null)
+                segments.Add($"glas:{r.Glas.Naam}");
+            if (r.PassePartout1 is not null)
+                segments.Add($"pp1:{r.PassePartout1.Naam}");
+            if (r.PassePartout2 is not null)
+                segments.Add($"pp2:{r.PassePartout2.Naam}");
+            if (r.DiepteKern is not null)
+                segments.Add($"diepte:{r.DiepteKern.Naam}");
+            if (r.Opkleven is not null)
+                segments.Add($"opkleven:{r.Opkleven.Naam}");
+            if (r.Rug is not null)
+                segments.Add($"rug:{r.Rug.Naam}");
+
+            // TypeLijst opmerking (tagged)
+            if (!string.IsNullOrWhiteSpace(r.TypeLijst?.Opmerking))
+                segments.Add($"lijst_opm:{r.TypeLijst!.Opmerking}");
+
+            // OfferteRegel opmerking (tagged)
+            if (!string.IsNullOrWhiteSpace(r.Opmerking))
+                segments.Add($"opm:{r.Opmerking}");
+
+            var omschrijving = string.Join(" | ", segments.Where(x => !string.IsNullOrWhiteSpace(x)));
 
             lijnen.Add(CreateLijn(omschrijving, qty, "st", unitEx, effectiefBtw, sort++));
 
@@ -236,8 +269,13 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
     {
         var offerte = await db.Offertes
             .Include(o => o.Klant)
-            .Include(o => o.Regels)
-                .ThenInclude(r => r.TypeLijst)
+            .Include(o => o.Regels).ThenInclude(r => r.TypeLijst)
+            .Include(o => o.Regels).ThenInclude(r => r.Glas)
+            .Include(o => o.Regels).ThenInclude(r => r.PassePartout1)
+            .Include(o => o.Regels).ThenInclude(r => r.PassePartout2)
+            .Include(o => o.Regels).ThenInclude(r => r.DiepteKern)
+            .Include(o => o.Regels).ThenInclude(r => r.Opkleven)
+            .Include(o => o.Regels).ThenInclude(r => r.Rug)
             .FirstOrDefaultAsync(o => o.Id == offerteId);
 
         return offerte ?? throw new InvalidOperationException("Offerte niet gevonden.");
@@ -303,6 +341,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             FactuurDatum = now,
             VervalDatum = now.AddDays(30),
             IsBtwVrijgesteld = vrijgesteld,
+            VoorschotBedrag = offerte.VoorschotBedrag,
             Status = FactuurStatus.Draft,
             Lijnen = BuildLijnen(offerte, btwPct, vrijgesteld)
         };

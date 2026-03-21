@@ -65,6 +65,9 @@ public class Factuur
     [Precision(18, 2)]
     public decimal TotaalInclBtw { get; set; }
 
+    [Precision(18, 2)]
+    public decimal VoorschotBedrag { get; set; } = 0m;
+
     [MaxLength(500)]
     public string? ExportPad { get; set; }
 

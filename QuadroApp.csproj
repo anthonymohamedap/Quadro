@@ -59,6 +59,13 @@
 	<ItemGroup>
 		<AvaloniaResource Include="Assets\**\*" />
 	</ItemGroup>
+
+	<!-- Logo's die QuestPDF nodig heeft als bestanden op schijf -->
+	<ItemGroup>
+		<Content Include="Assets\Quadro_logo2012_RGB.jpg" CopyToOutputDirectory="PreserveNewest" />
+		<Content Include="Assets\hib logo 7.4 Kb.jpg" CopyToOutputDirectory="PreserveNewest" />
+		<Content Include="Assets\Guild Certified Framer logo 125px.png" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
   <ItemGroup>
     <Compile Update="Views\KlantImportPreviewWindow.axaml.cs">
       <DependentUpon>KlantImportPreviewWindow.axaml</DependentUpon>
