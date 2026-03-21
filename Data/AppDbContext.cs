@@ -219,6 +219,11 @@ namespace QuadroApp.Data
                     .HasForeignKey<Factuur>(x => x.WerkBonId)
                     .OnDelete(DeleteBehavior.Restrict);
 
+                entity.HasOne(x => x.Offerte)
+                    .WithOne()
+                    .HasForeignKey<Factuur>(x => x.OfferteId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
                 entity.HasMany(x => x.Lijnen)
                     .WithOne(x => x.Factuur)
                     .HasForeignKey(x => x.FactuurId)

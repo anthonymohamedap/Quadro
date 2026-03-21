@@ -8,13 +8,8 @@ namespace QuadroApp.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "WinstMargeFactor",
-                table: "TypeLijsten");
-
-            migrationBuilder.DropColumn(
-                name: "AfvalPercentage",
-                table: "TypeLijsten");
+            // Schema already applied to database — no-op to sync migration history.
+            migrationBuilder.Sql("SELECT 1;");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

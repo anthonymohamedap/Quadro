@@ -1,0 +1,66 @@
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:QuadroApp.ViewModels"
+    x:Class="QuadroApp.Views.FactuurInfoDialog"
+    x:DataType="vm:FactuurInfoDialogViewModel"
+    Width="560"
+    Height="430"
+    MinWidth="520"
+    MinHeight="400"
+    Title="Factuurgegevens"
+    WindowStartupLocation="CenterOwner">
+
+    <Border Padding="20" Background="#F7F8FA">
+        <StackPanel Spacing="14">
+            <StackPanel Spacing="4">
+                <TextBlock Text="Extra factuurinfo" FontSize="20" FontWeight="Bold"/>
+                <TextBlock Text="{Binding FactuurNummer}" FontWeight="SemiBold" Foreground="#123B68"/>
+                <TextBlock Text="{Binding KlantNaam}" Foreground="#5F6B7A"/>
+            </StackPanel>
+
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="10">
+                <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Factuurdatum"/>
+                <DatePicker Grid.Row="0" Grid.Column="1" SelectedDate="{Binding FactuurDatum, Mode=TwoWay}"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Vervaldatum"/>
+                <DatePicker Grid.Row="1" Grid.Column="1" SelectedDate="{Binding VervalDatum, Mode=TwoWay}"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Top" Text="Initialen"/>
+                <TextBox Grid.Row="2" Grid.Column="1" MaxLength="10" Text="{Binding AangenomenDoorInitialen, Mode=TwoWay}"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" VerticalAlignment="Top" Text="Opmerking"/>
+                <TextBox Grid.Row="3"
+                         Grid.Column="1"
+                         Height="120"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         VerticalContentAlignment="Top"
+                         Text="{Binding Opmerking, Mode=TwoWay}"/>
+            </Grid>
+
+            <Border Background="#FDECEC"
+                    BorderBrush="#E3A8A8"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="10"
+                    IsVisible="{Binding HasValidatieFout}">
+                <TextBlock Text="{Binding ValidatieFout, TargetNullValue=''}" Foreground="#9B1C1C" TextWrapping="Wrap"/>
+            </Border>
+
+            <TextBlock Text="Na bevestigen wordt meteen een PDF-preview geopend."
+                       Foreground="#5F6B7A"/>
+
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="10">
+                <Button Content="Annuleren" Command="{Binding AnnuleerCommand}"/>
+                <Button Content="Bevestigen &amp; preview"
+                        Command="{Binding BevestigCommand}"
+                        Background="#D9EAFE"
+                        Foreground="#123B68"
+                        FontWeight="Bold"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

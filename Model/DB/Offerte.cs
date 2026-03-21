@@ -62,6 +62,6 @@ namespace QuadroApp.Model.DB
         // 🔹 Restbedrag (niet in DB nodig maar mag)
         [NotMapped]
         public decimal RestTeBetalen =>
-            TotaalInclBtw - (IsVoorschotBetaald ? VoorschotBedrag : 0m);
+            TotaalInclBtw - VoorschotBedrag;
     }
 }

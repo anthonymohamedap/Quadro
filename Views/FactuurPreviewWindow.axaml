@@ -1,0 +1,104 @@
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:QuadroApp.ViewModels"
+    x:Class="QuadroApp.Views.FactuurPreviewWindow"
+    x:DataType="vm:FactuurPreviewViewModel"
+    Width="860"
+    Height="620"
+    MinWidth="760"
+    MinHeight="520"
+    Title="Factuur preview"
+    WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Background="#F7F8FA">
+        <Border Grid.Row="0" Background="#123B68" Padding="18">
+            <StackPanel>
+                <TextBlock Text="{Binding Titel}" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="{Binding StatusTekst}" Foreground="#D9EAFE"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="1" Margin="18,18,18,0" Padding="14" Background="#EEF4FB" CornerRadius="8">
+            <StackPanel Spacing="8">
+                <TextBlock Text="De PDF-preview wordt geopend in je standaard PDF-viewer."
+                           FontWeight="SemiBold"
+                           Foreground="#123B68"/>
+                <TextBlock Text="{Binding PreviewPad}" TextWrapping="Wrap" Foreground="#38506A"/>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="2" Margin="18" ColumnDefinitions="1.2*,0.8*" ColumnSpacing="18">
+            <Border Padding="14" Background="White" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Factuurlijnen" FontSize="16" FontWeight="SemiBold"/>
+                    <DataGrid ItemsSource="{Binding Lijnen}"
+                              AutoGenerateColumns="False"
+                              CanUserResizeColumns="True"
+                              CanUserSortColumns="False"
+                              HeadersVisibility="Column"
+                              IsReadOnly="True"
+                              MinHeight="320">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Omschrijving" Binding="{Binding Omschrijving}" Width="*"/>
+                            <DataGridTextColumn Header="Aantal" Binding="{Binding Aantal}" Width="90"/>
+                            <DataGridTextColumn Header="Prijs" Binding="{Binding PrijsExcl, StringFormat=€ {0:N2}}" Width="100"/>
+                            <DataGridTextColumn Header="Totaal" Binding="{Binding TotaalIncl, StringFormat=€ {0:N2}}" Width="110"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1" Padding="14" Background="White" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Samenvatting" FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Factuur.KlantNaam}" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Factuur.KlantAdres}" TextWrapping="Wrap"/>
+                    <Separator/>
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+                        <TextBlock Text="Factuurdatum"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Factuur.FactuurDatum, StringFormat={}{0:dd/MM/yyyy}}"/>
+
+                        <TextBlock Grid.Row="1" Text="Vervaldatum"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Factuur.VervalDatum, StringFormat={}{0:dd/MM/yyyy}}"/>
+
+                        <TextBlock Grid.Row="2" Text="Initialen"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Factuur.AangenomenDoorInitialen, TargetNullValue='-'}"/>
+                    </Grid>
+                    <Separator/>
+                    <TextBlock Text="Opmerking" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Factuur.Opmerking, TargetNullValue='Geen extra opmerking'}"
+                               TextWrapping="Wrap"/>
+                    <Separator/>
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+                        <TextBlock Text="Excl. BTW"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Factuur.TotaalExclBtw, StringFormat=€ {0:N2}}"/>
+
+                        <TextBlock Grid.Row="1" Text="BTW"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Factuur.TotaalBtw, StringFormat=€ {0:N2}}"/>
+
+                        <TextBlock Grid.Row="2" Text="Incl. BTW" FontWeight="Bold"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Factuur.TotaalInclBtw, StringFormat=€ {0:N2}}" FontWeight="Bold"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="3" Background="White" BorderBrush="#E5E7EB" BorderThickness="1,1,1,0" Padding="18">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button Content="Open preview" Command="{Binding OpenPreviewCommand}"/>
+                <Button Content="Opslaan bij offerte"
+                        Command="{Binding BewaarBijOfferteCommand}"
+                        Background="#D9EAFE"
+                        Foreground="#123B68"
+                        FontWeight="Bold"/>
+                <Button Content="Exporteer PDF"
+                        Command="{Binding ExporteerCommand}"
+                        Background="#F5C242"
+                        Foreground="Black"
+                        FontWeight="Bold"/>
+                <Button Content="Sluiten" Command="{Binding SluitCommand}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

@@ -188,7 +188,7 @@
 					<!-- REGEL DETAILS -->
 					<Border Classes="quadro-card">
 						<Grid ColumnDefinitions="220,*"
-                             RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                             RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                               RowSpacing="10">
 
 							<TextBlock Text="Regel details"
@@ -196,8 +196,15 @@
                                        FontSize="16"
                                        FontWeight="SemiBold"/>
 
-							<TextBlock Grid.Row="1" Grid.Column="0" Text="Aantal stuks"/>
-							<NumericUpDown Grid.Row="1"
+							<!-- ══ TITEL — eerste invoerveld ══ -->
+							<TextBlock Grid.Row="1" Grid.Column="0" Text="Titel (verschijnt op bon)"/>
+							<TextBox Grid.Row="1"
+                                     Grid.Column="1"
+                                     Watermark="bv. Poster A3, Trouwfoto, Canvas..."
+                                     Text="{Binding SelectedRegel.Titel, Mode=TwoWay}"/>
+
+							<TextBlock Grid.Row="2" Grid.Column="0" Text="Aantal stuks"/>
+							<NumericUpDown Grid.Row="2"
                                            Grid.Column="1"
 										   			
                             Foreground="Black"
@@ -205,9 +212,9 @@
                                            Maximum="999"
                                            Value="{Binding SelectedRegel.AantalStuks, Mode=TwoWay}"/>
 
-							<TextBlock Grid.Row="2" Grid.Column="0" Text="Type lijst"/>
+							<TextBlock Grid.Row="3" Grid.Column="0" Text="Type lijst"/>
 
-							<StackPanel Grid.Row="2"
+							<StackPanel Grid.Row="3"
                                         Grid.Column="1"
                                         Spacing="6">
 								<TextBlock Text="{Binding SelectedRegel.TypeLijst.Artikelnummer}" />
@@ -225,27 +232,27 @@
 								</ComboBox>
 							</StackPanel>
 
-							<TextBlock Grid.Row="3" Grid.Column="0" Text="Breedte (cm)"/>
-							<NumericUpDown Grid.Row="3"
+							<TextBlock Grid.Row="4" Grid.Column="0" Text="Breedte (cm)"/>
+							<NumericUpDown Grid.Row="4"
 										   			
                             Foreground="Black"
                                            Grid.Column="1"
                                            Value="{Binding SelectedRegel.BreedteCm, Mode=TwoWay}"/>
 
-							<TextBlock Grid.Row="4" Grid.Column="0" Text="Hoogte (cm)"/>
-							<NumericUpDown Grid.Row="4"
+							<TextBlock Grid.Row="5" Grid.Column="0" Text="Hoogte (cm)"/>
+							<NumericUpDown Grid.Row="5"
 										   			
                             Foreground="Black"
                                            Grid.Column="1"
                                            Value="{Binding SelectedRegel.HoogteCm, Mode=TwoWay}"/>
 
-							<TextBlock Grid.Row="5" Grid.Column="0" Text="Afgesproken prijs (excl.)"/>
-							<TextBox Grid.Row="5"
+							<TextBlock Grid.Row="6" Grid.Column="0" Text="Afgesproken prijs (excl.)"/>
+							<TextBox Grid.Row="6"
                                      Grid.Column="1"
                                      Text="{Binding SelectedRegel.AfgesprokenPrijsExcl, Mode=TwoWay}"/>
 
-							<TextBlock Grid.Row="6" Grid.Column="0" Text="Inleg (B × H) cm"/>
-							<Grid Grid.Row="6"
+							<TextBlock Grid.Row="7" Grid.Column="0" Text="Inleg (B × H) cm"/>
+							<Grid Grid.Row="7"
                                   Grid.Column="1"
                                   ColumnDefinitions="*,8,*">
 								<NumericUpDown Value="{Binding SelectedRegel.InlegBreedteCm, Mode=TwoWay}"			
@@ -257,12 +264,12 @@
                             Foreground="Black"
                                                Value="{Binding SelectedRegel.InlegHoogteCm, Mode=TwoWay}"/>
 							</Grid>
-							<TextBlock Grid.Row="7"
+							<TextBlock Grid.Row="8"
            Grid.Column="0"
            VerticalAlignment="Top"
            Text="Opmerking"/>
 
-							<TextBox Grid.Row="7"
+							<TextBox Grid.Row="8"
 									 Grid.Column="1"
 									 AcceptsReturn="True"
 									 Height="70"
@@ -497,18 +504,10 @@
 
 								<!-- VOORSCHOT -->
 								<TextBlock Grid.Row="2" Grid.Column="0" Text="Voorschot betaald"/>
-								<StackPanel Grid.Row="2"
-											Grid.Column="1"
-											Orientation="Horizontal"
-											Spacing="10">
-
-									<CheckBox IsChecked="{Binding Offerte.IsVoorschotBetaald, Mode=TwoWay}"/>
-
-									<TextBox Width="120"
-											 Watermark="Bedrag"
-											 Text="{Binding Offerte.VoorschotBedrag, Mode=TwoWay}"
-											 IsEnabled="{Binding Offerte.IsVoorschotBetaald}"/>
-								</StackPanel>
+								<TextBox Grid.Row="2"
+										 Grid.Column="1"
+										 Watermark="Bedrag"
+										 Text="{Binding Offerte.VoorschotBedrag, Mode=TwoWay}"/>
 
 							</Grid>
 
@@ -530,26 +529,38 @@
 				  ColumnSpacing="30">
 
 				<!-- LINKS ACTIES -->
-				<StackPanel Orientation="Horizontal"
-							Spacing="12">
+				<StackPanel Spacing="6">
+					<StackPanel Orientation="Horizontal"
+								Spacing="12">
 
-					<Button Content="Berekenen"
-							Command="{Binding BerekenCommand}"
-							Background="#F5C242"
-							Foreground="Black"
-							FontWeight="Bold"/>
+						<Button Content="Berekenen"
+								Command="{Binding BerekenCommand}"
+								Background="#F5C242"
+								Foreground="Black"
+								FontWeight="Bold"/>
 
-					<Button Content="Opslaan"
-							Command="{Binding SaveCommand}"
-							Background="#F5C242"
-							Foreground="Black"
-							FontWeight="Bold"/>
+						<Button Content="Opslaan"
+								Command="{Binding SaveCommand}"
+								Background="#F5C242"
+								Foreground="Black"
+								FontWeight="Bold"/>
 
-					<Button Content="Bevestigen → Bestelling"
-							Command="{Binding BevestigenCommand}"
-							Background="#F5C242"
-							Foreground="Black"
-							FontWeight="Bold"/>
+						<Button Content="{Binding FactuurButtonText}"
+								Command="{Binding FactuurCommand}"
+								Background="#D9EAFE"
+								Foreground="#123B68"
+								FontWeight="Bold"/>
+
+						<Button Content="Bevestigen → Bestelling"
+								Command="{Binding BevestigenCommand}"
+								Background="#F5C242"
+								Foreground="Black"
+								FontWeight="Bold"/>
+					</StackPanel>
+
+					<TextBlock Text="{Binding FactuurStatusText}"
+							   FontSize="12"
+							   Foreground="#5F6B7A"/>
 				</StackPanel>
 
 				<!-- RECHTS PRIJZEN -->

@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
+using QuadroApp.Service.Import;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
@@ -31,11 +32,16 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
     private readonly IOfferteWorkflowService _workflow;
     private readonly IWerkBonWorkflowService _werkBonWorkflow;
     private readonly IWorkflowService _statusWorkflow;
+    private readonly IFactuurWorkflowService _factuurWorkflow;
+    private readonly IFactuurExportService _factuurExportService;
+    private readonly IFilePickerService _filePickerService;
     private readonly ICrudValidator<Klant> _klantValidator;
     private readonly IKlantDialogService _klantDialog;
     // ====== state ======
     [ObservableProperty] private Offerte? offerte;
     [ObservableProperty] private ObservableCollection<OfferteRegel> regels = new();
+    [ObservableProperty] private WerkBon? gekoppeldeWerkBon;
+    [ObservableProperty] private Factuur? gekoppeldeFactuur;
 
     [ObservableProperty] private ObservableCollection<TypeLijst> typeLijsten = new();
     [ObservableProperty] private ObservableCollection<Klant> klanten = new();
@@ -92,6 +98,20 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
     public decimal OfferteEx => Offerte?.SubtotaalExBtw ?? 0m;
     public decimal OfferteBtw => Offerte?.BtwBedrag ?? 0m;
     public decimal OfferteIncl => Offerte?.TotaalInclBtw ?? 0m;
+    public string FactuurButtonText => GekoppeldeFactuur is null ? "Factuur aanmaken" : "Factuur bekijken";
+    public string FactuurStatusText
+    {
+        get
+        {
+            if (GekoppeldeFactuur is not null)
+                return $"Factuur {GekoppeldeFactuur.FactuurNummer} ({GekoppeldeFactuur.Status})";
+
+            if (GekoppeldeWerkBon is null)
+                return "Nog geen factuur voor deze offerte.";
+
+            return $"Nog geen factuur. Werkbon status: {GekoppeldeWerkBon.Status}.";
+        }
+    }
 
     // ====== EXPLICIETE commands (zodat compiled bindings nooit falen) ======
     public IAsyncRelayCommand NieuweKlantCommand { get; }
@@ -99,6 +119,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
     public IAsyncRelayCommand ApplyLegacyCodeCommand { get; }
     public IRelayCommand GenerateLegacyCodeCommand { get; }
     public IAsyncRelayCommand BevestigenCommand { get; }
+    public IAsyncRelayCommand FactuurCommand { get; }
 
     // BerekenCommand (als je XAML BerekenCommand gebruikt)
     public IRelayCommand BerekenCommand { get; }
@@ -118,6 +139,9 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
         IOfferteWorkflowService workflow,
         IWerkBonWorkflowService werkBonWorkflow,
         IWorkflowService statusWorkflow,
+        IFactuurWorkflowService factuurWorkflow,
+        IFactuurExportService factuurExportService,
+        IFilePickerService filePickerService,
         IOfferteValidator validator,
         IToastService toast, ICrudValidator<Klant> crudValidator, IKlantDialogService klantDialog)
     {
@@ -128,6 +152,9 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
         _workflow = workflow;
         _werkBonWorkflow = werkBonWorkflow;
         _statusWorkflow = statusWorkflow;
+        _factuurWorkflow = factuurWorkflow;
+        _factuurExportService = factuurExportService;
+        _filePickerService = filePickerService;
         _validator = validator;
         _klantValidator = crudValidator;
         _klantDialog = klantDialog;
@@ -139,6 +166,15 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
         ApplyLegacyCodeCommand = new AsyncRelayCommand(ApplyLegacyCodeAsync, () => SelectedRegel is not null);
         GenerateLegacyCodeCommand = new RelayCommand(GenerateLegacyCode, () => SelectedRegel is not null);
         BevestigenCommand = new AsyncRelayCommand(BevestigenAsync);
+        FactuurCommand = new AsyncRelayCommand(OpenFactuurAsync);
+    }
+
+    partial void OnGekoppeldeWerkBonChanged(WerkBon? value) => OnPropertyChanged(nameof(FactuurStatusText));
+
+    partial void OnGekoppeldeFactuurChanged(Factuur? value)
+    {
+        OnPropertyChanged(nameof(FactuurButtonText));
+        OnPropertyChanged(nameof(FactuurStatusText));
     }
 
     public async Task InitializeAsync() => await LoadCatalogAsync();
@@ -215,6 +251,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
             HoogteCm = r.HoogteCm,
             InlegBreedteCm = r.InlegBreedteCm,
             InlegHoogteCm = r.InlegHoogteCm,
+            Titel = r.Titel,
             Opmerking = r.Opmerking,
             TypeLijstId = r.TypeLijst?.Id ?? r.TypeLijstId,
             GlasId = r.Glas?.Id ?? r.GlasId,
@@ -431,6 +468,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
                 .AsNoTracking()
                 .FirstAsync(x => x.Id == offerteId);
             Offerte = o;
+            await LoadFactuurContextAsync(db, offerteId);
 
             SelectedKlant = GefilterdeKlanten.FirstOrDefault(k => k.Id == o.KlantId);
             Regels = new ObservableCollection<OfferteRegel>();
@@ -446,6 +484,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
                     HoogteCm = dbRule.HoogteCm,
                     InlegBreedteCm = dbRule.InlegBreedteCm,
                     InlegHoogteCm = dbRule.InlegHoogteCm,
+                    Titel = dbRule.Titel,
                     Opmerking = dbRule.Opmerking,
                     TypeLijstId = dbRule.TypeLijstId,
                     GlasId = dbRule.GlasId,
@@ -512,6 +551,8 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
     {
         Offerte = new Offerte();
         Regels = new ObservableCollection<OfferteRegel>();
+        GekoppeldeWerkBon = null;
+        GekoppeldeFactuur = null;
 
         SelectedRegel = null;
 
@@ -566,6 +607,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
                         HoogteCm = vmRule.HoogteCm,
                         InlegBreedteCm = vmRule.InlegBreedteCm,
                         InlegHoogteCm = vmRule.InlegHoogteCm,
+                        Titel = vmRule.Titel,
                         Opmerking = vmRule.Opmerking,
                         TypeLijstId = vmRule.TypeLijst?.Id,
                         GlasId = vmRule.Glas?.Id,
@@ -647,6 +689,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
                             HoogteCm = vmRule.HoogteCm,
                             InlegBreedteCm = vmRule.InlegBreedteCm,
                             InlegHoogteCm = vmRule.InlegHoogteCm,
+                            Titel = vmRule.Titel,
                             Opmerking = vmRule.Opmerking,
                             TypeLijstId = vmRule.TypeLijst?.Id,
                             GlasId = vmRule.Glas?.Id,
@@ -678,6 +721,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
                         dbRule.HoogteCm = vmRule.HoogteCm;
                         dbRule.InlegBreedteCm = vmRule.InlegBreedteCm;
                         dbRule.InlegHoogteCm = vmRule.InlegHoogteCm;
+                        dbRule.Titel = vmRule.Titel;
                         dbRule.Opmerking = vmRule.Opmerking;
                         dbRule.TypeLijstId = vmRule.TypeLijst?.Id;
                         dbRule.GlasId = vmRule.Glas?.Id;
@@ -757,6 +801,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
             HoogteCm = s.HoogteCm,
             InlegBreedteCm = s.InlegBreedteCm,
             InlegHoogteCm = s.InlegHoogteCm,
+            Titel = s.Titel,
             Opmerking = s.Opmerking,
             TypeLijstId = s.TypeLijst?.Id ?? s.TypeLijstId,
             GlasId = s.Glas?.Id ?? s.GlasId,
@@ -972,6 +1017,74 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
         }
     }
 
+    private async Task OpenFactuurAsync()
+    {
+        if (Offerte is null)
+        {
+            _toast.Error("Geen offerte geladen.");
+            return;
+        }
+
+        if (IsBusy)
+            return;
+
+        var pricingOk = await RunValidationOrToastAsync(o => _validator.ValidateForPricingAsync(o), showFeedback: true);
+        if (!pricingOk)
+            return;
+
+        await BerekenAsync(showFeedback: false);
+        await SaveCoreAsync(reloadAfterSave: false);
+
+        if (Offerte.Id == 0)
+        {
+            _toast.Error("Sla de offerte eerst op voordat je een factuur opent.");
+            return;
+        }
+
+        try
+        {
+            IsBusy = true;
+
+            await using var db = await _dbFactory.CreateDbContextAsync();
+            await LoadFactuurContextAsync(db, Offerte.Id);
+
+            var factuur = GekoppeldeFactuur;
+            if (factuur is null || factuur.Status == FactuurStatus.Draft)
+            {
+                factuur = await _factuurWorkflow.MaakFactuurVanOfferteAsync(Offerte.Id);
+            }
+            else
+            {
+                factuur = await _factuurWorkflow.GetFactuurAsync(factuur.Id) ?? factuur;
+            }
+
+            if (factuur.Status == FactuurStatus.Draft)
+            {
+                var bijgewerkteFactuur = await ShowFactuurInfoDialogAsync(factuur);
+                if (bijgewerkteFactuur is null)
+                    return;
+
+                await _factuurWorkflow.SaveDraftAsync(bijgewerkteFactuur);
+                factuur = await _factuurWorkflow.GetFactuurAsync(bijgewerkteFactuur.Id) ?? bijgewerkteFactuur;
+            }
+
+            GekoppeldeFactuur = factuur;
+            await ShowFactuurPreviewAsync(factuur.Id);
+
+            await using var refreshDb = await _dbFactory.CreateDbContextAsync();
+            await LoadFactuurContextAsync(refreshDb, Offerte.Id);
+        }
+        catch (Exception ex)
+        {
+            Foutmelding = ex.InnerException?.Message ?? ex.Message;
+            await _dialogs.ShowErrorAsync("Factuur openen mislukt", Foutmelding);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
     // ====== Klant ======
 
     private async Task NieuweKlantAsync()
@@ -1084,5 +1197,125 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
         OnPropertyChanged(nameof(OfferteEx));
         OnPropertyChanged(nameof(OfferteBtw));
         OnPropertyChanged(nameof(OfferteIncl));
+    }
+
+    private async Task LoadFactuurContextAsync(AppDbContext db, int offerteId)
+    {
+        var werkBon = await db.WerkBonnen
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.OfferteId == offerteId);
+
+        GekoppeldeWerkBon = werkBon;
+
+        var factuur = await db.Facturen
+            .Include(x => x.Lijnen)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.OfferteId == offerteId || (werkBon != null && x.WerkBonId == werkBon.Id));
+
+        if (factuur is not null)
+            factuur.Lijnen = factuur.Lijnen.OrderBy(x => x.Sortering).ToList();
+
+        GekoppeldeFactuur = factuur;
+    }
+
+    private async Task<Factuur?> ShowFactuurInfoDialogAsync(Factuur factuur)
+    {
+        var owner = GetOwnerWindow();
+        if (owner is null)
+            throw new InvalidOperationException("Hoofdvenster niet gevonden.");
+
+        var vm = new FactuurInfoDialogViewModel(CloneFactuur(factuur));
+        var dialog = new FactuurInfoDialog
+        {
+            DataContext = vm
+        };
+
+        vm.RequestClose = confirmed => dialog.Close(confirmed);
+        var confirmed = await dialog.ShowDialog<bool>(owner);
+        return confirmed ? vm.ToFactuur() : null;
+    }
+
+    private async Task ShowFactuurPreviewAsync(int factuurId)
+    {
+        var owner = GetOwnerWindow();
+        if (owner is null)
+            throw new InvalidOperationException("Hoofdvenster niet gevonden.");
+
+        var factuur = await _factuurWorkflow.GetFactuurAsync(factuurId)
+            ?? throw new InvalidOperationException("Factuur niet gevonden.");
+
+        var vm = new FactuurPreviewViewModel(
+            factuur.Id,
+            factuur,
+            _factuurWorkflow,
+            _factuurExportService,
+            _filePickerService,
+            _toast);
+
+        await vm.InitializeAsync();
+
+        var window = new FactuurPreviewWindow
+        {
+            DataContext = vm
+        };
+
+        vm.RequestClose = () => window.Close();
+        await window.ShowDialog(owner);
+    }
+
+    private static Avalonia.Controls.Window? GetOwnerWindow()
+    {
+        if (App.Current?.ApplicationLifetime is not Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            return null;
+
+        return desktop.MainWindow;
+    }
+
+    private static Factuur CloneFactuur(Factuur factuur)
+    {
+        return new Factuur
+        {
+            Id = factuur.Id,
+            OfferteId = factuur.OfferteId,
+            WerkBonId = factuur.WerkBonId,
+            Jaar = factuur.Jaar,
+            VolgNr = factuur.VolgNr,
+            FactuurNummer = factuur.FactuurNummer,
+            DocumentType = factuur.DocumentType,
+            KlantNaam = factuur.KlantNaam,
+            KlantAdres = factuur.KlantAdres,
+            KlantBtwNummer = factuur.KlantBtwNummer,
+            FactuurDatum = factuur.FactuurDatum,
+            VervalDatum = factuur.VervalDatum,
+            Opmerking = factuur.Opmerking,
+            AangenomenDoorInitialen = factuur.AangenomenDoorInitialen,
+            IsBtwVrijgesteld = factuur.IsBtwVrijgesteld,
+            TotaalExclBtw = factuur.TotaalExclBtw,
+            TotaalBtw = factuur.TotaalBtw,
+            TotaalInclBtw = factuur.TotaalInclBtw,
+            VoorschotBedrag = factuur.VoorschotBedrag,
+            ExportPad = factuur.ExportPad,
+            Status = factuur.Status,
+            AangemaaktOp = factuur.AangemaaktOp,
+            BijgewerktOp = factuur.BijgewerktOp,
+            RowVersion = factuur.RowVersion,
+            Lijnen = factuur.Lijnen
+                .OrderBy(x => x.Sortering)
+                .Select(x => new FactuurLijn
+                {
+                    Id = x.Id,
+                    FactuurId = x.FactuurId,
+                    Omschrijving = x.Omschrijving,
+                    Aantal = x.Aantal,
+                    Eenheid = x.Eenheid,
+                    PrijsExcl = x.PrijsExcl,
+                    BtwPct = x.BtwPct,
+                    TotaalExcl = x.TotaalExcl,
+                    TotaalBtw = x.TotaalBtw,
+                    TotaalIncl = x.TotaalIncl,
+                    Sortering = x.Sortering
+                })
+                .ToList()
+        };
     }
 }

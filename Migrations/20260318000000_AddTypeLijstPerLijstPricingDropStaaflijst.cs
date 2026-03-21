@@ -8,35 +8,8 @@ namespace QuadroApp.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Add per-lijst pricing fields (nullable = use global default when null)
-            migrationBuilder.AddColumn<decimal>(
-                name: "WinstFactor",
-                table: "TypeLijsten",
-                type: "TEXT",
-                precision: 6,
-                scale: 3,
-                nullable: true);
-
-            migrationBuilder.AddColumn<decimal>(
-                name: "AfvalPercentage",
-                table: "TypeLijsten",
-                type: "TEXT",
-                precision: 5,
-                scale: 2,
-                nullable: true);
-
-            // Migrate old staaflijst data: give those lists explicit values matching the old global defaults
-            migrationBuilder.Sql(
-                "UPDATE TypeLijsten SET WinstFactor = 3.5, AfvalPercentage = 20 WHERE IsStaaflijst = 1;");
-
-            // Drop the IsStaaflijst flag – no longer needed
-            migrationBuilder.DropColumn(
-                name: "IsStaaflijst",
-                table: "TypeLijsten");
-
-            // Remove the staaflijst-specific global settings from Instellingen
-            migrationBuilder.Sql(
-                "DELETE FROM Instellingen WHERE Sleutel IN ('StaaflijstWinstFactor','StaaflijstAfvalPercentage');");
+            // Schema already applied to database — no-op to sync migration history.
+            migrationBuilder.Sql("SELECT 1;");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

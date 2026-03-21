@@ -1,7 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
+using QuadroApp.Service.Pricing;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -13,10 +14,21 @@ namespace QuadroApp.Service;
 public sealed class FactuurWorkflowService : IFactuurWorkflowService
 {
     private readonly IDbContextFactory<AppDbContext> _factory;
+    private readonly IPricingService _pricing;
 
-    public FactuurWorkflowService(IDbContextFactory<AppDbContext> factory)
+    public FactuurWorkflowService(IDbContextFactory<AppDbContext> factory, IPricingService pricing)
     {
         _factory = factory;
+        _pricing = pricing;
+    }
+
+    public async Task<Factuur> MaakFactuurVanOfferteAsync(int offerteId)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        await FactuurSchemaUpgrade.EnsureAsync(db);
+
+        var offerte = await LoadOfferteAsync(db, offerteId);
+        return await GetOrCreateFactuurAsync(db, offerte, werkBonId: null);
     }
 
     public async Task<Factuur> MaakFactuurVanWerkBonAsync(int werkBonId)
@@ -24,18 +36,15 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         await using var db = await _factory.CreateDbContextAsync();
         await FactuurSchemaUpgrade.EnsureAsync(db);
 
-        var existing = await db.Facturen
-            .Include(x => x.Lijnen)
-            .FirstOrDefaultAsync(x => x.WerkBonId == werkBonId);
-        if (existing is not null)
-            return existing;
-
         var werkbon = await db.WerkBonnen
-            .Include(w => w.Offerte)
-                .ThenInclude(o => o!.Klant)
-            .Include(w => w.Offerte)
-                .ThenInclude(o => o!.Regels)
-                    .ThenInclude(r => r.TypeLijst)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Klant)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.TypeLijst)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.Glas)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.PassePartout1)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.PassePartout2)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.DiepteKern)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.Opkleven)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.Rug)
             .FirstOrDefaultAsync(w => w.Id == werkBonId);
 
         if (werkbon is null)
@@ -45,38 +54,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             throw new InvalidOperationException("Factuur kan enkel gemaakt worden voor afgewerkte werkbonnen.");
 
         var offerte = werkbon.Offerte ?? throw new InvalidOperationException("Werkbon heeft geen offerte.");
-        var klant = offerte.Klant;
-
-        var now = DateTime.Today;
-        var jaar = now.Year;
-        var volgNr = (await db.Facturen.Where(f => f.Jaar == jaar).MaxAsync(f => (int?)f.VolgNr) ?? 0) + 1;
-
-        var btwPct = await LeesBtwPctAsync(db);
-        var vrijgesteld = await IsBtwVrijgesteldAsync(db);
-
-        var factuur = new Factuur
-        {
-            WerkBonId = werkBonId,
-            Jaar = jaar,
-            VolgNr = volgNr,
-            FactuurNummer = $"{jaar}-{volgNr}",
-            DocumentType = "Bestelbon",
-            KlantNaam = BuildKlantNaam(klant),
-            KlantAdres = BuildAdres(klant),
-            KlantBtwNummer = klant?.BtwNummer,
-            FactuurDatum = now,
-            VervalDatum = now.AddDays(30),
-            IsBtwVrijgesteld = vrijgesteld,
-            Status = FactuurStatus.Draft,
-            Lijnen = BuildLijnen(offerte, btwPct, vrijgesteld)
-        };
-
-        HerberekenTotalen(factuur);
-
-        db.Facturen.Add(factuur);
-        await db.SaveChangesAsync();
-
-        return factuur;
+        return await GetOrCreateFactuurAsync(db, offerte, werkBonId);
     }
 
     public async Task<Factuur?> GetFactuurAsync(int factuurId)
@@ -84,6 +62,24 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         await using var db = await _factory.CreateDbContextAsync();
         await FactuurSchemaUpgrade.EnsureAsync(db);
         return await db.Facturen.Include(x => x.Lijnen.OrderBy(l => l.Sortering)).FirstOrDefaultAsync(x => x.Id == factuurId);
+    }
+
+    public async Task<Factuur?> GetFactuurVoorOfferteAsync(int offerteId)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        await FactuurSchemaUpgrade.EnsureAsync(db);
+
+        var factuur = await db.Facturen
+            .Include(x => x.Lijnen.OrderBy(l => l.Sortering))
+            .FirstOrDefaultAsync(x => x.OfferteId == offerteId || (x.WerkBon != null && x.WerkBon.OfferteId == offerteId));
+
+        if (factuur is not null && factuur.OfferteId != offerteId)
+        {
+            factuur.OfferteId = offerteId;
+            await db.SaveChangesAsync();
+        }
+
+        return factuur;
     }
 
     public async Task MarkeerKlaarVoorExportAsync(int factuurId)
@@ -120,10 +116,13 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         if (factuur.Status != FactuurStatus.Draft)
             throw new InvalidOperationException("Alleen draft facturen zijn bewerkbaar.");
 
+        factuur.OfferteId = updated.OfferteId ?? factuur.OfferteId;
+        factuur.WerkBonId = updated.WerkBonId ?? factuur.WerkBonId;
         factuur.FactuurDatum = updated.FactuurDatum;
         factuur.VervalDatum = updated.VervalDatum;
         factuur.Opmerking = updated.Opmerking;
         factuur.AangenomenDoorInitialen = updated.AangenomenDoorInitialen;
+        factuur.VoorschotBedrag = updated.VoorschotBedrag;
 
         foreach (var lijn in updated.Lijnen.Where(l => l.Id == 0))
         {
@@ -157,12 +156,41 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         {
             var qty = Math.Max(1, r.AantalStuks);
             var unitEx = qty == 0 ? r.TotaalExcl : Math.Round(r.TotaalExcl / qty, 2);
-            var omschrijving = string.Join(" | ", new[]
+
+            // Bouw verrijkte pipe-string met tagged segmenten
+            var segments = new List<string>
             {
                 r.TypeLijst?.Artikelnummer ?? "Lijstwerk",
-                $"{r.BreedteCm.ToString("0.##", CultureInfo.InvariantCulture)}x{r.HoogteCm.ToString("0.##", CultureInfo.InvariantCulture)} cm",
-                r.Opmerking
-            }.Where(x => !string.IsNullOrWhiteSpace(x)));
+                $"{r.BreedteCm.ToString("0.##", CultureInfo.InvariantCulture)}x{r.HoogteCm.ToString("0.##", CultureInfo.InvariantCulture)} cm"
+            };
+
+            // Titel (tagged)
+            if (!string.IsNullOrWhiteSpace(r.Titel))
+                segments.Add($"titel:{r.Titel}");
+
+            // Afwerkingen (tagged)
+            if (r.Glas is not null)
+                segments.Add($"glas:{r.Glas.Naam}");
+            if (r.PassePartout1 is not null)
+                segments.Add($"pp1:{r.PassePartout1.Naam}");
+            if (r.PassePartout2 is not null)
+                segments.Add($"pp2:{r.PassePartout2.Naam}");
+            if (r.DiepteKern is not null)
+                segments.Add($"diepte:{r.DiepteKern.Naam}");
+            if (r.Opkleven is not null)
+                segments.Add($"opkleven:{r.Opkleven.Naam}");
+            if (r.Rug is not null)
+                segments.Add($"rug:{r.Rug.Naam}");
+
+            // TypeLijst opmerking (tagged)
+            if (!string.IsNullOrWhiteSpace(r.TypeLijst?.Opmerking))
+                segments.Add($"lijst_opm:{r.TypeLijst!.Opmerking}");
+
+            // OfferteRegel opmerking (tagged)
+            if (!string.IsNullOrWhiteSpace(r.Opmerking))
+                segments.Add($"opm:{r.Opmerking}");
+
+            var omschrijving = string.Join(" | ", segments.Where(x => !string.IsNullOrWhiteSpace(x)));
 
             lijnen.Add(CreateLijn(omschrijving, qty, "st", unitEx, effectiefBtw, sort++));
 
@@ -235,5 +263,136 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
     {
         var waarde = await db.Instellingen.Where(x => x.Sleutel == "BtwVrijgesteld").Select(x => x.Waarde).FirstOrDefaultAsync();
         return string.Equals(waarde, "true", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static async Task<Offerte> LoadOfferteAsync(AppDbContext db, int offerteId)
+    {
+        var offerte = await db.Offertes
+            .Include(o => o.Klant)
+            .Include(o => o.Regels).ThenInclude(r => r.TypeLijst)
+            .Include(o => o.Regels).ThenInclude(r => r.Glas)
+            .Include(o => o.Regels).ThenInclude(r => r.PassePartout1)
+            .Include(o => o.Regels).ThenInclude(r => r.PassePartout2)
+            .Include(o => o.Regels).ThenInclude(r => r.DiepteKern)
+            .Include(o => o.Regels).ThenInclude(r => r.Opkleven)
+            .Include(o => o.Regels).ThenInclude(r => r.Rug)
+            .FirstOrDefaultAsync(o => o.Id == offerteId);
+
+        return offerte ?? throw new InvalidOperationException("Offerte niet gevonden.");
+    }
+
+    private async Task<Factuur> GetOrCreateFactuurAsync(AppDbContext db, Offerte offerte, int? werkBonId)
+    {
+        var existing = await db.Facturen
+            .Include(x => x.Lijnen)
+            .FirstOrDefaultAsync(x => x.OfferteId == offerte.Id || (werkBonId.HasValue && x.WerkBonId == werkBonId.Value));
+
+        if (existing is not null)
+        {
+            var changed = false;
+
+            if (existing.OfferteId != offerte.Id)
+            {
+                existing.OfferteId = offerte.Id;
+                changed = true;
+            }
+
+            if (werkBonId.HasValue && existing.WerkBonId != werkBonId)
+            {
+                existing.WerkBonId = werkBonId;
+                changed = true;
+            }
+
+            if (NeedsDraftPrijsRefresh(existing))
+            {
+                var btwPctExisting = await LeesBtwPctAsync(db);
+                var vrijgesteldExisting = await IsBtwVrijgesteldAsync(db);
+                await RebuildDraftLijnenAsync(db, existing, offerte, btwPctExisting, vrijgesteldExisting);
+                changed = true;
+            }
+
+            if (changed)
+                await db.SaveChangesAsync();
+
+            return existing;
+        }
+
+        await EnsureOfferteCalculatedAsync(offerte);
+
+        var now = DateTime.Today;
+        var jaar = now.Year;
+        var volgNr = (await db.Facturen.Where(f => f.Jaar == jaar).MaxAsync(f => (int?)f.VolgNr) ?? 0) + 1;
+
+        var btwPct = await LeesBtwPctAsync(db);
+        var vrijgesteld = await IsBtwVrijgesteldAsync(db);
+        var klant = offerte.Klant;
+
+        var factuur = new Factuur
+        {
+            OfferteId = offerte.Id,
+            WerkBonId = werkBonId,
+            Jaar = jaar,
+            VolgNr = volgNr,
+            FactuurNummer = $"{jaar}-{volgNr}",
+            DocumentType = "Factuur",
+            KlantNaam = BuildKlantNaam(klant),
+            KlantAdres = BuildAdres(klant),
+            KlantBtwNummer = klant?.BtwNummer,
+            FactuurDatum = now,
+            VervalDatum = now.AddDays(30),
+            IsBtwVrijgesteld = vrijgesteld,
+            VoorschotBedrag = offerte.VoorschotBedrag,
+            Status = FactuurStatus.Draft,
+            Lijnen = BuildLijnen(offerte, btwPct, vrijgesteld)
+        };
+
+        HerberekenTotalen(factuur);
+
+        db.Facturen.Add(factuur);
+        await db.SaveChangesAsync();
+
+        return factuur;
+    }
+
+    private async Task EnsureOfferteCalculatedAsync(Offerte offerte)
+    {
+        if (offerte.Regels.Count == 0)
+            return;
+
+        var heeftPrijsData = offerte.Regels.Any(r => r.TotaalExcl > 0m || r.SubtotaalExBtw > 0m || r.TotaalInclBtw > 0m)
+            || offerte.SubtotaalExBtw > 0m
+            || offerte.TotaalInclBtw > 0m;
+
+        if (heeftPrijsData)
+            return;
+
+        await _pricing.BerekenAsync(offerte);
+    }
+
+    private static bool NeedsDraftPrijsRefresh(Factuur factuur)
+    {
+        if (factuur.Status != FactuurStatus.Draft)
+            return false;
+
+        if (factuur.TotaalExclBtw > 0m || factuur.TotaalInclBtw > 0m)
+            return false;
+
+        return factuur.Lijnen.Count == 0 || factuur.Lijnen.All(l => l.TotaalExcl == 0m && l.TotaalIncl == 0m);
+    }
+
+    private async Task RebuildDraftLijnenAsync(AppDbContext db, Factuur factuur, Offerte offerte, decimal btwPct, bool vrijgesteld)
+    {
+        await EnsureOfferteCalculatedAsync(offerte);
+
+        if (factuur.Lijnen.Count > 0)
+            db.FactuurLijnen.RemoveRange(factuur.Lijnen);
+
+        factuur.Lijnen.Clear();
+
+        foreach (var lijn in BuildLijnen(offerte, btwPct, vrijgesteld))
+            factuur.Lijnen.Add(lijn);
+
+        HerberekenTotalen(factuur);
+        factuur.BijgewerktOp = DateTime.UtcNow;
     }
 }

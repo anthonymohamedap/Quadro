@@ -66,7 +66,6 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
 
             var list = await db.Offertes
     .Include(o => o.Klant)
-    .Where(o => o.Status == OfferteStatus.Concept)
     .OrderByDescending(o => o.Datum)
     .ToListAsync();
 

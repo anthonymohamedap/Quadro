@@ -249,7 +249,7 @@
                                     IsVisible="{Binding IsDetailOpen}">
 
                             <Grid ColumnDefinitions="2*,3*"
-                                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                                   RowSpacing="7"
                                   ColumnSpacing="15">
 
@@ -307,6 +307,16 @@
 
                                 <TextBlock Text="WerkMinuten" Grid.Row="9" Grid.Column="0" FontWeight="Bold"/>
                                 <TextBox Foreground="Black" Text="{Binding GeselecteerdeLijst.WerkMinuten, Mode=TwoWay}" Grid.Row="9" Grid.Column="1"/>
+
+                                <TextBlock Text="Opmerking" Grid.Row="10" Grid.Column="0" FontWeight="Bold" VerticalAlignment="Top"/>
+                                <TextBox Grid.Row="10"
+                                         Grid.Column="1"
+                                         Foreground="Black"
+                                         Text="{Binding GeselecteerdeLijst.Opmerking, Mode=TwoWay}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalContentAlignment="Top"
+                                         MinHeight="120"/>
                             </Grid>
 
                             <Button Content="Opslaan wijzigingen"
@@ -328,4 +338,3 @@
         </Grid>
     </Grid>
 </UserControl>
-
