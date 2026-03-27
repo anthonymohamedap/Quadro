@@ -358,8 +358,122 @@ public class WorkflowServiceTests
         Assert.Equal(VoorraadStatus.Reserved, taak.VoorraadStatus);
     }
 
+    [Fact]
+    public async Task PlanRegelMetDagCapaciteitAsync_splits_large_task_across_multiple_days()
+    {
+        var factory = CreateFactory();
+        var toast = new TestToastService();
+        var (werkBonId, regelId) = await SeedWerkBonRegelAsync(factory);
+        var sut = CreateWerkBonWorkflowSut(factory, toast);
+
+        var laatsteDag = await sut.PlanRegelMetDagCapaciteitAsync(
+            werkBonId,
+            regelId,
+            new DateTime(2026, 4, 6),
+            600,
+            480,
+            "Inlijsten");
+
+        await using var db = await factory.CreateDbContextAsync();
+        var taken = await db.WerkTaken
+            .Where(t => t.WerkBonId == werkBonId && t.OfferteRegelId == regelId)
+            .OrderBy(t => t.GeplandVan)
+            .ToListAsync();
+
+        Assert.Equal(new DateTime(2026, 4, 7), laatsteDag);
+        Assert.Equal(2, taken.Count);
+        Assert.Equal(new[] { 480, 120 }, taken.Select(t => t.DuurMinuten));
+        Assert.Equal(new DateTime(2026, 4, 6, 9, 0, 0), taken[0].GeplandVan);
+        Assert.Equal(new DateTime(2026, 4, 7, 9, 0, 0), taken[1].GeplandVan);
+        Assert.StartsWith("Inlijsten", taken[0].Omschrijving, StringComparison.Ordinal);
+        Assert.Contains("deel 2/2", taken[1].Omschrijving, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task PlanRegelMetDagCapaciteitAsync_uses_remaining_capacity_before_next_day()
+    {
+        var factory = CreateFactory();
+        var toast = new TestToastService();
+        var (werkBonId, regelId) = await SeedWerkBonRegelAsync(factory);
+
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            db.WerkTaken.Add(new WerkTaak
+            {
+                WerkBonId = werkBonId,
+                GeplandVan = new DateTime(2026, 4, 6, 9, 0, 0),
+                GeplandTot = new DateTime(2026, 4, 6, 14, 0, 0),
+                DuurMinuten = 300,
+                Omschrijving = "Bestaande taak",
+                BenodigdeMeter = 0.25m
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var sut = CreateWerkBonWorkflowSut(factory, toast);
+
+        await sut.PlanRegelMetDagCapaciteitAsync(
+            werkBonId,
+            regelId,
+            new DateTime(2026, 4, 6),
+            300,
+            480,
+            "Inlijsten");
+
+        await using var checkDb = await factory.CreateDbContextAsync();
+        var taken = await checkDb.WerkTaken
+            .Where(t => t.WerkBonId == werkBonId && t.OfferteRegelId == regelId)
+            .OrderBy(t => t.GeplandVan)
+            .ToListAsync();
+
+        Assert.Equal(2, taken.Count);
+        Assert.Equal(new[] { 180, 120 }, taken.Select(t => t.DuurMinuten));
+        Assert.Equal(new DateTime(2026, 4, 6, 9, 0, 0), taken[0].GeplandVan);
+        Assert.Equal(new DateTime(2026, 4, 7, 9, 0, 0), taken[1].GeplandVan);
+    }
+
+    [Fact]
+    public async Task PlanRegelMetDagCapaciteitAsync_skips_blocked_days()
+    {
+        var factory = CreateFactory();
+        var toast = new TestToastService();
+        var (werkBonId, regelId) = await SeedWerkBonRegelAsync(factory);
+
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            db.GeblokkeerDagen.Add(new GeblokkeerdeDag
+            {
+                Datum = new DateTime(2026, 4, 7)
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var sut = CreateWerkBonWorkflowSut(factory, toast);
+
+        await sut.PlanRegelMetDagCapaciteitAsync(
+            werkBonId,
+            regelId,
+            new DateTime(2026, 4, 6),
+            600,
+            480,
+            "Inlijsten");
+
+        await using var checkDb = await factory.CreateDbContextAsync();
+        var taken = await checkDb.WerkTaken
+            .Where(t => t.WerkBonId == werkBonId && t.OfferteRegelId == regelId)
+            .OrderBy(t => t.GeplandVan)
+            .ToListAsync();
+
+        Assert.Equal(2, taken.Count);
+        Assert.Equal(new DateTime(2026, 4, 6, 9, 0, 0), taken[0].GeplandVan);
+        Assert.Equal(new DateTime(2026, 4, 8, 9, 0, 0), taken[1].GeplandVan);
+    }
+
     private static QuadroApp.Service.WorkflowService CreateSut(IDbContextFactory<AppDbContext> factory, IToastService toast) =>
         new(factory, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
+
+    private static QuadroApp.Service.WerkBonWorkflowService CreateWerkBonWorkflowSut(IDbContextFactory<AppDbContext> factory, IToastService toast) =>
+        new(factory, CreateSut(factory, toast));
 
     private static IDbContextFactory<AppDbContext> CreateFactory()
     {
@@ -463,6 +577,59 @@ public class WorkflowServiceTests
         await db.SaveChangesAsync();
 
         return werkBon.Id;
+    }
+
+    private static async Task<(int WerkBonId, int RegelId)> SeedWerkBonRegelAsync(IDbContextFactory<AppDbContext> factory)
+    {
+        await using var db = await factory.CreateDbContextAsync();
+
+        var leverancier = new Leverancier { Naam = $"L{Guid.NewGuid():N}"[..3].ToUpperInvariant() };
+        db.Leveranciers.Add(leverancier);
+
+        var lijst = new TypeLijst
+        {
+            Artikelnummer = $"ART-{Guid.NewGuid():N}"[..10].ToUpperInvariant(),
+            Leverancier = leverancier,
+            Levcode = "LEV-PLN",
+            BreedteCm = 10,
+            Soort = "HOUT",
+            PrijsPerMeter = 10m,
+            VasteKost = 0m,
+            WerkMinuten = 5,
+            VoorraadMeter = 20m,
+            InventarisKost = 0m,
+            MinimumVoorraad = 2m
+        };
+
+        var offerte = new Offerte
+        {
+            Datum = DateTime.UtcNow,
+            Status = OfferteStatus.Goedgekeurd,
+            TotaalInclBtw = 200m
+        };
+
+        var regel = new OfferteRegel
+        {
+            Offerte = offerte,
+            TypeLijst = lijst,
+            AantalStuks = 1,
+            BreedteCm = 40,
+            HoogteCm = 30
+        };
+
+        var werkBon = new WerkBon
+        {
+            Offerte = offerte,
+            TotaalPrijsIncl = 200m,
+            Status = WerkBonStatus.Gepland,
+            StockReservationProcessed = false
+        };
+
+        db.WerkBonnen.Add(werkBon);
+        db.OfferteRegels.Add(regel);
+        await db.SaveChangesAsync();
+
+        return (werkBon.Id, regel.Id);
     }
 
     private sealed class TestToastService : IToastService

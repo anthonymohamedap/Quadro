@@ -261,7 +261,8 @@ public partial class AfwerkingenViewModel : ObservableObject
             var t = Zoekterm.Trim();
             src = src.Where(o =>
                 o.Volgnummer.ToString().Contains(t, StringComparison.OrdinalIgnoreCase) ||
-                (o.Naam ?? "").Contains(t, StringComparison.OrdinalIgnoreCase));
+                (o.Naam ?? "").Contains(t, StringComparison.OrdinalIgnoreCase) ||
+                (o.Kleur ?? "").Contains(t, StringComparison.OrdinalIgnoreCase));
         }
 
         FilteredOpties = new ObservableCollection<AfwerkingsOptie>(src);

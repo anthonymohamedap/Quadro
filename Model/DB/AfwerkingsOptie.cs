@@ -17,6 +17,11 @@ namespace QuadroApp.Model.DB
         [Required]
         public char Volgnummer { get; set; }
 
+        [Required, MaxLength(50)]
+        public string Kleur { get; set; } = "Standaard";
+
+        public string DisplayLabel => $"{Volgnummer} - {Kleur} - {Naam}";
+
         [Precision(10, 2)]
         public decimal KostprijsPerM2 { get; set; }
 

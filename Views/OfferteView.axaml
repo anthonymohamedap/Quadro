@@ -134,6 +134,7 @@
                                         Content="– Verwijderen"
                                         
                                         Command="{Binding RegelVerwijderenCommand}"
+                                        CommandParameter="{Binding SelectedRegel}"
 										Background="#F5C242"
                             Foreground="Black"
                             FontWeight="Bold"/>
@@ -326,9 +327,7 @@
 
 								<ComboBox.ItemTemplate>
 									<DataTemplate x:DataType="m:AfwerkingsOptie">
-										<!-- 👇 ZWART ipv white -->
-										<TextBlock Text="{Binding Naam}"
-												   />
+										<TextBlock Text="{Binding DisplayLabel}" />
 									</DataTemplate>
 								</ComboBox.ItemTemplate>
 							</ComboBox>
@@ -351,8 +350,7 @@
 
 								<ComboBox.ItemTemplate>
 									<DataTemplate x:DataType="m:AfwerkingsOptie">
-										<TextBlock Text="{Binding Naam}"
-												   />
+										<TextBlock Text="{Binding DisplayLabel}" />
 									</DataTemplate>
 								</ComboBox.ItemTemplate>
 							</ComboBox>
@@ -375,8 +373,7 @@
 
 								<ComboBox.ItemTemplate>
 									<DataTemplate x:DataType="m:AfwerkingsOptie">
-										<TextBlock Text="{Binding Naam}"
-												   />
+										<TextBlock Text="{Binding DisplayLabel}" />
 									</DataTemplate>
 								</ComboBox.ItemTemplate>
 							</ComboBox>
@@ -398,8 +395,7 @@
 
 								<ComboBox.ItemTemplate>
 									<DataTemplate x:DataType="m:AfwerkingsOptie">
-										<TextBlock Text="{Binding Naam}"
-												   />
+										<TextBlock Text="{Binding DisplayLabel}" />
 									</DataTemplate>
 								</ComboBox.ItemTemplate>
 							</ComboBox>
@@ -422,8 +418,7 @@
 
 								<ComboBox.ItemTemplate>
 									<DataTemplate x:DataType="m:AfwerkingsOptie">
-										<TextBlock Text="{Binding Naam}"
-												   />
+										<TextBlock Text="{Binding DisplayLabel}" />
 									</DataTemplate>
 								</ComboBox.ItemTemplate>
 							</ComboBox>
@@ -444,8 +439,7 @@
 
 								<ComboBox.ItemTemplate>
 									<DataTemplate x:DataType="m:AfwerkingsOptie">
-										<TextBlock Text="{Binding Naam}"
-												   />
+										<TextBlock Text="{Binding DisplayLabel}" />
 									</DataTemplate>
 								</ComboBox.ItemTemplate>
 							</ComboBox>

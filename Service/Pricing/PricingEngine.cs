@@ -1,5 +1,6 @@
 using QuadroApp.Model.DB;
 using System;
+using Microsoft.Extensions.Logging;
 
 namespace QuadroApp.Service.Pricing;
 

@@ -81,6 +81,7 @@ public partial class App : Application
 
         services.AddSingleton<IWindowProvider, WindowProvider>();
         services.AddSingleton<IFilePickerService, FilePickerService>();
+        services.AddSingleton<IPathOpener, PathOpener>();
         services.AddSingleton<IToastService, ToastService>();
         services.AddSingleton<IDialogService, DialogService>();
 
@@ -222,7 +223,6 @@ public partial class App : Application
         await using var db = await factory.CreateDbContextAsync();
 
         Console.WriteLine("[DB] Resetting demo database...");
-        await db.Database.EnsureDeletedAsync();
         await db.Database.EnsureCreatedAsync();
 
         // Seed data (single source of truth)

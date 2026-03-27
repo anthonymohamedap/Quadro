@@ -57,6 +57,11 @@ public sealed class AfwerkingsOptieValidator : ICrudValidator<AfwerkingsOptie>
         else if (o.Naam.Trim().Length > 50)
             r.Error(nameof(o.Naam), "Naam is te lang (max 50).");
 
+        if (string.IsNullOrWhiteSpace(o.Kleur))
+            r.Error(nameof(o.Kleur), "Kleur is verplicht.");
+        else if (o.Kleur.Trim().Length > 50)
+            r.Error(nameof(o.Kleur), "Kleur is te lang (max 50).");
+
         if (!IsValidVolgnummer(o.Volgnummer))
             r.Error(nameof(o.Volgnummer), "Volgnummer moet 1-9 of A-K zijn.");
 
@@ -92,18 +97,23 @@ public sealed class AfwerkingsOptieValidator : ICrudValidator<AfwerkingsOptie>
 
         // Uniek volgnummer binnen groep (aanrader)
         await using var db = await _dbFactory.CreateDbContextAsync();
-        var volg = o.Volgnummer;
+        var volg = char.ToUpperInvariant(o.Volgnummer);
+        var kleur = NormalizeKleur(o.Kleur);
 
         var exists = await db.AfwerkingsOpties.AnyAsync(a =>
             a.AfwerkingsGroepId == o.AfwerkingsGroepId &&
             a.Volgnummer == volg &&
+            a.Kleur == kleur &&
             (!isUpdate || a.Id != o.Id));
 
         if (exists)
-            r.Error(nameof(o.Volgnummer), "Dit volgnummer bestaat al binnen deze groep.");
+            r.Error(nameof(o.Kleur), "Deze kleur bestaat al binnen dezelfde familie.");
 
         return r;
     }
+
+    private static string NormalizeKleur(string? kleur)
+        => string.IsNullOrWhiteSpace(kleur) ? string.Empty : kleur.Trim();
     private static bool IsValidVolgnummer(char c)
     {
         c = char.ToUpperInvariant(c);

@@ -392,6 +392,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
         var list = await db.AfwerkingsOpties.AsNoTracking()
             .Where(a => a.AfwerkingsGroepId == groepId)
             .OrderBy(a => a.Volgnummer)
+            .ThenBy(a => a.Kleur)
             .ThenBy(a => a.Naam)
             .ToListAsync();
 
@@ -804,18 +805,29 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
             Titel = s.Titel,
             Opmerking = s.Opmerking,
             TypeLijstId = s.TypeLijst?.Id ?? s.TypeLijstId,
+            TypeLijst = s.TypeLijst,
             GlasId = s.Glas?.Id ?? s.GlasId,
+            Glas = s.Glas,
             PassePartout1Id = s.PassePartout1?.Id ?? s.PassePartout1Id,
+            PassePartout1 = s.PassePartout1,
             PassePartout2Id = s.PassePartout2?.Id ?? s.PassePartout2Id,
+            PassePartout2 = s.PassePartout2,
             DiepteKernId = s.DiepteKern?.Id ?? s.DiepteKernId,
+            DiepteKern = s.DiepteKern,
             OpklevenId = s.Opkleven?.Id ?? s.OpklevenId,
+            Opkleven = s.Opkleven,
             RugId = s.Rug?.Id ?? s.RugId,
+            Rug = s.Rug,
 
             AfgesprokenPrijsExcl = s.AfgesprokenPrijsExcl,
             ExtraWerkMinuten = s.ExtraWerkMinuten,
             ExtraPrijs = s.ExtraPrijs,
             Korting = s.Korting,
-            LegacyCode = s.LegacyCode
+            LegacyCode = s.LegacyCode,
+            TotaalExcl = s.TotaalExcl,
+            SubtotaalExBtw = s.SubtotaalExBtw,
+            BtwBedrag = s.BtwBedrag,
+            TotaalInclBtw = s.TotaalInclBtw
         };
 
         Regels.Add(r);
@@ -917,6 +929,83 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
     }
 
     // ====== Pricing ======
+
+    /// Reloads TypeLijst and AfwerkingsOptie prices from DB so stale in-memory
+    /// values don't produce wrong calculations after a lijst price update.
+    private async Task RefreshLijstPrijzenAsync()
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+
+        var lijstIds = Regels
+            .Select(r => r.TypeLijst?.Id ?? r.TypeLijstId)
+            .Where(id => id.HasValue)
+            .Select(id => id!.Value)
+            .Distinct()
+            .ToList();
+
+        var optieIds = Regels
+            .SelectMany(r => new[]
+            {
+                r.Glas?.Id ?? r.GlasId,
+                r.PassePartout1?.Id ?? r.PassePartout1Id,
+                r.PassePartout2?.Id ?? r.PassePartout2Id,
+                r.DiepteKern?.Id ?? r.DiepteKernId,
+                r.Opkleven?.Id ?? r.OpklevenId,
+                r.Rug?.Id ?? r.RugId
+            })
+            .Where(id => id.HasValue)
+            .Select(id => id!.Value)
+            .Distinct()
+            .ToList();
+
+        var freshLijsten = lijstIds.Count > 0
+            ? await db.TypeLijsten.Where(l => lijstIds.Contains(l.Id)).ToListAsync()
+            : new System.Collections.Generic.List<TypeLijst>();
+
+        var freshOpties = optieIds.Count > 0
+            ? await db.AfwerkingsOpties.Where(o => optieIds.Contains(o.Id)).ToListAsync()
+            : new System.Collections.Generic.List<AfwerkingsOptie>();
+
+        foreach (var regel in Regels)
+        {
+            if (regel.TypeLijst is not null)
+            {
+                var fresh = freshLijsten.FirstOrDefault(l => l.Id == regel.TypeLijst.Id);
+                if (fresh is not null) regel.TypeLijst = fresh;
+            }
+            if (regel.Glas is not null)
+            {
+                var fresh = freshOpties.FirstOrDefault(o => o.Id == regel.Glas.Id);
+                if (fresh is not null) regel.Glas = fresh;
+            }
+            if (regel.PassePartout1 is not null)
+            {
+                var fresh = freshOpties.FirstOrDefault(o => o.Id == regel.PassePartout1.Id);
+                if (fresh is not null) regel.PassePartout1 = fresh;
+            }
+            if (regel.PassePartout2 is not null)
+            {
+                var fresh = freshOpties.FirstOrDefault(o => o.Id == regel.PassePartout2.Id);
+                if (fresh is not null) regel.PassePartout2 = fresh;
+            }
+            if (regel.DiepteKern is not null)
+            {
+                var fresh = freshOpties.FirstOrDefault(o => o.Id == regel.DiepteKern.Id);
+                if (fresh is not null) regel.DiepteKern = fresh;
+            }
+            if (regel.Opkleven is not null)
+            {
+                var fresh = freshOpties.FirstOrDefault(o => o.Id == regel.Opkleven.Id);
+                if (fresh is not null) regel.Opkleven = fresh;
+            }
+            if (regel.Rug is not null)
+            {
+                var fresh = freshOpties.FirstOrDefault(o => o.Id == regel.Rug.Id);
+                if (fresh is not null) regel.Rug = fresh;
+            }
+        }
+    }
+
     private async Task BerekenAsync(bool showFeedback)
     {
         if (Offerte is null) return;
@@ -930,6 +1019,7 @@ public partial class OfferteViewModel : ObservableObject, IAsyncInitializable
         {
             IsBusy = true;
 
+            await RefreshLijstPrijzenAsync();
             var snapshot = BuildSnapshotForPricing();
             await _pricing.BerekenAsync(snapshot);
             ApplyPricingSnapshot(snapshot);

@@ -6,6 +6,60 @@
     x:Class="QuadroApp.MainWindow"
     x:DataType="vm:MainWindowViewModel">
 
-	<ContentControl Content="{Binding CurrentViewModel}" />
+	<Panel>
+		<ContentControl Content="{Binding CurrentViewModel}" />
+
+		<!-- Growl-style toast overlay – top centre -->
+		<ItemsControl ItemsSource="{Binding Toast.Messages}"
+					  HorizontalAlignment="Center"
+					  VerticalAlignment="Top"
+					  Margin="0,24,0,0"
+					  IsHitTestVisible="False">
+			<ItemsControl.ItemsPanel>
+				<ItemsPanelTemplate>
+					<StackPanel Spacing="6"/>
+				</ItemsPanelTemplate>
+			</ItemsControl.ItemsPanel>
+			<ItemsControl.ItemTemplate>
+				<DataTemplate>
+					<!-- Outer panel for drop shadow clearance -->
+					<Panel Margin="3">
+						<Border CornerRadius="6"
+								Background="White"
+								BorderBrush="{Binding AccentBrush}"
+								BorderThickness="0,3,0,0"
+								MinWidth="260"
+								MaxWidth="380"
+								ClipToBounds="False">
+							<Border.Effect>
+								<DropShadowEffect BlurRadius="12"
+												  OffsetX="0"
+												  OffsetY="2"
+												  Opacity="0.15"
+												  Color="Black"/>
+							</Border.Effect>
+							<Border CornerRadius="6" ClipToBounds="True">
+								<Grid Margin="12,8" RowDefinitions="Auto,Auto">
+									<!-- Title row -->
+									<TextBlock Grid.Row="0"
+											   Text="{Binding Title}"
+											   FontWeight="SemiBold"
+											   FontSize="13"
+											   Foreground="#1a1a1a"/>
+									<!-- Message row -->
+									<TextBlock Grid.Row="1"
+											   Text="{Binding Message}"
+											   FontSize="12"
+											   Foreground="#555555"
+											   TextWrapping="Wrap"
+											   Margin="0,3,0,0"/>
+								</Grid>
+							</Border>
+						</Border>
+					</Panel>
+				</DataTemplate>
+			</ItemsControl.ItemTemplate>
+		</ItemsControl>
+	</Panel>
 
 </huskui:AppWindow>
