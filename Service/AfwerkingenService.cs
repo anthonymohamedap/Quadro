@@ -52,6 +52,7 @@ namespace QuadroApp.Service
 
             return await q
                 .OrderBy(o => o.Volgnummer)
+                .ThenBy(o => o.Kleur)
                 .ThenBy(o => o.Naam)
                 .ToListAsync();
         }
@@ -59,7 +60,36 @@ namespace QuadroApp.Service
         public async Task SaveOptieAsync(AfwerkingsOptie optie)
         {
             await using var db = await _dbFactory.CreateDbContextAsync();
-            db.Update(optie);
+            var bestaand = await db.AfwerkingsOpties.FirstOrDefaultAsync(x => x.Id == optie.Id);
+            if (bestaand is null)
+                throw new System.InvalidOperationException("Afwerkingsoptie niet gevonden.");
+
+            bestaand.AfwerkingsGroepId = optie.AfwerkingsGroepId;
+            bestaand.Naam = optie.Naam.Trim();
+            bestaand.Volgnummer = char.ToUpperInvariant(optie.Volgnummer);
+            bestaand.Kleur = NormalizeKleur(optie.Kleur);
+            bestaand.KostprijsPerM2 = optie.KostprijsPerM2;
+            bestaand.WinstMarge = optie.WinstMarge;
+            bestaand.AfvalPercentage = optie.AfvalPercentage;
+            bestaand.VasteKost = optie.VasteKost;
+            bestaand.WerkMinuten = optie.WerkMinuten;
+            bestaand.LeverancierId = optie.LeverancierId;
+
+            var familieleden = await db.AfwerkingsOpties
+                .Where(x => x.AfwerkingsGroepId == bestaand.AfwerkingsGroepId
+                    && x.Volgnummer == bestaand.Volgnummer
+                    && x.Id != bestaand.Id)
+                .ToListAsync();
+
+            foreach (var familielid in familieleden)
+            {
+                familielid.KostprijsPerM2 = bestaand.KostprijsPerM2;
+                familielid.WinstMarge = bestaand.WinstMarge;
+                familielid.AfvalPercentage = bestaand.AfvalPercentage;
+                familielid.VasteKost = bestaand.VasteKost;
+                familielid.WerkMinuten = bestaand.WerkMinuten;
+            }
+
             await db.SaveChangesAsync();
         }
 
@@ -89,6 +119,7 @@ namespace QuadroApp.Service
                 AfwerkingsGroepId = groepId,
                 Naam = "Nieuwe optie",
                 Volgnummer = next,
+                Kleur = "Standaard",
                 WinstMarge = 0.25m,
                 AfvalPercentage = 0m
             };
@@ -108,6 +139,9 @@ namespace QuadroApp.Service
             db.AfwerkingsOpties.Remove(optie);
             await db.SaveChangesAsync();
         }
+
+        private static string NormalizeKleur(string? kleur)
+            => string.IsNullOrWhiteSpace(kleur) ? "Standaard" : kleur.Trim();
     }
 
 }

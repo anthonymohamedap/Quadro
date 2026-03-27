@@ -168,6 +168,8 @@ public partial class PlanningCalendarViewModel : ObservableObject
         UpdateTileSelection(value);
         _ = LoadTakenVanDagAsync();
         _ = LoadWeekRowsAsync(SelectedWeekNr);
+        OnPropertyChanged(nameof(IsGeselecteerdeDagGeblokkeerd));
+        OnPropertyChanged(nameof(BlokkeerDagButtonText));
     }
 
     // ───────── TILE SELECTION ─────────
@@ -263,7 +265,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
         return Math.Max(min, 15);
     }
 
-    // ───────── PLAN GESELECTEERDE REGELS ─────────
+    // ───────── PLAN GESELECTEERDE REGELS (MET AUTO-SPREAD) ─────────
 
     [RelayCommand]
     private async Task PlanGeselecteerdeRegelsAsync()
@@ -277,35 +279,9 @@ public partial class PlanningCalendarViewModel : ObservableObject
         var selectedIds = RegelsVanWerkBon.Where(x => x.IsSelected).Select(x => x.RegelId).ToList();
         if (selectedIds.Count == 0) return;
 
-        // Tijdstip bepalen via dialoog
-        DateTime van;
-        if (ShowTijdDialogAsync is not null)
-        {
-            await using var dbPreview = await _factory.CreateDbContextAsync();
-            var werkBonLabel = await dbPreview.WerkBonnen
-                .Where(w => w.Id == WerkBonId)
-                .Select(w => w.Offerte.Klant != null ? w.Offerte.Klant.Achternaam : null)
-                .FirstOrDefaultAsync() ?? $"WerkBon #{WerkBonId}";
-
-            var dialogVm = new PlanningTijdDialogViewModel
-            {
-                ContextLabel = $"WerkBon #{WerkBonId} — {werkBonLabel} · {selectedIds.Count} regel(s)",
-                GeplandeDatum = new DateTimeOffset(SelectedDate.Date),
-            };
-
-            bool ok = await ShowTijdDialogAsync(dialogVm);
-            if (!ok) return;
-
-            van = dialogVm.GetVanDateTime();
-        }
-        else
-        {
-            van = SelectedDate.Date.AddHours(9);
-        }
-
-        await using var db = await _factory.CreateDbContextAsync();
-
-        var regels = await db.OfferteRegels
+        // Regels laden om geschatte duur te berekenen
+        await using var dbCalc = await _factory.CreateDbContextAsync();
+        var regels = await dbCalc.OfferteRegels
             .Include(r => r.TypeLijst)
             .Include(r => r.Glas)
             .Include(r => r.PassePartout1)
@@ -316,24 +292,79 @@ public partial class PlanningCalendarViewModel : ObservableObject
             .Where(r => selectedIds.Contains(r.Id))
             .ToListAsync();
 
-        var dagTaken = await db.WerkTaken
-            .Where(t => t.GeplandVan.Date == van.Date)
-            .ToListAsync();
+        int totaalGeschat = regels.Sum(CalcMinutenVoorRegel);
 
-        int totaal = dagTaken.Sum(t => t.DuurMinuten);
-        int extra = regels.Sum(CalcMinutenVoorRegel);
+        // Datum bepalen via dialoog
+        DateTime startDag;
+        if (ShowTijdDialogAsync is not null)
+        {
+            var werkBonLabel = await dbCalc.WerkBonnen
+                .Where(w => w.Id == WerkBonId)
+                .Select(w => w.Offerte.Klant != null ? w.Offerte.Klant.Achternaam : null)
+                .FirstOrDefaultAsync() ?? $"WerkBon #{WerkBonId}";
 
-        if (totaal + extra > CapaciteitMinuten)
-            _toast.Warning($"Let op: dag heeft {(totaal + extra) / 60}u {(totaal + extra) % 60}m gepland (max {CapaciteitMinuten / 60}u).");
+            var dialogVm = new PlanningTijdDialogViewModel
+            {
+                ContextLabel = $"WerkBon #{WerkBonId} — {werkBonLabel} · {selectedIds.Count} regel(s)",
+                GeplandeDatum = new DateTimeOffset(SelectedDate.Date),
+                TotaalMinuten = totaalGeschat,
+            };
+
+            bool ok = await ShowTijdDialogAsync(dialogVm);
+            if (!ok) return;
+
+            startDag = dialogVm.GetStartDatum();
+        }
+        else
+        {
+            startDag = SelectedDate.Date.AddHours(9);
+        }
+
+        var huidigeDag = startDag.Date;
 
         foreach (var r in regels)
         {
             int duur = CalcMinutenVoorRegel(r);
-            await _workflow.VoegPlanningToeVoorRegelAsync(
-                WerkBonId, r.Id, van, duur, "Inlijsten");
+            huidigeDag = await _workflow.PlanRegelMetDagCapaciteitAsync(
+                WerkBonId,
+                r.Id,
+                huidigeDag,
+                duur,
+                CapaciteitMinuten,
+                "Inlijsten");
         }
 
+        _toast.Success($"{regels.Count} taken gepland vanaf {startDag:dd/MM}.");
         await RefreshAsync();
+    }
+
+    /// <summary>
+    /// Zoekt de eerste beschikbare dag (niet geblokkeerd) waar de taak past
+    /// binnen de dagcapaciteit. Als de dag vol is, schuift door naar de volgende.
+    /// </summary>
+    private async Task<DateTime> ZoekBeschikbareDag(
+        AppDbContext db, DateTime vanafDag, int benodigdeMinuten, HashSet<DateTime> geblokkeerd)
+    {
+        var dag = vanafDag.Date;
+        for (int i = 0; i < 365; i++)
+        {
+            if (geblokkeerd.Contains(dag))
+            {
+                dag = dag.AddDays(1);
+                continue;
+            }
+
+            var dagBezet = await db.WerkTaken
+                .Where(t => t.GeplandVan.Date == dag)
+                .SumAsync(t => t.DuurMinuten);
+
+            if (dagBezet + benodigdeMinuten <= CapaciteitMinuten)
+                return dag;
+
+            dag = dag.AddDays(1);
+        }
+
+        return vanafDag.Date;
     }
 
     // ───────── HERPLANNEN ─────────
@@ -347,29 +378,45 @@ public partial class PlanningCalendarViewModel : ObservableObject
         {
             ContextLabel = $"WerkBon #{taak.WerkBonId} — {taak.Omschrijving}",
             GeplandeDatum = new DateTimeOffset(taak.GeplandVan.Date),
-            VanUur = taak.GeplandVan.Hour,
-            VanMinuut = taak.GeplandVan.Minute,
-            TotUur = taak.GeplandTot.Hour,
-            TotMinuut = taak.GeplandTot.Minute,
+            TotaalMinuten = taak.DuurMinuten,
         };
 
         bool ok = await ShowTijdDialogAsync(dialogVm);
         if (!ok) return;
 
-        var nieuweVan = dialogVm.GetVanDateTime();
-        var nieuweTot = nieuweVan.AddMinutes(dialogVm.DuurMinuten);
+        var nieuweDag = dialogVm.GetStartDatum();
 
-        await using var db = await _factory.CreateDbContextAsync();
-        var dbTaak = await db.WerkTaken.FindAsync(taak.Id);
-        if (dbTaak is null) return;
+        // Check blokkering
+        if (await IsDagGeblokkeerd(nieuweDag))
+        {
+            _toast.Error("De gekozen datum is geblokkeerd.");
+            return;
+        }
 
-        dbTaak.GeplandVan = nieuweVan;
-        dbTaak.GeplandTot = nieuweTot;
-        dbTaak.DuurMinuten = dialogVm.DuurMinuten;
+        if (taak.OfferteRegelId.HasValue && taak.DuurMinuten > CapaciteitMinuten)
+        {
+            await _workflow.PlanRegelMetDagCapaciteitAsync(
+                taak.WerkBonId,
+                taak.OfferteRegelId.Value,
+                nieuweDag,
+                taak.DuurMinuten,
+                CapaciteitMinuten,
+                taak.Omschrijving);
+        }
+        else
+        {
+            await using var db = await _factory.CreateDbContextAsync();
+            var dbTaak = await db.WerkTaken.FindAsync(taak.Id);
+            if (dbTaak is null) return;
 
-        await db.SaveChangesAsync();
+            dbTaak.GeplandVan = nieuweDag;
+            dbTaak.GeplandTot = nieuweDag.AddMinutes(taak.DuurMinuten);
+            dbTaak.DuurMinuten = taak.DuurMinuten;
 
-        _toast.Success($"Taak herplanned naar {nieuweVan:dd/MM HH:mm}.");
+            await db.SaveChangesAsync();
+        }
+
+        _toast.Success($"Taak herplanned naar {nieuweDag:dd/MM} ({taak.DuurMinuten} min).");
         await RefreshAsync();
     }
 
@@ -389,6 +436,76 @@ public partial class PlanningCalendarViewModel : ObservableObject
         await RefreshAsync();
     }
 
+    // ═══════════════════════════════════════════════════
+    // BLOKKEER LOGICA
+    // ═══════════════════════════════════════════════════
+
+    private HashSet<DateTime> _geblokkeerd = new();
+
+    public bool IsGeselecteerdeDagGeblokkeerd => _geblokkeerd.Contains(SelectedDate.Date);
+
+    public string BlokkeerDagButtonText =>
+        IsGeselecteerdeDagGeblokkeerd ? "🔓 Deblokkeer dag" : "🔒 Blokkeer dag";
+
+    private async Task<bool> IsDagGeblokkeerd(DateTime datum)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        return await db.GeblokkeerDagen.AnyAsync(g => g.Datum == datum.Date);
+    }
+
+    [RelayCommand]
+    private async Task ToggleBlokkeerDagAsync()
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        var datum = SelectedDate.Date;
+        var bestaand = await db.GeblokkeerDagen.FirstOrDefaultAsync(g => g.Datum == datum);
+
+        if (bestaand is not null)
+        {
+            db.GeblokkeerDagen.Remove(bestaand);
+            _toast.Success($"{datum:dd/MM} gedeblokkeerd.");
+        }
+        else
+        {
+            db.GeblokkeerDagen.Add(new GeblokkeerdeDag { Datum = datum, Reden = "Geblokkeerd" });
+            _toast.Success($"{datum:dd/MM} geblokkeerd.");
+        }
+
+        await db.SaveChangesAsync();
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task ToggleBlokkeerWeekAsync()
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        var weekStart = ISOWeek.ToDateTime(SelectedDate.Year, SelectedWeekNr, DayOfWeek.Monday);
+        var weekDagen = Enumerable.Range(0, 7).Select(i => weekStart.AddDays(i).Date).ToList();
+
+        var bestaand = await db.GeblokkeerDagen
+            .Where(g => weekDagen.Contains(g.Datum))
+            .ToListAsync();
+
+        if (bestaand.Count >= 5) // meeste dagen al geblokkeerd → deblokkeer
+        {
+            db.GeblokkeerDagen.RemoveRange(bestaand);
+            _toast.Success($"Week {SelectedWeekNr} gedeblokkeerd.");
+        }
+        else
+        {
+            // Blokkeer alle dagen die nog niet geblokkeerd zijn
+            var bestaandeDatums = bestaand.Select(g => g.Datum).ToHashSet();
+            foreach (var dag in weekDagen.Where(d => !bestaandeDatums.Contains(d)))
+            {
+                db.GeblokkeerDagen.Add(new GeblokkeerdeDag { Datum = dag, Reden = "Week geblokkeerd" });
+            }
+            _toast.Success($"Week {SelectedWeekNr} geblokkeerd.");
+        }
+
+        await db.SaveChangesAsync();
+        await RefreshAsync();
+    }
+
     // ───────── REFRESH HELPER ─────────
 
     private async Task RefreshAsync()
@@ -396,6 +513,8 @@ public partial class PlanningCalendarViewModel : ObservableObject
         await LoadAsync();
         await LoadTakenVanDagAsync();
         await LoadWeekRowsAsync(ISOWeek.GetWeekOfYear(SelectedDate));
+        OnPropertyChanged(nameof(IsGeselecteerdeDagGeblokkeerd));
+        OnPropertyChanged(nameof(BlokkeerDagButtonText));
     }
 
     // ───────── DAG DETAIL ─────────
@@ -441,6 +560,14 @@ public partial class PlanningCalendarViewModel : ObservableObject
             .Where(t => t.GeplandVan >= start && t.GeplandVan < end)
             .ToListAsync();
 
+        // Geblokkeerde dagen laden
+        var geblokkeerdeList = await db.GeblokkeerDagen
+            .Where(g => g.Datum >= start && g.Datum < end)
+            .ToListAsync();
+
+        _geblokkeerd = geblokkeerdeList.Select(g => g.Datum.Date).ToHashSet();
+        var geblokkeerdeRedenen = geblokkeerdeList.ToDictionary(g => g.Datum.Date, g => g.Reden ?? "Geblokkeerd");
+
         MonthDays.Clear();
         WeekSummaries.Clear();
         DayRows.Clear();
@@ -450,46 +577,59 @@ public partial class PlanningCalendarViewModel : ObservableObject
             var date = start.AddDays(i);
             var dagTaken = taken.Where(t => t.GeplandVan.Date == date.Date).ToList();
             var used = dagTaken.Sum(x => x.DuurMinuten);
-            var util = Math.Clamp((double)used / CapaciteitMinuten, 0, 1);
+            var isGeblokkeerd = _geblokkeerd.Contains(date.Date);
+            var util = isGeblokkeerd ? 1.0 : Math.Clamp((double)used / CapaciteitMinuten, 0, 1);
 
-            var kleur = util switch
-            {
-                <= 0.5 => Brushes.LimeGreen,
-                <= 0.75 => Brushes.Goldenrod,
-                <= 0.9 => Brushes.OrangeRed,
-                _ => Brushes.Red
-            };
+            var kleur = isGeblokkeerd
+                ? new SolidColorBrush(Color.Parse("#DC2626"))
+                : util switch
+                {
+                    <= 0.5 => Brushes.LimeGreen,
+                    <= 0.75 => Brushes.Goldenrod,
+                    <= 0.9 => Brushes.OrangeRed,
+                    _ => (IBrush)Brushes.Red
+                };
 
             bool isVandaag = date.Date == DateTime.Today;
             bool isAndereMaand = date.Month != Month;
             bool isWeekend = date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
 
             IBrush bg =
-                isVandaag
-                    ? new SolidColorBrush(Color.FromRgb(35, 45, 70))
-                    : isAndereMaand
-                        ? new SolidColorBrush(Color.FromRgb(30, 30, 30))
-                        : isWeekend
-                            ? new SolidColorBrush(Color.FromRgb(40, 40, 40))
-                            : Brushes.Transparent;
+                isGeblokkeerd
+                    ? new SolidColorBrush(Color.FromArgb(180, 60, 10, 10))
+                    : isVandaag
+                        ? new SolidColorBrush(Color.FromRgb(35, 45, 70))
+                        : isAndereMaand
+                            ? new SolidColorBrush(Color.FromRgb(30, 30, 30))
+                            : isWeekend
+                                ? new SolidColorBrush(Color.FromRgb(40, 40, 40))
+                                : Brushes.Transparent;
 
             bool isSelected = date.Date == SelectedDate.Date;
 
-            // BusyLabel: "3u 30m / 8u" (toon ook capaciteitsmaximum)
-            string busyLabel = used == 0
-                ? $"/ {CapaciteitMinuten / 60}u"
-                : $"{used / 60}u {used % 60}m / {CapaciteitMinuten / 60}u";
+            string busyLabel;
+            if (isGeblokkeerd)
+            {
+                busyLabel = geblokkeerdeRedenen.TryGetValue(date.Date, out var reden) ? $"🚫 {reden}" : "🚫 Geblokkeerd";
+            }
+            else
+            {
+                busyLabel = used == 0
+                    ? $"/ {CapaciteitMinuten / 60}u"
+                    : $"{used / 60}u {used % 60}m / {CapaciteitMinuten / 60}u";
+            }
 
             MonthDays.Add(new DayTile
             {
                 Date = date,
-                DayNumber = date.Day.ToString(),
+                DayNumber = isGeblokkeerd ? $"🚫 {date.Day}" : date.Day.ToString(),
                 BusyLabel = busyLabel,
                 Busy = util,
                 BusyColor = kleur,
                 Background = bg,
                 Border = ComputeTileBorder(date, isSelected),
-                IsSelected = isSelected
+                IsSelected = isSelected,
+                IsGeblokkeerd = isGeblokkeerd
             });
 
             DayRows.Add(new DayRow
@@ -499,7 +639,8 @@ public partial class PlanningCalendarViewModel : ObservableObject
                 Datum = date.Date,
                 Uren = used / 60,
                 Minuten = used % 60,
-                Kleur = kleur
+                Kleur = kleur,
+                IsGeblokkeerd = isGeblokkeerd
             });
         }
 
@@ -509,18 +650,28 @@ public partial class PlanningCalendarViewModel : ObservableObject
         {
             var weekEnd = weekStart.AddDays(7);
             var weekMinutes = MonthDays
-                .Where(x => x.Date >= weekStart && x.Date < weekEnd)
+                .Where(x => x.Date >= weekStart && x.Date < weekEnd && !x.IsGeblokkeerd)
                 .Sum(x => (int)(x.Busy * CapaciteitMinuten));
+
+            var weekGeblokkeerd = MonthDays
+                .Count(x => x.Date >= weekStart && x.Date < weekEnd && x.IsGeblokkeerd);
+
+            var label = weekGeblokkeerd > 0
+                ? $"{weekMinutes / 60}u {weekMinutes % 60}m · {weekGeblokkeerd}🚫"
+                : $"{weekMinutes / 60}u {weekMinutes % 60}m";
 
             WeekSummaries.Add(new WeekSummary
             {
                 Title = $"Week {ISOWeek.GetWeekOfYear(weekStart)}",
                 Range = $"{weekStart:dd/MM} - {weekEnd.AddDays(-1):dd/MM}",
-                TotalLabel = $"{weekMinutes / 60}u {weekMinutes % 60}m",
+                TotalLabel = label,
                 Color = Brushes.LightGray
             });
             weekStart = weekEnd;
         }
+
+        OnPropertyChanged(nameof(IsGeselecteerdeDagGeblokkeerd));
+        OnPropertyChanged(nameof(BlokkeerDagButtonText));
     }
 
     // ───────── WEEKDETAIL ─────────
@@ -556,8 +707,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
                 Afmeting = r is null ? "" : $"{r.AantalStuks}× {r.BreedteCm}×{r.HoogteCm}",
                 Lijst = r?.TypeLijst?.Artikelnummer ?? "",
                 LijstType = r?.TypeLijst?.Soort ?? "",
-                Van = t.GeplandVan,
-                Tot = t.GeplandTot
+                Dag = t.GeplandVan.ToString("ddd dd/MM", CultureInfo.CurrentCulture)
             });
         }
     }
@@ -573,6 +723,7 @@ public partial class DayTile : ObservableObject
     public double Busy { get; set; }
     public IBrush BusyColor { get; set; } = Brushes.LimeGreen;
     public double BusyBarWidth => Busy * 120;
+    public bool IsGeblokkeerd { get; set; }
 
     [ObservableProperty] private IBrush background = Brushes.Transparent;
     [ObservableProperty] private IBrush border = Brushes.Gray;
@@ -595,7 +746,8 @@ public class DayRow
     public int Uren { get; set; }
     public int Minuten { get; set; }
     public IBrush Kleur { get; set; } = Brushes.Gray;
-    public string UurMinText => $"{Uren:00}:{Minuten:00}";
+    public bool IsGeblokkeerd { get; set; }
+    public string UurMinText => IsGeblokkeerd ? "🚫" : $"{Uren:00}:{Minuten:00}";
 }
 
 public class WeekRow
@@ -606,7 +758,5 @@ public class WeekRow
     public string Afmeting { get; set; } = "";
     public string Lijst { get; set; } = "";
     public string LijstType { get; set; } = "";
-    public DateTime Van { get; set; }
-    public DateTime Tot { get; set; }
-    public string Tijdstip => $"{Van:HH:mm} – {Tot:HH:mm}";
+    public string Dag { get; set; } = "";
 }

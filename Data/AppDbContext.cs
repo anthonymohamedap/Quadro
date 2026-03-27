@@ -27,6 +27,7 @@ namespace QuadroApp.Data
         public DbSet<ImportRowLog> ImportRowLogs => Set<ImportRowLog>();
         public DbSet<Factuur> Facturen => Set<Factuur>();
         public DbSet<FactuurLijn> FactuurLijnen => Set<FactuurLijn>();
+        public DbSet<GeblokkeerdeDag> GeblokkeerDagen => Set<GeblokkeerdeDag>();
 
 
         public AppDbContext(DbContextOptions<AppDbContext> opties) : base(opties) { }
@@ -65,11 +66,12 @@ namespace QuadroApp.Data
             // AfwerkingsOptie entity
             b.Entity<AfwerkingsOptie>(entity =>
             {
+                entity.Property(x => x.Kleur).HasMaxLength(50);
                 entity.Property(x => x.KostprijsPerM2).HasPrecision(10, 2);
                 entity.Property(x => x.WinstMarge).HasPrecision(6, 3);
                 entity.Property(x => x.AfvalPercentage).HasPrecision(5, 2);
                 entity.Property(x => x.VasteKost).HasPrecision(10, 2);
-                entity.HasIndex(x => new { x.AfwerkingsGroepId, x.Volgnummer }).IsUnique();
+                entity.HasIndex(x => new { x.AfwerkingsGroepId, x.Volgnummer, x.Kleur }).IsUnique();
                 entity.HasOne(x => x.AfwerkingsGroep)
                       .WithMany(g => g.Opties)
                       .HasForeignKey(x => x.AfwerkingsGroepId)

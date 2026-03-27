@@ -66,28 +66,34 @@ public sealed class AfwerkingsOptieImportCommitter : IImportCommitter<Afwerkings
             }
 
             var naam = parsed.Naam.Trim();
+            var kleur = NormalizeKleur(parsed.Kleur);
             var huidig = bestaande.FirstOrDefault(o =>
                 o.AfwerkingsGroepId == groep.Id &&
-                o.Volgnummer == parsed.Volgnummer);
+                o.Volgnummer == parsed.Volgnummer &&
+                NormalizeKleur(o.Kleur) == kleur);
 
             if (huidig is null)
             {
                 parsed.Naam = naam;
+                parsed.Kleur = kleur;
                 parsed.AfwerkingsGroep = groep;
                 parsed.Leverancier = leverancier;
                 db.AfwerkingsOpties.Add(parsed);
                 bestaande.Add(parsed);
+                SynchroniseerFamiliePrijs(bestaande, groep.Id, parsed.Volgnummer, parsed);
                 inserted++;
                 continue;
             }
 
             huidig.Naam = naam;
+            huidig.Kleur = kleur;
             huidig.KostprijsPerM2 = parsed.KostprijsPerM2;
             huidig.WinstMarge = parsed.WinstMarge;
             huidig.AfvalPercentage = parsed.AfvalPercentage;
             huidig.VasteKost = parsed.VasteKost;
             huidig.WerkMinuten = parsed.WerkMinuten;
             huidig.Leverancier = leverancier;
+            SynchroniseerFamiliePrijs(bestaande, groep.Id, parsed.Volgnummer, huidig);
             updated++;
         }
 
@@ -97,5 +103,20 @@ public sealed class AfwerkingsOptieImportCommitter : IImportCommitter<Afwerkings
 
     private static string NormalizeLeverancierNaam(string? raw)
         => string.IsNullOrWhiteSpace(raw) ? string.Empty : raw.Trim().ToUpperInvariant();
+
+    private static string NormalizeKleur(string? raw)
+        => string.IsNullOrWhiteSpace(raw) ? "Standaard" : raw.Trim();
+
+    private static void SynchroniseerFamiliePrijs(List<AfwerkingsOptie> opties, int groepId, char volgnummer, AfwerkingsOptie bron)
+    {
+        foreach (var optie in opties.Where(o => o.AfwerkingsGroepId == groepId && o.Volgnummer == volgnummer))
+        {
+            optie.KostprijsPerM2 = bron.KostprijsPerM2;
+            optie.WinstMarge = bron.WinstMarge;
+            optie.AfvalPercentage = bron.AfvalPercentage;
+            optie.VasteKost = bron.VasteKost;
+            optie.WerkMinuten = bron.WerkMinuten;
+        }
+    }
 }
 

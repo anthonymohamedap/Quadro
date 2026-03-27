@@ -57,6 +57,11 @@ namespace QuadroApp.Migrations
                     b.Property<int?>("LeverancierId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Kleur")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Naam")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -80,7 +85,7 @@ namespace QuadroApp.Migrations
 
                     b.HasIndex("LeverancierId");
 
-                    b.HasIndex("AfwerkingsGroepId", "Volgnummer")
+                    b.HasIndex("AfwerkingsGroepId", "Volgnummer", "Kleur")
                         .IsUnique();
 
                     b.ToTable("AfwerkingsOpties");

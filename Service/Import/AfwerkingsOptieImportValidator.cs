@@ -45,6 +45,8 @@ public sealed class AfwerkingsOptieImportValidator : IImportValidator<Afwerkings
             });
         }
 
+        row.Parsed.Kleur = string.IsNullOrWhiteSpace(row.Parsed.Kleur) ? "Standaard" : row.Parsed.Kleur.Trim();
+
         var groepCode = row.Parsed.AfwerkingsGroep?.Code;
         if (!groepCode.HasValue)
         {

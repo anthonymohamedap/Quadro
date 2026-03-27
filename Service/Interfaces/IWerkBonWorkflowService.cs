@@ -9,6 +9,7 @@ namespace QuadroApp.Service.Interfaces
         Task<WerkBon> MaakWerkBonAsync(int offerteId);
         Task VoegPlanningToeAsync(int werkBonId, DateTime start, int duurMinuten, string? omschrijving = null);
         Task VoegPlanningToeVoorRegelAsync(int werkBonId, int offerteRegelId, DateTime dag, int duurMinuten, string? omschrijving = null);
+        Task<DateTime> PlanRegelMetDagCapaciteitAsync(int werkBonId, int offerteRegelId, DateTime startDag, int duurMinuten, int capaciteitMinutenPerDag, string? omschrijving = null);
         Task HerplanWerkBonRegelsAsync(int werkBonId, DateTime nieuweDag, int? startUur = 9, int? startMinuut = 0);
         Task VeranderStatusAsync(int werkBonId, WerkBonStatus nieuweStatus);
         Task ChangeWerkBonStatusAsync(int werkBonId, WerkBonStatus nieuweStatus);

@@ -3,7 +3,7 @@
         xmlns:vm="using:QuadroApp.ViewModels"
         x:Class="QuadroApp.Views.PlanningTijdDialog"
         x:DataType="vm:PlanningTijdDialogViewModel"
-        Title="Tijdstip plannen"
+        Title="Taak plannen"
         Width="420"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
@@ -14,16 +14,6 @@
         <Style Selector="TextBlock">
             <Setter Property="Foreground" Value="#F0F2F8"/>
             <Setter Property="FontFamily" Value="Segoe UI, sans-serif"/>
-        </Style>
-        <Style Selector="NumericUpDown">
-            <Setter Property="Background"   Value="#1E2029"/>
-            <Setter Property="Foreground"   Value="#F0F2F8"/>
-            <Setter Property="BorderBrush"  Value="#2A2D38"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="FontSize"     Value="22"/>
-            <Setter Property="FontWeight"   Value="Bold"/>
-            <Setter Property="Height"       Value="52"/>
         </Style>
         <Style Selector="DatePicker">
             <Setter Property="Background"   Value="#1E2029"/>
@@ -37,13 +27,14 @@
 
             <!-- Titel -->
             <StackPanel Spacing="2">
-                <TextBlock Text="Tijdstip plannen"
+                <TextBlock Text="Taak plannen"
                            FontSize="18"
                            FontWeight="Bold"
                            Foreground="#F5C242"/>
-                <TextBlock Text="Kies datum en tijdstip voor de taak."
+                <TextBlock Text="Kies startdatum — taken worden automatisch verdeeld als de dag vol is."
                            FontSize="12"
-                           Foreground="#5A6075"/>
+                           Foreground="#5A6075"
+                           TextWrapping="Wrap"/>
             </StackPanel>
 
             <!-- Context info -->
@@ -58,9 +49,9 @@
                            TextWrapping="Wrap"/>
             </Border>
 
-            <!-- Datum -->
+            <!-- Startdatum -->
             <StackPanel Spacing="6">
-                <TextBlock Text="DATUM"
+                <TextBlock Text="STARTDATUM"
                            FontSize="11"
                            FontWeight="SemiBold"
                            Foreground="#5A6075"
@@ -69,67 +60,27 @@
                             HorizontalAlignment="Stretch"/>
             </StackPanel>
 
-            <!-- Van / Tot (verticaal gestapeld) -->
-            <StackPanel Spacing="12">
-
-                <!-- Van -->
-                <StackPanel Spacing="6">
-                    <TextBlock Text="VAN"
-                               FontSize="11" FontWeight="SemiBold"
-                               Foreground="#5A6075" LetterSpacing="1.5"/>
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <NumericUpDown Value="{Binding VanUur}"
-                                       Minimum="0" Maximum="23"
-                                       FormatString="00"
-                                       Width="100"/>
-                        <TextBlock Text=":" VerticalAlignment="Center"
-                                   FontSize="24" FontWeight="Bold" Foreground="#5A6075"/>
-                        <NumericUpDown Value="{Binding VanMinuut}"
-                                       Minimum="0" Maximum="55"
-                                       Increment="5"
-                                       FormatString="00"
-                                       Width="100"/>
-                    </StackPanel>
-                </StackPanel>
-
-                <!-- Tot -->
-                <StackPanel Spacing="6">
-                    <TextBlock Text="TOT"
-                               FontSize="11" FontWeight="SemiBold"
-                               Foreground="#5A6075" LetterSpacing="1.5"/>
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <NumericUpDown Value="{Binding TotUur}"
-                                       Minimum="0" Maximum="23"
-                                       FormatString="00"
-                                       Width="100"/>
-                        <TextBlock Text=":" VerticalAlignment="Center"
-                                   FontSize="24" FontWeight="Bold" Foreground="#5A6075"/>
-                        <NumericUpDown Value="{Binding TotMinuut}"
-                                       Minimum="0" Maximum="55"
-                                       Increment="5"
-                                       FormatString="00"
-                                       Width="100"/>
-                    </StackPanel>
-                </StackPanel>
-
-            </StackPanel>
-
-            <!-- Berekende duur -->
+            <!-- Geschat werk (read-only) -->
             <Border Background="#1E2029"
                     BorderBrush="#2A2D38"
                     BorderThickness="1"
                     CornerRadius="8"
                     Padding="14,10">
-                <StackPanel Orientation="Horizontal" Spacing="10">
-                    <TextBlock Text="Duur:"
+                <StackPanel Spacing="6">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="Totaal geschat werk:"
+                                   FontSize="12"
+                                   Foreground="#9299AE"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding DuurLabel}"
+                                   FontSize="15"
+                                   FontWeight="Bold"
+                                   Foreground="#F5C242"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding SpreadLabel}"
                                FontSize="12"
-                               Foreground="#9299AE"
-                               VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding DuurLabel}"
-                               FontSize="15"
-                               FontWeight="Bold"
-                               Foreground="#F5C242"
-                               VerticalAlignment="Center"/>
+                               Foreground="#9299AE"/>
                 </StackPanel>
             </Border>
 

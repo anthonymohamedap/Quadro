@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:QuadroApp.ViewModels"
+             xmlns:sm="using:QuadroApp.Service.Model"
              x:Class="QuadroApp.Views.ExportCenterView"
              x:DataType="vm:ExportCenterViewModel"
              Background="#F5F5F5">
@@ -11,7 +12,7 @@
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
                     <Ellipse Width="35" Height="35" Fill="#F5C242"/>
                     <TextBlock Text="QUADRO" Foreground="White" FontWeight="Bold" FontSize="20" VerticalAlignment="Center"/>
-                    <TextBlock Text="Excel exportcenter" Foreground="#CCC" FontSize="13" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Exportcenter" Foreground="#CCC" FontSize="13" Margin="5,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <Button Content="⬅️ Terug"
@@ -31,11 +32,11 @@
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="20" Spacing="18">
                 <StackPanel Spacing="6">
-                    <TextBlock Text="Centrale Excel-export"
+                    <TextBlock Text="Configureerbare Excel-export"
                                FontSize="24"
                                FontWeight="Bold"
                                Foreground="#222"/>
-                    <TextBlock Text="Exporteer klanten, lijsten, afwerkingen en leveranciers vanuit één centrale view."
+                    <TextBlock Text="Kies een dataset, pas velden en relaties aan, of start vanuit een Nederlandstalige preset."
                                Foreground="#5F6C7B"
                                TextWrapping="Wrap"/>
                 </StackPanel>
@@ -43,7 +44,7 @@
                 <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="12" Padding="16">
                     <StackPanel Spacing="10">
                         <TextBlock Text="Exportmap" FontWeight="SemiBold" Foreground="#111827"/>
-                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                        <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
                             <TextBox Grid.Column="0"
                                      Text="{Binding ExportFolder}"
                                      IsReadOnly="True"
@@ -53,8 +54,12 @@
                                     Command="{Binding ChooseExportFolderCommand}"
                                     Classes="MainBtn"/>
                             <Button Grid.Column="2"
-                                    Content="📦 Exporteer alles"
-                                    Command="{Binding ExportAllesCommand}"
+                                    Content="✔️ Alles selecteren"
+                                    Command="{Binding SelecteerAlleVeldenCommand}"
+                                    Classes="MainBtn"/>
+                            <Button Grid.Column="3"
+                                    Content="🧹 Wis selectie"
+                                    Command="{Binding WisVeldenCommand}"
                                     Classes="MainBtn"/>
                         </Grid>
                         <TextBlock Text="{Binding StatusMessage}" Foreground="#374151" TextWrapping="Wrap"/>
@@ -62,70 +67,201 @@
                                    IsVisible="{Binding HasLastExportPath}"
                                    Foreground="#6B7280"
                                    TextWrapping="Wrap"/>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Content="📂 Open exportmap"
+                                    Command="{Binding OpenExportFolderCommand}"
+                                    Classes="MainBtn"/>
+                            <Button Content="🗎 Open laatste bestand"
+                                    Command="{Binding OpenLastExportCommand}"
+                                    Classes="MainBtn"
+                                    IsVisible="{Binding HasLastExportPath}"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
-                <UniformGrid Columns="2">
-                    <Border Classes="ExportCard">
-                        <StackPanel Spacing="10">
-                            <TextBlock Text="Klanten" FontSize="18" FontWeight="Bold" Foreground="#111827"/>
-                            <TextBlock Text="Exporteer alle klantgegevens, contactinformatie en adressen naar Excel."
-                                       Foreground="#5F6C7B"
-                                       TextWrapping="Wrap"/>
-                            <Button Content="📤 Exporteer klanten"
-                                    Command="{Binding ExportKlantenCommand}"
+                <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="12" Padding="16">
+                    <StackPanel Spacing="14">
+                        <TextBlock Text="Exportinstellingen" FontWeight="SemiBold" Foreground="#111827"/>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <StackPanel Grid.Column="0" Spacing="6">
+                                <TextBlock Text="Dataset" Foreground="#555" FontSize="12"/>
+                                <ComboBox ItemsSource="{Binding BeschikbareDatasets}"
+                                          SelectedItem="{Binding SelectedDataset, Mode=TwoWay}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="sm:ExportDatasetOptie">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="{Binding Naam}" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding Beschrijving}" FontSize="11" Foreground="#6B7280" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Spacing="6">
+                                <TextBlock Text="Standaardpreset" Foreground="#555" FontSize="12"/>
+                                <ComboBox ItemsSource="{Binding BeschikbarePresets}"
+                                          SelectedItem="{Binding SelectedPreset, Mode=TwoWay}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="sm:ExportPresetOptie">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="{Binding Naam}" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding Beschrijving}" FontSize="11" Foreground="#6B7280" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
+
+                        <Border Background="#F9FAFB" CornerRadius="10" Padding="12">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="{Binding DatasetBeschrijving}" FontWeight="SemiBold" Foreground="#111827" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding GeselecteerdePresetBeschrijving}" Foreground="#6B7280" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding GeselecteerdeEntiteitenTekst}" Foreground="#1F2937"/>
+                                <TextBlock Text="{Binding GeselecteerdeVeldenTekst}" Foreground="#1F2937"/>
+                                <TextBlock Text="{Binding GeselecteerdeRelatiesTekst}" Foreground="#1F2937"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Button Content="📤 Exporteer huidige selectie"
+                                Command="{Binding ExporteerConfiguratieCommand}"
+                                Classes="MainBtn"
+                                HorizontalAlignment="Left"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="12" Padding="16">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Specifieke records (optioneel)" FontSize="18" FontWeight="Bold" Foreground="#111827"/>
+                        <TextBlock Text="Laat alles leeg om de volledige dataset te exporteren, of kies hier specifieke records samen met hun relaties."
+                                   Foreground="#5F6C7B"
+                                   TextWrapping="Wrap"/>
+
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Content="✔️ Selecteer alle records"
+                                    Command="{Binding SelecteerAlleEntiteitenCommand}"
                                     Classes="MainBtn"/>
+                            <Button Content="🧹 Wis recordfilter"
+                                    Command="{Binding WisEntiteitenCommand}"
+                                    Classes="MainBtn"/>
+                        </StackPanel>
+
+                        <TextBox Watermark="🔍 Zoek op naam of omschrijving..."
+                                 Text="{Binding EntiteitZoekterm, Mode=TwoWay}"
+                                 Margin="0,4,0,0"/>
+
+                        <Border Background="#F9FAFB" CornerRadius="8" Padding="10">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Geen records beschikbaar voor deze dataset."
+                                           IsVisible="{Binding GeenEntiteiten}"
+                                           Foreground="#6B7280"/>
+
+                                <ItemsControl ItemsSource="{Binding GepagineerdeEntiteiten}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="sm:ExportEntiteitOptie">
+                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Margin="0,4">
+                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsGeselecteerd, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                                <StackPanel Grid.Column="1" Spacing="2">
+                                                    <TextBlock Text="{Binding Label}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding Beschrijving}" FontSize="11" Foreground="#6B7280" TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="2" Text="{Binding Id}" Foreground="#6B7280" FontSize="11" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,8,0,0" IsVisible="{Binding HeeftEntiteiten}">
+                                    <Button Grid.Column="0"
+                                            Content="◀ Vorige"
+                                            Command="{Binding VorigePaginaCommand}"
+                                            Classes="MainBtn"
+                                            IsEnabled="{Binding KanNaarVorigePagina}"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding PaginaInfo}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Foreground="#374151"/>
+                                    <Button Grid.Column="2"
+                                            Content="Volgende ▶"
+                                            Command="{Binding VolgendePaginaCommand}"
+                                            Classes="MainBtn"
+                                            IsEnabled="{Binding KanNaarVolgendePagina}"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                    <Border Grid.Column="0" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="12" Padding="16">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Hoofdvelden" FontSize="18" FontWeight="Bold" Foreground="#111827"/>
+                            <TextBlock Text="Vink de velden aan die je op het hoofdwerkblad wil opnemen." Foreground="#5F6C7B" TextWrapping="Wrap"/>
+
+                            <Border Background="#F9FAFB" CornerRadius="8" Padding="10">
+                                <ItemsControl ItemsSource="{Binding BeschikbareKolommen}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="sm:ExportKolomOptie">
+                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Margin="0,4">
+                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsGeselecteerd, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding Label}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding Groep}" Foreground="#6B7280" FontSize="11" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
                         </StackPanel>
                     </Border>
 
-                    <Border Classes="ExportCard">
+                    <Border Grid.Column="1" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="12" Padding="16">
                         <StackPanel Spacing="10">
-                            <TextBlock Text="Lijsten" FontSize="18" FontWeight="Bold" Foreground="#111827"/>
-                            <TextBlock Text="Exporteer type-lijsten met voorraad, prijzen, leverancier en opmerkingen."
-                                       Foreground="#5F6C7B"
-                                       TextWrapping="Wrap"/>
-                            <Button Content="📤 Exporteer lijsten"
-                                    Command="{Binding ExportLijstenCommand}"
-                                    Classes="MainBtn"/>
-                        </StackPanel>
-                    </Border>
+                            <TextBlock Text="Relaties" FontSize="18" FontWeight="Bold" Foreground="#111827"/>
+                            <TextBlock Text="Kies extra werkbladen voor logische relaties, zoals leverancier → lijsten of klant → offertes." Foreground="#5F6C7B" TextWrapping="Wrap"/>
 
-                    <Border Classes="ExportCard">
-                        <StackPanel Spacing="10">
-                            <TextBlock Text="Afwerkingen" FontSize="18" FontWeight="Bold" Foreground="#111827"/>
-                            <TextBlock Text="Exporteer afwerkingsopties inclusief groep, leverancier en kostparameters."
-                                       Foreground="#5F6C7B"
-                                       TextWrapping="Wrap"/>
-                            <Button Content="📤 Exporteer afwerkingen"
-                                    Command="{Binding ExportAfwerkingenCommand}"
-                                    Classes="MainBtn"/>
-                        </StackPanel>
-                    </Border>
+                            <Border Background="#F9FAFB" CornerRadius="8" Padding="10">
+                                <StackPanel Spacing="10">
+                                    <TextBlock Text="Geen relaties beschikbaar voor deze dataset."
+                                               IsVisible="{Binding GeenRelaties}"
+                                               Foreground="#6B7280"/>
 
-                    <Border Classes="ExportCard">
-                        <StackPanel Spacing="10">
-                            <TextBlock Text="Leveranciers" FontSize="18" FontWeight="Bold" Foreground="#111827"/>
-                            <TextBlock Text="Exporteer leverancierscodes met gekoppelde tellingen van lijsten en bestellingen."
-                                       Foreground="#5F6C7B"
-                                       TextWrapping="Wrap"/>
-                            <Button Content="📤 Exporteer leveranciers"
-                                    Command="{Binding ExportLeveranciersCommand}"
-                                    Classes="MainBtn"/>
+                                    <ItemsControl ItemsSource="{Binding BeschikbareRelaties}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="sm:ExportRelatieOptie">
+                                                <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,4,0,0">
+                                                    <StackPanel Spacing="8">
+                                                        <CheckBox IsChecked="{Binding IsGeselecteerd, Mode=TwoWay}">
+                                                            <StackPanel Spacing="2">
+                                                                <TextBlock Text="{Binding Label}" FontWeight="SemiBold"/>
+                                                                <TextBlock Text="{Binding Beschrijving}" FontSize="11" Foreground="#6B7280" TextWrapping="Wrap"/>
+                                                            </StackPanel>
+                                                        </CheckBox>
+
+                                                        <ItemsControl ItemsSource="{Binding Kolommen}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate x:DataType="sm:ExportKolomOptie">
+                                                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Margin="18,0,0,0">
+                                                                        <CheckBox Grid.Column="0" IsChecked="{Binding IsGeselecteerd, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                                                        <TextBlock Grid.Column="1" Text="{Binding Label}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                                                        <TextBlock Grid.Column="2" Text="{Binding Groep}" Foreground="#6B7280" FontSize="11" VerticalAlignment="Center"/>
+                                                                    </Grid>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </Border>
-                </UniformGrid>
+                </Grid>
             </StackPanel>
         </ScrollViewer>
     </Grid>
-
-    <UserControl.Styles>
-        <Style Selector="Border.ExportCard">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#E5E7EB"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="Padding" Value="18"/>
-            <Setter Property="Margin" Value="0,0,18,18"/>
-        </Style>
-    </UserControl.Styles>
 </UserControl>

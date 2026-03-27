@@ -87,6 +87,7 @@ public sealed class AfwerkingsOptieImportDefinition : IImportPreviewDefinition
             ["Groep"] = optie.AfwerkingsGroep is null ? null : optie.AfwerkingsGroep.Code.ToString(),
             ["Naam"] = optie.Naam,
             ["Volgnummer"] = optie.Volgnummer == default ? string.Empty : optie.Volgnummer.ToString(),
+            ["Kleur"] = optie.Kleur,
             ["Kostprijs/m²"] = optie.KostprijsPerM2.ToString(),
             ["Winstmarge"] = optie.WinstMarge.ToString(),
             ["Leverancier"] = optie.Leverancier?.Naam

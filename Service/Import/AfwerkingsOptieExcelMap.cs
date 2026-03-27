@@ -15,6 +15,7 @@ public sealed class AfwerkingsOptieExcelMap : IExcelMap<AfwerkingsOptie>
         Text("Groep", true, "Afwerking"),
         Text("Naam", true),
         Text("Volgnummer", true, "Volgnumm"),
+        Text("Kleur", false, "Color"),
         Decimal("KostprijsPerM2", false, "KostprijsPe", "KostprijsPerM2"),
         Decimal("WinstMarge", false, "WinstMarg", "WinstMarge"),
         Decimal("AfvalPercentage", false, "AfvalPerce", "AfvalPercentage"),
@@ -45,6 +46,9 @@ public sealed class AfwerkingsOptieExcelMap : IExcelMap<AfwerkingsOptie>
                 {
                     target.Volgnummer = volgnummer.Value;
                 }
+                break;
+            case "Kleur":
+                target.Kleur = NormalizeKleur(cellText);
                 break;
             case "KostprijsPerM2":
                 if (TryParseDecimal(cellText, out var kostprijs))
@@ -91,6 +95,7 @@ public sealed class AfwerkingsOptieExcelMap : IExcelMap<AfwerkingsOptie>
         "Groep" => source.AfwerkingsGroep is not null ? source.AfwerkingsGroep.Code.ToString() : null,
         "Naam" => source.Naam,
         "Volgnummer" => source.Volgnummer == default ? string.Empty : source.Volgnummer.ToString(),
+        "Kleur" => source.Kleur,
         "KostprijsPerM2" => source.KostprijsPerM2.ToString(CultureInfo.InvariantCulture),
         "WinstMarge" => source.WinstMarge.ToString(CultureInfo.InvariantCulture),
         "AfvalPercentage" => source.AfvalPercentage.ToString(CultureInfo.InvariantCulture),
@@ -100,7 +105,7 @@ public sealed class AfwerkingsOptieExcelMap : IExcelMap<AfwerkingsOptie>
         _ => null
     };
 
-    public string GetKey(AfwerkingsOptie source) => $"{source.AfwerkingsGroep?.Code}:{source.Volgnummer}";
+    public string GetKey(AfwerkingsOptie source) => $"{source.AfwerkingsGroep?.Code}:{source.Volgnummer}:{NormalizeKleur(source.Kleur)}";
 
     private static char? ParseGroepCode(string? value)
     {
@@ -125,6 +130,9 @@ public sealed class AfwerkingsOptieExcelMap : IExcelMap<AfwerkingsOptie>
 
     private static string NormalizeLeverancierNaam(string? raw)
         => string.IsNullOrWhiteSpace(raw) ? string.Empty : raw.Trim().ToUpperInvariant();
+
+    private static string NormalizeKleur(string? raw)
+        => string.IsNullOrWhiteSpace(raw) ? "Standaard" : raw.Trim();
 
     private static char? ParseVolgnummer(string? value)
     {

@@ -1,6 +1,7 @@
 <!-- Styles/QuadroTheme.axaml -->
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:huskui="https://github.com/d3ara1n/Huskui.Avalonia">
 
 	<!-- Global resources (colors, thickness, corner radius, etc.) -->
 	<Styles.Resources>
@@ -133,6 +134,56 @@
 		<Setter Property="Background" Value="#FFECB3"/>
 	</Style>
 
+	<!-- CheckBox: custom stijl met vinkje -->
+	<Style Selector="CheckBox">
+		<Setter Property="Template">
+			<ControlTemplate>
+				<Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" VerticalAlignment="Center">
+					<Border x:Name="CheckBorder"
+					        Grid.Column="0"
+					        Width="18" Height="18"
+					        CornerRadius="4"
+					        BorderThickness="2"
+					        BorderBrush="#CCCCCC"
+					        Background="White"
+					        VerticalAlignment="Center">
+						<Path x:Name="CheckMark"
+						      Data="M 3,9 L 7,13 L 15,4"
+						      Stroke="White"
+						      StrokeThickness="2.2"
+						      StrokeLineCap="Round"
+						      IsVisible="False"
+						      Stretch="None"/>
+					</Border>
+					<ContentPresenter Grid.Column="1"
+					                  Content="{TemplateBinding Content}"
+					                  ContentTemplate="{TemplateBinding ContentTemplate}"
+					                  VerticalAlignment="Center"
+					                  HorizontalAlignment="Left"/>
+				</Grid>
+			</ControlTemplate>
+		</Setter>
+	</Style>
+
+	<Style Selector="CheckBox:checked /template/ Border#CheckBorder">
+		<Setter Property="Background" Value="#F5C242"/>
+		<Setter Property="BorderBrush" Value="#E0A800"/>
+	</Style>
+
+	<Style Selector="CheckBox:checked /template/ Path#CheckMark">
+		<Setter Property="IsVisible" Value="True"/>
+	</Style>
+
+	<Style Selector="CheckBox:pointerover /template/ Border#CheckBorder">
+		<Setter Property="BorderBrush" Value="#F5C242"/>
+		<Setter Property="Background" Value="#FFFDE7"/>
+	</Style>
+
+	<Style Selector="CheckBox:indeterminate /template/ Border#CheckBorder">
+		<Setter Property="Background" Value="#F5C242"/>
+		<Setter Property="BorderBrush" Value="#E0A800"/>
+	</Style>
+
 	<!-- DataGrid: horizontale lijnen, lichte header -->
 	<Style Selector="DataGrid">
 		<Setter Property="GridLinesVisibility" Value="Horizontal"/>
@@ -160,6 +211,14 @@
 	</Style>
 	<Style Selector="ComboBox /template/ Border#Background">
 		<Setter Property="Background" Value="White"/>
+	</Style>
+
+	<!-- Centre the Huskui growl/toast notifications -->
+	<Style Selector="huskui|AppWindow /template/ huskui|GrowlHost">
+		<Setter Property="HorizontalAlignment" Value="Center"/>
+		<Setter Property="VerticalAlignment" Value="Center"/>
+		<Setter Property="HorizontalContentAlignment" Value="Center"/>
+		<Setter Property="Margin" Value="0"/>
 	</Style>
 	<Style Selector="ComboBox /template/ ContentPresenter">
 		<Setter Property="TextElement.Foreground" Value="#222222"/>

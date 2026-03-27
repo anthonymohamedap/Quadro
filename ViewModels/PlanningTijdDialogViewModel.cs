@@ -9,51 +9,42 @@ public partial class PlanningTijdDialogViewModel : ObservableObject
     [ObservableProperty] private string contextLabel = "";
     [ObservableProperty] private DateTimeOffset? geplandeDatum;
 
-    // decimal voor Avalonia NumericUpDown compatibiliteit
-    [ObservableProperty] private decimal vanUur = 8;
-    [ObservableProperty] private decimal vanMinuut = 0;
-    [ObservableProperty] private decimal totUur = 10;
-    [ObservableProperty] private decimal totMinuut = 0;
+    /// <summary>Totaal geschatte werkminuten (read-only, berekend door caller).</summary>
+    [ObservableProperty] private int totaalMinuten;
 
     public Action<bool>? RequestClose { get; set; }
     public bool Confirmed { get; private set; }
 
-    public int DuurMinuten
-    {
-        get
-        {
-            int van = (int)VanUur * 60 + (int)VanMinuut;
-            int tot = (int)TotUur * 60 + (int)TotMinuut;
-            return Math.Max(0, tot - van);
-        }
-    }
-
     public string DuurLabel =>
-        DuurMinuten > 0
-            ? $"{DuurMinuten / 60}u {DuurMinuten % 60:D2}m ({DuurMinuten} min)"
-            : "Ongeldige tijdspanne";
+        TotaalMinuten > 0
+            ? $"{TotaalMinuten / 60}u {TotaalMinuten % 60:D2}m ({TotaalMinuten} min)"
+            : "—";
 
-    public bool IsGeldig => DuurMinuten > 0 && GeplandeDatum.HasValue;
+    /// <summary>Hoeveel dagen dit werk nodig heeft (bij 8u/dag).</summary>
+    public int AantalDagen => TotaalMinuten <= 0 ? 0 : (int)Math.Ceiling((double)TotaalMinuten / (8 * 60));
 
-    partial void OnVanUurChanged(decimal value) => Refresh();
-    partial void OnVanMinuutChanged(decimal value) => Refresh();
-    partial void OnTotUurChanged(decimal value) => Refresh();
-    partial void OnTotMinuutChanged(decimal value) => Refresh();
+    public string SpreadLabel =>
+        AantalDagen <= 1
+            ? "Past op 1 dag"
+            : $"Wordt verdeeld over {AantalDagen} dagen";
+
+    public bool IsGeldig => TotaalMinuten > 0 && GeplandeDatum.HasValue;
+
+    partial void OnTotaalMinutenChanged(int value) => Refresh();
     partial void OnGeplandeDatumChanged(DateTimeOffset? value) => Refresh();
 
     private void Refresh()
     {
-        OnPropertyChanged(nameof(DuurMinuten));
         OnPropertyChanged(nameof(DuurLabel));
+        OnPropertyChanged(nameof(AantalDagen));
+        OnPropertyChanged(nameof(SpreadLabel));
         OnPropertyChanged(nameof(IsGeldig));
         BevestigCommand.NotifyCanExecuteChanged();
     }
 
-    /// <summary>Geeft de volledige Van-DateTime terug (datum + tijdstip).</summary>
-    public DateTime GetVanDateTime() =>
-        (GeplandeDatum?.DateTime.Date ?? DateTime.Today)
-            .AddHours((double)VanUur)
-            .AddMinutes((double)VanMinuut);
+    /// <summary>Startdatum (datum + 09:00 dummy).</summary>
+    public DateTime GetStartDatum() =>
+        (GeplandeDatum?.DateTime.Date ?? DateTime.Today).AddHours(9);
 
     [RelayCommand(CanExecute = nameof(IsGeldig))]
     private void Bevestig()
