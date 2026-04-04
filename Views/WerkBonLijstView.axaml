@@ -217,21 +217,11 @@
 										  ItemsSource="{Binding WerkBonStatusOpties}"
 										  SelectedItem="{Binding SelectedWerkBonStatus, Mode=TwoWay}"/>
 
-								<TextBlock Text="Offerte status"
-										   Grid.Row="3" Grid.Column="0"
-										   FontWeight="Bold"/>
-								<ComboBox Grid.Row="3" Grid.Column="1"
-										  ItemsSource="{Binding OfferteStatusOpties}"
-										  SelectedItem="{Binding SelectedOfferteStatus, Mode=TwoWay}"/>
 							</Grid>
 
 							<StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
 								<Button Content="💾 Opslaan status"
 										Command="{Binding SaveStatusCommand}"
-										Classes="MainBtn"
-										Padding="12,6"/>
-								<Button Content="↩️ Offerte terug zichtbaar"
-										Command="{Binding MaakOfferteTerugZichtbaarCommand}"
 										Classes="MainBtn"
 										Padding="12,6"/>
 							</StackPanel>

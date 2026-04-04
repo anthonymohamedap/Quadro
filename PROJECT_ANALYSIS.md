@@ -1,366 +1,411 @@
 # QuadroApp — Project Analysis
-*Updated: 2026-03-17 | Branch: `styling` | Analyst: Claude*
+*Gegenereerd op 4 april 2026 · .NET 9 / Avalonia 11.3 / EF Core 9 / SQLite*
 
 ---
 
-## 1. Project Overview
+## 1. Overzicht
 
-**QuadroApp** is a Belgian desktop business application for a picture-framing / interior-finishing company. It manages the full order lifecycle: customer quotes (offertes) → work orders (werkbonnen) → invoices (facturen), plus stock tracking, planning, supplier/product catalogue management, and a weekly work schedule.
+QuadroApp is een desktop-applicatie voor een **inlijstwerkplaats** (Quadro). Het beheert het volledige werkproces: van klantbeheer en offertes, over werkbonnen en planning, tot facturatie en voorraadbeheer. De app draait op Windows (en theoretisch cross-platform via Avalonia UI) en wordt als één zelfstandig `.exe`-bestand gepubliceerd (`PublishSingleFile`).
 
-- **Platform:** .NET 9, Avalonia UI 11.3 (cross-platform desktop)
-- **Architecture pattern:** MVVM (Model-View-ViewModel)
-- **Database:** SQLite via Entity Framework Core 9 (`quadro.db`)
-- **DI framework:** Microsoft.Extensions.DependencyInjection
-- **Language:** C# 13 with `Nullable enable`
-- **Publishing:** Single-file, self-contained executable
+### Tech Stack
 
----
-
-## 2. Solution Layout
-
-```
-Quadro.sln
-└── QuadroApp/                   ← main project (single executable)
-    ├── App.axaml / App.axaml.cs ← DI bootstrap, startup, global error handling
-    ├── Program.cs               ← entry point (STA thread, Avalonia host)
-    ├── MainWindow.axaml         ← shell window
-    ├── Data/                    ← EF Core data layer
-    ├── Model/                   ← domain entities + import models
-    ├── Service/                 ← business logic + service interfaces
-    ├── ViewModels/              ← MVVM view models (20 files)
-    ├── Views/                   ← Avalonia AXAML views & windows
-    ├── Converters/              ← IValueConverter implementations (7 files)
-    ├── Validation/              ← entity validators
-    ├── Styles/                  ← custom Avalonia theme (QuadroTheme.axaml)
-    └── Assets/                  ← logos, images
-WorkflowService.Tests/           ← xUnit test project (separate .csproj)
-```
+| Laag | Technologie |
+|---|---|
+| UI Framework | Avalonia 11.3.12 (Fluent theme, CompiledBindings) |
+| MVVM | CommunityToolkit.Mvvm 8.4.0 |
+| ORM / DB | EF Core 9.0.9 + SQLite (`quadro.db`) |
+| PDF export | QuestPDF 2024.7.1 |
+| Excel I/O | ClosedXML 0.105.0 + EPPlus 8.4.1 |
+| Toast UI | Huskui.Avalonia 0.10.3 |
+| DI container | Microsoft.Extensions.DependencyInjection 9.0 |
+| Target framework | .NET 9 (self-contained, trimming uitgeschakeld) |
 
 ---
 
-## 3. Dependency Graph (High Level)
+## 2. Architectuur
 
 ```
-Program.cs
-  └── App.axaml.cs  (DI container built here)
-        ├── Data/AppDbContext  (EF Core, SQLite)
-        ├── Service/*          (business logic)
-        │     ├── Pricing/PricingEngine
-        │     ├── Import/Enterprise/*  (Excel import pipeline)
-        │     │     ├── Klant pipeline
-        │     │     ├── TypeLijst pipeline
-        │     │     └── AfwerkingsOptie pipeline
-        │     ├── WorkflowService      (offerte state machine + stock + besteld)
-        │     ├── OfferteWorkflowService
-        │     ├── WerkBonWorkflowService
-        │     └── FactuurWorkflowService
-        └── ViewModels/*
-              └── bound to Views/* (AXAML)
+App.axaml.cs          ← DI bootstrapping, seeder, EF migrate
+  │
+  ├── INavigationService  ← singleton, wisselt CurrentViewModel
+  │     └── MainWindow.axaml  ← ContentControl gebonden aan CurrentViewModel
+  │
+  ├── ViewModels/       ← CommunityToolkit.Mvvm, IAsyncInitializable
+  │     └── (transient tenzij anders)
+  │
+  ├── Views/            ← Avalonia UserControl / Window, CompiledBindings
+  │
+  ├── Service/          ← business-logica, exports, import-pipeline
+  │     ├── Pricing/
+  │     ├── Import/
+  │     └── Toast/
+  │
+  ├── Data/             ← AppDbContext, DatabaseSeeder, migrations
+  │
+  ├── Model/DB/         ← EF entiteiten
+  ├── Model/Import/     ← import-preview & resultaat-modellen
+  │
+  └── Validation/       ← ICrudValidator<T> per entiteit
 ```
+
+### Navigatiepatroon
+
+`INavigationService.NavigateToAsync<TViewModel>()` lost de ViewModel op via DI, cast naar `IAsyncInitializable` en roept `InitializeAsync()` aan. `MainWindowViewModel.CurrentPage` wordt geüpdatet en de `ContentControl` in `MainWindow` rendert de bijpassende `DataTemplate`.
+
+### IAsyncInitializable
+
+ViewModels implementeren `Task InitializeAsync()` voor laden van data na navigatie. Wordt aangeroepen door `NavigationService` na constructie.
 
 ---
 
-## 4. Domain Model (Model/DB/)
+## 3. Domeinmodel (25 entiteiten)
 
-### Core Entities
+### Kernentiteiten
 
-| Entity | Key Fields | Relations |
+| Entiteit | Tabel | Sleutels / Relaties |
 |---|---|---|
-| `Klant` | Id, Voornaam, Achternaam, Email, Telefoon, Adres, BtwNummer | → many `Offerte` |
-| `Leverancier` | Id, Naam (max 3 chars, unique) | → many `TypeLijst` |
-| `TypeLijst` | Id, Artikelnummer, BreedteCm, PrijsPerMeter, VoorraadMeter, MinimumVoorraad, Soort | → `Leverancier`; used in `OfferteRegel`, `WerkTaak` |
-| `AfwerkingsGroep` | Id, Code (G/P/D/O/R), Naam | → many `AfwerkingsOptie` |
-| `AfwerkingsOptie` | Id, Naam, Volgnummer, KostprijsPerM2, WinstMarge, AfvalPercentage, WerkMinuten | → `AfwerkingsGroep`, optional `Leverancier` |
-| `Offerte` | Id, KlantId, Status (enum), Datum, totalen, KortingPct, MeerPrijsIncl, VoorschotBedrag | → `Klant`, → many `OfferteRegel`, → 0..1 `WerkBon` |
-| `OfferteRegel` | Id, OfferteId, AantalStuks, Breedte/HoogteCm, 6× AfwerkingsOptie FK, prijsvelden, ExtraWerkMinuten | → `TypeLijst`, 6× `AfwerkingsOptie` |
-| `WerkBon` | Id, OfferteId, Status (enum), TotaalPrijsIncl, StockReservationProcessed | → `Offerte`, → many `WerkTaak` |
-| `WerkTaak` | Id, WerkBonId, OfferteRegelId, GeplandVan/Tot, DuurMinuten, BenodigdeMeter, IsBesteld, BestelDatum, IsOpVoorraad, **WeekNotitie** | → `WerkBon`, → `OfferteRegel` |
-| `Factuur` | Id, WerkBonId, FactuurNummer, DocumentType, KlantNaam, Status (enum), totalen, Lijnen | → `WerkBon`, → many `FactuurLijn` |
-| `FactuurLijn` | Id, FactuurId, Omschrijving, Aantal, PrijsExcl, BtwPct, totalen | → `Factuur` |
-| `Instelling` | Sleutel (PK), Waarde | Key-value settings store |
-| `ImportSession` | Id, EntityName, FileName, totals, Status | Audit log of imports → many `ImportRowLog` |
-| `ImportRowLog` | Id, ImportSessionId, RowNumber, Key, Success, IssuesJson | Per-row import result |
+| `Klant` | Klanten | contactgegevens, BTW-nummer |
+| `TypeLijst` | TypeLijsten | lijsttype + voorraadbeheer; FK → Leverancier |
+| `AfwerkingsGroep` | AfwerkingsGroepen | code (1 char: G/P/D/O/R), naam |
+| `AfwerkingsOptie` | AfwerkingsOpties | FK → AfwerkingsGroep + Leverancier; unieke index op (GroepId, Volgnummer, Kleur) |
+| `Leverancier` | Leveranciers | naam max 3 chars, uniek |
 
-**New since last analysis:** `WerkTaak.WeekNotitie` (`[MaxLength(2000)]`) — per-task free-text note shown and saved from the weekly work list screen. `TypeLijst.Soort` — used for list-type display in planning week rows.
+### Offerte-traject
 
-### Status Enums
+| Entiteit | Opmerkingen |
+|---|---|
+| `Offerte` | Status enum (Concept/…), planning-velden (GeplandeDatum, DeadlineDatum, GeschatteMinuten), 1:1 → WerkBon |
+| `OfferteRegel` | 7 FK's: TypeLijst + 6 AfwerkingsOpties (Glas, PassePartout1, PassePartout2, DiepteKern, Opkleven, Rug). Alle 6 afwerkingen: `OnDelete = NoAction`. Backing fields met auto-sync van FK-int |
+| `OfferteStatus` | enum: Concept, Verstuurd, Goedgekeurd, Geweigerd, Afgewerkt |
 
-**OfferteStatus:** `Concept → Verzonden → Goedgekeurd → InProductie → Afgewerkt → Gefactureerd → Betaald` (or `Geannuleerd`)
+### Werkplaats
 
-**WerkBonStatus:** `Gepland → InUitvoering → Afgewerkt → Afgehaald`
+| Entiteit | Opmerkingen |
+|---|---|
+| `WerkBon` | Status enum (Gepland/InUitvoering/Afgewerkt/Afgehaald), 1:1 → Offerte, bevat collectie WerkTaken |
+| `WerkTaak` | GeplandVan/GeplandTot (auto-berekend in SaveChangesAsync), DuurMinuten, Resource, VoorraadStatus enum |
+| `GeblokkeerdeDag` | Unieke index op Datum; optionele Reden (max 200 char) |
 
-**FactuurStatus:** `Draft → KlaarVoorExport → Geexporteerd → Betaald → Geannuleerd`
+### Facturatie
+
+| Entiteit | Opmerkingen |
+|---|---|
+| `Factuur` | DocumentType, KlantNaam/Adres/BTW, Status enum, FK → WerkBon (Restrict), FK → Offerte (Restrict) |
+| `FactuurLijn` | Omschrijving, Eenheid, Aantal, PrijsExcl, BtwPct, totaalvelden |
+
+### Voorraadbeheer
+
+| Entiteit | Opmerkingen |
+|---|---|
+| `LeverancierBestelling` | BestelNummer, Status enum, FK → Leverancier |
+| `LeverancierBestelLijn` | Besteld/Ontvangen meter, FK → LeverancierBestelling + TypeLijst (Restrict) + WerkBon (SetNull) |
+| `VoorraadMutatie` | MutatieType enum, AantalMeter, FK's → TypeLijst/WerkBon/WerkTaak/BestelLijn |
+| `VoorraadAlert` | AlertType/Status enum, Bericht, FK → TypeLijst (SetNull) |
+
+### Import-infra
+
+| Entiteit | Opmerkingen |
+|---|---|
+| `ImportSession` | EntityName, FileName, Status, ErrorMessage |
+| `ImportRowLog` | Key, Message, FK → ImportSession (Cascade) |
+
+### Instellingen
+
+| Entiteit | Opmerkingen |
+|---|---|
+| `Instelling` | Key/Value-store voor app-instellingen |
 
 ---
 
-## 5. Data Layer (Data/)
+## 4. AfwerkingsOptie — Familie-concept
+
+Elke `AfwerkingsOptie` behoort tot een groep en heeft:
+- **Volgnummer** (`char`): `'1'`–`'9'` of `'A'`–`'K'`
+- **Kleur** (`string`, max 50, default `"Standaard"`): onderscheidt varianten binnen dezelfde familie
+- **Familie** = alle opties met dezelfde `(AfwerkingsGroepId, Volgnummer)` — zij delen prijsstelling
+
+Uniekheidsconstraint in DB: `(AfwerkingsGroepId, Volgnummer, Kleur)`.
+
+`AfwerkingenService.SaveOptieAsync` synchroniseert bij opslaan de prijsvelden (`KostprijsPerM2`, `WinstMarge`, `AfvalPercentage`, `VasteKost`, `WerkMinuten`) naar alle andere familieleden.
+
+### Standaard groepen (seeder)
+
+| Code | Naam | Opties |
+|---|---|---|
+| G | Glas | 3 (volgnummers: 1, 2, 3) |
+| P | Passe-partout | 3 |
+| D | Dieptekern | 3 |
+| O | Opkleven | 3 |
+| R | Rug | 3 |
+
+**Historische bug (opgelost):** De seeder gebruikte `(char)1` (ASCII SOH = besturingsteken) i.p.v. `'1'` (ASCII 49). `LegacyAfwerkingCode.ApplyAsync()` zocht op `'1'` en vond niets. Fix: alle seeder-toewijzingen vervangen door letterlijke `char`-constanten + `FixVolgnummers()` startup-methode die bestaande databases heelt.
+
+---
+
+## 5. LegacyAfwerkingCode
+
+Een 6-tekens code `GPPDOR` identificeert de afwerkingskeuzes per OfferteRegel:
+
+```
+Positie 0 = Glas          (groep G)
+Positie 1 = PassePartout1 (groep P)
+Positie 2 = PassePartout2 (groep P)
+Positie 3 = DiepteKern    (groep D)
+Positie 4 = Opkleven      (groep O)
+Positie 5 = Rug           (groep R)
+```
+
+- `'0'` = geen keuze voor die positie
+- `'1'`–`'9'`/`'A'`–`'K'` = volgnummer van de gewenste optie
+
+`Generate(regel)` maakt de code. `ApplyAsync(db, regel, code)` laadt de bijpassende opties uit de DB en koppelt ze aan de regel.
+
+---
+
+## 6. PrijsBerekening
+
+`PricingEngine` (singleton) berekent de verkoopprijs van een `OfferteRegel`:
+
+1. Lijst-bijdrage: `(oppervlakteM2 × PrijsPerMeter) + VasteKost` (TypeLijst)
+2. Per afwerking: `(oppervlakteM2 × (1 + afval%) × KostprijsPerM2 × WinstMarge) + VasteKost`
+3. Som → ExtraPrijs + Korting → SubtotaalExBtw → BTW → TotaalInclBtw
+4. `PreviewPrijsText` in `AfwerkingenViewModel` toont live een voorbeeldberekening voor opgegeven breedte/hoogte.
+
+---
+
+## 7. ViewModels (23 stuks)
+
+| ViewModel | Scherm | Bijzonderheden |
+|---|---|---|
+| `MainWindowViewModel` | MainWindow | singleton, `CurrentPage` eigenschap |
+| `LoginViewModel` | LoginWindow | authenticatie |
+| `HomeViewModel` | HomeView | dashboard-tiles, navigeert naar andere VM's |
+| `KlantenViewModel` | KlantenView | CRUD klanten, zoeken |
+| `KlantDetailViewModel` | KlantDetailView | detail + offertelijst per klant |
+| `LijstenViewModel` | LijstenView | CRUD TypeLijsten, voorraadbeheer |
+| `LeveranciersViewModel` | LeveranciersView | CRUD leveranciers |
+| `AfwerkingenViewModel` | AfwerkingenView | CRUD + import; familie-bewust opslaan; `VolgnummerText` char-binding met toast-validatie |
+| `OffertesLijstViewModel` | OffertesLijstView | lijst van offertes, navigeer naar detail |
+| `OfferteViewModel` | OfferteView | hoofdscherm; laadt catalog, berekent prijzen; `RelinkSelectionsAfterCatalog()` relinkt alle 8 navigatie-properties |
+| `WerkBonLijstViewModel` | WerkBonLijstView | overzicht werkbonnen, statusbeheer |
+| `PlanningCalendarViewModel` | PlanningCalendarWindow | kalender met observable DayTile's, GeblokkeerdeDag, WerkTaak beheer |
+| `PlanningTijdDialogViewModel` | PlanningTijdDialog | tijdsinvoer (delegate-injectie vanuit code-behind) |
+| `WeekWerkLijstViewModel` | WeekWerkLijstWindow | weekoverzicht werktaken |
+| `FacturenViewModel` | FacturenView | factuurlijst, statuswijzigingen |
+| `FactuurPreviewViewModel` | FactuurPreviewWindow | PDF-preview factuur |
+| `FactuurInfoDialogViewModel` | FactuurInfoDialog | factuurinfo invullen |
+| `ExportCenterViewModel` | ExportCenterView | centrale Excel-export |
+| `InstellingenViewModel` | InstellingenWindow | app-instellingen beheer |
+| `ImportPreviewViewModel` | ImportPreviewView | generieke import-preview |
+| `AfwerkingExcelPreviewViewModel` | AfwerkingImportPreviewWindow | Excel-import preview afwerkingen |
+| `KlantExcelPreviewViewModel` | KlantImportPreviewWindow | Excel-import preview klanten |
+| `BulkLijstenViewModel` | BulkLijstenWindow | bulkbewerking TypeLijsten |
+
+### DI-registratie
+
+- `MainWindowViewModel` → **singleton**
+- Alle overige → **transient**
+
+---
+
+## 8. PlanningCalendarViewModel — Details
+
+### DayTile (inner class)
+
+```csharp
+public partial class DayTile : ObservableObject
+{
+    [ObservableProperty] IBrush background;
+    [ObservableProperty] IBrush border;
+    [ObservableProperty] bool isSelected;
+    public DateTime Date { get; init; }
+}
+```
+
+Reactief dankzij `ObservableObject` — AXAML-binding pikt `Border`/`Background`-wijzigingen direct op zonder extra notify-calls.
+
+### WeekRow (week-tabel rij)
+
+6 kolommen: `BonNr`, `KlantNaam`, `Afmeting`, `Lijst`, `Dag`, `DuurMin`
+
+### Geblokkeerde dagen
+
+`GeblokkeerdeDag`-records worden bij `LoadAsync` in een `HashSet<DateTime> _geblokkeerd` geladen. `IsDagGeblokkeerd(date)` en `IsGeselecteerdeDagGeblokkeerd` sturen de UI-indicator en knop-tekst.
+
+### Commando's
+
+- `ToggleBlokkeerDagCommand` — blokkeert/deblokkert geselecteerde dag
+- `ToggleBlokkeerWeekCommand` — blokkeert/deblokkert hele week
+- `HerplanTaakCommand` — context-menu op WerkTaak
+- `VerwijderTaakCommand` — context-menu op WerkTaak
+- `ShowTijdDialogAsync` — `Func<…>` delegate geïnjecteerd vanuit `PlanningCalendarWindow.axaml.cs`
+
+### Capaciteit
+
+Constante `CapaciteitMinuten = 8 * 60 = 480` (één standaard werkdag).
+
+---
+
+## 9. Services
+
+### Domeinservices (Scoped)
+
+| Service | Verantwoordelijkheid |
+|---|---|
+| `AfwerkingenService` | CRUD + familie-sync prijsvelden + volgnummer-normalisering |
+| `StockService` | Voorraadmutaties, alerts, berekeningen |
+| `WorkflowService` | Algemene workflow-stappen |
+| `OfferteWorkflowService` | Offerte statusovergangen |
+| `WerkBonWorkflowService` | WerkBon aanmaken, status, stock-reservering |
+| `FactuurWorkflowService` | Factuur aanmaken vanuit WerkBon, statusbeheer |
+| `FactuurExportService` | PDF-generatie voor facturen (QuestPDF) |
+| `CentralExcelExportService` | Excel-exports (EPPlus) |
+| `PdfFactuurExporter` | Implementatie `IFactuurExporter` via QuestPDF |
+
+### Singletons
+
+| Service | Verantwoordelijkheid |
+|---|---|
+| `NavigationService` | Scherm-navigatie, `CurrentViewModel` |
+| `OfferteNavigationService` | Offerte-specifieke navigatie |
+| `PricingEngine` | Prijsberekeningslogica |
+| `PricingService` | Wrapper rond PricingEngine |
+| `AppSettingsProvider` | Leest/schrijft `Instelling`-records |
+| `ToastService` | Huskui toast-notificaties (Info/Success/Warning/Error) |
+| `DialogService` | Modal dialoogvensters |
+| `WindowProvider` | Geeft toegang aan Avalonia Window-instantie |
+
+### Transient
+
+| Service | Verantwoordelijkheid |
+|---|---|
+| `KlantDialogService` | Klant selectie/aanmaak dialoog |
+| `LijstDialogService` | TypeLijst selectie dialoog |
+| `ImportService` | Generieke import-pipeline orchestratie |
+| `ClosedXmlExcelParser` | Parset .xlsx bestanden |
+| Klant/TypeLijst/AfwerkingsOptie import-stacks | Map + Validator + Committer per entiteitstype |
+
+---
+
+## 10. Import-pipeline
+
+Generiek pipeline-patroon via interfaces:
+
+```
+IExcelParser              → parset rijen uit .xlsx
+IExcelMap<T>              → kolom-naar-property mapping
+IImportPreviewDefinition  → bouwt preview-rijen
+IImportValidator<T>       → valideert elke rij
+IImportCommitter<T>       → schrijft goedgekeurde rijen naar DB
+IImportService            → orchestreert het hele proces
+```
+
+Preview-modellen: `KlantPreviewRow`, `TypeLijstPreviewRow`, `AfwerkingsOptiePreviewRow`
+Resultaat-modellen: `ImportResult`, `ImportRowResult`, `ImportIssue`, `ImportRowIssue`, `ImportCommitReceipt`, `Severity`
+
+---
+
+## 11. Validatie
+
+`ICrudValidator<T>` interface met drie methoden: `ValidateCreateAsync`, `ValidateUpdateAsync`, `ValidateDeleteAsync`.
+
+`ValidationResult` kent **errors** (blokkerend) en **warnings** (niet-blokkerend, getoond als toast).
+
+| Validator | Entiteit | Bijzonderheden |
+|---|---|---|
+| `KlantValidator` | Klant | naam, e-mail, BTW-formaat |
+| `TypeLijstValidator` | TypeLijst | artikelnummer, prijzen |
+| `AfwerkingsOptieValidator` | AfwerkingsOptie | Volgnummer `1-9`/`A-K`, Kleur max 50, unieke `(Groep+Volgnummer+Kleur)` DB-check; warnings voor 0-waarden |
+| `OfferteValidator` | Offerte | klant, regels, afmetingen |
+
+---
+
+## 12. Data-laag
 
 ### AppDbContext
-- **DbSets:** TypeLijsten, AfwerkingsGroepen, AfwerkingsOpties, Offertes, WerkBonnen, WerkTaken, OfferteRegels, Klanten, Leveranciers, ImportSessions, ImportRowLogs, Facturen, FactuurLijnen, Instellingen
-- **Precision** configured for all decimal fields (10,2 or 18,2)
-- **Delete behaviors:** Cascade for parent-child (Offerte→WerkBon, WerkBon→WerkTaak, etc.), NoAction for the 6 AfwerkingsOptie FKs on OfferteRegel (to avoid multiple cascade paths in SQLite)
-- **SaveChangesAsync override:** Auto-sets `WerkTaak.GeplandTot = GeplandVan + max(1, DuurMinuten)` and updates `WerkBon.BijgewerktOp` on modification
-- **Status columns:** Stored as strings via `.HasConversion<string>()`
-- **Optimistic concurrency:** `[Timestamp] RowVersion` on `WerkBon`, `WerkTaak`, `Factuur`
-- **Indices:** `WerkTaak` indexed on `GeplandVan` and `WerkBonId` for fast planning queries
 
-### Database Initialization (App.axaml.cs)
-- **⚠️ CRITICAL:** On every app startup, `EnsureDeletedAsync()` + `EnsureCreatedAsync()` is called — **this wipes the entire database on each launch**. Demo data is re-seeded via `DbSeeder.SeedDemoData()`. This must be replaced with proper migration-based startup before production use.
-- The legacy `AppServices.Init()` (in `AppServices.cs`) still exists alongside the main DI path and also does `EnsureDeleted` — dead code remnant.
+25 `DbSet`-properties. Sleutelconfiguraties in `OnModelCreating`:
+- Precisies op alle decimale velden
+- `Offerte 1:1 WerkBon` via `HasForeignKey<WerkBon>(w => w.OfferteId)`
+- `OfferteRegel` → 6 × AfwerkingsOptie met `OnDelete = NoAction` (vermijdt multiple cascade paths)
+- `AfwerkingsOptie` unieke samengestelde index `(AfwerkingsGroepId, Volgnummer, Kleur)`
+- `SaveChangesAsync` override: auto-berekent `WerkTaak.GeplandTot` en stelt `WerkBon.BijgewerktOp` in
 
 ### DatabaseSeeder
-Seeds: 4 Leveranciers (ICO, HOF, FRA, BOL), demo Klanten, AfwerkingsGroepen with Opties, TypeLijsten, and sample Offertes.
+
+Vult bij lege DB: 4 leveranciers (ICO/HOF/FRA/BOL), 3 klanten, 5 afwerkingsgroepen (G/P/D/O/R), 15 afwerkingsopties (3 per groep, met `Kleur = "Standaard"`).
+
+`FixVolgnummers(db)` — idempotente herstel-methode die bij opstart controleert op `Volgnummer < ' '` (besturingstekens) en mapt naar correcte cijfertekens ('1'–'9', 'A'–'K').
+
+### Migrations
+
+Standaard EF Core migrations. `AppDbContextModelSnapshot.cs` aanwezig. `FactuurSchemaUpgrade.cs` bevat handmatige schema-upgrade logica voor de factuur-entiteiten.
 
 ---
 
-## 6. Service Layer (Service/)
+## 13. Views & Theming
 
-### Dependency Injection Lifetimes
+### Stijlen (`Styles/QuadroTheme.axaml`)
 
-| Service | Lifetime | Notes |
-|---|---|---|
-| `INavigationService` | Singleton | Holds current VM reference |
-| `IOfferteNavigationService` | Singleton | Offerte-specific navigation |
-| `IWindowProvider` | Singleton | Manages window references |
-| `IFilePickerService` | Singleton | File open/save dialogs |
-| `IToastService` | Singleton | In-app notifications |
-| `IDialogService` | Singleton | Generic modal dialogs |
-| `IKlantDialogService` | Transient | Klant create/edit dialogs |
-| `ILijstDialogService` | Transient | TypeLijst create/edit dialogs |
-| `IAfwerkingenService` | Scoped | |
-| `IWorkflowService` | Scoped | Main state machine |
-| `IOfferteWorkflowService` | Scoped | |
-| `IWerkBonWorkflowService` | Scoped | |
-| `IFactuurWorkflowService` | Scoped | |
-| `IFactuurExportService` | Scoped | |
-| `IFactuurExporter` (PDF) | Scoped | QuestPDF implementation |
-| `PricingEngine` | Singleton | Pure calculation, stateless |
-| `IPricingSettingsProvider` | Singleton | Reads settings from DB |
-| `IPricingService` | Singleton | Wraps PricingEngine |
-| `IAppSettingsProvider` | Singleton | App-level key-value settings |
-| Import pipeline services | Transient | Parser, maps, validators, committers (×3 entities) |
-| Legacy import services | Transient | Candidates for removal |
-| Validators | Scoped/Transient | Per-entity CRUD validators |
-| ViewModels | Singleton (Main) / Transient | |
+Globale stijlen en resources voor de hele app:
+- `MainBtn` — gele actie-knop (`#F5C242`)
+- `DangerBtn` — rode verwijder-knop
+- Resources: `AccentYellow` (#F5C242), `AccentDark` (#444A50), `AccentRed`, `AccentRedDim`
+- Header-patroon: `#444A50` achtergrond, wit logo + subtitel, gele "Terug"-knop rechts
 
-### WorkflowService (the state machine)
-Implements strict `OfferteStatus` transitions via a lookup dictionary. Key behaviors:
-- **Goedgekeurd transition:** Automatically creates a `WerkBon` if none exists (idempotent)
-- **Stock reservation (`ReserveStockForWerkBonAsync`):** Validates `BenodigdeMeter > 0`, checks available stock per `WerkTaak`, decrements `VoorraadMeter`, sets `IsOpVoorraad`, raises warnings if below `MinimumVoorraad`; idempotent via `StockReservationProcessed` flag
-- **`MarkLijstAsBesteldAsync`:** Sets `IsBesteld + BestelDatum` on a WerkTaak; used from both WeekWerkLijstWindow and WerkBonLijstView
-- **Offerte→WerkBon→Factuur lifecycle** is managed across three specialized workflow services
+### Hoofd-navigatievensters (UserControl, wisselen via ContentControl)
 
-### WerkBonWorkflowService
-- **`VoegPlanningToeVoorRegelAsync`:** Creates a `WerkTaak` for a given WerkBon + OfferteRegel at a specific `DateTime` with a calculated duration. Called from `PlanningCalendarViewModel`.
+HomeView, KlantenView, LijstenView, LeveranciersView, AfwerkingenView, OffertesLijstView, OfferteView, WerkBonLijstView, FacturenView, ExportCenterView
 
-### PricingEngine (Service/Pricing/)
-Pure calculation class (no DB dependency). For each `OfferteRegel` it computes:
-1. **Lijst price:** perimeter × PrijsPerMeter + waste% + labour (min/hr × uurloon) + VasteKost
-2. **Afwerking price (×6 slots):** m² × KostprijsPerM2 + VasteKost + waste% + labour
-3. **Extra costs/discounts** per regel (including `ExtraWerkMinuten`)
-4. **Offerte-level:** discount (KortingPct), MeerPrijsIncl, BTW calculation, VoorschotBedrag clamping
-5. Distinguishes Staaflijst vs. non-staaflijst for different waste/profit factor settings
+### Dialoog- en popup-vensters (Window)
 
-### Import Pipeline (Service/Import/Enterprise/)
-Generic, interface-driven pipeline:
-- `IExcelParser` (`ClosedXmlExcelParser`) → reads rows as `Dictionary<string, string?>`
-- `IExcelMap<T>` → defines columns, parsers, key extraction, `ApplyCell`
-- `IImportValidator<T>` → async per-row validation against DB
-- `IImportCommitter<T>` → upsert rows into DB with tracking
-- `ImportService` orchestrates: **DryRun** (validation only) then **Commit** (transactional, with audit logging to `ImportSession`/`ImportRowLog`)
-- **Implemented for all 3 entity types:** `Klant`, `TypeLijst`, `AfwerkingsOptie`
+LoginWindow, KlantDialog, LijstDialog, InstellingenWindow, FactuurInfoDialog, FactuurPreviewWindow, ImportPreviewWindow, KlantImportPreviewWindow, AfwerkingImportPreviewWindow, BulkLijstenWindow, WeekWerkLijstWindow, PlanningCalendarWindow, PlanningTijdDialog
 
-The legacy import services have been removed; the Enterprise import pipeline is now the active import path.
+### PlanningCalendarWindow (herontworpen)
 
-### Other Services
-- **NavigationService:** Service-locator navigation using `IServiceProvider`; supports typed navigation with parameter passing via `IParameterReceiver<TParam>` and `IAsyncInitializable`
-- **ToastService:** Shows timed in-app toast notifications (Success/Error/Warning/Info)
-- **DialogService / KlantDialogService / LijstDialogService:** Modal dialog helpers
-- **PdfFactuurExporter:** Uses QuestPDF (community license) to export invoices/orders as PDF
-- **AppSettingsProvider / PricingSettingsProvider:** Read `Instelling` key-value pairs from DB
-- **LegacyAfwerkingCode:** Utility for encoding/decoding the G-P-P-D-O-R afwerking code string
+- 2-kolommen layout: links maandkalender-grid (DayTile's), rechts detail-paneel
+- DayTile: goud border (`#F5C242`) bij selectie, DeepSkyBlue bij vandaag, grijs anders; `BorderThickness=2`
+- Dag-detail (rechts): blokkeerknoppen bovenaan, werkbon-regels sectie, week-tabel (6 kolommen)
+- Context-menu op WerkTaak-items: Herplan / Verwijder
+- Code-behind injecteert `ShowTijdDialogAsync` delegate in ViewModel via `OnDataContextChanged`
 
 ---
 
-## 7. Presentation Layer (Views & ViewModels)
+## 14. Bekende kwesties & aandachtspunten
 
-### Screen Inventory
+### Opgelost in recente sessies
 
-| ViewModel | View/Window | Purpose |
-|---|---|---|
-| `MainWindowViewModel` | `MainWindow` | Shell, hosts navigation area |
-| `HomeViewModel` | `HomeView` | Dashboard / landing page |
-| `LoginViewModel` | `LoginWindow` | User authentication |
-| `KlantenViewModel` | `KlantenView` | Customer list & management (with Excel import) |
-| `KlantDetailViewModel` | `KlantDetailView` | Single customer detail |
-| `LeveranciersViewModel` | `LeveranciersView` | Supplier list |
-| `LijstenViewModel` | `LijstenView` | TypeLijst (product/frame list) management |
-| `AfwerkingenViewModel` | `AfwerkingenView` | Finishing options management |
-| `OffertesLijstViewModel` | `OffertesLijstView` | Quote list (Concept status) |
-| `OfferteViewModel` | `OfferteView` | Quote detail editor (klant, regels, afwerkingen, pricing) |
-| `WerkBonLijstViewModel` | `WerkBonLijstView` | Work order list with detail panel + bestel-datum workflow |
-| `FacturenViewModel` | `FacturenView` | Invoice management |
-| `PlanningCalendarViewModel` | `PlanningCalendarWindow` | Full month calendar with day/week detail, task planning |
-| `PlanningTijdDialogViewModel` | `PlanningTijdDialog` | Modal dialog for selecting planning time (van/tot) |
-| `WeekWerkLijstViewModel` | `WeekWerkLijstWindow` | Weekly work schedule with notities + besteld-marking |
-| `BulkLijstenViewModel` | `BulkLijstenWindow` | Bulk list operations |
-| `InstellingenViewModel` | `InstellingenWindow` | App settings |
-| `ImportPreviewViewModel` | `ImportPreviewView/Window` | Generic import preview |
-| `KlantExcelPreviewViewModel` | `KlantImportPreviewWindow` | Klant import preview |
-| `AfwerkingExcelPreviewViewModel` | `AfwerkingImportPreviewWindow` | Afwerking import preview |
-
-### PlanningCalendarViewModel — Notable Design
-- Displays a **35-tile month grid** (DayTile objects with utilization color coding)
-- Week summary sidebar (WeekSummary) and week day-row detail (DayRow, WeekRow)
-- Capacity constant: **8 hours (480 min)** per day; tiles colored LimeGreen/Goldenrod/OrangeRed/Red by utilization %
-- **Planning flow:** Select OfferteRegels from list → `PlanGeselecteerdeRegelsAsync` → opens `PlanningTijdDialog` → calls `WerkBonWorkflowService.VoegPlanningToeVoorRegelAsync`
-- **Herplannen:** Opens time dialog to reschedule an existing WerkTaak in-place
-- **`OpenWeekWerkLijstCommand`:** Opens `WeekWerkLijstWindow` for the selected ISO week
-- Support classes declared in same file: `DayTile`, `WeekSummary`, `DayRow`, `WeekRow`
-
-### WeekWerkLijstViewModel — Notable Design
-- Groups WerkTaken by klant name (`KlantWeekBlock` + `WeekWerkItem`)
-- **`MarkeerBesteldCommand`:** Sets `IsBesteld + BestelDatum` on a WerkTaak item (uses `BestelDatumInput` from the item itself)
-- **`SaveNotitieCommand`:** Persists `WeekNotitie` text to DB for a specific WerkTaak
-- `WeekWerkItem` is a partial `ObservableObject` with observable `Notitie`, `IsBesteld`, `BestelDatum`, `IsOpVoorraad`, `BestelDatumInput`
-
-### Key MVVM Patterns
-- `CommunityToolkit.Mvvm` (source-generated `[ObservableProperty]`, `[RelayCommand]`)
-- Navigation driven by `INavigationService`; views data-template-mapped to ViewModels
-- `IAsyncInitializable` — ViewModels implement `InitializeAsync()` called after navigation
-- `IParameterReceiver<T>` — ViewModels receive typed parameters (e.g., klantId)
-- **Compiled bindings (`x:DataType`)** used throughout; inside DataTemplates, parent DataContext bindings use explicit type casts: `$parent[T].((VMType)DataContext).Property`
-- `Huskui.Avalonia` used for additional UI controls
-
----
-
-## 8. Converters (Converters/)
-
-| Converter | Purpose |
+| Probleem | Oplossing |
 |---|---|
-| `BooleanConverters` | Bool↔visibility, bool inversion |
-| `IntToBoolInverseConverter` | `int == 0 → true` |
-| `CapacityToBrushConverter` | Capacity % → colored brush (planning calendar tiles) |
-| `BoolToThicknessConverter` | Bool → Thickness (slide panel animation) |
-| `BoolToDoubleConverter` | Bool → double (opacity animation) |
-| `ToastColorConverter` (in `App`) | ToastType → SolidColorBrush |
-| `ToastColorConverter` (in `Service/Toast/`) | Duplicate — candidate for consolidation |
+| Seeder `(char)1` besturingstekens als volgnummer | Vervangen door letterlijke char-constanten + `FixVolgnummers()` startup-fix |
+| `RelinkSelectionsAfterCatalog()` relinkte slechts 2 van 8 navigaties | Uitgebreid naar alle 8 (TypeLijst + 6 afwerkingen + Klant) |
+| Ongeldig volgnummer werd stil afgewezen | Toast-waarschuwing toegevoegd via `_toast.Warning(...)` |
+| List-badge `char`-binding zonder StringFormat | `StringFormat='{}{0}'` toegevoegd |
+| Debug `Console.WriteLine` in OfferteViewModel | Verwijderd |
+| PlanningCalendar: linker-paneel en 16 tabel-kolommen | Herontwerp: linker paneel weg, 6 kolommen, DayTile reactief |
+
+### Nog openstaande aandachtspunten
+
+- **`Console.WriteLine` in App.axaml.cs** — DB-pad wordt gelogd bij opstart (`[DB] SQLite path = ...`). Onschadelijk maar verbose in productie; vervangen door `ILogger<App>` is netter.
+- **Leverancier.Naam max 3 chars** — de 3-tekens beperking is strak; toekomstige leveranciers met langere namen vereisen een migratie.
+- **`AvaloniaUseCompiledBindingsByDefault=true`** — alle bindingen zijn gecompileerd; `x:DataType` is verplicht in DataTemplates. Ontbrekende `x:DataType` geeft compile-fout.
+- **`WorkflowService.Tests` map** — testsuite bestaat maar is uitgesloten van de build in `.csproj`. Mogelijk verouderd of nog in ontwikkeling.
+- **`EfCore.SchemaCompare`** — dependency aanwezig (v8.2.0) maar gebruik niet zichtbaar in productiecode; waarschijnlijk voor ontwikkel-validatie.
+- **`Microsoft.EntityFrameworkCore.SqlServer`** — aanwezig als dependency maar app gebruikt uitsluitend SQLite. Verwijderen bespaart ruimte bij publish.
+- **`GeblokkeerdeDag.Reden`** — aanwezig in model maar niet in het blokkeer-dialoog getoond aan de gebruiker.
 
 ---
 
-## 9. Validation Layer (Validation/)
+## 15. Verbeteringsideeën
 
-Each entity has an `ICrudValidator<T>` implementation:
-
-| Validator | Entity | Key rules |
-|---|---|---|
-| `KlantValidator` | `Klant` | Required: Voornaam/Achternaam; email format if provided |
-| `TypeLijstValidator` | `TypeLijst` | Required: Artikelnummer, Levcode, LeverancierId, BreedteCm > 0 |
-| `AfwerkingsOptieValidator` | `AfwerkingsOptie` | Required: Naam, AfwerkingsGroepId |
-| `OfferteValidator` | `Offerte` | Custom `IOfferteValidator` interface |
-
----
-
-## 10. Testing (WorkflowService.Tests/)
-
-xUnit test project targeting `net9.0`. Uses **in-memory EF Core** (`UseInMemoryDatabase`) for fast, isolated tests.
-
-### Test Coverage
-
-| Test Class | Tests | What's covered |
-|---|---|---|
-| `WorkflowServiceTests` | 9 tests | Status transitions (valid/invalid), WerkBon creation idempotency, stock reservation (success/insufficient/minimum warning), besteld marking, duplicate reservation prevention, validation exceptions |
-| `PricingEngineTests` | 2 tests | Staaflijst vs. non-staaflijst pricing paths |
-| `ImportServiceTests` | present | Import pipeline testing |
-| `TypeLijstImportCommitterTests` | present | Committer upsert logic |
-| `PricingSettingsProviderTests` | present | Settings reading |
-| `MigrationSafetyTests` | present | Schema compatibility checks |
+1. **Unit tests heractiveren** — `WorkflowService.Tests` herstructureren als apart testproject
+2. **Migrations via EF CLI verbeteren** — `FactuurSchemaUpgrade.cs` handmatige upgrade samenvoegen in standaard EF-migraties
+3. **Leverancier.Naam uitbreiden** — max 3 chars → max 50 chars (+ migratie)
+4. **SqlServer dependency verwijderen** — bespaart ~15 MB in de gepubliceerde executable
+5. **Console.WriteLine uit App.axaml.cs** — vervangen door `ILogger<App>`
+6. **GeblokkeerdeDag reden-veld** — tonen in blokkeer-UI zodat gebruikers een reden kunnen invullen
+7. **WerkTaak.Resource** — vrij tekstveld (max 80 chars); eventueel koppelen aan een medewerker-entiteit
 
 ---
 
-## 11. NuGet Dependencies
-
-| Package | Version | Purpose |
-|---|---|---|
-| Avalonia (+ Controls.DataGrid, Desktop, Themes.Fluent, Fonts.Inter) | 11.3.12 | UI framework |
-| Avalonia.Diagnostics | 11.3.12 | Debug inspector (Debug only) |
-| CommunityToolkit.Mvvm | 8.4.0 | MVVM source generators |
-| Microsoft.EntityFrameworkCore + SQLite + SqlServer + InMemory | 9.0.9 | ORM + providers |
-| Microsoft.Extensions.DependencyInjection | 9.0.9 | DI container |
-| Microsoft.Extensions.Logging | 9.0.0 | Logging |
-| ClosedXML | 0.105.0 | Excel reading (Enterprise import pipeline) |
-| EPPlus | 8.4.1 | Excel (legacy import path — candidate for removal) |
-| QuestPDF | 2024.7.1 | PDF invoice export |
-| Huskui.Avalonia | 0.10.3 | Extra Avalonia controls |
-| EfCore.SchemaCompare | 8.2.0 | Migration safety tests |
-| xunit (assert, core, abstractions) | 2.9.3 | Testing |
-
----
-
-## 12. Key Observations & Risks
-
-### ⚠️ Critical Issues
-
-1. **Database wiped on every startup** — `EnsureDeletedAsync` + `EnsureCreatedAsync` runs in `OnFrameworkInitializationCompleted`. All data is lost and re-seeded from scratch on every run. Must be replaced with migration-based startup before any production use. Migrations folder exists but is unused at runtime.
-
-2. **Dead code / dual DI path** — `AppServices.cs` (`AppServices.Init()`) contains a second, parallel DI registration and also calls `EnsureDeleted`. It is never called from `App.axaml.cs` and appears to be an obsolete remnant.
-
-### ⚠️ Moderate Issues
-
-3. **Two Excel libraries** — Both `ClosedXML` (Enterprise) and `EPPlus` are present. With the legacy import path removed, `EPPlus` should be reviewed and removed if no other runtime path still needs it.
-
-4. **`Klant` has no explicit MaxLength on most string fields** — unlike other entities. May cause issues if switching to SQL Server.
-
-6. **`OfferteRegel` stores computed price fields** (`SubtotaalExBtw`, `BtwBedrag`, `TotaalInclBtw`) redundantly — re-derived by `PricingEngine`. Risk of stale data if not kept in sync.
-
-7. **Duplicate `ToastColorConverter`** — Defined in both `App` class and `Service/Toast/ToastColorConverter.cs`. Should be consolidated to one.
-
-8. **`PlanningCalendarViewModel` creates ViewModels directly** — `WeekWerkLijstViewModel` and `PlanningTijdDialogViewModel` are `new`'d inside the VM instead of being resolved via DI. This bypasses the DI container and makes testing harder.
-
-### ℹ️ Minor / Cosmetic
-
-9. **`Levcode` field on `TypeLijst`** — max 50 chars but `Leverancier.Naam` is max 3 chars. The relationship and meaning may need clarification.
-
-10. **`WerkTaak` uses local `DateTime`** — comment in code notes future migration to `DateTimeOffset` if timezone support is needed.
-
-11. **`AppServices.cs` global static** — uses a static `IServiceProvider` pattern (`AppServices.Db`) which can cause issues in tests or parallel scenarios. The main DI path in `App.axaml.cs` correctly uses constructor injection.
-
-12. **`WeekNotitie` not yet in migration** — The field was added to the model but since the app uses `EnsureCreated` (no migrations at runtime), this works in demo mode. A proper migration must be authored before switching to migration-based startup.
-
----
-
-## 13. Recent Changes (since 2026-03-11)
-
-| Area | Change |
-|---|---|
-| **Model** | `WerkTaak.WeekNotitie` field added (`[MaxLength(2000)]`); `TypeLijst.Soort` property in use |
-| **Planning** | `PlanningCalendarViewModel` fully implemented: month-grid (DayTile), week summaries, week rows, day-detail, task planning + herplannen + verwijderen |
-| **Planning** | `PlanningTijdDialogViewModel` added: van/tot time picker with duration preview and validation |
-| **WeekWerkLijst** | `SaveNotitieCommand` (persist per-task notes) and `MarkeerBesteldCommand` added to `WeekWerkLijstViewModel` |
-| **WerkBonLijst** | `MarkeerLijstAlsBesteldCommand` + `GeselecteerdeBestelDatum` added to `WerkBonLijstViewModel` |
-| **Import** | Enterprise pipeline extended to `TypeLijst` and `AfwerkingsOptie` (was Klant-only) |
-| **Converters** | `BoolToThicknessConverter`, `BoolToDoubleConverter`, `CapacityToBrushConverter` added |
-| **XAML** | Compiled-binding parent-DataContext casts fixed across 4 views (KlantenView, OffertesLijstView, WeekWerkLijstWindow, WerkBonLijstView) |
-| **XAML** | Explicit `Grid.Column="0"` / `Grid.Row="0"` setters added throughout `OfferteView` to clear analyzer warnings |
-| **Styling** | `App.axaml`, `QuadroTheme.axaml`, `OfferteView.axaml` actively modified on `styling` branch |
-
----
-
-## 14. File Count Summary
-
-| Area | Files |
-|---|---|
-| Views (AXAML + code-behind) | ~44 files |
-| ViewModels | 20 files |
-| Services | ~40 files |
-| Model/DB entities | 14 files |
-| Model/Import models | 10 files |
-| Converters | 7 files |
-| Validators | 5 files |
-| Data layer | 4 files |
-| Tests | 6 files |
-| **Total source files** | **~150** |
-
----
-
-*Update this document after significant refactoring sessions or new feature additions.*
+*Analyse gebaseerd op volledige codebase-scan van het project (april 2026)*

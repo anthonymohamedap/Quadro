@@ -35,12 +35,8 @@ namespace QuadroApp.ViewModels
         public ObservableCollection<WerkBonStatus> WerkBonStatusOpties { get; } =
             new ObservableCollection<WerkBonStatus>(Enum.GetValues<WerkBonStatus>());
 
-        public ObservableCollection<OfferteStatus> OfferteStatusOpties { get; } =
-            new ObservableCollection<OfferteStatus>(Enum.GetValues<OfferteStatus>());
-
         // gekozen statuses in UI
         [ObservableProperty] private WerkBonStatus? selectedWerkBonStatus;
-        [ObservableProperty] private OfferteStatus? selectedOfferteStatus;
 
         public WerkBonLijstViewModel(
             IDbContextFactory<AppDbContext> factory,
@@ -101,7 +97,6 @@ namespace QuadroApp.ViewModels
                 IsDetailOpen = false;
                 SelectedWerkBonTaken = new ObservableCollection<WerkTaak>();
                 SelectedWerkBonStatus = null;
-                SelectedOfferteStatus = null;
                 return;
             }
 
@@ -112,7 +107,6 @@ namespace QuadroApp.ViewModels
             );
 
             SelectedWerkBonStatus = value.Status;
-            SelectedOfferteStatus = value.Offerte?.Status;
             GeselecteerdeBestelDatum = DateTimeOffset.Now.Date;
         }
 
@@ -161,13 +155,6 @@ namespace QuadroApp.ViewModels
             if (SelectedWerkBonStatus.HasValue && SelectedWerkBonStatus.Value != SelectedWerkBon.Status)
                 await _statusWorkflow.ChangeWerkBonStatusAsync(SelectedWerkBon.Id, SelectedWerkBonStatus.Value);
 
-            if (SelectedWerkBon.Offerte != null &&
-                SelectedOfferteStatus.HasValue &&
-                SelectedOfferteStatus.Value != SelectedWerkBon.Offerte.Status)
-            {
-                await _statusWorkflow.ChangeOfferteStatusAsync(SelectedWerkBon.Offerte.Id, SelectedOfferteStatus.Value);
-            }
-
             var selectedWerkBonId = SelectedWerkBon.Id;
 
             await LoadAsync();
@@ -180,22 +167,6 @@ namespace QuadroApp.ViewModels
                 _toast.Success("Werkbon afgewerkt: bestelbon/factuur werd automatisch aangemaakt.");
                 await _nav.NavigateToAsync<FacturenViewModel>();
             }
-        }
-
-        /// <summary>
-        /// Shortcut: "Maak offerte terug zichtbaar"
-        /// Zet Offerte.Status terug naar Nieuw.
-        /// (optioneel) zet WerkBon.Status naar Geannuleerd zodat hij niet meer als actieve bon gezien wordt.
-        /// </summary>
-        [RelayCommand]
-        private async Task MaakOfferteTerugZichtbaarAsync()
-        {
-            if (SelectedWerkBon == null)
-                return;
-
-            SelectedOfferteStatus = OfferteStatus.Concept;
-            SelectedWerkBonStatus = WerkBonStatus.Afgehaald; // kies wat je wil
-            await SaveStatusAsync();
         }
 
         [RelayCommand]
