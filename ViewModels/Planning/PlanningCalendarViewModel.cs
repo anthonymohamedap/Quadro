@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace QuadroApp.ViewModels;
 
-public partial class PlanningCalendarViewModel : ObservableObject
+public partial class PlanningCalendarViewModel : AsyncViewModelBase
 {
     private readonly IDbContextFactory<AppDbContext> _factory;
     private readonly IWerkBonWorkflowService _workflow;
@@ -61,6 +61,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
         IWerkBonWorkflowService workflow,
         IToastService toast,
         IWorkflowService statusWorkflow)
+        : base(toast)
     {
         _factory = factory;
         _workflow = workflow;
@@ -104,14 +105,14 @@ public partial class PlanningCalendarViewModel : ObservableObject
     public int Year
     {
         get => _year;
-        set { SetProperty(ref _year, value); UpdateMonthTitle(); _ = LoadAsync(); }
+        set { SetProperty(ref _year, value); UpdateMonthTitle(); RunAsync(LoadAsync); }
     }
 
     private int _month = DateTime.Today.Month;
     public int Month
     {
         get => _month;
-        set { SetProperty(ref _month, value); UpdateMonthTitle(); _ = LoadAsync(); }
+        set { SetProperty(ref _month, value); UpdateMonthTitle(); RunAsync(LoadAsync); }
     }
 
     private string _monthTitle = "";
@@ -166,8 +167,8 @@ public partial class PlanningCalendarViewModel : ObservableObject
         SelectedWeekNr = ISOWeek.GetWeekOfYear(value);
         BuildWeekDayRows();
         UpdateTileSelection(value);
-        _ = LoadTakenVanDagAsync();
-        _ = LoadWeekRowsAsync(SelectedWeekNr);
+        RunAsync(LoadTakenVanDagAsync);
+        RunAsync(() => LoadWeekRowsAsync(SelectedWeekNr));
         OnPropertyChanged(nameof(IsGeselecteerdeDagGeblokkeerd));
         OnPropertyChanged(nameof(BlokkeerDagButtonText));
     }
