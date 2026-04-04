@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace QuadroApp.ViewModels
 {
-    public partial class WerkBonLijstViewModel : ObservableObject
+    public partial class WerkBonLijstViewModel : AsyncViewModelBase
     {
         private readonly IDbContextFactory<AppDbContext> _factory;
         private readonly INavigationService _nav;
@@ -44,6 +44,7 @@ namespace QuadroApp.ViewModels
             IWerkBonWorkflowService workflow,
             IWorkflowService statusWorkflow,
             IToastService toast)
+            : base(toast)
         {
             _factory = factory;
             _nav = nav;
@@ -85,10 +86,7 @@ namespace QuadroApp.ViewModels
             }
         }
 
-        partial void OnZoektermChanged(string? value)
-        {
-            _ = LoadAsync();
-        }
+        partial void OnZoektermChanged(string? value) => RunAsync(LoadAsync);
 
         partial void OnSelectedWerkBonChanged(WerkBon? value)
         {

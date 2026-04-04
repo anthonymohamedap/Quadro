@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace QuadroApp.ViewModels;
 
-public partial class FacturenViewModel : ObservableObject, IAsyncInitializable
+public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
 {
     private readonly IDbContextFactory<AppDbContext> _factory;
     private readonly IFactuurWorkflowService _workflow;
@@ -48,6 +48,7 @@ public partial class FacturenViewModel : ObservableObject, IAsyncInitializable
         IFactuurExportService exportService,
         IToastService toast,
         INavigationService nav)
+        : base(toast)
     {
         _factory = factory;
         _workflow = workflow;
@@ -79,7 +80,7 @@ public partial class FacturenViewModel : ObservableObject, IAsyncInitializable
         Facturen = new ObservableCollection<Factuur>(items);
     }
 
-    partial void OnFilterTekstChanged(string value) => _ = InitializeAsync();
+    partial void OnFilterTekstChanged(string value) => RunAsync(InitializeAsync);
 
     partial void OnGeselecteerdeFactuurChanged(Factuur? value)
     {

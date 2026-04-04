@@ -1,0 +1,190 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.EntityFrameworkCore;
+using QuadroApp.Data;
+using QuadroApp.Model.DB;
+using QuadroApp.Service;
+using QuadroApp.Service.Interfaces;
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace QuadroApp.ViewModels;
+
+public partial class OfferteRegelViewModel : AsyncViewModelBase
+{
+    private readonly IDbContextFactory<AppDbContext> _dbFactory;
+    private readonly IDialogService _dialogs;
+
+    // ── Regels ──
+    [ObservableProperty] private ObservableCollection<OfferteRegel> regels = new();
+
+    // ── TypeLijst zoeken ──
+    [ObservableProperty] private ObservableCollection<TypeLijst> typeLijsten = new();
+    [ObservableProperty] private ObservableCollection<TypeLijst> gefilterdeTypeLijsten = new();
+    [ObservableProperty] private string? typeLijstZoekterm;
+
+    // ── Afwerking dropdowns ──
+    [ObservableProperty] private ObservableCollection<AfwerkingsOptie> glasOpties = new();
+    [ObservableProperty] private ObservableCollection<AfwerkingsOptie> passe1Opties = new();
+    [ObservableProperty] private ObservableCollection<AfwerkingsOptie> passe2Opties = new();
+    [ObservableProperty] private ObservableCollection<AfwerkingsOptie> diepteOpties = new();
+    [ObservableProperty] private ObservableCollection<AfwerkingsOptie> opkleefOpties = new();
+    [ObservableProperty] private ObservableCollection<AfwerkingsOptie> rugOpties = new();
+
+    // ── SelectedRegel: manual property voor CanExecute + recalc trigger ──
+    private OfferteRegel? _selectedRegel;
+    public OfferteRegel? SelectedRegel
+    {
+        get => _selectedRegel;
+        set
+        {
+            if (SetProperty(ref _selectedRegel, value))
+            {
+                RegelDuplicerenCommand.NotifyCanExecuteChanged();
+                ApplyLegacyCodeCommand.NotifyCanExecuteChanged();
+                GenerateLegacyCodeCommand.NotifyCanExecuteChanged();
+                OnPropertyChanged(nameof(LegacyCode));
+                RegelChanged?.Invoke();
+            }
+        }
+    }
+
+    // ── LegacyCode proxy ──
+    public string? LegacyCode
+    {
+        get => SelectedRegel?.LegacyCode;
+        set
+        {
+            if (SelectedRegel is null) return;
+            if (SelectedRegel.LegacyCode != value)
+            {
+                SelectedRegel.LegacyCode = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Vuurt wanneer SelectedRegel wisselt of een regel gewijzigd wordt.
+    /// OfferteViewModel/OffertePrijsViewModel abonneert om pricing te debounce-triggeren.
+    /// </summary>
+    public event Action? RegelChanged;
+
+    // ── Commands ──
+    public IRelayCommand RegelDuplicerenCommand { get; }
+    public IAsyncRelayCommand ApplyLegacyCodeCommand { get; }
+    public IRelayCommand GenerateLegacyCodeCommand { get; }
+
+    public OfferteRegelViewModel(
+        IDbContextFactory<AppDbContext> dbFactory,
+        IDialogService dialogs,
+        IToastService toast)
+        : base(toast)
+    {
+        _dbFactory = dbFactory ?? throw new ArgumentNullException(nameof(dbFactory));
+        _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
+
+        RegelDuplicerenCommand = new RelayCommand(RegelDupliceren, () => SelectedRegel is not null);
+        ApplyLegacyCodeCommand = new AsyncRelayCommand(ApplyLegacyCodeAsync, () => SelectedRegel is not null);
+        GenerateLegacyCodeCommand = new RelayCommand(GenerateLegacyCode, () => SelectedRegel is not null);
+    }
+
+    partial void OnTypeLijstZoektermChanged(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            GefilterdeTypeLijsten = new ObservableCollection<TypeLijst>(TypeLijsten);
+            return;
+        }
+
+        var t = value.Trim().ToLowerInvariant();
+        GefilterdeTypeLijsten = new ObservableCollection<TypeLijst>(
+            TypeLijsten.Where(x =>
+                x.Artikelnummer != null &&
+                x.Artikelnummer.ToLowerInvariant().Contains(t)));
+    }
+
+    // ── Regel CRUD (via RelayCommand attributes in OfferteViewModel doorgestuurd) ──
+    public void RegelToevoegen()
+    {
+        var r = new OfferteRegel { AantalStuks = 1, BreedteCm = 30, HoogteCm = 40 };
+        Regels.Add(r);
+        SelectedRegel = r;
+    }
+
+    public void RegelVerwijderen(OfferteRegel? regel)
+    {
+        if (regel is null) return;
+        var wasSelected = ReferenceEquals(SelectedRegel, regel);
+        Regels.Remove(regel);
+        if (wasSelected)
+            SelectedRegel = Regels.FirstOrDefault();
+    }
+
+    private void RegelDupliceren()
+    {
+        if (SelectedRegel is null) return;
+        var s = SelectedRegel;
+        var r = new OfferteRegel
+        {
+            AantalStuks = s.AantalStuks, BreedteCm = s.BreedteCm, HoogteCm = s.HoogteCm,
+            InlegBreedteCm = s.InlegBreedteCm, InlegHoogteCm = s.InlegHoogteCm,
+            Titel = s.Titel, Opmerking = s.Opmerking,
+            TypeLijstId = s.TypeLijst?.Id ?? s.TypeLijstId, TypeLijst = s.TypeLijst,
+            GlasId = s.Glas?.Id ?? s.GlasId, Glas = s.Glas,
+            PassePartout1Id = s.PassePartout1?.Id ?? s.PassePartout1Id, PassePartout1 = s.PassePartout1,
+            PassePartout2Id = s.PassePartout2?.Id ?? s.PassePartout2Id, PassePartout2 = s.PassePartout2,
+            DiepteKernId = s.DiepteKern?.Id ?? s.DiepteKernId, DiepteKern = s.DiepteKern,
+            OpklevenId = s.Opkleven?.Id ?? s.OpklevenId, Opkleven = s.Opkleven,
+            RugId = s.Rug?.Id ?? s.RugId, Rug = s.Rug,
+            AfgesprokenPrijsExcl = s.AfgesprokenPrijsExcl, ExtraWerkMinuten = s.ExtraWerkMinuten,
+            ExtraPrijs = s.ExtraPrijs, Korting = s.Korting, LegacyCode = s.LegacyCode,
+            TotaalExcl = s.TotaalExcl, SubtotaalExBtw = s.SubtotaalExBtw,
+            BtwBedrag = s.BtwBedrag, TotaalInclBtw = s.TotaalInclBtw
+        };
+        Regels.Add(r);
+        SelectedRegel = r;
+    }
+
+    private async Task ApplyLegacyCodeAsync()
+    {
+        if (SelectedRegel is null) return;
+
+        var code = (LegacyCode ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            await _dialogs.ShowErrorAsync("Legacy-code", "Geef een code in (6 tekens: G P P D O R).");
+            return;
+        }
+
+        try
+        {
+            await using var db = await _dbFactory.CreateDbContextAsync();
+            await LegacyAfwerkingCode.ApplyAsync(db, SelectedRegel, code);
+
+            SelectedRegel.GlasId = SelectedRegel.Glas?.Id;
+            SelectedRegel.PassePartout1Id = SelectedRegel.PassePartout1?.Id;
+            SelectedRegel.PassePartout2Id = SelectedRegel.PassePartout2?.Id;
+            SelectedRegel.DiepteKernId = SelectedRegel.DiepteKern?.Id;
+            SelectedRegel.OpklevenId = SelectedRegel.Opkleven?.Id;
+            SelectedRegel.RugId = SelectedRegel.Rug?.Id;
+
+            OnPropertyChanged(nameof(SelectedRegel));
+            OnPropertyChanged(nameof(LegacyCode));
+            RegelChanged?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            Toast.Error(ex.GetBaseException().Message);
+            await _dialogs.ShowErrorAsync("Legacy-code toepassen mislukt", ex.GetBaseException().Message);
+        }
+    }
+
+    private void GenerateLegacyCode()
+    {
+        if (SelectedRegel is null) return;
+        LegacyCode = LegacyAfwerkingCode.Generate(SelectedRegel);
+    }
+}
