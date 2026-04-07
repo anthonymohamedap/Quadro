@@ -218,7 +218,20 @@
 							<StackPanel Grid.Row="3"
                                         Grid.Column="1"
                                         Spacing="6">
-								<TextBlock Text="{Binding SelectedRegel.TypeLijst.Artikelnummer}" />
+								<Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+									<TextBlock Text="{Binding SelectedRegel.TypeLijst.Artikelnummer}"
+                                                   VerticalAlignment="Center"/>
+									<Button Grid.Column="1"
+                                                Content="&#x270F;"
+                                                ToolTip.Tip="Lijst bewerken"
+                                                Command="{Binding OpenTypeLijstCommand}"
+                                                Width="28"
+                                                Height="24"
+                                                Padding="0"
+                                                FontSize="13"
+                                                Background="#E5E7EB"
+                                                Foreground="#374151"/>
+								</Grid>
 								<TextBox Watermark="Zoek artikelnummer…"
                                          Text="{Binding TypeLijstZoekterm, UpdateSourceTrigger=PropertyChanged}"/>
 

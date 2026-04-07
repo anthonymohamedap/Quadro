@@ -52,6 +52,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     public IRelayCommand  RegelDuplicerenCommand    => Regelbeheer.RegelDuplicerenCommand;
     public IAsyncRelayCommand ApplyLegacyCodeCommand => Regelbeheer.ApplyLegacyCodeCommand;
     public IRelayCommand  GenerateLegacyCodeCommand  => Regelbeheer.GenerateLegacyCodeCommand;
+    public IAsyncRelayCommand OpenTypeLijstCommand   => Regelbeheer.OpenTypeLijstCommand;
 
     // KlantSelectie doorsturen
     public string? KlantZoekterm
