@@ -5,6 +5,7 @@ using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service;
 using QuadroApp.Service.Interfaces;
+using QuadroApp.Views;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -45,6 +46,7 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
                 RegelDuplicerenCommand.NotifyCanExecuteChanged();
                 ApplyLegacyCodeCommand.NotifyCanExecuteChanged();
                 GenerateLegacyCodeCommand.NotifyCanExecuteChanged();
+                OpenTypeLijstCommand.NotifyCanExecuteChanged();
                 OnPropertyChanged(nameof(LegacyCode));
                 RegelChanged?.Invoke();
             }
@@ -76,6 +78,7 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
     public IRelayCommand RegelDuplicerenCommand { get; }
     public IAsyncRelayCommand ApplyLegacyCodeCommand { get; }
     public IRelayCommand GenerateLegacyCodeCommand { get; }
+    public IAsyncRelayCommand OpenTypeLijstCommand { get; }
 
     public OfferteRegelViewModel(
         IDbContextFactory<AppDbContext> dbFactory,
@@ -89,6 +92,7 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
         RegelDuplicerenCommand = new RelayCommand(RegelDupliceren, () => SelectedRegel is not null);
         ApplyLegacyCodeCommand = new AsyncRelayCommand(ApplyLegacyCodeAsync, () => SelectedRegel is not null);
         GenerateLegacyCodeCommand = new RelayCommand(GenerateLegacyCode, () => SelectedRegel is not null);
+        OpenTypeLijstCommand = new AsyncRelayCommand(OpenTypeLijstAsync, () => SelectedRegel?.TypeLijst is not null);
     }
 
     partial void OnTypeLijstZoektermChanged(string? value)
@@ -186,5 +190,55 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
     {
         if (SelectedRegel is null) return;
         LegacyCode = LegacyAfwerkingCode.Generate(SelectedRegel);
+    }
+
+    private async Task OpenTypeLijstAsync()
+    {
+        if (SelectedRegel?.TypeLijst is null) return;
+
+        var owner = GetOwnerWindow();
+        if (owner is null) return;
+
+        var dialog = new LijstDialog(SelectedRegel.TypeLijst);
+        var result = await dialog.ShowDialog<TypeLijst?>(owner);
+        if (result is null) return;
+
+        try
+        {
+            await using var db = await _dbFactory.CreateDbContextAsync();
+            db.TypeLijsten.Attach(result);
+            db.Entry(result).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+            await db.SaveChangesAsync();
+
+            // Update de in-memory catalogus-entry
+            var idx = TypeLijsten.IndexOf(TypeLijsten.FirstOrDefault(t => t.Id == result.Id)!);
+            if (idx >= 0)
+                TypeLijsten[idx] = result;
+
+            // Update alle regels die naar deze lijst verwijzen
+            foreach (var r in Regels.Where(r => r.TypeLijst?.Id == result.Id))
+                r.TypeLijst = result;
+
+            // Update de geselecteerde regel zodat de UI refresht
+            if (SelectedRegel.TypeLijst?.Id == result.Id)
+            {
+                SelectedRegel.TypeLijst = result;
+                OnPropertyChanged(nameof(SelectedRegel));
+            }
+
+            Toast.Success($"Lijst '{result.Artikelnummer}' opgeslagen.");
+        }
+        catch (Exception ex)
+        {
+            Toast.Error(ex.GetBaseException().Message);
+        }
+    }
+
+    private static Avalonia.Controls.Window? GetOwnerWindow()
+    {
+        if (App.Current?.ApplicationLifetime is not
+            Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            return null;
+        return desktop.MainWindow;
     }
 }

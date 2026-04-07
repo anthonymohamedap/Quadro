@@ -222,7 +222,6 @@ public partial class App : Application
         var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
         await using var db = await factory.CreateDbContextAsync();
 
-        Console.WriteLine("[DB] Resetting demo database...");
         await db.Database.EnsureCreatedAsync();
 
         // Seed data (single source of truth)
