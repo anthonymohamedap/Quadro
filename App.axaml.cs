@@ -308,6 +308,18 @@ public partial class App : Application
             _logger.LogError(ex, "[DB] FOUT bij aanmaken archief-tabellen: {Message}", ex.Message);
         }
 
+        // ── Stap 1b: Schema-patches voor kolommen die mogelijk ontbreken op oudere DBs ─
+        try
+        {
+            // AfwerkingsOpties.Kleur — toegevoegd in migratie 20260323120500_AddAfwerkingsKleur
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"AfwerkingsOpties\" ADD COLUMN \"Kleur\" TEXT NOT NULL DEFAULT 'Standaard'");
+        }
+        catch
+        {
+            // Kolom bestaat al — negeer de fout
+        }
+
         // ── Stap 2: EF migratie-historietabel + pre-existing migrations ──────
         var preExistingMigrations = new[]
         {
