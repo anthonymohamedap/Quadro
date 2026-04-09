@@ -12,7 +12,7 @@ using System.Linq;
 using System.Threading.Tasks;
 namespace QuadroApp.ViewModels;
 
-public partial class AfwerkingenViewModel : ObservableObject
+public partial class AfwerkingenViewModel : AsyncViewModelBase
 {
     private readonly IAfwerkingenService _service;
     private readonly INavigationService _nav;
@@ -95,6 +95,7 @@ public partial class AfwerkingenViewModel : ObservableObject
         IDialogService dialogs,
         ICrudValidator<AfwerkingsOptie> validator,
     IToastService toast)
+        : base(toast)
     {
         _nav = nav ?? throw new ArgumentNullException(nameof(nav));
         _service = service ?? throw new ArgumentNullException(nameof(service));
@@ -107,7 +108,11 @@ public partial class AfwerkingenViewModel : ObservableObject
         NewAsyncCommand = new AsyncRelayCommand(NewAsync, () => !IsBusy);
         DeleteAsyncCommand = new AsyncRelayCommand(DeleteAsync, CanDelete);
 
-        _ = LoadAsync();
+        Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+        {
+            try { await LoadAsync(); }
+            catch (Exception ex) { _toast.Error(ex.GetBaseException().Message); }
+        });
     }
     public string VolgnummerText
     {
@@ -505,7 +510,7 @@ public partial class AfwerkingenViewModel : ObservableObject
     partial void OnSelectedGroepChanged(AfwerkingsGroep? value)
     {
         if (IsBusy) return;
-        _ = LoadOptiesAsync();
+        RunAsync(LoadOptiesAsync);
     }
 
     partial void OnPreviewBreedteCmChanged(decimal value)

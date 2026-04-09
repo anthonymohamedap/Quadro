@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace QuadroApp.ViewModels;
 
-public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializable
+public partial class LeveranciersViewModel : AsyncViewModelBase, IAsyncInitializable
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
     private readonly INavigationService _nav;
@@ -58,6 +58,7 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
         IDialogService dialogs,
         IToastService toast,
         IStockService stock)
+        : base(toast)
     {
         _dbFactory = dbFactory;
         _nav = nav;
@@ -68,15 +69,10 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
 
     public async Task InitializeAsync() => await LoadLeveranciersAsync();
 
-    partial void OnZoektermChanged(string? value)
-    {
-        _ = LoadLeveranciersAsync();
-    }
+    partial void OnZoektermChanged(string? value) => RunAsync(LoadLeveranciersAsync);
 
     partial void OnSelectedLeverancierChanged(Leverancier? value)
-    {
-        _ = LoadTypeLijstenForSelectedAsync(value);
-    }
+        => RunAsync(() => LoadTypeLijstenForSelectedAsync(value));
 
     partial void OnLeveranciersCurrentPageChanged(int value) => UpdateLeveranciersPage();
     partial void OnLeveranciersPageSizeChanged(int value)
@@ -353,20 +349,15 @@ public partial class LeveranciersViewModel : ObservableObject, IAsyncInitializab
 
             await using var db = await _dbFactory.CreateDbContextAsync();
 
-            var heeftTypeLijsten = await db.TypeLijsten
+            var aantalLijsten = await db.TypeLijsten
                 .AsNoTracking()
-                .AnyAsync(x => x.LeverancierId == SelectedLeverancier.Id);
+                .CountAsync(x => x.LeverancierId == SelectedLeverancier.Id);
 
-            if (heeftTypeLijsten)
-            {
-                _toast.Warning("Deze leverancier kan niet verwijderd worden omdat er TypeLijsten aan gekoppeld zijn.");
-                return;
-            }
+            var bevestiging = aantalLijsten > 0
+                ? $"Leverancier '{SelectedLeverancier.Naam}' heeft {aantalLijsten} gekoppelde lijst(en). Deze lijsten blijven bestaan maar verliezen hun leverancierskoppeling. Doorgaan?"
+                : $"Ben je zeker dat je leverancier '{SelectedLeverancier.Naam}' wil verwijderen?";
 
-            var ok = await _dialogs.ConfirmAsync(
-                "Leverancier verwijderen",
-                $"Ben je zeker dat je leverancier '{SelectedLeverancier.Naam}' wil verwijderen?");
-
+            var ok = await _dialogs.ConfirmAsync("Leverancier verwijderen", bevestiging);
             if (!ok)
                 return;
 

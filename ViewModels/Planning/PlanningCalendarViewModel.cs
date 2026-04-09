@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace QuadroApp.ViewModels;
 
-public partial class PlanningCalendarViewModel : ObservableObject
+public partial class PlanningCalendarViewModel : AsyncViewModelBase
 {
     private readonly IDbContextFactory<AppDbContext> _factory;
     private readonly IWerkBonWorkflowService _workflow;
@@ -61,6 +61,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
         IWerkBonWorkflowService workflow,
         IToastService toast,
         IWorkflowService statusWorkflow)
+        : base(toast)
     {
         _factory = factory;
         _workflow = workflow;
@@ -104,14 +105,14 @@ public partial class PlanningCalendarViewModel : ObservableObject
     public int Year
     {
         get => _year;
-        set { SetProperty(ref _year, value); UpdateMonthTitle(); _ = LoadAsync(); }
+        set { SetProperty(ref _year, value); UpdateMonthTitle(); RunAsync(LoadAsync); }
     }
 
     private int _month = DateTime.Today.Month;
     public int Month
     {
         get => _month;
-        set { SetProperty(ref _month, value); UpdateMonthTitle(); _ = LoadAsync(); }
+        set { SetProperty(ref _month, value); UpdateMonthTitle(); RunAsync(LoadAsync); }
     }
 
     private string _monthTitle = "";
@@ -166,10 +167,11 @@ public partial class PlanningCalendarViewModel : ObservableObject
         SelectedWeekNr = ISOWeek.GetWeekOfYear(value);
         BuildWeekDayRows();
         UpdateTileSelection(value);
-        _ = LoadTakenVanDagAsync();
-        _ = LoadWeekRowsAsync(SelectedWeekNr);
+        RunAsync(LoadTakenVanDagAsync);
+        RunAsync(() => LoadWeekRowsAsync(SelectedWeekNr));
         OnPropertyChanged(nameof(IsGeselecteerdeDagGeblokkeerd));
         OnPropertyChanged(nameof(BlokkeerDagButtonText));
+        OnPropertyChanged(nameof(GeselecteerdeDagRedenTekst));
     }
 
     // ───────── TILE SELECTION ─────────
@@ -281,6 +283,19 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
         // Regels laden om geschatte duur te berekenen
         await using var dbCalc = await _factory.CreateDbContextAsync();
+
+        // Statuscheck: afgewerkte/afgehaalde werkbonnen mogen niet (opnieuw) gepland worden
+        var werkBonStatus = await dbCalc.WerkBonnen
+            .Where(w => w.Id == WerkBonId)
+            .Select(w => (WerkBonStatus?)w.Status)
+            .FirstOrDefaultAsync();
+
+        if (werkBonStatus is WerkBonStatus.Afgewerkt or WerkBonStatus.Afgehaald)
+        {
+            _toast.Error("Deze werkbon is al afgewerkt of afgehaald en kan niet meer gepland worden.");
+            return;
+        }
+
         var regels = await dbCalc.OfferteRegels
             .Include(r => r.TypeLijst)
             .Include(r => r.Glas)
@@ -322,16 +337,25 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
         var huidigeDag = startDag.Date;
 
-        foreach (var r in regels)
+        try
         {
-            int duur = CalcMinutenVoorRegel(r);
-            huidigeDag = await _workflow.PlanRegelMetDagCapaciteitAsync(
-                WerkBonId,
-                r.Id,
-                huidigeDag,
-                duur,
-                CapaciteitMinuten,
-                "Inlijsten");
+            foreach (var r in regels)
+            {
+                int duur = CalcMinutenVoorRegel(r);
+                huidigeDag = await _workflow.PlanRegelMetDagCapaciteitAsync(
+                    WerkBonId,
+                    r.Id,
+                    huidigeDag,
+                    duur,
+                    CapaciteitMinuten,
+                    "Inlijsten");
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            _toast.Error(ex.Message);
+            await RefreshAsync();
+            return;
         }
 
         _toast.Success($"{regels.Count} taken gepland vanaf {startDag:dd/MM}.");
@@ -441,11 +465,19 @@ public partial class PlanningCalendarViewModel : ObservableObject
     // ═══════════════════════════════════════════════════
 
     private HashSet<DateTime> _geblokkeerd = new();
+    private Dictionary<DateTime, string?> _geblokkeerdMetReden = new();
+
+    [ObservableProperty] private string blokkeerReden = string.Empty;
 
     public bool IsGeselecteerdeDagGeblokkeerd => _geblokkeerd.Contains(SelectedDate.Date);
 
     public string BlokkeerDagButtonText =>
         IsGeselecteerdeDagGeblokkeerd ? "🔓 Deblokkeer dag" : "🔒 Blokkeer dag";
+
+    public string GeselecteerdeDagRedenTekst =>
+        _geblokkeerdMetReden.TryGetValue(SelectedDate.Date, out var r) && !string.IsNullOrWhiteSpace(r)
+            ? r
+            : string.Empty;
 
     private async Task<bool> IsDagGeblokkeerd(DateTime datum)
     {
@@ -463,11 +495,13 @@ public partial class PlanningCalendarViewModel : ObservableObject
         if (bestaand is not null)
         {
             db.GeblokkeerDagen.Remove(bestaand);
+            BlokkeerReden = string.Empty;
             _toast.Success($"{datum:dd/MM} gedeblokkeerd.");
         }
         else
         {
-            db.GeblokkeerDagen.Add(new GeblokkeerdeDag { Datum = datum, Reden = "Geblokkeerd" });
+            var reden = string.IsNullOrWhiteSpace(BlokkeerReden) ? null : BlokkeerReden.Trim();
+            db.GeblokkeerDagen.Add(new GeblokkeerdeDag { Datum = datum, Reden = reden });
             _toast.Success($"{datum:dd/MM} geblokkeerd.");
         }
 
@@ -515,6 +549,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
         await LoadWeekRowsAsync(ISOWeek.GetWeekOfYear(SelectedDate));
         OnPropertyChanged(nameof(IsGeselecteerdeDagGeblokkeerd));
         OnPropertyChanged(nameof(BlokkeerDagButtonText));
+        OnPropertyChanged(nameof(GeselecteerdeDagRedenTekst));
     }
 
     // ───────── DAG DETAIL ─────────
@@ -566,7 +601,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
             .ToListAsync();
 
         _geblokkeerd = geblokkeerdeList.Select(g => g.Datum.Date).ToHashSet();
-        var geblokkeerdeRedenen = geblokkeerdeList.ToDictionary(g => g.Datum.Date, g => g.Reden ?? "Geblokkeerd");
+        _geblokkeerdMetReden = geblokkeerdeList.ToDictionary(g => g.Datum.Date, g => g.Reden);
 
         MonthDays.Clear();
         WeekSummaries.Clear();
@@ -610,7 +645,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
             string busyLabel;
             if (isGeblokkeerd)
             {
-                busyLabel = geblokkeerdeRedenen.TryGetValue(date.Date, out var reden) ? $"🚫 {reden}" : "🚫 Geblokkeerd";
+                busyLabel = _geblokkeerdMetReden.TryGetValue(date.Date, out var reden) && !string.IsNullOrWhiteSpace(reden) ? $"🚫 {reden}" : "🚫 Geblokkeerd";
             }
             else
             {
@@ -672,6 +707,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
         OnPropertyChanged(nameof(IsGeselecteerdeDagGeblokkeerd));
         OnPropertyChanged(nameof(BlokkeerDagButtonText));
+        OnPropertyChanged(nameof(GeselecteerdeDagRedenTekst));
     }
 
     // ───────── WEEKDETAIL ─────────

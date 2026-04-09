@@ -53,7 +53,7 @@
                              Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 					<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
 						<Button Content="Nieuw" Command="{Binding NieuwCommand}" Classes="MainBtn"/>
-						<Button Content="🗑️" Command="{Binding VerwijderCommand}" Classes="IconBtn"/>
+						<Button Content="🗑️ Verwijderen" Command="{Binding VerwijderCommand}" Classes="MainBtn"/>
 					</StackPanel>
 				</Grid>
 

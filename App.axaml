@@ -48,6 +48,10 @@
 			<views:WerkBonLijstView/>
 		</DataTemplate>
 
+		<DataTemplate DataType="vm:ArchiefViewModel">
+			<views:ArchiefView/>
+		</DataTemplate>
+
  		<DataTemplate DataType="{x:Type vm:FacturenViewModel}">
  			<views:FacturenView/>
  		</DataTemplate>

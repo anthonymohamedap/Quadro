@@ -45,11 +45,11 @@
                       Margin="24"
                       VerticalScrollBarVisibility="Auto">
 
-			<Grid ColumnDefinitions="1.05*,1*"
+			<Grid ColumnDefinitions="1*,1.05*"
                   ColumnSpacing="24">
 
 				<!-- ================= LEFT COLUMN ================= -->
-				<StackPanel Spacing="20">
+				<StackPanel Grid.Column="1" Spacing="20">
 
 					<!-- KLANT -->
 					<Border Classes="quadro-card">
@@ -141,12 +141,13 @@
 							</Grid>
 
 							<!-- TABEL HEADERS -->
-							<Grid ColumnDefinitions="60,80,90,*,110"
+							<Grid ColumnDefinitions="60,60,60,90,*,110"
                                   Opacity="0.6">
 								<TextBlock Grid.Column="1" Text="Aantal"/>
 								<TextBlock Grid.Column="2" Text="Breedte"/>
-								<TextBlock Grid.Column="3" Text="Type lijst"/>
-								<TextBlock Grid.Column="4"
+								<TextBlock Grid.Column="3" Text="Hoogte"/>
+								<TextBlock Grid.Column="4" Text="Type lijst"/>
+								<TextBlock Grid.Column="5"
                                            Text="Totaal"
                                            HorizontalAlignment="Right"/>
 							</Grid>
@@ -161,14 +162,16 @@
 								<ListBox.ItemTemplate>
 									<DataTemplate x:DataType="m:OfferteRegel">
 										<Border Padding="6">
-											<Grid ColumnDefinitions="60,80,90,*,110">
+											<Grid ColumnDefinitions="60,60,60,90,*,110">
 												<TextBlock Grid.Column="1" Text="{Binding AantalStuks}"/>
 												<TextBlock Grid.Column="2"
                                                            Text="{Binding BreedteCm, StringFormat={}{0} cm}"/>
 												<TextBlock Grid.Column="3"
+                                                           Text="{Binding HoogteCm, StringFormat={}{0} cm}"/>
+												<TextBlock Grid.Column="4"
                                                            Text="{Binding TypeLijst.Artikelnummer}"
                                                            TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="4"
+												<TextBlock Grid.Column="5"
                                                            Text="{Binding TotaalInclBtw, StringFormat=€ {0:N2}}"
                                                            HorizontalAlignment="Right"
                                                            FontWeight="SemiBold"/>
@@ -183,7 +186,7 @@
 				</StackPanel>
 
 				<!-- ================= RIGHT COLUMN ================= -->
-				<StackPanel Grid.Column="1"
+				<StackPanel Grid.Column="0"
                             Spacing="20">
 
 					<!-- REGEL DETAILS -->
@@ -218,12 +221,46 @@
 							<StackPanel Grid.Row="3"
                                         Grid.Column="1"
                                         Spacing="6">
-								<TextBlock Text="{Binding SelectedRegel.TypeLijst.Artikelnummer}" />
+
+								<!-- Geselecteerde lijst — zelfde stijl als klant display -->
+								<Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+									<Border Grid.Column="0"
+                                            Background="#EEF2FF"
+                                            CornerRadius="6"
+                                            Padding="6">
+										<TextBlock FontWeight="SemiBold"
+                                                   Foreground="#1E40AF"
+                                                   Text="{Binding SelectedRegelTypeLijst.Artikelnummer,
+                                                          TargetNullValue='Geen lijst geselecteerd'}"/>
+									</Border>
+									<Button Grid.Column="1"
+                                                Content="&#x270F;"
+                                                ToolTip.Tip="Lijst bewerken"
+                                                Command="{Binding OpenTypeLijstCommand}"
+                                                Width="28"
+                                                Height="24"
+                                                Padding="0"
+                                                FontSize="13"
+                                                Background="#E5E7EB"
+                                                Foreground="#374151"/>
+									<Button Grid.Column="2"
+                                                Content="&#x1F4CB;"
+                                                ToolTip.Tip="Open lijstenbeheer"
+                                                Command="{Binding OpenLijstBeheerCommand}"
+                                                Width="28"
+                                                Height="24"
+                                                Padding="0"
+                                                FontSize="13"
+                                                Background="#E5E7EB"
+                                                Foreground="#374151"/>
+								</Grid>
+
+								<!-- Zoek + kies -->
 								<TextBox Watermark="Zoek artikelnummer…"
                                          Text="{Binding TypeLijstZoekterm, UpdateSourceTrigger=PropertyChanged}"/>
 
 								<ComboBox ItemsSource="{Binding GefilterdeTypeLijsten}"
-                                          SelectedItem="{Binding SelectedRegel.TypeLijst, Mode=TwoWay}"
+                                          SelectedItem="{Binding SelectedRegelTypeLijst, Mode=TwoWay}"
                                           MaxDropDownHeight="300">
 									<ComboBox.ItemTemplate>
 										<DataTemplate x:DataType="m:TypeLijst">
@@ -231,6 +268,7 @@
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
+
 							</StackPanel>
 
 							<TextBlock Grid.Row="4" Grid.Column="0" Text="Breedte (cm)"/>
@@ -322,7 +360,7 @@
 									  Grid.Column="1"
 									  x:Name="GlasBox"
 									  ItemsSource="{Binding GlasOpties}"
-									  SelectedItem="{Binding SelectedRegel.Glas, Mode=TwoWay}"
+									  SelectedItem="{Binding SelectedRegelGlas, Mode=TwoWay}"
 									  MinWidth="200">
 
 								<ComboBox.ItemTemplate>
@@ -344,7 +382,7 @@
 									  Grid.Column="3"
 									  x:Name="Passe1Box"
 									  ItemsSource="{Binding Passe1Opties}"
-									  SelectedItem="{Binding SelectedRegel.PassePartout1, Mode=TwoWay}"
+									  SelectedItem="{Binding SelectedRegelPasse1, Mode=TwoWay}"
 									  MinWidth="200"
 									   Foreground="Black">
 
@@ -368,7 +406,7 @@
 									  Grid.Column="1"
 									  x:Name="Passe2Box"
 									  ItemsSource="{Binding Passe2Opties}"
-									  SelectedItem="{Binding SelectedRegel.PassePartout2, Mode=TwoWay}"
+									  SelectedItem="{Binding SelectedRegelPasse2, Mode=TwoWay}"
 									  MinWidth="200">
 
 								<ComboBox.ItemTemplate>
@@ -390,7 +428,7 @@
 									  Grid.Column="3"
 									  x:Name="DiepteBox"
 									  ItemsSource="{Binding DiepteOpties}"
-									  SelectedItem="{Binding SelectedRegel.DiepteKern, Mode=TwoWay}"
+									  SelectedItem="{Binding SelectedRegelDiepte, Mode=TwoWay}"
 									  MinWidth="200">
 
 								<ComboBox.ItemTemplate>
@@ -413,7 +451,7 @@
 									  Grid.Column="1"
 									  x:Name="OpklevenBox"
 									  ItemsSource="{Binding OpkleefOpties}"
-									  SelectedItem="{Binding SelectedRegel.Opkleven, Mode=TwoWay}"
+									  SelectedItem="{Binding SelectedRegelOpkleven, Mode=TwoWay}"
 									  MinWidth="200">
 
 								<ComboBox.ItemTemplate>
@@ -434,7 +472,7 @@
 									  Grid.Column="3"
 									  x:Name="RugBox"
 									  ItemsSource="{Binding RugOpties}"
-									  SelectedItem="{Binding SelectedRegel.Rug, Mode=TwoWay}"
+									  SelectedItem="{Binding SelectedRegelRug, Mode=TwoWay}"
 									  MinWidth="200">
 
 								<ComboBox.ItemTemplate>

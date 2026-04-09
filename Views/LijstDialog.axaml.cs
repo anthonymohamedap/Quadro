@@ -34,7 +34,16 @@ public partial class LijstDialog : Window
         _editCopy.LeverancierId = lijst.LeverancierId;
         _editCopy.LaatsteUpdate = lijst.LaatsteUpdate;
         _editCopy.Leverancier = lijst.Leverancier;
+        _editCopy.WinstFactor = lijst.WinstFactor;
+        _editCopy.AfvalPercentage = lijst.AfvalPercentage;
+        _editCopy.GereserveerdeVoorraadMeter = lijst.GereserveerdeVoorraadMeter;
+        _editCopy.InBestellingMeter = lijst.InBestellingMeter;
+        _editCopy.HerbestelNiveauMeter = lijst.HerbestelNiveauMeter;
+        _editCopy.IsDealer = lijst.IsDealer;
 
+        // Reset DataContext zodat Avalonia de bindings opnieuw evalueert
+        // (TypeLijst implementeert geen INotifyPropertyChanged)
+        DataContext = null;
         DataContext = _editCopy;
     }
 

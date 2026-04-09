@@ -25,22 +25,21 @@ public class MigrationSafetyTests
     }
 
     [Fact]
-    public void MigrationA_IsIdempotentForSettings()
+    public void MigrationA_InitialClean_BevatKernTabellen()
     {
-        var content = File.ReadAllText(GetMigrationPath("20260303090000_AddStaaflijstSettingsAndFlag.cs"));
-        Assert.Contains("NOT EXISTS", content);
-        Assert.Contains("StaaflijstWinstFactor", content);
-        Assert.Contains("StaaflijstAfvalPercentage", content);
+        var content = File.ReadAllText(GetMigrationPath("20260228232856_InitialClean.cs"));
+        Assert.Contains("TypeLijsten", content);
+        Assert.Contains("Leveranciers", content);
+        Assert.Contains("Offertes", content);
     }
 
     [Fact]
-    public void MigrationB_DropsAndRestoresMarginColumns()
+    public void MigrationB_NullableLeverancierIdOnTypeLijst_AlterColumn()
     {
-        var content = File.ReadAllText(GetMigrationPath("20260303091000_RemoveTypeLijstMarginColumns.cs"));
-        Assert.Contains("DropColumn", content);
-        Assert.Contains("WinstMargeFactor", content);
-        Assert.Contains("AfvalPercentage", content);
-        Assert.Contains("precision: 6", content);
-        Assert.Contains("precision: 5", content);
+        var content = File.ReadAllText(GetMigrationPath("20260407000000_NullableLeverancierIdOnTypeLijst.cs"));
+        Assert.Contains("AlterColumn", content);
+        Assert.Contains("LeverancierId", content);
+        Assert.Contains("TypeLijsten", content);
+        Assert.Contains("nullable: true", content);
     }
 }
