@@ -3,10 +3,12 @@ name: Build & Release QuadroApp
 on:
   push:
     tags:
-      - 'v*'   # triggers on version tags like v1.0.0
+      - 'v*'
+
+permissions:
+  contents: write   # 🔥 THIS FIXES YOUR ERROR
 
 jobs:
-
   build:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -22,19 +24,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
 
       - name: Publish
         run: dotnet publish QuadroApp.csproj -c Release -r ${{ matrix.rid }} --self-contained true
 
-      - name: Zip output (Windows)
+      - name: Zip Windows
         if: matrix.os == 'windows-latest'
         run: Compress-Archive -Path bin/Release/net9.0/${{ matrix.rid }}/publish/* -DestinationPath ${{ matrix.zip }}
 
-      - name: Zip output (Mac)
+      - name: Zip Mac
         if: matrix.os == 'macos-latest'
         run: zip -r ${{ matrix.zip }} bin/Release/net9.0/${{ matrix.rid }}/publish/
 
