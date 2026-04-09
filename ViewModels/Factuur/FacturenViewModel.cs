@@ -125,12 +125,32 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
     {
         if (GeselecteerdeFactuur is null) return;
 
-        var exportFolder = Path.Combine(AppContext.BaseDirectory, "exports");
+        // Bug 1 fix: guard against wrong status so the user gets clear feedback
+        // instead of a silent crash swallowed by AsyncRelayCommand.
+        if (GeselecteerdeFactuur.Status != FactuurStatus.KlaarVoorExport)
+        {
+            _toast.Error("Markeer de factuur eerst als 'Klaar voor export'.");
+            return;
+        }
+
+        // Bug 3 fix: BaseDirectory on a single-file publish points to a temp
+        // extraction folder in %TEMP% — nobody finds it. Use MyDocuments instead.
+        var exportFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            "Quadro", "exports");
         Directory.CreateDirectory(exportFolder);
 
-        var result = await _exportService.ExportAsync(GeselecteerdeFactuur.Id, ExportFormaat.Pdf, exportFolder);
-        if (result.Success) _toast.Success(result.Message);
-        else _toast.Error(result.Message);
+        try
+        {
+            var result = await _exportService.ExportAsync(GeselecteerdeFactuur.Id, ExportFormaat.Pdf, exportFolder);
+            if (result.Success) _toast.Success($"{result.Message} → {exportFolder}");
+            else _toast.Error(result.Message);
+        }
+        catch (Exception ex)
+        {
+            _toast.Error($"Export mislukt: {ex.GetBaseException().Message}");
+        }
+
         await InitializeAsync();
     }
 

@@ -319,7 +319,8 @@ public partial class App : Application
             "20260321121423_AddTitelToOfferteRegel",
             "20260323120500_AddAfwerkingsKleur",
             "20260407000000_NullableLeverancierIdOnTypeLijst",
-            "20260408161449_home",
+            // "20260408161449_home" — removed: no matching .cs migration file exists,
+            // would crash MigrateAsync on an existing DB that doesn't have it applied.
             "20260408120000_AddWerkBonArchief",
             "20260408140000_AddOfferteArchief",
         };

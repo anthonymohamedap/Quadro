@@ -292,14 +292,18 @@
 													<!-- Bestelling vereist + input -->
 													<StackPanel Spacing="4" IsVisible="{Binding KanBesteldWorden}">
 														<Border Background="#FEF3C7" CornerRadius="6" Padding="8,5">
-														<TextBlock Text="⚠️ Bestelling vereist" Foreground="#92400E" FontWeight="SemiBold"/>
+															<TextBlock Text="⚠️ Bestelling vereist" Foreground="#92400E" FontWeight="SemiBold"/>
 														</Border>
-														<StackPanel Orientation="Horizontal" Spacing="8">
-															<DatePicker SelectedDate="{Binding #Root.((vm:WerkBonLijstViewModel)DataContext).GeselecteerdeBestelDatum, Mode=TwoWay}"/>
-															<Button Content="Plaats bestelling"
-																Background="#F5C242" Foreground="Black" FontWeight="Bold"
-																Command="{Binding #Root.((vm:WerkBonLijstViewModel)DataContext).MarkeerLijstAlsBesteldCommand}"
-																CommandParameter="{Binding}"/>
+														<StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+															<Button Content="Maak bestelling"
+																	Background="#F5C242" Foreground="Black" FontWeight="Bold"
+																	Command="{Binding #Root.((vm:WerkBonLijstViewModel)DataContext).MarkeerLijstAlsBesteldCommand}"
+																	CommandParameter="{Binding}"/>
+															<TextBlock Text="{Binding BestelDatum, StringFormat='Besteld op: {0:dd/MM/yyyy}'}"
+																	   VerticalAlignment="Center"
+																	   Foreground="#065F46"
+																	   FontWeight="SemiBold"
+																	   IsVisible="{Binding IsBesteld}"/>
 														</StackPanel>
 													</StackPanel>
 												</StackPanel>
