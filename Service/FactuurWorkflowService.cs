@@ -168,7 +168,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             if (!string.IsNullOrWhiteSpace(r.Titel))
                 segments.Add($"titel:{r.Titel}");
 
-            // Afwerkingen (tagged)
+            // Afwerkingen (tagged) — gebruik Naam
             if (r.Glas is not null)
                 segments.Add($"glas:{r.Glas.Naam}");
             if (r.PassePartout1 is not null)
@@ -371,13 +371,28 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
 
     private static bool NeedsDraftPrijsRefresh(Factuur factuur)
     {
-        if (factuur.Status != FactuurStatus.Draft)
-            return false;
+        // Rebuild for Draft: prices or offerte content may have changed.
+        if (factuur.Status == FactuurStatus.Draft)
+            return true;
 
-        if (factuur.TotaalExclBtw > 0m || factuur.TotaalInclBtw > 0m)
-            return false;
+        // Also rebuild for KlaarVoorExport when afwerking tags are missing from
+        // stored Omschrijving — happens when the factuur was created before
+        // afwerkingen were set on the offerte, or before tagged format was added.
+        // Safe: we never change the status here, only refresh the line content.
+        if (factuur.Status == FactuurStatus.KlaarVoorExport)
+        {
+            return factuur.Lijnen.Any(l =>
+                l.Omschrijving != null &&
+                l.Omschrijving.Contains('|') &&          // tagged format is present
+                !l.Omschrijving.Contains("glas:")   &&  // but afwerking tags are missing
+                !l.Omschrijving.Contains("pp1:")    &&
+                !l.Omschrijving.Contains("pp2:")    &&
+                !l.Omschrijving.Contains("diepte:") &&
+                !l.Omschrijving.Contains("opkleven:") &&
+                !l.Omschrijving.Contains("rug:"));
+        }
 
-        return factuur.Lijnen.Count == 0 || factuur.Lijnen.All(l => l.TotaalExcl == 0m && l.TotaalIncl == 0m);
+        return false;
     }
 
     private async Task RebuildDraftLijnenAsync(AppDbContext db, Factuur factuur, Offerte offerte, decimal btwPct, bool vrijgesteld)

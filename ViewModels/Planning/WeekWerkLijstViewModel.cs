@@ -89,7 +89,7 @@ public partial class WeekWerkLijstViewModel : ObservableObject
     {
         if (item is null) return;
 
-        var bestelDatum = (item.BestelDatumInput ?? DateTimeOffset.Now.Date).Date;
+        var bestelDatum = DateTime.Today;
         await _workflow.MarkLijstAsBesteldAsync(item.TaakId, bestelDatum);
         await LoadAsync();
     }

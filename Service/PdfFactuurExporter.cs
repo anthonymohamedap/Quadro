@@ -195,13 +195,17 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             if (!string.IsNullOrWhiteSpace(metaLine2))
                 block.Item().Text(metaLine2);
 
-            // Afwerkingen
-            foreach (var afw in item.Afwerkingen)
-                block.Item().Text($"    \u2022 {afw}").FontSize(10);
-
-            // TypeLijst opmerking
+            // TypeLijst opmerking — altijd boven afwerkingen
             if (!string.IsNullOrWhiteSpace(item.LijstOpmerking))
                 block.Item().Text($"    lijst opmerking: {item.LijstOpmerking}").Italic().FontSize(10);
+
+            // Afwerkingen — label + bullets, alleen als er zijn
+            if (item.Afwerkingen.Count > 0)
+            {
+                block.Item().Text("    Afwerkingen:").FontSize(10).SemiBold();
+                foreach (var afw in item.Afwerkingen)
+                    block.Item().Text($"    \u2022 {afw}").FontSize(10);
+            }
 
             // Operatie-regels (backward compat voor oude data)
             foreach (var operation in item.OperationLines)
@@ -342,8 +346,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             }
         }
 
-        if (operations.Count == 0 && afwerkingen.Count == 0)
-            operations.Add("Lijstwerk volgens bestelbon.");
+        // "Lijstwerk volgens bestelbon." fallback removed — not needed on factuur.
 
         // Titel-logica: als Titel ingevuld → gebruik die, anders artikelnummer
         var displayTitle = !string.IsNullOrWhiteSpace(titel)
