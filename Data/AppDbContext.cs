@@ -28,6 +28,8 @@ namespace QuadroApp.Data
         public DbSet<Factuur> Facturen => Set<Factuur>();
         public DbSet<FactuurLijn> FactuurLijnen => Set<FactuurLijn>();
         public DbSet<GeblokkeerdeDag> GeblokkeerDagen => Set<GeblokkeerdeDag>();
+        public DbSet<WerkBonArchief> WerkBonArchieven => Set<WerkBonArchief>();
+        public DbSet<OfferteArchief> OfferteArchieven => Set<OfferteArchief>();
 
 
         public AppDbContext(DbContextOptions<AppDbContext> opties) : base(opties) { }
@@ -52,7 +54,8 @@ namespace QuadroApp.Data
                 entity.HasOne(x => x.Leverancier)
                       .WithMany(l => l.TypeLijsten)
                       .HasForeignKey(x => x.LeverancierId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                      .IsRequired(false)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
 
 

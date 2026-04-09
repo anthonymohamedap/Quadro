@@ -10,7 +10,14 @@
       "Bash(ls:*)",
       "Bash(grep:*)",
       "Bash(dotnet build:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(dotnet ef:*)",
+      "Bash(dotnet test:*)",
+      "Bash(dotnet-script list:*)",
+      "Bash(dotnet-ilspy Avalonia.Base.dll)",
+      "Bash(powershell -Command \"Add-Type -Path 'Avalonia.Base.dll'; [Avalonia.Input.IDataTransfer].GetMembers\\(\\) | Select-Object Name\")",
+      "Bash(powershell:*)",
+      "Bash(rm:*)"
     ]
   }
 }

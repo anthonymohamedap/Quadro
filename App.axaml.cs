@@ -26,6 +26,7 @@ namespace QuadroApp;
 public partial class App : Application
 {
     public static IServiceProvider Services { get; private set; } = default!;
+    private static ILogger<App> _logger = default!;
 
     public override void Initialize()
     {
@@ -70,7 +71,6 @@ public partial class App : Application
         });
 
         var dbPath = Path.GetFullPath("quadro.db");
-        Console.WriteLine($"[DB] SQLite path = {dbPath}");
 
         // ==============================
         // 3️⃣ NAVIGATION & UI SERVICES
@@ -94,6 +94,8 @@ public partial class App : Application
 
         services.AddScoped<IAfwerkingenService, AfwerkingenService>();
         services.AddScoped<IStockService, StockService>();
+        services.AddScoped<IWerkBonArchiefService, WerkBonArchiefService>();
+        services.AddScoped<IOfferteArchiefService, OfferteArchiefService>();
         services.AddScoped<IWorkflowService, WorkflowService>();
         services.AddScoped<IOfferteWorkflowService, OfferteWorkflowService>();
         services.AddScoped<IWerkBonWorkflowService, WerkBonWorkflowService>();
@@ -146,11 +148,14 @@ public partial class App : Application
         services.AddTransient<OfferteViewModel>();
         services.AddTransient<KlantDetailViewModel>();
         services.AddTransient<WerkBonLijstViewModel>();
+        services.AddTransient<ArchiefViewModel>();
         services.AddTransient<FacturenViewModel>();
         services.AddTransient<ExportCenterViewModel>();
         services.AddTransient<InstellingenViewModel>();
 
         Services = services.BuildServiceProvider();
+        _logger = Services.GetRequiredService<ILogger<App>>();
+        _logger.LogInformation("[DB] SQLite path = {DbPath}", dbPath);
 
         // ==============================
         // 6️⃣ DATABASE INITIALIZATION
@@ -222,14 +227,123 @@ public partial class App : Application
         var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
         await using var db = await factory.CreateDbContextAsync();
 
+        // Ensure DB exists (for new installs)
         await db.Database.EnsureCreatedAsync();
+
+        // Apply pending migrations safely.
+        // For DBs created via EnsureCreatedAsync (no __EFMigrationsHistory),
+        // first mark all previously-existing migrations as applied so we don't re-run them.
+        await ApplyPendingMigrationsAsync(db);
 
         // Seed data (single source of truth)
         DbSeeder.SeedDemoData(db);
 
-        Console.WriteLine("[DB] Klanten rows = " + await db.Klanten.CountAsync());
-        Console.WriteLine("[DB] TypeLijsten rows = " + await db.TypeLijsten.CountAsync());
-        Console.WriteLine("[DB] Offertes rows = " + await db.Offertes.CountAsync());
+        _logger.LogInformation("[DB] Klanten={K}, TypeLijsten={L}, Offertes={O}",
+            await db.Klanten.CountAsync(),
+            await db.TypeLijsten.CountAsync(),
+            await db.Offertes.CountAsync());
+    }
+
+    /// <summary>
+    /// Applies EF Core migrations safely, even on a DB that was originally
+    /// created via EnsureCreatedAsync (which has no __EFMigrationsHistory table).
+    /// Marks all pre-existing migrations as applied, then runs only new ones.
+    /// </summary>
+    private static async Task ApplyPendingMigrationsAsync(AppDbContext db)
+    {
+        const string historyTable = "__EFMigrationsHistory";
+
+        // ── Stap 1: archief-tabellen ALTIJD aanmaken via raw SQL ─────────────
+        // Dit staat los van het migratie-systeem zodat een vroeg-falende catch
+        // de tabelcreatie niet kan overslaan.
+#pragma warning disable EF1002  // Raw SQL with no user input — safe
+        try
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                "CREATE TABLE IF NOT EXISTS \"WerkBonArchieven\" (" +
+                "\"Id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
+                "\"OrigineleWerkBonId\" INTEGER NOT NULL," +
+                "\"OfferteId\" INTEGER NOT NULL," +
+                "\"KlantNaam\" TEXT NOT NULL," +
+                "\"KlantId\" INTEGER NULL," +
+                "\"OfferteDatum\" TEXT NOT NULL," +
+                "\"OfferteStatusOpMoment\" TEXT NOT NULL," +
+                "\"WerkBonStatusOpMoment\" TEXT NOT NULL," +
+                "\"TotaalPrijsIncl\" TEXT NOT NULL," +
+                "\"GearchiveerdOp\" TEXT NOT NULL," +
+                "\"AnnuleringsReden\" TEXT NULL," +
+                "\"Snapshot\" TEXT NOT NULL," +
+                "\"IsHersteld\" INTEGER NOT NULL," +
+                "\"HersteldNaarOfferteId\" INTEGER NULL" +
+                ")");
+            await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_WerkBonArchieven_GearchiveerdOp""     ON ""WerkBonArchieven""(""GearchiveerdOp"")");
+            await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_WerkBonArchieven_OrigineleWerkBonId"" ON ""WerkBonArchieven""(""OrigineleWerkBonId"")");
+            await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_WerkBonArchieven_OfferteId""          ON ""WerkBonArchieven""(""OfferteId"")");
+
+            await db.Database.ExecuteSqlRawAsync(
+                "CREATE TABLE IF NOT EXISTS \"OfferteArchieven\" (" +
+                "\"Id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
+                "\"OrigineleOfferteId\" INTEGER NOT NULL," +
+                "\"KlantNaam\" TEXT NOT NULL," +
+                "\"KlantId\" INTEGER NULL," +
+                "\"OfferteDatum\" TEXT NOT NULL," +
+                "\"Jaar\" INTEGER NOT NULL," +
+                "\"StatusOpMoment\" TEXT NOT NULL," +
+                "\"TotaalInclBtw\" TEXT NOT NULL," +
+                "\"HadWerkBon\" INTEGER NOT NULL," +
+                "\"GearchiveerdOp\" TEXT NOT NULL," +
+                "\"Reden\" TEXT NULL," +
+                "\"Snapshot\" TEXT NOT NULL," +
+                "\"IsHersteld\" INTEGER NOT NULL," +
+                "\"HersteldNaarOfferteId\" INTEGER NULL" +
+                ")");
+            await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_OfferteArchieven_GearchiveerdOp""     ON ""OfferteArchieven""(""GearchiveerdOp"")");
+            await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_OfferteArchieven_Jaar""               ON ""OfferteArchieven""(""Jaar"")");
+            await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_OfferteArchieven_OrigineleOfferteId"" ON ""OfferteArchieven""(""OrigineleOfferteId"")");
+
+            _logger.LogInformation("[DB] Archief-tabellen gecontroleerd/aangemaakt.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[DB] FOUT bij aanmaken archief-tabellen: {Message}", ex.Message);
+        }
+
+        // ── Stap 2: EF migratie-historietabel + pre-existing migrations ──────
+        var preExistingMigrations = new[]
+        {
+            "20260228232856_InitialClean",
+            "20260303090000_AddStaaflijstSettingsAndFlag",
+            "20260303091000_RemoveTypeLijstMarginColumns",
+            "20260303141137_fixes",
+            "20260318000000_AddTypeLijstPerLijstPricingDropStaaflijst",
+            "20260321121423_AddTitelToOfferteRegel",
+            "20260323120500_AddAfwerkingsKleur",
+            "20260407000000_NullableLeverancierIdOnTypeLijst",
+            "20260408161449_home",
+            "20260408120000_AddWerkBonArchief",
+            "20260408140000_AddOfferteArchief",
+        };
+
+        try
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                $"CREATE TABLE IF NOT EXISTS \"{historyTable}\" " +
+                "(\"MigrationId\" TEXT NOT NULL CONSTRAINT \"PK___EFMigrationsHistory\" PRIMARY KEY, " +
+                "\"ProductVersion\" TEXT NOT NULL)");
+
+            foreach (var m in preExistingMigrations)
+            {
+                await db.Database.ExecuteSqlRawAsync(
+                    $"INSERT OR IGNORE INTO \"{historyTable}\" VALUES ('{m}', '9.0.0')");
+            }
+
+            await db.Database.MigrateAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[Migration] Warning: {Message}", ex.Message);
+        }
+#pragma warning restore EF1002
     }
 
     private static async Task RunStartupTasksAsync(IServiceProvider provider)
@@ -237,7 +351,7 @@ public partial class App : Application
         using var scope = provider.CreateScope();
         var stockService = scope.ServiceProvider.GetRequiredService<IStockService>();
 
-        Console.WriteLine("[Startup] Refreshing voorraad alerts...");
+        _logger.LogInformation("[Startup] Refreshing voorraad alerts...");
         await stockService.RefreshAlertsAsync();
     }
 

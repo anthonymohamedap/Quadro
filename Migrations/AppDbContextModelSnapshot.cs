@@ -50,17 +50,17 @@ namespace QuadroApp.Migrations
                     b.Property<int>("AfwerkingsGroepId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Kleur")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal>("KostprijsPerM2")
                         .HasPrecision(10, 2)
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("LeverancierId")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("Kleur")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("Naam")
                         .IsRequired()
@@ -178,6 +178,10 @@ namespace QuadroApp.Migrations
                     b.Property<int>("VolgNr")
                         .HasColumnType("INTEGER");
 
+                    b.Property<decimal>("VoorschotBedrag")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
                     b.Property<int?>("WerkBonId")
                         .HasColumnType("INTEGER");
 
@@ -246,6 +250,27 @@ namespace QuadroApp.Migrations
                     b.HasIndex("FactuurId");
 
                     b.ToTable("FactuurLijnen");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.GeblokkeerdeDag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("Datum")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reden")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Datum")
+                        .IsUnique();
+
+                    b.ToTable("GeblokkeerDagen");
                 });
 
             modelBuilder.Entity("QuadroApp.Model.DB.ImportRowLog", b =>
@@ -344,7 +369,7 @@ namespace QuadroApp.Migrations
 
                     b.Property<string>("Waarde")
                         .IsRequired()
-                        .HasMaxLength(255)
+                        .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Sleutel");
@@ -717,7 +742,7 @@ namespace QuadroApp.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("LeverancierId")
+                    b.Property<int?>("LeverancierId")
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("MinimumVoorraad")
@@ -851,6 +876,93 @@ namespace QuadroApp.Migrations
                     b.HasIndex("WerkTaakId");
 
                     b.ToTable("VoorraadMutaties");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.OfferteArchief", b =>
+                {
+                    b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("INTEGER");
+                    b.Property<DateTime>("GearchiveerdOp").HasColumnType("TEXT");
+                    b.Property<bool>("HadWerkBon").HasColumnType("INTEGER");
+                    b.Property<int?>("HersteldNaarOfferteId").HasColumnType("INTEGER");
+                    b.Property<bool>("IsHersteld").HasColumnType("INTEGER");
+                    b.Property<int>("Jaar").HasColumnType("INTEGER");
+                    b.Property<int?>("KlantId").HasColumnType("INTEGER");
+                    b.Property<string>("KlantNaam").IsRequired().HasMaxLength(200).HasColumnType("TEXT");
+                    b.Property<DateTime>("OfferteDatum").HasColumnType("TEXT");
+                    b.Property<int>("OrigineleOfferteId").HasColumnType("INTEGER");
+                    b.Property<string>("Reden").HasMaxLength(500).HasColumnType("TEXT");
+                    b.Property<string>("Snapshot").IsRequired().HasColumnType("TEXT");
+                    b.Property<string>("StatusOpMoment").IsRequired().HasMaxLength(30).HasColumnType("TEXT");
+                    b.Property<decimal>("TotaalInclBtw").HasColumnType("decimal(18,2)");
+                    b.HasKey("Id");
+                    b.HasIndex("GearchiveerdOp");
+                    b.HasIndex("Jaar");
+                    b.HasIndex("OrigineleOfferteId");
+                    b.ToTable("OfferteArchieven");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.WerkBonArchief", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AnnuleringsReden")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("GearchiveerdOp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("HersteldNaarOfferteId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsHersteld")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("KlantId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("KlantNaam")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("OfferteId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("OfferteDatum")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OfferteStatusOpMoment")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("OrigineleWerkBonId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Snapshot")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotaalPrijsIncl")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("WerkBonStatusOpMoment")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GearchiveerdOp");
+
+                    b.HasIndex("OfferteId");
+
+                    b.HasIndex("OrigineleWerkBonId");
+
+                    b.ToTable("WerkBonArchieven");
                 });
 
             modelBuilder.Entity("QuadroApp.Model.DB.WerkBon", b =>
@@ -1137,8 +1249,7 @@ namespace QuadroApp.Migrations
                     b.HasOne("QuadroApp.Model.DB.Leverancier", "Leverancier")
                         .WithMany("TypeLijsten")
                         .HasForeignKey("LeverancierId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Leverancier");
                 });

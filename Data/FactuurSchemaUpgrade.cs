@@ -38,6 +38,19 @@ public static class FactuurSchemaUpgrade
             if (!columns.Contains("VoorschotBedrag", StringComparer.OrdinalIgnoreCase))
                 await ExecuteNonQueryAsync(conn, "ALTER TABLE Facturen ADD COLUMN VoorschotBedrag TEXT NOT NULL DEFAULT '0';");
 
+            // GeblokkeerDagen: aangemaakt door home-migration; voor oude databases via raw SQL
+            await ExecuteNonQueryAsync(conn, """
+                CREATE TABLE IF NOT EXISTS "GeblokkeerDagen" (
+                    "Id" INTEGER NOT NULL CONSTRAINT "PK_GeblokkeerDagen" PRIMARY KEY AUTOINCREMENT,
+                    "Datum" TEXT NOT NULL,
+                    "Reden" TEXT NULL
+                );
+                """);
+            await ExecuteNonQueryAsync(conn, """
+                CREATE UNIQUE INDEX IF NOT EXISTS "IX_GeblokkeerDagen_Datum"
+                ON "GeblokkeerDagen" ("Datum");
+                """);
+
             await ExecuteNonQueryAsync(conn, """
                 UPDATE Facturen
                 SET OfferteId = (

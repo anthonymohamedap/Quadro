@@ -11,8 +11,9 @@
     d:DataContext="{d:DesignInstance vm:WerkBonLijstViewModel, IsDesignTimeCreatable=True}"
     Background="#F5F5F5">
 
-	<!-- Resources (zelfde als LijstenView) -->
+	<!-- Resources -->
 	<UserControl.Resources>
+		<conv:JaarConverter x:Key="JaarConv"/>
 		<conv:BoolToThicknessConverter x:Key="BoolToThicknessSlide"
 									   WhenTrue="0"
 									   WhenFalse="520,0,-520,0"/>
@@ -78,11 +79,27 @@
 					<!-- Search + tools -->
 					<Grid ColumnDefinitions="280,Auto" ColumnSpacing="10">
 
-						<TextBox Grid.Column="0"
-								 Height="34"
-								 Foreground="#222"
-								 Watermark="Zoek op bonnr of klant…"
-								 Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+						<StackPanel Grid.Column="0"
+									Orientation="Horizontal"
+									Spacing="8"
+									VerticalAlignment="Center">
+							<TextBox Height="34"
+									 Width="200"
+									 Foreground="#222"
+									 Watermark="Zoek op bonnr of klant…"
+									 Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+							<ComboBox ItemsSource="{Binding BeschikbareJaren}"
+									  SelectedItem="{Binding GeselecteerdJaar, Mode=TwoWay}"
+									  Width="110"
+									  Height="34"
+									  VerticalAlignment="Center">
+								<ComboBox.ItemTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding Converter={StaticResource JaarConv}}"/>
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
+						</StackPanel>
 
 						<StackPanel Grid.Column="1"
 									Orientation="Horizontal"
