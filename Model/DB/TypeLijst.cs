@@ -18,9 +18,8 @@ namespace QuadroApp.Model.DB
         [Required]
         public string Levcode { get; set; } = null!;
 
-        [Required]
-        public int LeverancierId { get; set; }
-        public Leverancier Leverancier { get; set; } = null!;
+        public int? LeverancierId { get; set; }
+        public Leverancier? Leverancier { get; set; }
 
         [Required]
         public int BreedteCm { get; set; }

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace QuadroApp.ViewModels
 {
-    public partial class WerkBonLijstViewModel : ObservableObject
+    public partial class WerkBonLijstViewModel : AsyncViewModelBase
     {
         private readonly IDbContextFactory<AppDbContext> _factory;
         private readonly INavigationService _nav;
@@ -31,16 +31,16 @@ namespace QuadroApp.ViewModels
 
         [ObservableProperty] private DateTimeOffset? geselecteerdeBestelDatum = DateTimeOffset.Now.Date;
 
+        // ── Jaar-filter ───────────────────────────────────────────────────────
+        public ObservableCollection<int> BeschikbareJaren { get; } = new();
+        [ObservableProperty] private int geselecteerdJaar = 0;
+
         // Dropdown data
         public ObservableCollection<WerkBonStatus> WerkBonStatusOpties { get; } =
             new ObservableCollection<WerkBonStatus>(Enum.GetValues<WerkBonStatus>());
 
-        public ObservableCollection<OfferteStatus> OfferteStatusOpties { get; } =
-            new ObservableCollection<OfferteStatus>(Enum.GetValues<OfferteStatus>());
-
         // gekozen statuses in UI
         [ObservableProperty] private WerkBonStatus? selectedWerkBonStatus;
-        [ObservableProperty] private OfferteStatus? selectedOfferteStatus;
 
         public WerkBonLijstViewModel(
             IDbContextFactory<AppDbContext> factory,
@@ -48,6 +48,7 @@ namespace QuadroApp.ViewModels
             IWerkBonWorkflowService workflow,
             IWorkflowService statusWorkflow,
             IToastService toast)
+            : base(toast)
         {
             _factory = factory;
             _nav = nav;
@@ -65,6 +66,10 @@ namespace QuadroApp.ViewModels
                 .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.TypeLijst)
                 .AsQueryable();
 
+            // Jaar-filter
+            if (GeselecteerdJaar > 0)
+                query = query.Where(w => w.AangemaaktOp.Year == GeselecteerdJaar);
+
             if (!string.IsNullOrWhiteSpace(Zoekterm))
             {
                 var t = Zoekterm.Trim().ToLowerInvariant();
@@ -80,19 +85,26 @@ namespace QuadroApp.ViewModels
                 .OrderByDescending(w => w.AangemaaktOp)
                 .ToListAsync();
 
+            // Bouw jaar-dropdown (uit alle werkbonnen, niet gefilterd op jaar)
+            var alleJaren = await db.WerkBonnen
+                .Select(w => w.AangemaaktOp.Year)
+                .Distinct()
+                .OrderByDescending(y => y)
+                .ToListAsync();
+
+            BeschikbareJaren.Clear();
+            BeschikbareJaren.Add(0); // "Alle jaren"
+            foreach (var j in alleJaren) BeschikbareJaren.Add(j);
+
             WerkBonnen = new ObservableCollection<WerkBon>(list);
 
             // behoud selectie als mogelijk
             if (SelectedWerkBon != null)
-            {
                 SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == SelectedWerkBon.Id);
-            }
         }
 
-        partial void OnZoektermChanged(string? value)
-        {
-            _ = LoadAsync();
-        }
+        partial void OnZoektermChanged(string? value) => RunAsync(LoadAsync);
+        partial void OnGeselecteerdJaarChanged(int value) => RunAsync(LoadAsync);
 
         partial void OnSelectedWerkBonChanged(WerkBon? value)
         {
@@ -101,7 +113,6 @@ namespace QuadroApp.ViewModels
                 IsDetailOpen = false;
                 SelectedWerkBonTaken = new ObservableCollection<WerkTaak>();
                 SelectedWerkBonStatus = null;
-                SelectedOfferteStatus = null;
                 return;
             }
 
@@ -112,7 +123,6 @@ namespace QuadroApp.ViewModels
             );
 
             SelectedWerkBonStatus = value.Status;
-            SelectedOfferteStatus = value.Offerte?.Status;
             GeselecteerdeBestelDatum = DateTimeOffset.Now.Date;
         }
 
@@ -161,13 +171,6 @@ namespace QuadroApp.ViewModels
             if (SelectedWerkBonStatus.HasValue && SelectedWerkBonStatus.Value != SelectedWerkBon.Status)
                 await _statusWorkflow.ChangeWerkBonStatusAsync(SelectedWerkBon.Id, SelectedWerkBonStatus.Value);
 
-            if (SelectedWerkBon.Offerte != null &&
-                SelectedOfferteStatus.HasValue &&
-                SelectedOfferteStatus.Value != SelectedWerkBon.Offerte.Status)
-            {
-                await _statusWorkflow.ChangeOfferteStatusAsync(SelectedWerkBon.Offerte.Id, SelectedOfferteStatus.Value);
-            }
-
             var selectedWerkBonId = SelectedWerkBon.Id;
 
             await LoadAsync();
@@ -180,22 +183,6 @@ namespace QuadroApp.ViewModels
                 _toast.Success("Werkbon afgewerkt: bestelbon/factuur werd automatisch aangemaakt.");
                 await _nav.NavigateToAsync<FacturenViewModel>();
             }
-        }
-
-        /// <summary>
-        /// Shortcut: "Maak offerte terug zichtbaar"
-        /// Zet Offerte.Status terug naar Nieuw.
-        /// (optioneel) zet WerkBon.Status naar Geannuleerd zodat hij niet meer als actieve bon gezien wordt.
-        /// </summary>
-        [RelayCommand]
-        private async Task MaakOfferteTerugZichtbaarAsync()
-        {
-            if (SelectedWerkBon == null)
-                return;
-
-            SelectedOfferteStatus = OfferteStatus.Concept;
-            SelectedWerkBonStatus = WerkBonStatus.Afgehaald; // kies wat je wil
-            await SaveStatusAsync();
         }
 
         [RelayCommand]

@@ -291,13 +291,19 @@
 						<StackPanel Spacing="0">
 
 							<!-- ══ BLOKKEER KNOPPEN ══ -->
-							<StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
-								<Button Content="{Binding BlokkeerDagButtonText}"
-										Command="{Binding ToggleBlokkeerDagCommand}"
-										Classes="DangerBtn"/>
-								<Button Content="🔒 Blokkeer/deblokkeer week"
-										Command="{Binding ToggleBlokkeerWeekCommand}"
-										Classes="DangerBtn"/>
+							<StackPanel Spacing="6" Margin="0,0,0,12">
+								<TextBox Watermark="Reden (optioneel)..."
+										 Text="{Binding BlokkeerReden, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+										 IsVisible="{Binding !IsGeselecteerdeDagGeblokkeerd}"
+										 FontSize="12"/>
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<Button Content="{Binding BlokkeerDagButtonText}"
+											Command="{Binding ToggleBlokkeerDagCommand}"
+											Classes="DangerBtn"/>
+									<Button Content="🔒 Blokkeer/deblokkeer week"
+											Command="{Binding ToggleBlokkeerWeekCommand}"
+											Classes="DangerBtn"/>
+								</StackPanel>
 							</StackPanel>
 
 							<!-- Geblokkeerd indicator -->
@@ -308,13 +314,21 @@
 									CornerRadius="{StaticResource RadiusMd}"
 									Padding="14,10"
 									Margin="0,0,0,12">
-								<StackPanel Orientation="Horizontal" Spacing="10">
-									<TextBlock Text="🚫" FontSize="20" VerticalAlignment="Center"/>
-									<TextBlock Text="Deze dag is geblokkeerd — er kunnen geen taken worden ingepland."
-											   FontSize="12"
+								<StackPanel Spacing="4">
+									<StackPanel Orientation="Horizontal" Spacing="10">
+										<TextBlock Text="🚫" FontSize="20" VerticalAlignment="Center"/>
+										<TextBlock Text="Deze dag is geblokkeerd — er kunnen geen taken worden ingepland."
+												   FontSize="12"
+												   Foreground="{StaticResource AccentRed}"
+												   TextWrapping="Wrap"
+												   VerticalAlignment="Center"/>
+									</StackPanel>
+									<TextBlock Text="{Binding GeselecteerdeDagRedenTekst}"
+											   IsVisible="{Binding GeselecteerdeDagRedenTekst, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+											   FontSize="11"
 											   Foreground="{StaticResource AccentRed}"
-											   TextWrapping="Wrap"
-											   VerticalAlignment="Center"/>
+											   FontStyle="Italic"
+											   Margin="30,0,0,0"/>
 								</StackPanel>
 							</Border>
 

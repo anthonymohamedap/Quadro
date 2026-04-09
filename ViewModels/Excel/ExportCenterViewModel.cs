@@ -13,7 +13,7 @@ using System.Collections.Generic;
 
 namespace QuadroApp.ViewModels;
 
-public partial class ExportCenterViewModel : ObservableObject, IAsyncInitializable
+public partial class ExportCenterViewModel : AsyncViewModelBase, IAsyncInitializable
 {
     private readonly INavigationService _nav;
     private readonly ICentralExcelExportService _exportService;
@@ -71,6 +71,7 @@ public partial class ExportCenterViewModel : ObservableObject, IAsyncInitializab
         IPathOpener pathOpener,
         IAppSettingsProvider settings,
         IToastService toast)
+        : base(toast)
     {
         _nav = nav;
         _exportService = exportService;
@@ -290,7 +291,7 @@ public partial class ExportCenterViewModel : ObservableObject, IAsyncInitializab
         if (_selectionEventsSuppressed || value is null)
             return;
 
-        _ = PasPresetToeAsync(value);
+        RunAsync(() => PasPresetToeAsync(value));
     }
 
     partial void OnSelectedDatasetChanged(ExportDatasetOptie? value)
@@ -298,7 +299,7 @@ public partial class ExportCenterViewModel : ObservableObject, IAsyncInitializab
         if (_selectionEventsSuppressed || value is null)
             return;
 
-        _ = LaadDatasetAsync(value);
+        RunAsync(() => LaadDatasetAsync(value));
     }
 
     private async Task LaadMetadataAsync()

@@ -47,6 +47,9 @@ namespace QuadroApp.Model.DB
         public bool IsOpVoorraad { get; set; }
         public VoorraadStatus VoorraadStatus { get; set; } = VoorraadStatus.Unknown;
 
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public bool KanBesteldWorden => !IsBesteld && !IsOpVoorraad;
+
         public int? LeverancierBestelLijnId { get; set; }
         public LeverancierBestelLijn? LeverancierBestelLijn { get; set; }
 

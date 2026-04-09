@@ -8,7 +8,7 @@ namespace QuadroApp.Model.DB
         [MaxLength(100)]
         public string Sleutel { get; set; } = null!;
 
-        [MaxLength(255)]
+        [MaxLength(2000)]
         public string Waarde { get; set; } = null!;
     }
 }

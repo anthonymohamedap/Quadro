@@ -521,7 +521,8 @@ public sealed class CentralExcelExportService : ICentralExcelExportService
                     .ToListAsync();
 
                 var lijstenPerLeverancier = await db.TypeLijsten.AsNoTracking()
-                    .GroupBy(x => x.LeverancierId)
+                    .Where(x => x.LeverancierId.HasValue)
+                    .GroupBy(x => x.LeverancierId!.Value)
                     .Select(g => new { LeverancierId = g.Key, Aantal = g.Count() })
                     .ToDictionaryAsync(x => x.LeverancierId, x => x.Aantal);
 
@@ -574,8 +575,8 @@ public sealed class CentralExcelExportService : ICentralExcelExportService
                     ],
                     async (db, ids) => (await db.TypeLijsten.AsNoTracking()
                         .Include(x => x.Leverancier)
-                        .Where(x => ids.Contains(x.LeverancierId))
-                        .OrderBy(x => x.Leverancier.Naam)
+                        .Where(x => x.LeverancierId.HasValue && ids.Contains(x.LeverancierId.Value))
+                        .OrderBy(x => x.Leverancier!.Naam)
                         .ThenBy(x => x.Artikelnummer)
                         .ToListAsync()).Cast<object>().ToList()),
                 new RelatieDefinitie(
