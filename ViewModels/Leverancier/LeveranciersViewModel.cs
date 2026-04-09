@@ -349,20 +349,15 @@ public partial class LeveranciersViewModel : AsyncViewModelBase, IAsyncInitializ
 
             await using var db = await _dbFactory.CreateDbContextAsync();
 
-            var heeftTypeLijsten = await db.TypeLijsten
+            var aantalLijsten = await db.TypeLijsten
                 .AsNoTracking()
-                .AnyAsync(x => x.LeverancierId == SelectedLeverancier.Id);
+                .CountAsync(x => x.LeverancierId == SelectedLeverancier.Id);
 
-            if (heeftTypeLijsten)
-            {
-                _toast.Warning("Deze leverancier kan niet verwijderd worden omdat er TypeLijsten aan gekoppeld zijn.");
-                return;
-            }
+            var bevestiging = aantalLijsten > 0
+                ? $"Leverancier '{SelectedLeverancier.Naam}' heeft {aantalLijsten} gekoppelde lijst(en). Deze lijsten blijven bestaan maar verliezen hun leverancierskoppeling. Doorgaan?"
+                : $"Ben je zeker dat je leverancier '{SelectedLeverancier.Naam}' wil verwijderen?";
 
-            var ok = await _dialogs.ConfirmAsync(
-                "Leverancier verwijderen",
-                $"Ben je zeker dat je leverancier '{SelectedLeverancier.Naam}' wil verwijderen?");
-
+            var ok = await _dialogs.ConfirmAsync("Leverancier verwijderen", bevestiging);
             if (!ok)
                 return;
 

@@ -241,9 +241,9 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
                 .ToListAsync();
 
             Lijsten = new ObservableCollection<TypeLijst>(lijstenData);
-            FilteredLijsten = new ObservableCollection<TypeLijst>(Lijsten);
             GefilterdeLeveranciers = new ObservableCollection<Leverancier>(Leveranciers);
 
+            ApplyFilter();
             SyncSelectedLeverancierFromLijst();
             UpdatePagedLijsten();
         }
@@ -258,8 +258,25 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
         }
     }
 
+    public Action? OnTerug { get; set; }
+
     [RelayCommand]
-    private async Task GaTerugAsync() => await _nav.NavigateToAsync<HomeViewModel>();
+    private async Task GaTerugAsync()
+    {
+        if (OnTerug is not null)
+            OnTerug();
+        else
+            await _nav.NavigateToAsync<HomeViewModel>();
+    }
+
+    [RelayCommand]
+    private void Nieuw()
+    {
+        var nieuwe = new TypeLijst { LaatsteUpdate = DateTime.Now };
+        GeselecteerdeLijst = nieuwe;
+        SelectedLeverancier = null;
+        IsDetailOpen = true;
+    }
 
     [RelayCommand]
     private async Task RefreshAsync() => await LoadAsync();
@@ -301,7 +318,11 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
             GeselecteerdeLijst.Soort = (GeselecteerdeLijst.Soort ?? string.Empty).Trim();
             GeselecteerdeLijst.LaatsteUpdate = DateTime.Now;
 
-            var vr = await _validator.ValidateUpdateAsync(GeselecteerdeLijst);
+            bool isNieuw = GeselecteerdeLijst.Id == 0;
+
+            var vr = isNieuw
+                ? await _validator.ValidateCreateAsync(GeselecteerdeLijst)
+                : await _validator.ValidateUpdateAsync(GeselecteerdeLijst);
 
             var warn = vr.WarningText();
             if (!string.IsNullOrWhiteSpace(warn)) _toast.Warning(warn);
@@ -314,11 +335,23 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
 
             await using var db = await _dbFactory.CreateDbContextAsync();
 
-            db.TypeLijsten.Attach(GeselecteerdeLijst);
-            db.Entry(GeselecteerdeLijst).State = EntityState.Modified;
-            db.Entry(GeselecteerdeLijst).Reference(x => x.Leverancier).IsModified = false;
-
-            await db.SaveChangesAsync();
+            if (isNieuw)
+            {
+                var leverancier = GeselecteerdeLijst.Leverancier;
+                GeselecteerdeLijst.Leverancier = null!;
+                db.TypeLijsten.Add(GeselecteerdeLijst);
+                await db.SaveChangesAsync();
+                GeselecteerdeLijst.Leverancier = leverancier;
+            }
+            else
+            {
+                var leverancier = GeselecteerdeLijst.Leverancier;
+                GeselecteerdeLijst.Leverancier = null!;
+                db.TypeLijsten.Attach(GeselecteerdeLijst);
+                db.Entry(GeselecteerdeLijst).State = EntityState.Modified;
+                await db.SaveChangesAsync();
+                GeselecteerdeLijst.Leverancier = leverancier;
+            }
 
             if (GeselecteerdeLijst.VoorraadMeter < GeselecteerdeLijst.MinimumVoorraad)
             {

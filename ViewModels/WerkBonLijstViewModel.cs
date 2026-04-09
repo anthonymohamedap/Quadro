@@ -31,6 +31,10 @@ namespace QuadroApp.ViewModels
 
         [ObservableProperty] private DateTimeOffset? geselecteerdeBestelDatum = DateTimeOffset.Now.Date;
 
+        // ── Jaar-filter ───────────────────────────────────────────────────────
+        public ObservableCollection<int> BeschikbareJaren { get; } = new();
+        [ObservableProperty] private int geselecteerdJaar = 0;
+
         // Dropdown data
         public ObservableCollection<WerkBonStatus> WerkBonStatusOpties { get; } =
             new ObservableCollection<WerkBonStatus>(Enum.GetValues<WerkBonStatus>());
@@ -62,6 +66,10 @@ namespace QuadroApp.ViewModels
                 .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.TypeLijst)
                 .AsQueryable();
 
+            // Jaar-filter
+            if (GeselecteerdJaar > 0)
+                query = query.Where(w => w.AangemaaktOp.Year == GeselecteerdJaar);
+
             if (!string.IsNullOrWhiteSpace(Zoekterm))
             {
                 var t = Zoekterm.Trim().ToLowerInvariant();
@@ -77,16 +85,26 @@ namespace QuadroApp.ViewModels
                 .OrderByDescending(w => w.AangemaaktOp)
                 .ToListAsync();
 
+            // Bouw jaar-dropdown (uit alle werkbonnen, niet gefilterd op jaar)
+            var alleJaren = await db.WerkBonnen
+                .Select(w => w.AangemaaktOp.Year)
+                .Distinct()
+                .OrderByDescending(y => y)
+                .ToListAsync();
+
+            BeschikbareJaren.Clear();
+            BeschikbareJaren.Add(0); // "Alle jaren"
+            foreach (var j in alleJaren) BeschikbareJaren.Add(j);
+
             WerkBonnen = new ObservableCollection<WerkBon>(list);
 
             // behoud selectie als mogelijk
             if (SelectedWerkBon != null)
-            {
                 SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == SelectedWerkBon.Id);
-            }
         }
 
         partial void OnZoektermChanged(string? value) => RunAsync(LoadAsync);
+        partial void OnGeselecteerdJaarChanged(int value) => RunAsync(LoadAsync);
 
         partial void OnSelectedWerkBonChanged(WerkBon? value)
         {

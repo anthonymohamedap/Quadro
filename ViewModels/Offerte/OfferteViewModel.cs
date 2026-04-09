@@ -101,6 +101,83 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         set => Regelbeheer.LegacyCode = value;
     }
 
+    // ── TypeLijst selectie: zelfde patroon als SelectedKlant in KlantSelectieViewModel.
+    //    SelectedTypeLijst is een echte [ObservableProperty] op Regelbeheer, dus Avalonia
+    //    kan het betrouwbaar tracken zonder multi-segment path binding issues. ──
+    public TypeLijst? SelectedRegelTypeLijst
+    {
+        get => Regelbeheer.SelectedTypeLijst;
+        set => Regelbeheer.SelectedTypeLijst = value;
+    }
+
+    // ── Overige regel-navigatie: dedicated single-segment properties voor afwerkingen. ──
+    public AfwerkingsOptie? SelectedRegelGlas
+    {
+        get => Regelbeheer.SelectedRegel?.Glas;
+        set
+        {
+            if (Regelbeheer.SelectedRegel is null) return;
+            Regelbeheer.SelectedRegel.Glas = value;
+            OnPropertyChanged();
+            if (!_suppressRecalc) Prijzen.TriggerRecalc();
+        }
+    }
+    public AfwerkingsOptie? SelectedRegelPasse1
+    {
+        get => Regelbeheer.SelectedRegel?.PassePartout1;
+        set
+        {
+            if (Regelbeheer.SelectedRegel is null) return;
+            Regelbeheer.SelectedRegel.PassePartout1 = value;
+            OnPropertyChanged();
+            if (!_suppressRecalc) Prijzen.TriggerRecalc();
+        }
+    }
+    public AfwerkingsOptie? SelectedRegelPasse2
+    {
+        get => Regelbeheer.SelectedRegel?.PassePartout2;
+        set
+        {
+            if (Regelbeheer.SelectedRegel is null) return;
+            Regelbeheer.SelectedRegel.PassePartout2 = value;
+            OnPropertyChanged();
+            if (!_suppressRecalc) Prijzen.TriggerRecalc();
+        }
+    }
+    public AfwerkingsOptie? SelectedRegelDiepte
+    {
+        get => Regelbeheer.SelectedRegel?.DiepteKern;
+        set
+        {
+            if (Regelbeheer.SelectedRegel is null) return;
+            Regelbeheer.SelectedRegel.DiepteKern = value;
+            OnPropertyChanged();
+            if (!_suppressRecalc) Prijzen.TriggerRecalc();
+        }
+    }
+    public AfwerkingsOptie? SelectedRegelOpkleven
+    {
+        get => Regelbeheer.SelectedRegel?.Opkleven;
+        set
+        {
+            if (Regelbeheer.SelectedRegel is null) return;
+            Regelbeheer.SelectedRegel.Opkleven = value;
+            OnPropertyChanged();
+            if (!_suppressRecalc) Prijzen.TriggerRecalc();
+        }
+    }
+    public AfwerkingsOptie? SelectedRegelRug
+    {
+        get => Regelbeheer.SelectedRegel?.Rug;
+        set
+        {
+            if (Regelbeheer.SelectedRegel is null) return;
+            Regelbeheer.SelectedRegel.Rug = value;
+            OnPropertyChanged();
+            if (!_suppressRecalc) Prijzen.TriggerRecalc();
+        }
+    }
+
     public OfferteViewModel(
         IDbContextFactory<AppDbContext> dbFactory,
         INavigationService nav,
@@ -132,7 +209,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         Regelbeheer = new OfferteRegelViewModel(dbFactory, dialogs, toast);
         Regelbeheer.RegelChanged += () =>
         {
-            if (!_suppressRecalc) Prijzen.TriggerRecalc();
+            if (!_suppressRecalc) Prijzen?.TriggerRecalc();
         };
 
         Prijzen = new OffertePrijsViewModel(
@@ -171,7 +248,16 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                 case nameof(Regelbeheer.SelectedRegel):
                     OnPropertyChanged(nameof(SelectedRegel));
                     OnPropertyChanged(nameof(LegacyCode));
+                    // SelectedRegelTypeLijst is now forwarded via Regelbeheer.SelectedTypeLijst
+                    // (a real [ObservableProperty]), so no manual notification needed here.
+                    OnPropertyChanged(nameof(SelectedRegelGlas));
+                    OnPropertyChanged(nameof(SelectedRegelPasse1));
+                    OnPropertyChanged(nameof(SelectedRegelPasse2));
+                    OnPropertyChanged(nameof(SelectedRegelDiepte));
+                    OnPropertyChanged(nameof(SelectedRegelOpkleven));
+                    OnPropertyChanged(nameof(SelectedRegelRug));
                     break;
+                case nameof(Regelbeheer.SelectedTypeLijst):   OnPropertyChanged(nameof(SelectedRegelTypeLijst)); break;
                 case nameof(Regelbeheer.Regels):              OnPropertyChanged(nameof(Regels)); break;
                 case nameof(Regelbeheer.TypeLijstZoekterm):   OnPropertyChanged(nameof(TypeLijstZoekterm)); break;
                 case nameof(Regelbeheer.GefilterdeTypeLijsten): OnPropertyChanged(nameof(GefilterdeTypeLijsten)); break;
@@ -206,7 +292,10 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         Regelbeheer.TypeLijsten.Clear();
         foreach (var l in lijsten)
             Regelbeheer.TypeLijsten.Add(l);
-        Regelbeheer.GefilterdeTypeLijsten = new ObservableCollection<TypeLijst>(lijsten);
+
+        // Sync GefilterdeTypeLijsten via diff (nooit Clear/replace) zodat de ComboBox
+        // zijn SelectedItem niet verliest als de catalog wordt herladen.
+        Regelbeheer.ApplyTypeLijstFilter(Regelbeheer.TypeLijstZoekterm);
 
         var klanten = await db.Klanten.AsNoTracking()
             .OrderBy(k => k.Achternaam).ThenBy(k => k.Voornaam)
@@ -258,6 +347,10 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             if (regel.RugId is int rid)
                 regel.Rug = Regelbeheer.RugOpties.FirstOrDefault(r => r.Id == rid);
         }
+
+        // Na het relinken van catalog-referenties, sync SelectedTypeLijst zodat
+        // de ComboBox de nieuwe catalog-instantie toont.
+        Regelbeheer.SyncTypeLijstFromSelectedRegel();
     }
 
     // ── Load offerte ──
@@ -268,6 +361,14 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         _suppressRecalc = true;
         try
         {
+            // ── Null SelectedRegel FIRST ──────────────────────────────────────────────
+            // When LoadCatalogAsync replaces ItemsSource collections (GlasOpties, etc.),
+            // Avalonia's ComboBoxes lose their SelectedItem and write null back via the
+            // TwoWay binding. The SelectedRegelXxx setters guard against this with
+            // "if (Regelbeheer.SelectedRegel is null) return;" so they cannot wipe FK IDs
+            // — but only when SelectedRegel is already null before the catalog reload.
+            Regelbeheer.SelectedRegel = null;
+
             if (reloadCatalog)
                 await LoadCatalogAsync();
 
@@ -281,7 +382,9 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             Offerte = o;
             await Workflow.LoadFactuurContextAsync(db, offerteId);
 
-            KlantSelectie.SetKlanten(KlantSelectie.Klanten, o.KlantId);
+            // Selecteer de juiste klant uit de al-geladen catalogus.
+            // Niet SetKlanten aanroepen met de eigen collectie — dat wist hem eerst (self-clear bug).
+            KlantSelectie.SelectedKlant = KlantSelectie.Klanten.FirstOrDefault(k => k.Id == o.KlantId);
 
             var regels = new ObservableCollection<OfferteRegel>();
             foreach (var dbRule in o.Regels)
@@ -315,8 +418,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             }
 
             Regelbeheer.Regels = regels;
-            Regelbeheer.SelectedRegel = null;
-            Regelbeheer.SelectedRegel = regels.FirstOrDefault();
+            Regelbeheer.SelectedRegel = null;  // Geen auto-selectie — gebruiker klikt zelf een regel aan.
 
             RefreshTotals();
         }
@@ -541,31 +643,38 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             Offerte.TotaalInclBtw   = snapshot.TotaalInclBtw;
             Offerte.VoorschotBedrag = snapshot.VoorschotBedrag;
 
-            var selectedRuleId = Regelbeheer.SelectedRegel?.Id;
-            var selectedIndex  = Regelbeheer.SelectedRegel is null
-                ? -1 : Regelbeheer.Regels.IndexOf(Regelbeheer.SelectedRegel);
-
-            var updatedRegels = snapshot.Regels
-                .Select(r => CloneRegelForSnapshot(r, includeNavigations: true))
-                .ToList();
-
-            while (Regelbeheer.Regels.Count > updatedRegels.Count)
+            // Patch ONLY price fields in-place on the existing OfferteRegel instances.
+            // Never replace the instances themselves: swapping an instance out of the
+            // ObservableCollection causes the ListBox to null the TwoWay SelectedRegel
+            // binding, which momentarily clears all ComboBox selections.
+            var srcRegels = snapshot.Regels.ToList();   // ICollection → indexed list
+            var count = Math.Min(Regelbeheer.Regels.Count, srcRegels.Count);
+            for (var i = 0; i < count; i++)
+            {
+                var dst = Regelbeheer.Regels[i];
+                var src = srcRegels[i];
+                dst.TotaalExcl     = src.TotaalExcl;
+                dst.SubtotaalExBtw = src.SubtotaalExBtw;
+                dst.BtwBedrag      = src.BtwBedrag;
+                dst.TotaalInclBtw  = src.TotaalInclBtw;
+            }
+            // Remove any excess regels (defensive; should not happen in practice).
+            while (Regelbeheer.Regels.Count > srcRegels.Count)
                 Regelbeheer.Regels.RemoveAt(Regelbeheer.Regels.Count - 1);
 
-            for (var i = 0; i < updatedRegels.Count; i++)
-            {
-                if (i < Regelbeheer.Regels.Count)
-                    Regelbeheer.Regels[i] = updatedRegels[i];
-                else
-                    Regelbeheer.Regels.Add(updatedRegels[i]);
-            }
+            // RefreshLijstPrijzenAsync replaces regel navigation properties with fresh
+            // DB instances for accurate pricing.  Re-link them back to the catalog
+            // instances so ComboBox reference-equality matching still works.
+            RelinkSelectionsAfterCatalog();
 
-            Regelbeheer.SelectedRegel =
-                (selectedRuleId.HasValue
-                    ? Regelbeheer.Regels.FirstOrDefault(r => r.Id == selectedRuleId.Value) : null)
-                ?? (selectedIndex >= 0 && selectedIndex < Regelbeheer.Regels.Count
-                    ? Regelbeheer.Regels[selectedIndex] : null)
-                ?? Regelbeheer.Regels.FirstOrDefault();
+            // Force the ComboBox SelectedItem bindings to re-read from the re-linked regel.
+            OnPropertyChanged(nameof(SelectedRegelTypeLijst));
+            OnPropertyChanged(nameof(SelectedRegelGlas));
+            OnPropertyChanged(nameof(SelectedRegelPasse1));
+            OnPropertyChanged(nameof(SelectedRegelPasse2));
+            OnPropertyChanged(nameof(SelectedRegelDiepte));
+            OnPropertyChanged(nameof(SelectedRegelOpkleven));
+            OnPropertyChanged(nameof(SelectedRegelRug));
 
             RefreshTotals();
         }
@@ -653,6 +762,22 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     // ── Navigation ──
     [RelayCommand]
     private async Task GaTerugAsync() => await _nav.NavigateToAsync<OffertesLijstViewModel>();
+
+    [RelayCommand]
+    private async Task OpenLijstBeheerAsync()
+    {
+        if (App.Current?.ApplicationLifetime is not
+            Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            return;
+
+        var window = new QuadroApp.Views.LijstenWindow();
+        window.Closed += async (_, _) => await LoadCatalogAsync();
+
+        if (desktop.MainWindow is { } owner)
+            window.Show(owner);
+        else
+            window.Show();
+    }
 
     // ── DB helpers ──
     private static OfferteRegel BuildDbRegel(OfferteRegel vmRule, int offerteId) => new()

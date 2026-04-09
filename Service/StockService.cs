@@ -195,7 +195,7 @@ namespace QuadroApp.Service
                     return;
                 }
 
-                var bestelling = await GetOrCreateOpenSupplierOrderAsync(db, typeLijst.Leverancier, bestelDatum);
+                var bestelling = await GetOrCreateOpenSupplierOrderAsync(db, typeLijst.Leverancier!, bestelDatum);
 
                 var lijn = taak.LeverancierBestelLijnId.HasValue
                     ? await db.Set<LeverancierBestelLijn>().FirstOrDefaultAsync(x => x.Id == taak.LeverancierBestelLijnId.Value)
@@ -255,7 +255,7 @@ namespace QuadroApp.Service
                 if (typeLijst is null)
                     throw new InvalidOperationException("TypeLijst niet gevonden.");
 
-                var bestelling = await GetOrCreateOpenSupplierOrderAsync(db, typeLijst.Leverancier, bestelDatum);
+                var bestelling = await GetOrCreateOpenSupplierOrderAsync(db, typeLijst.Leverancier!, bestelDatum);
 
                 var lijn = bestelling.Lijnen.FirstOrDefault(x =>
                     x.TypeLijstId == typeLijst.Id &&

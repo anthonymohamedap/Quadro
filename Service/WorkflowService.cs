@@ -1,7 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
+using QuadroApp.Model.Snapshot;
 using QuadroApp.Service.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,7 @@ namespace QuadroApp.Service
         private readonly IToastService _toast;
         private readonly IFactuurWorkflowService _factuurWorkflow;
         private readonly IStockService _stock;
+        private readonly IWerkBonArchiefService _archief;
 
         private sealed class NoOpFactuurWorkflowService : IFactuurWorkflowService
         {
@@ -57,24 +59,64 @@ namespace QuadroApp.Service
             public Task RefreshAlertsAsync() => _inner.RefreshAlertsAsync();
         }
 
+        // ── State-machine tabellen ──────────────────────────────────────────
         private static readonly IReadOnlyDictionary<OfferteStatus, HashSet<OfferteStatus>> OfferteTransitions =
             new Dictionary<OfferteStatus, HashSet<OfferteStatus>>
             {
-                [OfferteStatus.Concept] = new() { OfferteStatus.Verzonden },
-                [OfferteStatus.Verzonden] = new() { OfferteStatus.Goedgekeurd, OfferteStatus.Geannuleerd },
-                [OfferteStatus.Goedgekeurd] = new() { OfferteStatus.InProductie },
-                [OfferteStatus.InProductie] = new() { OfferteStatus.Afgewerkt },
-                [OfferteStatus.Afgewerkt] = new() { OfferteStatus.Gefactureerd },
-                [OfferteStatus.Gefactureerd] = new() { OfferteStatus.Betaald }
+                [OfferteStatus.Concept]     = new() { OfferteStatus.Verzonden, OfferteStatus.Geannuleerd },
+                [OfferteStatus.Verzonden]   = new() { OfferteStatus.Goedgekeurd, OfferteStatus.Geannuleerd },
+                [OfferteStatus.Goedgekeurd] = new() { OfferteStatus.InProductie, OfferteStatus.Geannuleerd },
+                [OfferteStatus.InProductie] = new() { OfferteStatus.Afgewerkt, OfferteStatus.Geannuleerd },
+                [OfferteStatus.Afgewerkt]   = new() { OfferteStatus.Gefactureerd },
+                [OfferteStatus.Gefactureerd]= new() { OfferteStatus.Betaald }
             };
 
         private static readonly IReadOnlyDictionary<WerkBonStatus, HashSet<WerkBonStatus>> WerkBonTransitions =
             new Dictionary<WerkBonStatus, HashSet<WerkBonStatus>>
             {
-                [WerkBonStatus.Gepland] = new() { WerkBonStatus.InUitvoering },
-                [WerkBonStatus.InUitvoering] = new() { WerkBonStatus.Afgewerkt },
-                [WerkBonStatus.Afgewerkt] = new() { WerkBonStatus.Afgehaald }
+                [WerkBonStatus.Gepland]     = new() { WerkBonStatus.InUitvoering },
+                [WerkBonStatus.InUitvoering]= new() { WerkBonStatus.Afgewerkt },
+                [WerkBonStatus.Afgewerkt]   = new() { WerkBonStatus.Afgehaald }
             };
+
+        // ── Constructors ────────────────────────────────────────────────────
+
+        public WorkflowService(
+            IDbContextFactory<AppDbContext> factory,
+            ILogger<WorkflowService> logger,
+            IToastService toast,
+            IFactuurWorkflowService factuurWorkflow,
+            IStockService stock,
+            IWerkBonArchiefService archief)
+        {
+            _factory        = factory        ?? throw new ArgumentNullException(nameof(factory));
+            _logger         = logger         ?? throw new ArgumentNullException(nameof(logger));
+            _toast          = toast          ?? throw new ArgumentNullException(nameof(toast));
+            _factuurWorkflow= factuurWorkflow ?? throw new ArgumentNullException(nameof(factuurWorkflow));
+            _stock          = stock          ?? throw new ArgumentNullException(nameof(stock));
+            _archief        = archief        ?? throw new ArgumentNullException(nameof(archief));
+        }
+
+        // Backward-compatible constructor (geen archief → no-op)
+        public WorkflowService(
+            IDbContextFactory<AppDbContext> factory,
+            ILogger<WorkflowService> logger,
+            IToastService toast)
+            : this(factory, logger, toast,
+                   new NoOpFactuurWorkflowService(),
+                   new FallbackStockService(factory, toast),
+                   new NoOpWerkBonArchiefService())
+        { }
+
+        public WorkflowService(
+            IDbContextFactory<AppDbContext> factory,
+            ILogger<WorkflowService> logger,
+            IToastService toast,
+            IFactuurWorkflowService factuurWorkflow)
+            : this(factory, logger, toast, factuurWorkflow,
+                   new FallbackStockService(factory, toast),
+                   new NoOpWerkBonArchiefService())
+        { }
 
         public WorkflowService(
             IDbContextFactory<AppDbContext> factory,
@@ -82,31 +124,11 @@ namespace QuadroApp.Service
             IToastService toast,
             IFactuurWorkflowService factuurWorkflow,
             IStockService stock)
-        {
-            _factory = factory ?? throw new ArgumentNullException(nameof(factory));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _toast = toast ?? throw new ArgumentNullException(nameof(toast));
-            _factuurWorkflow = factuurWorkflow ?? throw new ArgumentNullException(nameof(factuurWorkflow));
-            _stock = stock ?? throw new ArgumentNullException(nameof(stock));
-        }
+            : this(factory, logger, toast, factuurWorkflow, stock,
+                   new NoOpWerkBonArchiefService())
+        { }
 
-        // Backward-compatible constructor for older test/setup code paths
-        public WorkflowService(
-            IDbContextFactory<AppDbContext> factory,
-            ILogger<WorkflowService> logger,
-            IToastService toast)
-            : this(factory, logger, toast, new NoOpFactuurWorkflowService(), new FallbackStockService(factory, toast))
-        {
-        }
-
-        public WorkflowService(
-            IDbContextFactory<AppDbContext> factory,
-            ILogger<WorkflowService> logger,
-            IToastService toast,
-            IFactuurWorkflowService factuurWorkflow)
-            : this(factory, logger, toast, factuurWorkflow, new FallbackStockService(factory, toast))
-        {
-        }
+        // ── ChangeOfferteStatusAsync ────────────────────────────────────────
 
         public async Task ChangeOfferteStatusAsync(int offerteId, OfferteStatus newStatus)
         {
@@ -115,23 +137,47 @@ namespace QuadroApp.Service
 
             var offerte = await db.Offertes
                 .Include(o => o.WerkBon)
-                .FirstOrDefaultAsync(o => o.Id == offerteId);
-
-            if (offerte is null)
-            {
-                throw new InvalidOperationException("Offerte niet gevonden.");
-            }
+                .FirstOrDefaultAsync(o => o.Id == offerteId)
+                ?? throw new InvalidOperationException("Offerte niet gevonden.");
 
             var oldStatus = offerte.Status;
             ValidateOfferteTransition(oldStatus, newStatus);
 
             offerte.Status = newStatus;
 
+            // ── Annulering: archiveer werkbon + geef stock vrij ─────────────
             if (newStatus == OfferteStatus.Geannuleerd && offerte.WerkBon is not null)
             {
-                await _stock.ReleaseReservationsForWerkBonAsync(offerte.WerkBon.Id, cancelOpenOrders: true);
+                var werkBonId = offerte.WerkBon.Id;
+
+                // Commit status EERST zodat de snapshot de juiste statussen vastlegt
+                await db.SaveChangesAsync();
+                await tx.CommitAsync();
+
+                // Stock vrijgeven (buiten transactie — eigen transactie intern)
+                await _stock.ReleaseReservationsForWerkBonAsync(werkBonId, cancelOpenOrders: true);
+
+                // Archiveer — eigen transactie intern in de service
+                try
+                {
+                    await _archief.ArchiveerAsync(werkBonId, annuleringsReden: null);
+                }
+                catch (Exception ex)
+                {
+                    // Archivering mag de annulering zelf NIET blokkeren — log en ga door.
+                    _logger.LogError(ex,
+                        "Archivering van WerkBon {WerkBonId} mislukt na annulering van offerte {OfferteId}.",
+                        werkBonId, offerteId);
+                }
+
+                _logger.LogInformation(
+                    "Offerte {OfferteId} geannuleerd (was {OldStatus}), WerkBon {WerkBonId} gearchiveerd.",
+                    offerteId, oldStatus, werkBonId);
+
+                return;
             }
 
+            // ── Goedkeuring: maak werkbon aan indien nog niet bestaat ───────
             var createdWerkBonId = 0;
             if (newStatus == OfferteStatus.Goedgekeurd && offerte.WerkBon is null)
             {
@@ -164,21 +210,17 @@ namespace QuadroApp.Service
 
             _logger.LogInformation(
                 "Offerte {OfferteId} status changed from {OldStatus} to {NewStatus} at {Timestamp}",
-                offerteId,
-                oldStatus,
-                newStatus,
-                DateTime.UtcNow);
+                offerteId, oldStatus, newStatus, DateTime.UtcNow);
         }
+
+        // ── ChangeWerkBonStatusAsync ────────────────────────────────────────
 
         public async Task ChangeWerkBonStatusAsync(int werkBonId, WerkBonStatus newStatus)
         {
             await using var db = await _factory.CreateDbContextAsync();
 
-            var werkBon = await db.WerkBonnen.FirstOrDefaultAsync(w => w.Id == werkBonId);
-            if (werkBon is null)
-            {
-                throw new InvalidOperationException("Werkbon niet gevonden.");
-            }
+            var werkBon = await db.WerkBonnen.FirstOrDefaultAsync(w => w.Id == werkBonId)
+                ?? throw new InvalidOperationException("Werkbon niet gevonden.");
 
             var oldStatus = werkBon.Status;
             ValidateWerkBonTransition(oldStatus, newStatus);
@@ -194,36 +236,46 @@ namespace QuadroApp.Service
 
             _logger.LogInformation(
                 "WerkBon {WerkBonId} status changed from {OldStatus} to {NewStatus} at {Timestamp}",
-                werkBonId,
-                oldStatus,
-                newStatus,
-                DateTime.UtcNow);
+                werkBonId, oldStatus, newStatus, DateTime.UtcNow);
         }
 
         public async Task ReserveStockForWerkBonAsync(int werkBonId)
-        {
-            await _stock.ReserveStockForWerkBonAsync(werkBonId);
-        }
+            => await _stock.ReserveStockForWerkBonAsync(werkBonId);
 
         public async Task MarkLijstAsBesteldAsync(int werkTaakId, DateTime bestelDatum)
-        {
-            await _stock.PlaceSupplierOrderForWerkTaakAsync(werkTaakId, bestelDatum);
-        }
+            => await _stock.PlaceSupplierOrderForWerkTaakAsync(werkTaakId, bestelDatum);
+
+        // ── Validatie ───────────────────────────────────────────────────────
 
         private static void ValidateOfferteTransition(OfferteStatus oldStatus, OfferteStatus newStatus)
         {
             if (!OfferteTransitions.TryGetValue(oldStatus, out var allowed) || !allowed.Contains(newStatus))
-            {
-                throw new InvalidOperationException("Ongeldige statusovergang");
-            }
+                throw new InvalidOperationException(
+                    $"Ongeldige statusovergang: {oldStatus} → {newStatus}");
         }
 
         private static void ValidateWerkBonTransition(WerkBonStatus oldStatus, WerkBonStatus newStatus)
         {
             if (!WerkBonTransitions.TryGetValue(oldStatus, out var allowed) || !allowed.Contains(newStatus))
-            {
-                throw new InvalidOperationException("Ongeldige statusovergang");
-            }
+                throw new InvalidOperationException(
+                    $"Ongeldige statusovergang: {oldStatus} → {newStatus}");
+        }
+
+        // ── No-op archief voor backward-compatible constructors ─────────────
+
+        private sealed class NoOpWerkBonArchiefService : IWerkBonArchiefService
+        {
+            public Task<WerkBonArchief> ArchiveerAsync(int werkBonId, string? annuleringsReden = null)
+                => Task.FromResult(new WerkBonArchief { OrigineleWerkBonId = werkBonId });
+
+            public Task<int> HerstellenAsync(int archiefId)
+                => Task.FromResult(0);
+
+            public Task<List<WerkBonArchief>> GetAlleAsync()
+                => Task.FromResult(new List<WerkBonArchief>());
+
+            public Task<WerkBonArchiefSnapshot?> GetSnapshotAsync(int archiefId)
+                => Task.FromResult<WerkBonArchiefSnapshot?>(null);
         }
     }
 }
