@@ -309,16 +309,26 @@ public partial class App : Application
         }
 
         // ── Stap 1b: Schema-patches voor kolommen die mogelijk ontbreken op oudere DBs ─
-        try
-        {
-            // AfwerkingsOpties.Kleur — toegevoegd in migratie 20260323120500_AddAfwerkingsKleur
-            await db.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE \"AfwerkingsOpties\" ADD COLUMN \"Kleur\" TEXT NOT NULL DEFAULT 'Standaard'");
-        }
-        catch
-        {
-            // Kolom bestaat al — negeer de fout
-        }
+        // Elke patch zit in een eigen try/catch: kolom bestaat al → SQLite gooit een fout → negeer.
+
+        // AddAfwerkingsKleur (20260323120500) — Kleur op AfwerkingsOpties
+        try { await db.Database.ExecuteSqlRawAsync(
+            "ALTER TABLE \"AfwerkingsOpties\" ADD COLUMN \"Kleur\" TEXT NOT NULL DEFAULT 'Standaard'"); }
+        catch { /* kolom bestaat al */ }
+
+        // AddAfwerkingsKleur (20260323120500) — uniek index updaten naar versie mét Kleur
+        try { await db.Database.ExecuteSqlRawAsync(
+            "DROP INDEX IF EXISTS \"IX_AfwerkingsOpties_AfwerkingsGroepId_Volgnummer\""); }
+        catch { /* index bestaat niet meer */ }
+        try { await db.Database.ExecuteSqlRawAsync(
+            "CREATE UNIQUE INDEX IF NOT EXISTS \"IX_AfwerkingsOpties_AfwerkingsGroepId_Volgnummer_Kleur\" " +
+            "ON \"AfwerkingsOpties\" (\"AfwerkingsGroepId\", \"Volgnummer\", \"Kleur\")"); }
+        catch { /* index bestaat al */ }
+
+        // AddTitelToOfferteRegel (20260321121423) — Titel op OfferteRegels
+        try { await db.Database.ExecuteSqlRawAsync(
+            "ALTER TABLE \"OfferteRegels\" ADD COLUMN \"Titel\" TEXT NULL"); }
+        catch { /* kolom bestaat al */ }
 
         // ── Stap 2: EF migratie-historietabel + pre-existing migrations ──────
         var preExistingMigrations = new[]
