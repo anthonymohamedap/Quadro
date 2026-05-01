@@ -214,6 +214,20 @@ namespace QuadroApp.ViewModels
                 SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == selectedWerkBonId.Value);
         }
 
+        /// <summary>Expliciet selecteren via de 'Bekijk'-knop in de rij.</summary>
+        [RelayCommand]
+        private void SelecteerWerkBon(WerkBon? werkBon)
+        {
+            SelectedWerkBon = werkBon;
+        }
+
+        /// <summary>Sluit het detailpaneel zonder de selectie te bewaren.</summary>
+        [RelayCommand]
+        private void SluitDetail()
+        {
+            SelectedWerkBon = null;
+        }
+
         [RelayCommand]
         private async Task GaTerugAsync()
         {

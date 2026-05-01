@@ -1,7 +1,8 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+﻿  <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:QuadroApp.ViewModels"
         xmlns:m="using:QuadroApp.Model.DB"
+        
         x:Class="QuadroApp.Views.BulkLijstenWindow"
         x:DataType="vm:BulkLijstenViewModel"
         Width="1100"
@@ -40,6 +41,7 @@
         <Grid Grid.Row="1" Margin="20">
             <Grid DataContext="{Binding}"
                   x:DataType="vm:BulkLijstenViewModel"
+
                   ColumnDefinitions="1.25*,1*"
                   ColumnSpacing="14">
                 <ScrollViewer VerticalScrollBarVisibility="Auto"

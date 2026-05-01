@@ -27,3 +27,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# App config — contains DB password, never commit
+appsettings.json

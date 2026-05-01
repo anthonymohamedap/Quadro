@@ -109,7 +109,7 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
         GeselecteerdeFactuur.Lijnen = Lijnen;
 
         await _workflow.SaveDraftAsync(GeselecteerdeFactuur);
-        _toast.Success("Factuur opgeslagen.");
+        _toast.Success("Bestelbon opgeslagen.");
         await InitializeAsync();
     }
 
@@ -117,7 +117,7 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
     {
         if (GeselecteerdeFactuur is null) return;
         await _workflow.MarkeerKlaarVoorExportAsync(GeselecteerdeFactuur.Id);
-        _toast.Success("Factuur staat klaar voor export.");
+        _toast.Success("Bestelbon staat klaar voor export.");
         await InitializeAsync();
     }
 
@@ -129,7 +129,7 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
         // instead of a silent crash swallowed by AsyncRelayCommand.
         if (GeselecteerdeFactuur.Status != FactuurStatus.KlaarVoorExport)
         {
-            _toast.Error("Markeer de factuur eerst als 'Klaar voor export'.");
+            _toast.Error("Markeer de bestelbon eerst als 'Klaar voor export'.");
             return;
         }
 
@@ -158,7 +158,7 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
     {
         if (GeselecteerdeFactuur is null) return;
         await _workflow.MarkeerBetaaldAsync(GeselecteerdeFactuur.Id);
-        _toast.Success("Factuur gemarkeerd als betaald.");
+        _toast.Success("Bestelbon gemarkeerd als betaald.");
         await InitializeAsync();
     }
 }

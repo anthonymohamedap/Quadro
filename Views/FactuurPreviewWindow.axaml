@@ -8,7 +8,7 @@
     Height="620"
     MinWidth="760"
     MinHeight="520"
-    Title="Factuur preview"
+    Title="Bestelbon preview"
     WindowStartupLocation="CenterOwner">
 
     <Grid RowDefinitions="Auto,Auto,*,Auto" Background="#F7F8FA">

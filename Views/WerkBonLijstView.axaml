@@ -14,12 +14,6 @@
 	<!-- Resources -->
 	<UserControl.Resources>
 		<conv:JaarConverter x:Key="JaarConv"/>
-		<conv:BoolToThicknessConverter x:Key="BoolToThicknessSlide"
-									   WhenTrue="0"
-									   WhenFalse="520,0,-520,0"/>
-		<conv:BoolToDoubleConverter x:Key="BoolToOpacity"
-									WhenTrue="1"
-									WhenFalse="0"/>
 	</UserControl.Resources>
 
 	<Grid RowDefinitions="Auto,*">
@@ -118,11 +112,12 @@
 					</Grid>
 
 					<!-- Headers -->
-					<Grid ColumnDefinitions="0.7*,1.8*,1.2*,1.3*">
+					<Grid ColumnDefinitions="0.5*,1.8*,1.2*,1.1*,Auto">
 						<TextBlock Text="Bon" Grid.Column="0" FontWeight="Bold" TextAlignment="Center"/>
 						<TextBlock Text="Klant" Grid.Column="1" FontWeight="Bold" TextAlignment="Center"/>
 						<TextBlock Text="Status" Grid.Column="2" FontWeight="Bold" TextAlignment="Center"/>
 						<TextBlock Text="Aangemaakt" Grid.Column="3" FontWeight="Bold" TextAlignment="Center"/>
+						<TextBlock Text="" Grid.Column="4" Width="90"/>
 					</Grid>
 
 					<Border Background="White"
@@ -138,20 +133,36 @@
 
 							<ListBox.ItemTemplate>
 								<DataTemplate x:DataType="m:WerkBon">
-									<Grid ColumnDefinitions="0.7*,1.8*,1.2*,1.3*">
+									<Grid ColumnDefinitions="0.5*,1.8*,1.2*,1.1*,Auto"
+										  Margin="0,2">
 										<TextBlock Grid.Column="0"
 												   Text="{Binding Id}"
 												   FontWeight="Bold"
-												   TextAlignment="Center"/>
+												   TextAlignment="Center"
+												   VerticalAlignment="Center"/>
 										<TextBlock Grid.Column="1"
 												   Text="{Binding Offerte.Klant.Achternaam}"
-												   TextAlignment="Center"/>
+												   TextAlignment="Center"
+												   VerticalAlignment="Center"/>
 										<TextBlock Grid.Column="2"
 												   Text="{Binding Status}"
-												   TextAlignment="Center"/>
+												   TextAlignment="Center"
+												   VerticalAlignment="Center"/>
 										<TextBlock Grid.Column="3"
 												   Text="{Binding AangemaaktOp, StringFormat='dd/MM/yyyy'}"
-												   TextAlignment="Center"/>
+												   TextAlignment="Center"
+												   VerticalAlignment="Center"/>
+										<Button Grid.Column="4"
+												Content="👁 Bekijk"
+												Width="85"
+												Padding="6,4"
+												Background="#F5C242"
+												Foreground="#222"
+												FontWeight="Bold"
+												CornerRadius="6"
+												Cursor="Hand"
+												Command="{Binding #Root.((vm:WerkBonLijstViewModel)DataContext).SelecteerWerkBonCommand}"
+												CommandParameter="{Binding}"/>
 									</Grid>
 								</DataTemplate>
 							</ListBox.ItemTemplate>
@@ -166,7 +177,27 @@
 				</StackPanel>
 			</ScrollViewer>
 
-			<!-- DETAIL PANEL -->
+			<!-- DETAIL PANEL: lege staat -->
+			<Border Grid.Column="1"
+					Width="300"
+					Padding="24"
+					Background="White"
+					CornerRadius="10"
+					BorderBrush="#E0E0E0"
+					BorderThickness="1"
+					IsVisible="{Binding !IsDetailOpen}"
+					VerticalAlignment="Top">
+				<StackPanel Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,40">
+					<TextBlock Text="📋" FontSize="36" HorizontalAlignment="Center"/>
+					<TextBlock Text="Klik op '👁 Bekijk' naast een werkbon om de details te openen."
+							   Foreground="#666"
+							   TextWrapping="Wrap"
+							   TextAlignment="Center"
+							   FontSize="13"/>
+				</StackPanel>
+			</Border>
+
+			<!-- DETAIL PANEL: geselecteerde werkbon -->
 			<Border Grid.Column="1"
 					Width="520"
 					Padding="24"
@@ -174,41 +205,30 @@
 					CornerRadius="10"
 					BorderBrush="#E0E0E0"
 					BorderThickness="1"
-					IsHitTestVisible="{Binding IsDetailOpen}">
-
-				<Border.Transitions>
-					<Transitions>
-						<ThicknessTransition Property="Margin" Duration="0:0:0.2"/>
-						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
-					</Transitions>
-				</Border.Transitions>
-
-				<Border.Margin>
-					<Binding Path="IsDetailOpen" Converter="{StaticResource BoolToThicknessSlide}"/>
-				</Border.Margin>
-				<Border.Opacity>
-					<Binding Path="IsDetailOpen" Converter="{StaticResource BoolToOpacity}"/>
-				</Border.Opacity>
+					IsVisible="{Binding IsDetailOpen}">
 
 				<ScrollViewer VerticalScrollBarVisibility="Auto">
 					<StackPanel Spacing="14">
 
-						<TextBlock Text="📌 Werkbon details"
-								   FontSize="22"
-								   FontWeight="Bold"
-								   Foreground="Black"/>
-
-						<!-- Als niets geselecteerd -->
-						<Border Background="#FFF8E1"
-								CornerRadius="8"
-								Padding="10"
-								IsVisible="{Binding !IsDetailOpen}">
-							<TextBlock Text="Selecteer links een werkbon om details te zien."
-									   Foreground="Black"/>
-						</Border>
+						<DockPanel>
+							<TextBlock Text="📌 Werkbon details"
+									   FontSize="22"
+									   FontWeight="Bold"
+									   Foreground="Black"
+									   VerticalAlignment="Center"/>
+							<Button DockPanel.Dock="Right"
+									Content="✕ Sluiten"
+									Command="{Binding SluitDetailCommand}"
+									Background="Transparent"
+									Foreground="#888"
+									FontSize="12"
+									Padding="6,4"
+									VerticalAlignment="Center"
+									HorizontalAlignment="Right"/>
+						</DockPanel>
 
 						<!-- Details -->
-						<StackPanel IsVisible="{Binding IsDetailOpen}" Spacing="16">
+						<StackPanel Spacing="16">
 
 							<Grid ColumnDefinitions="2*,3*"
 								  RowDefinitions="Auto,Auto,Auto,Auto"
@@ -314,6 +334,7 @@
 							</Border>
 
 						</StackPanel>
+
 					</StackPanel>
 				</ScrollViewer>
 			</Border>

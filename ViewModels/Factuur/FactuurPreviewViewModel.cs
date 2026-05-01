@@ -95,7 +95,7 @@ public partial class FactuurPreviewViewModel : ObservableObject
     [RelayCommand]
     private void BewaarBijOfferte()
     {
-        _toast.Success("Factuur blijft gekoppeld aan deze offerte.");
+        _toast.Success("Bestelbon blijft gekoppeld aan deze offerte.");
         RequestClose?.Invoke();
     }
 
@@ -155,12 +155,13 @@ public partial class FactuurPreviewViewModel : ObservableObject
     private async Task ReloadFactuurAsync()
     {
         Factuur = await _workflow.GetFactuurAsync(_factuurId)
-            ?? throw new InvalidOperationException("Factuur niet gevonden.");
+            ?? throw new InvalidOperationException("Bestelbon niet gevonden.");
     }
 
     private async Task EnsurePreviewAsync()
     {
-        var previewFolder = Path.Combine(AppContext.BaseDirectory, "preview");
+        // AppContext.BaseDirectory can be read-only on installed apps → use user temp folder
+        var previewFolder = Path.Combine(Path.GetTempPath(), "QuadroPreview");
         Directory.CreateDirectory(previewFolder);
 
         var result = await _exportService.GeneratePreviewAsync(Factuur.Id, ExportFormaat.Pdf, previewFolder);

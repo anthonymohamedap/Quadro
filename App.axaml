@@ -9,6 +9,9 @@
 		<FluentTheme />
 		<huskui:HuskuiTheme />
 		<StyleInclude Source="avares://QuadroApp/Styles/QuadroTheme.axaml" />
+		<Style Selector="NumericUpDown">
+			<Setter Property="AllowSpin" Value="False"/>
+		</Style>
 	</Application.Styles>
 
 	<Application.DataTemplates>
