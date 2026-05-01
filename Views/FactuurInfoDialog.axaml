@@ -8,19 +8,19 @@
     Height="430"
     MinWidth="520"
     MinHeight="400"
-    Title="Factuurgegevens"
+    Title="Bestelbon gegevens"
     WindowStartupLocation="CenterOwner">
 
     <Border Padding="20" Background="#F7F8FA">
         <StackPanel Spacing="14">
             <StackPanel Spacing="4">
-                <TextBlock Text="Extra factuurinfo" FontSize="20" FontWeight="Bold"/>
+                <TextBlock Text="Extra bestelbon info" FontSize="20" FontWeight="Bold"/>
                 <TextBlock Text="{Binding FactuurNummer}" FontWeight="SemiBold" Foreground="#123B68"/>
                 <TextBlock Text="{Binding KlantNaam}" Foreground="#5F6B7A"/>
             </StackPanel>
 
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="10">
-                <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Factuurdatum"/>
+                <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Besteldatum"/>
                 <DatePicker Grid.Row="0" Grid.Column="1" SelectedDate="{Binding FactuurDatum, Mode=TwoWay}"/>
 
                 <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Vervaldatum"/>
@@ -48,7 +48,7 @@
                 <TextBlock Text="{Binding ValidatieFout, TargetNullValue=''}" Foreground="#9B1C1C" TextWrapping="Wrap"/>
             </Border>
 
-            <TextBlock Text="Na bevestigen wordt meteen een PDF-preview geopend."
+            <TextBlock Text="Na bevestigen wordt meteen een PDF-preview van de bestelbon geopend."
                        Foreground="#5F6B7A"/>
 
             <StackPanel Orientation="Horizontal"

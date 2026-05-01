@@ -6,6 +6,8 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using QuadroApp.Data;
@@ -21,6 +23,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
+using Velopack;
 namespace QuadroApp;
 
 public partial class App : Application
@@ -64,13 +67,21 @@ public partial class App : Application
             builder.SetMinimumLevel(LogLevel.Information);
         });
 
-        // 🔹 Database
+        // 🔹 Database — connection string comes from appsettings.json when present,
+        //   falls back to local SQLite so existing installs keep working without any config file.
+        //   Provider is detected automatically from the connection string:
+        //     "Host=..."   → PostgreSQL (shared LAN server, both PCs)
+        //     "Data Source=..." → SQLite (local single-PC, default)
+        var connectionString = GetConnectionString();
+        var isPostgres = IsPostgresConnectionString(connectionString);
+
         services.AddDbContextFactory<AppDbContext>(options =>
         {
-            options.UseSqlite("Data Source=quadro.db");
+            if (isPostgres)
+                options.UseNpgsql(connectionString);
+            else
+                options.UseSqlite(connectionString);
         });
-
-        var dbPath = Path.GetFullPath("quadro.db");
 
         // ==============================
         // 3️⃣ NAVIGATION & UI SERVICES
@@ -155,7 +166,6 @@ public partial class App : Application
 
         Services = services.BuildServiceProvider();
         _logger = Services.GetRequiredService<ILogger<App>>();
-        _logger.LogInformation("[DB] SQLite path = {DbPath}", dbPath);
 
         // ==============================
         // 6️⃣ DATABASE INITIALIZATION
@@ -184,8 +194,150 @@ public partial class App : Application
             };
         }
 
+        // Check for updates in the background — never blocks startup, never crashes the app.
+        _ = CheckForUpdatesAsync();
+
         base.OnFrameworkInitializationCompleted();
     }
+    // ==============================
+    // 🔄 AUTO-UPDATE (Velopack)
+    // ==============================
+
+    /// <summary>
+    /// Silently checks GitHub Releases for a newer version.
+    /// Downloads it in the background and shows a toast when ready.
+    /// The update is applied on the next app restart — nothing interrupts the user.
+    /// </summary>
+    private static async Task CheckForUpdatesAsync()
+    {
+        try
+        {
+            // ⚠️ Replace with your actual GitHub repo URL before the first release.
+            const string repoUrl = "https://github.com/anthonymohamedap/Quadro";
+
+            var mgr = new UpdateManager(repoUrl);
+
+            // Not running as a Velopack-installed app (e.g. dev machine) → skip silently.
+            if (!mgr.IsInstalled) return;
+
+            var newVersion = await mgr.CheckForUpdatesAsync();
+            if (newVersion == null) return;
+
+            _logger.LogInformation("[Update] Nieuwe versie beschikbaar: {Version}", newVersion.TargetFullRelease.Version);
+
+            await mgr.DownloadUpdatesAsync(newVersion);
+
+            _logger.LogInformation("[Update] Download klaar. Wordt toegepast bij volgende herstart.");
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var toast = Services.GetService<IToastService>();
+                toast?.Info("🔄 Update gedownload — herstart de app om bij te werken.");
+            });
+        }
+        catch (Exception ex)
+        {
+            // Update check should never crash the app — log and move on.
+            _logger.LogWarning(ex, "[Update] Update-controle mislukt (niet kritiek): {Message}", ex.Message);
+        }
+    }
+
+    // ==============================
+    // ⚙️ CONFIGURATION
+    // ==============================
+
+    /// <summary>
+    /// Reads the DB connection string from appsettings.json if present.
+    /// Falls back to a platform-appropriate SQLite path so the app works
+    /// on both Windows and macOS without any config file.
+    ///
+    /// To switch to PostgreSQL on Thursday:
+    ///   Place an appsettings.json next to the exe with:
+    ///   { "ConnectionStrings": { "Default": "Host=192.168.1.X;Database=quadrodb;Username=quadro;Password=XXXX" } }
+    ///   Then swap UseSqlite → UseNpgsql in the DI registration.
+    /// </summary>
+    private static string GetConnectionString()
+    {
+        try
+        {
+            var config = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+                .Build();
+
+            var cs = config.GetConnectionString("Default");
+            if (!string.IsNullOrWhiteSpace(cs))
+                return cs;
+        }
+        catch (Exception ex)
+        {
+            // Config load failure is non-fatal — fall back to SQLite.
+            // _logger is not yet available here (called during DI setup), so write directly.
+            File.AppendAllText("crash.log", $"[Config] appsettings.json lezen mislukt: {ex.Message}\n");
+        }
+
+        return GetDefaultSqliteConnectionString();
+    }
+
+    /// <summary>
+    /// Returns a SQLite connection string pointing to the correct user-writable
+    /// data folder on the current platform:
+    ///   Windows → %LOCALAPPDATA%\QuadroApp\quadro.db
+    ///   macOS   → ~/Library/Application Support/QuadroApp/quadro.db
+    ///
+    /// On macOS the app bundle's own folder is read-only, so we can never store
+    /// the database next to the exe. This method always uses the OS data folder.
+    ///
+    /// One-time migration: if an old quadro.db exists next to the exe (from an
+    /// earlier install) it is moved to the new location automatically.
+    /// </summary>
+    /// <summary>
+    /// Returns true when the connection string targets PostgreSQL.
+    /// The Npgsql connection string always contains "Host=" while SQLite uses "Data Source=".
+    /// </summary>
+    private static bool IsPostgresConnectionString(string cs)
+        => cs.Contains("Host=", StringComparison.OrdinalIgnoreCase);
+
+    private static string GetDefaultSqliteConnectionString()
+    {
+        // Platform-appropriate data directory
+        string dataDir;
+        if (OperatingSystem.IsMacOS())
+        {
+            // macOS convention: ~/Library/Application Support/QuadroApp
+            dataDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.Personal),
+                "Library", "Application Support", "QuadroApp");
+        }
+        else
+        {
+            // Windows: C:\Users\<user>\AppData\Local\QuadroApp
+            dataDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "QuadroApp");
+        }
+
+        Directory.CreateDirectory(dataDir);
+        var newDbPath = Path.Combine(dataDir, "quadro.db");
+
+        // One-time migration from the old location (next to the exe).
+        // _logger is not yet available here — write directly to crash.log on failure.
+        var oldDbPath = Path.Combine(AppContext.BaseDirectory, "quadro.db");
+        if (!File.Exists(newDbPath) && File.Exists(oldDbPath))
+        {
+            try
+            {
+                File.Move(oldDbPath, newDbPath);
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText("crash.log", $"[DB] Kon quadro.db niet verplaatsen: {ex.Message}\n");
+            }
+        }
+
+        return $"Data Source={newDbPath}";
+    }
+
     private static void LogException(Exception? ex)
     {
         if (ex == null) return;
@@ -227,21 +379,52 @@ public partial class App : Application
         var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
         await using var db = await factory.CreateDbContextAsync();
 
-        // Ensure DB exists (for new installs)
-        await db.Database.EnsureCreatedAsync();
+        if (db.Database.IsNpgsql())
+            await InitializePostgresDatabaseAsync(db);
+        else
+            await InitializeSqliteDatabaseAsync(db);
 
-        // Apply pending migrations safely.
-        // For DBs created via EnsureCreatedAsync (no __EFMigrationsHistory),
-        // first mark all previously-existing migrations as applied so we don't re-run them.
-        await ApplyPendingMigrationsAsync(db);
-
-        // Seed data (single source of truth)
+        // Seed static reference data (idempotent — safe to run on every launch)
         DbSeeder.SeedDemoData(db);
 
         _logger.LogInformation("[DB] Klanten={K}, TypeLijsten={L}, Offertes={O}",
             await db.Klanten.CountAsync(),
             await db.TypeLijsten.CountAsync(),
             await db.Offertes.CountAsync());
+    }
+
+    /// <summary>
+    /// PostgreSQL initialisation — always a fresh install (data is migrated from SQLite
+    /// using the migration script on Thursday). EnsureCreatedAsync builds the entire
+    /// schema from the EF model using PostgreSQL-native syntax (SERIAL, BOOLEAN, etc.).
+    /// No migration history is needed because we never upgrade an existing PostgreSQL DB
+    /// via EF migrations — schema changes are applied as raw SQL patches instead.
+    /// </summary>
+    private static async Task InitializePostgresDatabaseAsync(AppDbContext db)
+    {
+        try
+        {
+            await db.Database.EnsureCreatedAsync();
+            _logger.LogInformation("[DB] PostgreSQL schema gecontroleerd/aangemaakt.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[DB] Fout bij PostgreSQL initialisatie: {Message}", ex.Message);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// SQLite initialisation — existing path with preExistingMigrations hack and
+    /// defensive ALTER TABLE patches. Unchanged so existing installs keep working.
+    /// </summary>
+    private static async Task InitializeSqliteDatabaseAsync(AppDbContext db)
+    {
+        // Ensure DB file exists (new installs)
+        await db.Database.EnsureCreatedAsync();
+
+        // Apply pending migrations safely.
+        await ApplyPendingMigrationsAsync(db);
     }
 
     /// <summary>

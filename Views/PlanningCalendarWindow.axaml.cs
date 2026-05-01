@@ -38,6 +38,10 @@ public partial class PlanningCalendarWindow : Window
             vm.SelectedDate = d.Date;
     }
 
+    // ───────── SLUITEN KNOP ─────────
+
+    private void SluitButton_Click(object? sender, RoutedEventArgs e) => Close();
+
     // ───────── CONTEXT MENU HANDLERS ─────────
 
     private async void OnHerplanMenuClick(object? sender, RoutedEventArgs e)

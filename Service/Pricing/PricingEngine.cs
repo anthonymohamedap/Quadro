@@ -37,7 +37,8 @@ public sealed class PricingEngine
             decimal lineEx;
             if (r.AfgesprokenPrijsExcl.HasValue)
             {
-                lineEx = r.AfgesprokenPrijsExcl.Value;
+                // Stored value is now entered incl. BTW by the user → divide to get excl.
+                lineEx = r.AfgesprokenPrijsExcl.Value / (1m + btwFactor);
             }
             else
             {
@@ -85,22 +86,24 @@ public sealed class PricingEngine
         }
 
         var kortingExcl = totaalRegelsEx * (offerte.KortingPct / 100m);
+        // MeerPrijsIncl is entered incl. BTW → split into excl + BTW parts
         var meerPrijsIncl = offerte.MeerPrijsIncl;
         var meerPrijsExcl = meerPrijsIncl / (1m + btwFactor);
-        var meerPrijsBtw = meerPrijsIncl - meerPrijsExcl;
 
+        // meerPrijsExcl is part of the taxable base; btwRegels already includes BTW on it.
+        // Do NOT add meerPrijsBtw separately — that would double-count it.
         var nieuwSubtotaalEx = totaalRegelsEx - kortingExcl + meerPrijsExcl;
         nieuwSubtotaalEx = Math.Max(0m, nieuwSubtotaalEx);
 
         var btwRegels = nieuwSubtotaalEx * btwFactor;
-        var totaalIncl = nieuwSubtotaalEx + btwRegels + meerPrijsBtw;
+        var totaalIncl = nieuwSubtotaalEx + btwRegels;  // = (regels - korting + meerExcl) * 1.21
 
         var totaalInclRound = Math.Round(totaalIncl, 2);
 
         var output = new PricingResult
         {
             SubtotaalExBtw = Math.Round(nieuwSubtotaalEx, 2),
-            BtwBedrag = Math.Round(btwRegels + meerPrijsBtw, 2),
+            BtwBedrag = Math.Round(btwRegels, 2),
             TotaalInclBtw = totaalInclRound,
             VoorschotBedrag = offerte.VoorschotBedrag > totaalInclRound ? totaalInclRound : offerte.VoorschotBedrag
         };

@@ -34,14 +34,14 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
     [ObservableProperty] private bool isBusy;
 
     public string FactuurButtonText =>
-        GekoppeldeFactuur is null ? "Factuur aanmaken" : "Factuur bekijken";
+        GekoppeldeFactuur is null ? "Bestelbon aanmaken" : "Bestelbon bekijken";
 
     public string FactuurStatusText
     {
         get
         {
             if (GekoppeldeFactuur is not null)
-                return $"Factuur {GekoppeldeFactuur.FactuurNummer} ({GekoppeldeFactuur.Status})";
+                return $"Bestelbon {GekoppeldeFactuur.FactuurNummer} ({GekoppeldeFactuur.Status})";
 
             if (GekoppeldeWerkBon is null)
                 return "Nog geen factuur voor deze offerte.";
@@ -204,13 +204,16 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
             await using var db = await _dbFactory.CreateDbContextAsync();
             await LoadFactuurContextAsync(db, _getOfferteId());
 
+            var wasNieuw = GekoppeldeFactuur is null;
             var factuur = GekoppeldeFactuur;
             if (factuur is null || factuur.Status == FactuurStatus.Draft)
                 factuur = await _factuurWorkflow.MaakFactuurVanOfferteAsync(_getOfferteId());
             else
                 factuur = await _factuurWorkflow.GetFactuurAsync(factuur.Id) ?? factuur;
 
-            if (factuur.Status == FactuurStatus.Draft)
+            // Toon de info-dialog alleen bij aanmaak van een gloednieuwe factuur.
+            // Bij heropenen van een bestaande Draft direct naar de preview — geen extra klik nodig.
+            if (wasNieuw && factuur.Status == FactuurStatus.Draft)
             {
                 var bijgewerkteFactuur = await ShowFactuurInfoDialogAsync(factuur);
                 if (bijgewerkteFactuur is null) return;
@@ -227,7 +230,7 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         }
         catch (Exception ex)
         {
-            await _dialogs.ShowErrorAsync("Factuur openen mislukt", ex.GetBaseException().Message);
+            await _dialogs.ShowErrorAsync("Bestelbon openen mislukt", ex.GetBaseException().Message);
         }
         finally
         {
@@ -253,7 +256,7 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         if (owner is null) throw new InvalidOperationException("Hoofdvenster niet gevonden.");
 
         var factuur = await _factuurWorkflow.GetFactuurAsync(factuurId)
-            ?? throw new InvalidOperationException("Factuur niet gevonden.");
+            ?? throw new InvalidOperationException("Bestelbon niet gevonden.");
 
         var vm = new FactuurPreviewViewModel(
             factuur.Id, factuur, _factuurWorkflow,

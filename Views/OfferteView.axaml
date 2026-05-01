@@ -285,7 +285,7 @@
                                            Grid.Column="1"
                                            Value="{Binding SelectedRegel.HoogteCm, Mode=TwoWay}"/>
 
-							<TextBlock Grid.Row="6" Grid.Column="0" Text="Afgesproken prijs (excl.)"/>
+							<TextBlock Grid.Row="6" Grid.Column="0" Text="Afgesproken prijs (incl. BTW)"/>
 							<TextBox Grid.Row="6"
                                      Grid.Column="1"
                                      Text="{Binding SelectedRegel.AfgesprokenPrijsExcl, Mode=TwoWay}"/>

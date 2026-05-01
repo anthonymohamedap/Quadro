@@ -67,10 +67,10 @@
 
       <Border Grid.Column="1" Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Padding="16">
         <StackPanel Spacing="12">
-          <TextBlock Text="Factuurdetails" FontSize="20" FontWeight="Bold"/>
+          <TextBlock Text="Bestelbon details" FontSize="20" FontWeight="Bold"/>
 
           <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
-            <TextBlock Text="Factuurdatum"/>
+            <TextBlock Text="Besteldatum"/>
             <DatePicker Grid.Column="1" SelectedDate="{Binding FactuurDatum, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
 
             <TextBlock Grid.Row="1" Text="Vervaldatum"/>
