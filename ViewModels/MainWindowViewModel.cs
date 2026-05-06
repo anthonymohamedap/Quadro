@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using QuadroApp.Service.Interfaces;
 using System.ComponentModel;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace QuadroApp.ViewModels
@@ -12,6 +13,17 @@ namespace QuadroApp.ViewModels
 
         public IToastService Toast => _toast;
         public IAsyncRelayCommand GoLeveranciersCommand { get; }
+
+        /// <summary>Displays the running assembly version, e.g. "v1.0.4".</summary>
+        public static string AppVersion
+        {
+            get
+            {
+                var v = Assembly.GetExecutingAssembly()
+                                .GetName().Version;
+                return v is null ? "v?" : $"v{v.Major}.{v.Minor}.{v.Build}";
+            }
+        }
 
         private object? _currentViewModel;
         public object? CurrentViewModel
