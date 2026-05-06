@@ -4,7 +4,10 @@
     xmlns:huskui="https://github.com/d3ara1n/Huskui.Avalonia"
     xmlns:vm="clr-namespace:QuadroApp.ViewModels"
     x:Class="QuadroApp.MainWindow"
-    x:DataType="vm:MainWindowViewModel">
+    x:DataType="vm:MainWindowViewModel"
+    Title="{Binding AppVersion, StringFormat='QuadroApp {0}'}"
+    Width="1200"
+    Height="820">
 
 	<Panel>
 		<ContentControl Content="{Binding CurrentViewModel}" />

@@ -15,7 +15,7 @@ namespace QuadroApp.ViewModels
         public IAsyncRelayCommand GoLeveranciersCommand { get; }
 
         /// <summary>Displays the running assembly version, e.g. "v1.0.4".</summary>
-        public static string AppVersion
+        public string AppVersion
         {
             get
             {
