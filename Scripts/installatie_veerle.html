@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>QuadroApp — Installatiegids</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; font-size: 14px; color: #222; background: #f5f5f5; padding: 32px; }
+  .page { max-width: 860px; margin: 0 auto; background: white; padding: 48px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+
+  /* Title */
+  .title-block { border-bottom: 5px solid #F5C242; padding-bottom: 16px; margin-bottom: 32px; }
+  .title-block h1 { font-size: 42px; color: #444A50; line-height: 1; }
+  .title-block p  { font-size: 18px; color: #666; margin-top: 6px; }
+  .title-meta { margin-top: 12px; font-size: 13px; color: #999; }
+
+  /* Section headers */
+  .section-header { background: #444A50; color: #F5C242; font-weight: bold; font-size: 15px;
+    padding: 10px 16px; border-radius: 6px; margin: 36px 0 20px; }
+  .section-sub { font-size: 13px; font-weight: normal; opacity: 0.85; }
+
+  /* Step cards */
+  .step { display: flex; gap: 0; margin-bottom: 14px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+  .step-num { background: #F5C242; color: #444A50; font-weight: bold; font-size: 22px;
+    min-width: 52px; display: flex; align-items: center; justify-content: center; padding: 12px 8px; flex-shrink: 0; }
+  .step-body { padding: 14px 18px; background: #fff; flex: 1; }
+  .step-body strong.title { font-size: 15px; display: block; margin-bottom: 6px; color: #222; }
+  .step-body p { font-size: 13.5px; color: #444; margin-bottom: 6px; line-height: 1.6; }
+  .step-body ul { margin: 6px 0 6px 0; padding-left: 20px; }
+  .step-body ul li { margin-bottom: 5px; color: #444; font-size: 13.5px; line-height: 1.6; }
+
+  /* Code / commando blokken */
+  .code { background: #f0f0f0; border-left: 4px solid #F5C242; padding: 10px 16px;
+    font-family: 'Courier New', monospace; font-size: 12.5px; color: #1a1a1a;
+    margin: 8px 0; border-radius: 0 4px 4px 0; white-space: pre; overflow-x: auto; }
+  .code-label { font-size: 11px; color: #888; margin-top: 8px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Note boxes */
+  .note        { border: 1px solid #ddd; border-radius: 6px; padding: 10px 14px; margin: 10px 0; font-size: 13px; line-height: 1.6; }
+  .note-info   { background: #FFF8E7; border-color: #F5C242; }
+  .note-ok     { background: #D1FAE5; border-color: #6EE7B7; }
+  .note-warn   { background: #FEE2E2; border-color: #FCA5A5; }
+  .note-blue   { background: #EFF6FF; border-color: #93C5FD; }
+
+  /* Download blok */
+  .downloads { border: 2px solid #F5C242; border-radius: 10px; padding: 20px 24px; margin: 24px 0; background: #FFFBF0; }
+  .downloads h2 { font-size: 16px; color: #444A50; margin-bottom: 14px; }
+  .dl-item { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; border-bottom: 1px solid #f0e0a0; }
+  .dl-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .dl-num { background: #444A50; color: #F5C242; font-weight: bold; font-size: 16px;
+    width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .dl-info strong { font-size: 14px; display: block; margin-bottom: 3px; }
+  .dl-info span { font-size: 12.5px; color: #666; }
+  .dl-info a { color: #1d6fa4; }
+
+  /* Wachtwoord box */
+  .password-box { border: 2px dashed #F5C242; border-radius: 8px; padding: 14px 18px; margin: 12px 0; background: #FFFBF0; }
+  .password-box strong { display: block; margin-bottom: 6px; font-size: 14px; }
+  .password-line { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
+  .password-line span { font-size: 13px; color: #555; min-width: 180px; }
+  .password-line .blank { border-bottom: 2px solid #aaa; flex: 1; height: 20px; }
+
+  /* Checklist */
+  .checklist { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; margin: 16px 0; }
+  .checklist-row { display: flex; border-bottom: 1px solid #eee; }
+  .checklist-row:last-child { border-bottom: none; }
+  .checklist-check { width: 48px; min-width: 48px; background: #f9f9f9; display: flex; align-items: center; justify-content: center; font-size: 20px; padding: 10px; }
+  .checklist-label { padding: 12px 16px; font-size: 13.5px; flex: 1; line-height: 1.5; }
+  .checklist-label small { display: block; color: #888; font-size: 12px; margin-top: 2px; }
+
+  /* Troubleshoot */
+  .trouble-item { border: 1px solid #eee; border-radius: 8px; padding: 14px 18px; margin-bottom: 12px; }
+  .trouble-item h3 { color: #c0392b; font-size: 14px; margin-bottom: 8px; }
+  .trouble-item p { font-size: 13px; color: #444; line-height: 1.6; margin-bottom: 6px; }
+  .trouble-item p:last-child { margin-bottom: 0; }
+
+  /* Terminal uitleg box */
+  .terminal-tip { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 14px 18px; margin: 10px 0; font-size: 13px; }
+  .terminal-tip .tip-title { color: #F5C242; font-weight: bold; margin-bottom: 8px; }
+  .terminal-tip .tip-step { color: #a6e3a1; margin-bottom: 4px; }
+
+  /* IP notitie */
+  .ip-note { background: #f8f8ff; border: 2px solid #93C5FD; border-radius: 8px; padding: 14px 18px; margin: 12px 0; }
+  .ip-note strong { display: block; margin-bottom: 8px; }
+  .ip-blank { border-bottom: 2px solid #93C5FD; display: inline-block; width: 200px; height: 22px; vertical-align: bottom; }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .page { box-shadow: none; padding: 24px; }
+    .step { break-inside: avoid; }
+    .section-header { break-before: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- TITLE -->
+  <div class="title-block">
+    <h1>QuadroApp</h1>
+    <p>Stap-voor-stap installatiegids — Veerle's Macs</p>
+    <div class="title-meta">Geschatte tijd: ± 60–90 minuten &nbsp;|&nbsp; Beide Macs moeten op hetzelfde wifi-netwerk zitten</div>
+  </div>
+
+  <!-- INTRO -->
+  <p style="font-size:14px; color:#444; line-height:1.8; margin-bottom:24px;">
+    Deze gids legt stap voor stap uit hoe je QuadroApp installeert op twee Macs zodat ze dezelfde gegevens delen.
+    Je hebt geen technische kennis nodig — volg gewoon elke stap in volgorde.
+    <strong>Lees elke stap volledig voor je iets doet.</strong>
+  </p>
+
+  <!-- DOWNLOADS EERST -->
+  <div class="downloads">
+    <h2>📥 Download deze 3 dingen vóór je begint</h2>
+    <p style="font-size:13px; color:#666; margin-bottom:14px;">Download alles op PC 1 (de hoofdcomputer) terwijl je nog internet hebt.</p>
+
+    <div class="dl-item">
+      <div class="dl-num">1</div>
+      <div class="dl-info">
+        <strong>Postgres.app — de databasesoftware</strong>
+        <span>Ga naar <a href="https://postgresapp.com" target="_blank"><strong>postgresapp.com</strong></a> → klik op de grote downloadknop → sla het .dmg bestand op</span>
+      </div>
+    </div>
+
+    <div class="dl-item">
+      <div class="dl-num">2</div>
+      <div class="dl-info">
+        <strong>QuadroApp — de applicatie zelf</strong>
+        <span>Ga naar <a href="https://github.com/anthonymohamedap/Quadro/releases" target="_blank"><strong>github.com/anthonymohamedap/Quadro/releases</strong></a> → klik op het bestand <strong>QuadroApp-osx-arm64.zip</strong> (of .pkg) om te downloaden</span>
+      </div>
+    </div>
+
+    <div class="dl-item">
+      <div class="dl-num">3</div>
+      <div class="dl-info">
+        <strong>MigrationTool — eenmalig hulpprogramma voor het kopiëren van bestaande gegevens</strong>
+        <span>Op dezelfde downloadpagina → klik op <strong>MigrationTool-osx-arm64</strong> om te downloaden</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="note note-blue">
+    💡 <strong>Wat is een database?</strong> Stel je voor dat QuadroApp een boekhouder is. De <em>database</em> is het archief waar de boekhouder alles in bewaart.
+    Postgres is dat archief. Door het archief op één Mac te zetten en beide Macs ernaar te laten kijken, zien ze altijd dezelfde gegevens — zoals twee mensen die hetzelfde Google-document openen.
+  </div>
+
+  <!-- DEEL 1 -->
+  <div class="section-header">DEEL 1 — PC 1 &nbsp;<span class="section-sub">(de Mac die het vaakst aanstaat — dit wordt de "server")</span></div>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <strong class="title">Postgres.app installeren</strong>
+      <ul>
+        <li>Open het <strong>Postgres.dmg</strong> bestand dat je gedownload hebt (dubbelklik erop in je Downloads-map)</li>
+        <li>Sleep het Postgres-icoontje naar de map <strong>Programma's</strong> (Applications)</li>
+        <li>Open daarna <strong>Programma's</strong> en dubbelklik op <strong>Postgres</strong></li>
+        <li>Klik op <strong>"Initialize"</strong> — dit maakt de database aan</li>
+        <li>Klik daarna op <strong>"Start"</strong></li>
+      </ul>
+      <div class="note note-ok">✅ Als je rechtsboven in de menubalk een olifantje 🐘 ziet staan, draait Postgres correct.</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <strong class="title">Terminal openen</strong>
+      <p>Terminal is een programma waarmee je tekst-commando's typt naar de computer. Het ziet er technisch uit, maar je hoeft alleen de exacte tekst te kopiëren en te plakken.</p>
+      <div class="terminal-tip">
+        <div class="tip-title">Hoe open je Terminal?</div>
+        <div class="tip-step">1. Druk tegelijk op <strong>Command (⌘) + Spatiebalk</strong></div>
+        <div class="tip-step">2. Typ: <strong>Terminal</strong></div>
+        <div class="tip-step">3. Druk op <strong>Enter</strong></div>
+        <div class="tip-step" style="margin-top:6px; color:#cba6f7;">→ Er opent een zwart of wit venster met een knipperende cursor. Dat is Terminal.</div>
+      </div>
+      <div class="note note-info">ℹ️ Laat Terminal open — je hebt het nodig voor de volgende stappen.</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <strong class="title">Database en gebruiker aanmaken</strong>
+      <p>Kopieer de onderstaande tekst, plak hem in Terminal (Command+V) en druk op <strong>Enter</strong>. Dit maakt een aparte database en een gebruiker aan voor QuadroApp.</p>
+      <div class="code-label">Kopieer en plak dit in Terminal:</div>
+      <div class="code">/Applications/Postgres.app/Contents/Versions/latest/bin/psql -U $USER -c "CREATE DATABASE quadrodb;" && \
+/Applications/Postgres.app/Contents/Versions/latest/bin/psql -U $USER -c "CREATE USER quadro WITH PASSWORD 'KiesEenWachtwoord';" && \
+/Applications/Postgres.app/Contents/Versions/latest/bin/psql -U $USER -c "GRANT ALL PRIVILEGES ON DATABASE quadrodb TO quadro;" && \
+/Applications/Postgres.app/Contents/Versions/latest/bin/psql -U $USER quadrodb -c "GRANT ALL ON SCHEMA public TO quadro;"</div>
+      <div class="note note-warn">⚠️ Vervang <strong>KiesEenWachtwoord</strong> door een echt wachtwoord vóór je op Enter drukt. Noteer het hieronder:</div>
+      <div class="password-box">
+        <strong>📝 Noteer hier je gegevens — je hebt ze later nodig</strong>
+        <div class="password-line"><span>Gekozen wachtwoord:</span><div class="blank"></div></div>
+      </div>
+      <div class="note note-ok">✅ Je ziet een paar regels tekst zoals "CREATE DATABASE" en "GRANT". Dat klopt.</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <strong class="title">Postgres.app instellen voor netwerktoegang</strong>
+      <p>Standaard luistert Postgres alleen naar de eigen computer. We moeten het zo instellen dat PC 2 er ook bij kan.</p>
+      <p><strong>Stap A — Open het instellingenbestand:</strong></p>
+      <div class="code-label">Typ dit in Terminal en druk Enter:</div>
+      <div class="code">open "$(ls -d ~/Library/Application\ Support/Postgres/var-* | tail -1)"</div>
+      <p style="margin-top:8px;">Er opent een Finder-venster met bestanden. Zoek het bestand <strong>pg_hba.conf</strong> en open het met <strong>TextEdit</strong> (rechts-klikken → Open met → TextEdit).</p>
+      <p style="margin-top:8px;"><strong>Stap B — Voeg een regel toe onderaan het bestand:</strong></p>
+      <p>Scroll helemaal naar het einde van het bestand. Voeg op een nieuwe lege regel exact dit toe:</p>
+      <div class="code">host    quadrodb    quadro    192.168.0.0/16    md5</div>
+      <p style="margin-top:8px;">Sla op (Command+S) en sluit TextEdit.</p>
+      <p style="margin-top:8px;"><strong>Stap C — Herladen:</strong></p>
+      <div class="code-label">Typ dit in Terminal en druk Enter:</div>
+      <div class="code">/Applications/Postgres.app/Contents/Versions/latest/bin/pg_ctl reload -D "$(ls -d ~/Library/Application\ Support/Postgres/var-* | tail -1)"</div>
+      <div class="note note-ok">✅ Je ziet "server signaled". Postgres accepteert nu verbindingen van andere computers op het netwerk.</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <strong class="title">IP-adres van PC 1 opzoeken en noteren</strong>
+      <p>Het IP-adres is het "huisadres" van PC 1 op het netwerk. PC 2 heeft dit adres nodig om verbinding te maken.</p>
+      <ul>
+        <li>Klik op het Apple-logo <strong></strong> linksboven → <strong>Systeeminstellingen</strong></li>
+        <li>Klik op <strong>Netwerk</strong></li>
+        <li>Klik op het actieve netwerk (bijv. Wi-Fi)</li>
+        <li>Je ziet een IP-adres zoals <strong>192.168.1.50</strong></li>
+      </ul>
+      <div class="ip-note">
+        <strong>📝 Noteer het IP-adres van PC 1 hier:</strong>
+        <span class="ip-blank"></span>
+        <p style="font-size:12px; color:#666; margin-top:8px;">Voorbeeld: 192.168.1.50 &nbsp;|&nbsp; Dit adres kan veranderen als de router opnieuw opstart. Vertel Anthony zodat hij een vast adres kan instellen.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">6</div>
+    <div class="step-body">
+      <strong class="title">Firewall instellen op PC 1</strong>
+      <p>De firewall is een beveiligingslaag op de Mac. We moeten hem toestaan om verbindingen van PC 2 door te laten.</p>
+      <ul>
+        <li>Klik op het Apple-logo <strong></strong> → <strong>Systeeminstellingen</strong> → <strong>Netwerk</strong> → <strong>Firewall</strong></li>
+        <li>Klik op <strong>Opties...</strong> (of "Firewall-opties")</li>
+        <li>Klik op het <strong>+</strong> knopje</li>
+        <li>Navigeer naar <strong>Programma's → Postgres.app</strong> en voeg het toe</li>
+        <li>Zorg dat het op <strong>"Inkomende verbindingen toestaan"</strong> staat</li>
+        <li>Klik op <strong>OK</strong></li>
+      </ul>
+      <div class="note note-info">ℹ️ Als je de Firewall-optie niet ziet, staat de firewall uit — dan hoef je niets te doen.</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">7</div>
+    <div class="step-body">
+      <strong class="title">QuadroApp installeren op PC 1</strong>
+      <ul>
+        <li>Open je <strong>Downloads-map</strong></li>
+        <li>Dubbelklik op het QuadroApp-installatiebestand</li>
+        <li>Sleep QuadroApp naar de map <strong>Programma's</strong> als dat gevraagd wordt</li>
+      </ul>
+      <div class="note note-warn">
+        ⚠️ <strong>macOS blokkeert de app de eerste keer.</strong> Doe dit om hem toch te openen:<br><br>
+        1. Ga naar <strong>Programma's</strong> in Finder<br>
+        2. <strong>Rechts-klik</strong> op QuadroApp (NIET gewoon dubbelklikken!)<br>
+        3. Kies <strong>"Open"</strong> uit het menu<br>
+        4. Klik in het waarschuwingsvenster op <strong>"Open"</strong><br><br>
+        Dit hoeft maar één keer — daarna opent de app gewoon normaal.
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">8</div>
+    <div class="step-body">
+      <strong class="title">Verbindingsbestand aanmaken (appsettings.json)</strong>
+      <p>QuadroApp heeft een klein tekstbestand nodig dat zegt waar de database staat. We maken dit met TextEdit.</p>
+      <ul>
+        <li>Open <strong>TextEdit</strong> (zoek het via Spotlight: Command+Spatiebalk → "TextEdit")</li>
+        <li>Klik in de menubalk op <strong>Opmaak → Zet om naar Onopgemaakte tekst</strong></li>
+        <li>Kopieer de onderstaande tekst en plak hem in TextEdit:</li>
+      </ul>
+      <div class="code">{
+  "ConnectionStrings": {
+    "Default": "Host=localhost;Port=5432;Database=quadrodb;Username=quadro;Password=WACHTWOORD"
+  }
+}</div>
+      <div class="note note-warn">⚠️ Vervang <strong>WACHTWOORD</strong> door het wachtwoord dat je in stap 3 hebt gekozen.</div>
+      <ul style="margin-top:10px;">
+        <li>Sla het bestand op met de naam <strong>appsettings.json</strong> (let op: precies zo gespeld, met de punt)</li>
+        <li>Sla het op in <strong>dezelfde map als QuadroApp</strong> (in de map Programma's → QuadroApp-map)</li>
+      </ul>
+      <div class="note note-info">ℹ️ Als TextEdit ".json.txt" toevoegt: klik op "Gebruik .json" in het venster dat verschijnt. Als dat niet werkt: hernoem het bestand handmatig en verwijder ".txt" aan het einde.</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">9</div>
+    <div class="step-body">
+      <strong class="title">QuadroApp voor het eerst starten op PC 1</strong>
+      <p>De app verbindt nu met Postgres en maakt automatisch alle benodigde tabellen aan.</p>
+      <ul>
+        <li>Dubbelklik op <strong>QuadroApp</strong> in de Programma's-map</li>
+        <li>De app opent — dit kan de eerste keer 10–20 seconden duren</li>
+        <li>Controleer of de app normaal werkt (je ziet het beginscherm)</li>
+        <li>Sluit de app weer</li>
+      </ul>
+      <div class="note note-ok">✅ De app opent zonder foutmelding? Dan is de database klaar voor gebruik.</div>
+      <div class="note note-warn">⚠️ Zie je een foutmelding over "connectie geweigerd"? Controleer of het olifantje 🐘 in de menubalk staat. Zo niet: open Postgres.app en klik op Start.</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">10</div>
+    <div class="step-body">
+      <strong class="title">Bestaande gegevens kopiëren naar de nieuwe database</strong>
+      <p>Het hulpprogramma <strong>MigrationTool</strong> kopieert alle oude gegevens (klanten, offertes, werkbonnen...) van de oude database naar de nieuwe.</p>
+      <p><strong>Stap A — MigrationTool uitvoerbaar maken:</strong></p>
+      <div class="code-label">Kopieer en plak dit in Terminal, druk Enter:</div>
+      <div class="code">chmod +x ~/Downloads/MigrationTool-osx-arm64</div>
+      <p style="margin-top:10px;"><strong>Stap B — Gegevens kopiëren:</strong></p>
+      <p>Kopieer de onderstaande tekst, vervang <strong>WACHTWOORD</strong> door jouw wachtwoord (uit stap 3), en druk Enter:</p>
+      <div class="code">~/Downloads/MigrationTool-osx-arm64 \
+  --sqlite "$HOME/Library/Application Support/QuadroApp/quadro.db" \
+  --pg "Host=localhost;Port=5432;Database=quadrodb;Username=quadro;Password=WACHTWOORD"</div>
+      <div class="note note-info">ℹ️ Je ziet voor elke tabel hoeveel rijen gekopieerd worden. Dit duurt enkele seconden.</div>
+      <div class="note note-ok">✅ Eindigt met "Migratie klaar — X rijen gekopieerd"? Alle gegevens staan nu in de nieuwe database.</div>
+      <div class="note note-warn">⚠️ Zie je "quadro.db niet gevonden"? De oude database staat misschien op Anthony's Windows-laptop. Anthony voert dit commando dan uit vanop zijn eigen laptop — zie de opmerking onderaan deze gids.</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">11</div>
+    <div class="step-body">
+      <strong class="title">Gegevens controleren op PC 1</strong>
+      <ul>
+        <li>Open QuadroApp opnieuw</li>
+        <li>Controleer of je klanten, offertes en werkbonnen ziet</li>
+      </ul>
+      <div class="note note-ok">✅ Alles staat er? Dan is PC 1 volledig klaar. Goed gedaan!</div>
+    </div>
+  </div>
+
+  <!-- DEEL 2 -->
+  <div class="section-header">DEEL 2 — PC 2 &nbsp;<span class="section-sub">(de tweede Mac)</span></div>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <strong class="title">QuadroApp installeren op PC 2</strong>
+      <ul>
+        <li>Download QuadroApp op PC 2 via dezelfde link als bij PC 1:<br><strong>github.com/anthonymohamedap/Quadro/releases</strong></li>
+        <li>Installeer de app op dezelfde manier als bij PC 1 (stap 7 van Deel 1)</li>
+        <li>Vergeet niet: eerste keer rechts-klikken → Open om de blokkering te omzeilen</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <strong class="title">Verbindingsbestand aanmaken op PC 2</strong>
+      <p>Op PC 2 verwijst het bestand naar <strong>het IP-adres van PC 1</strong> (dat je in stap 5 van Deel 1 hebt genoteerd) in plaats van "localhost".</p>
+      <ul>
+        <li>Open TextEdit op PC 2 (Command+Spatiebalk → "TextEdit")</li>
+        <li>Klik op <strong>Opmaak → Zet om naar Onopgemaakte tekst</strong></li>
+        <li>Plak de onderstaande tekst en vul het IP-adres en wachtwoord in:</li>
+      </ul>
+      <div class="code">{
+  "ConnectionStrings": {
+    "Default": "Host=IP-ADRES-PC1;Port=5432;Database=quadrodb;Username=quadro;Password=WACHTWOORD"
+  }
+}</div>
+      <div class="note note-warn">⚠️ Vervang <strong>IP-ADRES-PC1</strong> door het adres dat je in stap 5 hebt genoteerd (bijv. 192.168.1.50).<br>Vervang <strong>WACHTWOORD</strong> door hetzelfde wachtwoord als op PC 1.</div>
+      <ul style="margin-top:10px;">
+        <li>Sla op als <strong>appsettings.json</strong> in dezelfde map als QuadroApp op PC 2</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <strong class="title">QuadroApp starten en verbinding testen op PC 2</strong>
+      <ul>
+        <li>Open QuadroApp op PC 2</li>
+        <li>Je zou dezelfde klanten en offertes moeten zien als op PC 1</li>
+      </ul>
+      <p style="margin-top:8px;"><strong>Snelle test:</strong></p>
+      <ul>
+        <li>Maak een nieuwe testklant aan op PC 2</li>
+        <li>Ga naar PC 1 en kijk of de testklant daar ook verschijnt (na verversen)</li>
+      </ul>
+      <div class="note note-ok">✅ Beide Macs zien dezelfde gegevens — de installatie is geslaagd!</div>
+      <div class="note note-warn">⚠️ Zie je een foutmelding op PC 2? Controleer: is PC 1 aan en staat Postgres aan (olifantje 🐘 in menubalk van PC 1)? Zitten beide Macs op hetzelfde wifi-netwerk?</div>
+    </div>
+  </div>
+
+  <!-- DEEL 3 -->
+  <div class="section-header">DEEL 3 — Automatische updates testen &nbsp;<span class="section-sub">(optioneel, doe dit als je tijd hebt)</span></div>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <strong class="title">Test of de app zichzelf kan bijwerken</strong>
+      <p>QuadroApp kan zichzelf automatisch bijwerken zodra Anthony een nieuwe versie uitbrengt. Dit hoef je zelf nooit te doen — de app doet het bij het opstarten.</p>
+      <ul>
+        <li>Sluit QuadroApp volledig af op één van de Macs</li>
+        <li>Open de app opnieuw</li>
+        <li>Als er een nieuwe versie beschikbaar is, verschijnt er een melding: <em>"Update gedownload — herstart om bij te werken"</em></li>
+        <li>Na een herstart draait de app op de nieuwste versie</li>
+      </ul>
+      <div class="note note-info">ℹ️ Voor deze test heeft Anthony eerst een nieuwe versie moeten uitbrengen. Als er geen melding verschijnt, is de huidige versie al de nieuwste — dat is prima.</div>
+    </div>
+  </div>
+
+  <!-- CHECKLIST -->
+  <div class="section-header">AFRONDINGSCHECKLIST</div>
+  <p style="font-size:13px; color:#555; margin-bottom:12px;">Vink alles af voordat je klaar bent:</p>
+  <div class="checklist">
+    <div class="checklist-row"><div class="checklist-check">☐</div><div class="checklist-label">Postgres.app geïnstalleerd en actief op PC 1 (olifantje 🐘 in menubalk)<small>Deel 1 — Stap 1</small></div></div>
+    <div class="checklist-row"><div class="checklist-check">☐</div><div class="checklist-label">Database "quadrodb" en gebruiker "quadro" aangemaakt<small>Deel 1 — Stap 3</small></div></div>
+    <div class="checklist-row"><div class="checklist-check">☐</div><div class="checklist-label">Netwerktoegang ingesteld in pg_hba.conf<small>Deel 1 — Stap 4</small></div></div>
+    <div class="checklist-row"><div class="checklist-check">☐</div><div class="checklist-label">IP-adres van PC 1 genoteerd: ___________________<small>Deel 1 — Stap 5</small></div></div>
+    <div class="checklist-row"><div class="checklist-check">☐</div><div class="checklist-label">appsettings.json aangemaakt naast QuadroApp op PC 1 (met "localhost")<small>Deel 1 — Stap 8</small></div></div>
+    <div class="checklist-row"><div class="checklist-check">☐</div><div class="checklist-label">QuadroApp start correct op PC 1<small>Deel 1 — Stap 9</small></div></div>
+    <div class="checklist-row"><div class="checklist-check">☐</div><div class="checklist-label">Alle bestaande gegevens gekopieerd naar de nieuwe database<small>Deel 1 — Stap 10</small></div></div>
+    <div class="checklist-row"><div class="checklist-check">☐</div><div class="checklist-label">Klanten en offertes zichtbaar op PC 1<small>Deel 1 — Stap 11</small></div></div>
+    <div class="checklist-row"><div class="checklist-check">☐</div><div class="checklist-label">QuadroApp geïnstalleerd op PC 2<small>Deel 2 — Stap 1</small></div></div>
+    <div class="checklist-row"><div class="checklist-check">☐</div><div class="checklist-label">appsettings.json aangemaakt op PC 2 (met IP-adres van PC 1)<small>Deel 2 — Stap 2</small></div></div>
+    <div class="checklist-row"><div class="checklist-check">☐</div><div class="checklist-label">Dezelfde gegevens zichtbaar op PC 2<small>Deel 2 — Stap 3</small></div></div>
+    <div class="checklist-row"><div class="checklist-check">☐</div><div class="checklist-label">Test: aangemaakt op PC 2 verschijnt ook op PC 1<small>Deel 2 — Stap 3</small></div></div>
+  </div>
+
+  <!-- OPMERKING MIGRATIE VIA ANTHONY LAPTOP -->
+  <div class="note note-blue" style="margin-top:24px;">
+    💻 <strong>Als de oude gegevens op Anthony's Windows-laptop staan:</strong><br><br>
+    Anthony voert de migratie dan uit vanop zijn eigen laptop. Hij heeft het bestand <strong>quadro.db</strong> lokaal staan op:<br>
+    <code style="font-size:12px; background:#e8f0fb; padding:2px 6px; border-radius:4px;">C:\Users\[naam]\AppData\Local\QuadroApp\quadro.db</code><br><br>
+    Hij opent Command Prompt en voert dit uit (vervang IP en WACHTWOORD):<br>
+    <div class="code" style="margin-top:8px;">dotnet run --project Scripts/MigrationTool -- ^
+  --sqlite "C:\Users\[naam]\AppData\Local\QuadroApp\quadro.db" ^
+  --pg "Host=192.168.1.X;Port=5432;Database=quadrodb;Username=quadro;Password=WACHTWOORD"</div>
+    Zijn laptop moet dan verbonden zijn met hetzelfde wifi-netwerk als PC 1.
+  </div>
+
+  <!-- PROBLEMEN EN OPLOSSINGEN -->
+  <div class="section-header">Wat als er iets fout gaat?</div>
+
+  <div class="trouble-item">
+    <h3>🚫 "De app kan niet worden geopend omdat hij van een onbekende ontwikkelaar is"</h3>
+    <p>Je hebt op de app dubbelgeklikt. Dat werkt niet de eerste keer.</p>
+    <p>→ Ga naar Programma's → <strong>rechts-klik</strong> op QuadroApp → kies <strong>"Open"</strong> → klik op <strong>"Open"</strong> in het venster.</p>
+  </div>
+
+  <div class="trouble-item">
+    <h3>🚫 QuadroApp geeft een fout bij opstarten / "verbinding geweigerd"</h3>
+    <p>→ Kijk of het olifantje 🐘 in de menubalk staat. Zo niet: open <strong>Postgres.app</strong> uit de Programma's-map en klik op <strong>Start</strong>.</p>
+    <p>→ Controleer of het wachtwoord in <strong>appsettings.json</strong> exact hetzelfde is als wat je in stap 3 hebt ingesteld.</p>
+  </div>
+
+  <div class="trouble-item">
+    <h3>🚫 PC 2 ziet de gegevens van PC 1 niet</h3>
+    <p>→ Controleer of beide Macs op <strong>hetzelfde wifi-netwerk</strong> zitten.</p>
+    <p>→ Controleer of het IP-adres in <strong>appsettings.json op PC 2</strong> klopt met het genoteerde adres van PC 1.</p>
+    <p>→ Controleer of Postgres.app op PC 1 actief is (olifantje 🐘 in menubalk).</p>
+    <p>→ Controleer of de firewall op PC 1 Postgres toestaat (Deel 1 — Stap 6).</p>
+  </div>
+
+  <div class="trouble-item">
+    <h3>🚫 MigrationTool geeft een fout</h3>
+    <p>→ Zorg dat de app minstens één keer opgestart is op PC 1 vóór je de migratie uitvoert (stap 9 moet gedaan zijn).</p>
+    <p>→ Als het bestand "quadro.db" niet gevonden wordt: het staat waarschijnlijk op Anthony's laptop — zie de blauwe opmerking hierboven.</p>
+  </div>
+
+  <div class="trouble-item">
+    <h3>🚫 Het IP-adres van PC 1 verandert na een herstart van de router</h3>
+    <p>→ Dan werkt PC 2 plots niet meer. Vraag Anthony om een <strong>vast IP-adres</strong> in te stellen via de router. Hij doet dit op afstand vanuit zijn laptop.</p>
+    <p>→ Als tijdelijke oplossing: herhaal stap 5 van Deel 1 om het nieuwe IP op te zoeken, en pas <strong>appsettings.json op PC 2</strong> aan.</p>
+  </div>
+
+  <div class="trouble-item">
+    <h3>📞 Nog steeds problemen?</h3>
+    <p>→ Neem contact op met Anthony. Hij kan op afstand meekijken en helpen.</p>
+  </div>
+
+</div>
+</body>
+</html>

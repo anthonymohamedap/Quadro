@@ -13,8 +13,7 @@
 		<ItemsControl ItemsSource="{Binding Toast.Messages}"
 					  HorizontalAlignment="Center"
 					  VerticalAlignment="Top"
-					  Margin="0,24,0,0"
-					  IsHitTestVisible="False">
+					  Margin="0,24,0,0">
 			<ItemsControl.ItemsPanel>
 				<ItemsPanelTemplate>
 					<StackPanel Spacing="6"/>
@@ -39,7 +38,7 @@
 												  Color="Black"/>
 							</Border.Effect>
 							<Border CornerRadius="6" ClipToBounds="True">
-								<Grid Margin="12,8" RowDefinitions="Auto,Auto">
+								<Grid Margin="12,8" RowDefinitions="Auto,Auto,Auto">
 									<!-- Title row -->
 									<TextBlock Grid.Row="0"
 											   Text="{Binding Title}"
@@ -53,6 +52,18 @@
 											   Foreground="#555555"
 											   TextWrapping="Wrap"
 											   Margin="0,3,0,0"/>
+									<!-- Optional action button (e.g. "Herstart nu") -->
+									<Button Grid.Row="2"
+											Content="{Binding ActionLabel}"
+											Command="{Binding ActionCommand}"
+											IsVisible="{Binding HasAction}"
+											HorizontalAlignment="Right"
+											Background="Transparent"
+											Foreground="{Binding AccentBrush}"
+											FontSize="12"
+											FontWeight="SemiBold"
+											Padding="0,6,0,2"
+											Cursor="Hand"/>
 								</Grid>
 							</Border>
 						</Border>
