@@ -20,6 +20,29 @@ namespace QuadroApp.ViewModels
             private set { _currentViewModel = value; OnPropertyChanged(); }
         }
 
+        /// <summary>
+        /// True while the database is being initialised in the background.
+        /// Bind a loading overlay to this so the user sees the app start instantly
+        /// but can't interact until the DB is ready.
+        /// </summary>
+        private bool _isInitializing = true;
+        public bool IsInitializing
+        {
+            get => _isInitializing;
+            internal set { _isInitializing = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Set when startup DB initialisation fails. Show this in the UI
+        /// so the user knows what went wrong instead of seeing a frozen window.
+        /// </summary>
+        private string? _initError;
+        public string? InitError
+        {
+            get => _initError;
+            internal set { _initError = value; OnPropertyChanged(); }
+        }
+
         public MainWindowViewModel(
             INavigationService nav,
             IToastService toast)

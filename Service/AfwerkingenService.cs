@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -133,8 +134,33 @@ namespace QuadroApp.Service
         }
 
 
+        /// <inheritdoc/>
+        public async Task<int> CountGebruikAsync(int optieId)
+        {
+            await using var db = await _dbFactory.CreateDbContextAsync();
+            // Check all 6 FK columns on OfferteRegel that can reference an AfwerkingsOptie.
+            return await db.OfferteRegels.CountAsync(r =>
+                r.GlasId           == optieId ||
+                r.PassePartout1Id  == optieId ||
+                r.PassePartout2Id  == optieId ||
+                r.DiepteKernId     == optieId ||
+                r.OpklevenId       == optieId ||
+                r.RugId            == optieId);
+        }
+
+        /// <inheritdoc/>
         public async Task DeleteOptieAsync(AfwerkingsOptie optie)
         {
+            // Guard: refuse deletion when the optie is still used by existing offertes.
+            // Without this check the DB throws a raw FK-violation exception (SQLITE_CONSTRAINT
+            // on SQLite / ERROR 23503 on PostgreSQL) that surfaces as a cryptic error dialog.
+            var aantalInGebruik = await CountGebruikAsync(optie.Id);
+            if (aantalInGebruik > 0)
+                throw new InvalidOperationException(
+                    $"Deze afwerkingsoptie wordt nog gebruikt in {aantalInGebruik} " +
+                    $"offerteregel{(aantalInGebruik == 1 ? "" : "s")}. " +
+                    "Pas die offertes eerst aan voor je de optie verwijdert.");
+
             await using var db = await _dbFactory.CreateDbContextAsync();
             db.AfwerkingsOpties.Remove(optie);
             await db.SaveChangesAsync();

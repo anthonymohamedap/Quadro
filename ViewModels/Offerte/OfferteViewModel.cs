@@ -499,7 +499,11 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                     Status = Offerte.Status, KortingPct = Offerte.KortingPct,
                     MeerPrijsIncl = Offerte.MeerPrijsIncl, IsVoorschotBetaald = Offerte.IsVoorschotBetaald,
                     VoorschotBedrag = Offerte.VoorschotBedrag, SubtotaalExBtw = Offerte.SubtotaalExBtw,
-                    BtwBedrag = Offerte.BtwBedrag, TotaalInclBtw = Offerte.TotaalInclBtw
+                    BtwBedrag = Offerte.BtwBedrag, TotaalInclBtw = Offerte.TotaalInclBtw,
+                    // RowVersion must be included so EF Core can detect concurrent edits.
+                    // If two users save the same version, the second save throws
+                    // DbUpdateConcurrencyException and we show a clear Dutch message.
+                    RowVersion = Offerte.RowVersion
                 };
 
                 db.Offertes.Attach(offerteStub);
@@ -535,6 +539,15 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
 
             if (reloadAfterSave)
                 await LoadAsync(Offerte.Id, reloadCatalog: false);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // Another user saved this offerte while you had it open.
+            // Reload to get the latest version — their changes are preserved.
+            Foutmelding = "Iemand anders heeft deze offerte gewijzigd terwijl je hem open had. " +
+                          "De offerte wordt herladen met de laatste versie.";
+            await _dialogs.ShowErrorAsync("Opslaan mislukt — gelijktijdige wijziging", Foutmelding);
+            await LoadAsync(Offerte!.Id, reloadCatalog: false);
         }
         catch (Exception ex)
         {
