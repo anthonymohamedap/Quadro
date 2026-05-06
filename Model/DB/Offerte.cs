@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuadroApp.Model.DB
@@ -7,6 +8,15 @@ namespace QuadroApp.Model.DB
     public class Offerte
     {
         public int Id { get; set; }
+
+        /// <summary>
+        /// Optimistic concurrency token. EF Core updates this on every save.
+        /// A <see cref="Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException"/>
+        /// is thrown when two users save the same version simultaneously —
+        /// the second save is rejected with a clear "iemand anders heeft dit gewijzigd" message.
+        /// </summary>
+        [Timestamp]
+        public byte[]? RowVersion { get; set; }
 
         // Nieuw: klant-koppeling
         public int? KlantId { get; set; }

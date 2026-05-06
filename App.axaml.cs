@@ -31,6 +31,25 @@ public partial class App : Application
     public static IServiceProvider Services { get; private set; } = default!;
     private static ILogger<App> _logger = default!;
 
+    /// <summary>
+    /// Writable crash log path — resolved once at class load time so it is
+    /// available before DI / ILogger are initialised.
+    /// Windows : %LOCALAPPDATA%\QuadroApp\crash.log
+    /// macOS   : ~/Library/Application Support/QuadroApp/crash.log
+    /// </summary>
+    private static readonly string _crashLogPath = BuildCrashLogPath();
+
+    private static string BuildCrashLogPath()
+    {
+        var dir = OperatingSystem.IsMacOS()
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal),
+                           "Library", "Application Support", "QuadroApp")
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                           "QuadroApp");
+        Directory.CreateDirectory(dir);
+        return Path.Combine(dir, "crash.log");
+    }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -78,7 +97,15 @@ public partial class App : Application
         services.AddDbContextFactory<AppDbContext>(options =>
         {
             if (isPostgres)
-                options.UseNpgsql(connectionString);
+                options.UseNpgsql(connectionString, npgsql =>
+                {
+                    // Retry up to 3 times on transient network errors (Wi-Fi blips, PG restart).
+                    // Uses exponential backoff: 0s, 1s, 3s between attempts.
+                    npgsql.EnableRetryOnFailure(
+                        maxRetryCount: 3,
+                        maxRetryDelay: TimeSpan.FromSeconds(10),
+                        errorCodesToAdd: null);
+                });
             else
                 options.UseSqlite(connectionString);
         });
@@ -168,37 +195,63 @@ public partial class App : Application
         _logger = Services.GetRequiredService<ILogger<App>>();
 
         // ==============================
-        // 6️⃣ DATABASE INITIALIZATION
+        // 6️⃣ MAIN WINDOW — open first so the user sees the app immediately
         // ==============================
 
+        MainWindowViewModel? mainVm = null;
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            mainVm = Services.GetRequiredService<MainWindowViewModel>();
+            desktop.MainWindow = new MainWindow { DataContext = mainVm };
+        }
+
+        base.OnFrameworkInitializationCompleted();
+
+        // ==============================
+        // 7️⃣ DATABASE INITIALIZATION — runs in background after window is visible.
+        //    Previously used GetAwaiter().GetResult() which froze the UI thread and
+        //    could deadlock on a slow PostgreSQL connection. Window now opens instantly;
+        //    MainWindowViewModel.IsInitializing controls a loading overlay in the AXAML.
+        // ==============================
+
+        _ = InitializeInBackgroundAsync(mainVm);
+
+        // Check for updates in the background — never blocks startup, never crashes the app.
+        _ = CheckForUpdatesAsync();
+    }
+    // ==============================
+    // 🚀 BACKGROUND STARTUP
+    // ==============================
+
+    /// <summary>
+    /// Runs DB initialisation and startup tasks on a background thread after the
+    /// window is already visible. Updates <see cref="MainWindowViewModel.IsInitializing"/>
+    /// and <see cref="MainWindowViewModel.InitError"/> so the AXAML can show a
+    /// loading overlay / error message without blocking the UI thread.
+    /// </summary>
+    private static async Task InitializeInBackgroundAsync(MainWindowViewModel? mainVm)
+    {
         try
         {
-            InitializeDatabaseAsync(Services).GetAwaiter().GetResult();
-            RunStartupTasksAsync(Services).GetAwaiter().GetResult();
+            await Task.Run(async () =>
+            {
+                await InitializeDatabaseAsync(Services);
+                await RunStartupTasksAsync(Services);
+            });
         }
         catch (Exception ex)
         {
             LogException(ex);
-            throw;
+            if (mainVm is not null)
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                    mainVm.InitError = $"Database kon niet worden gestart: {ex.Message}");
+            return;
         }
 
-        // ==============================
-        // 7️⃣ MAIN WINDOW
-        // ==============================
-
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = Services.GetRequiredService<MainWindowViewModel>()
-            };
-        }
-
-        // Check for updates in the background — never blocks startup, never crashes the app.
-        _ = CheckForUpdatesAsync();
-
-        base.OnFrameworkInitializationCompleted();
+        if (mainVm is not null)
+            await Dispatcher.UIThread.InvokeAsync(() => mainVm.IsInitializing = false);
     }
+
     // ==============================
     // 🔄 AUTO-UPDATE (Velopack)
     // ==============================
@@ -281,7 +334,7 @@ public partial class App : Application
         {
             // Config load failure is non-fatal — fall back to SQLite.
             // _logger is not yet available here (called during DI setup), so write directly.
-            File.AppendAllText("crash.log", $"[Config] appsettings.json lezen mislukt: {ex.Message}\n");
+            File.AppendAllText(_crashLogPath, $"[Config] appsettings.json lezen mislukt: {ex.Message}\n");
         }
 
         return GetDefaultSqliteConnectionString();
@@ -339,7 +392,7 @@ public partial class App : Application
             }
             catch (Exception ex)
             {
-                File.AppendAllText("crash.log", $"[DB] Kon quadro.db niet verplaatsen: {ex.Message}\n");
+                File.AppendAllText(_crashLogPath, $"[DB] Kon quadro.db niet verplaatsen: {ex.Message}\n");
             }
         }
 
@@ -351,7 +404,7 @@ public partial class App : Application
         if (ex == null) return;
 
         var text = $"[{DateTime.Now}] {ex}\n\n";
-        File.AppendAllText("crash.log", text);
+        File.AppendAllText(_crashLogPath, text);
 
         if (Application.Current?.ApplicationLifetime
             is IClassicDesktopStyleApplicationLifetime desktop)
@@ -521,18 +574,26 @@ public partial class App : Application
                 "ALTER TABLE \"AfwerkingsOpties\" ADD COLUMN \"Kleur\" TEXT NOT NULL DEFAULT 'Standaard'");
 
         // AddAfwerkingsKleur (20260323120500) — uniek index updaten naar versie mét Kleur
+        // SQLite error 1 = SQLITE_ERROR; "no such index" is the only expected failure for DROP.
         try { await db.Database.ExecuteSqlRawAsync(
             "DROP INDEX IF EXISTS \"IX_AfwerkingsOpties_AfwerkingsGroepId_Volgnummer\""); }
-        catch { /* index bestaat niet meer */ }
-        try { await db.Database.ExecuteSqlRawAsync(
+        catch (Microsoft.Data.Sqlite.SqliteException ex)
+            when (ex.Message.Contains("no such index", StringComparison.OrdinalIgnoreCase))
+        { /* index bestond al niet — prima */ }
+        // IF NOT EXISTS makes the CREATE idempotent; no catch needed.
+        await db.Database.ExecuteSqlRawAsync(
             "CREATE UNIQUE INDEX IF NOT EXISTS \"IX_AfwerkingsOpties_AfwerkingsGroepId_Volgnummer_Kleur\" " +
-            "ON \"AfwerkingsOpties\" (\"AfwerkingsGroepId\", \"Volgnummer\", \"Kleur\")"); }
-        catch { /* index bestaat al */ }
+            "ON \"AfwerkingsOpties\" (\"AfwerkingsGroepId\", \"Volgnummer\", \"Kleur\")");
 
         // AddTitelToOfferteRegel (20260321121423) — Titel op OfferteRegels
         if (!await ColumnExistsAsync("OfferteRegels", "Titel"))
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"OfferteRegels\" ADD COLUMN \"Titel\" TEXT NULL");
+
+        // AddRowVersionToOfferte (20260506000000) — optimistic concurrency token
+        if (!await ColumnExistsAsync("Offertes", "RowVersion"))
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"Offertes\" ADD COLUMN \"RowVersion\" BLOB NULL");
 
         // ── Stap 2: EF migratie-historietabel + pre-existing migrations ──────
         var preExistingMigrations = new[]
@@ -549,6 +610,7 @@ public partial class App : Application
             // would crash MigrateAsync on an existing DB that doesn't have it applied.
             "20260408120000_AddWerkBonArchief",
             "20260408140000_AddOfferteArchief",
+            "20260506000000_AddRowVersionToOfferte",
         };
 
         try
