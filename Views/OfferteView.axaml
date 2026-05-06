@@ -598,7 +598,7 @@
 				<!-- RECHTS PRIJZEN -->
 				<Grid Grid.Column="1"
 					  HorizontalAlignment="Right"
-					  RowDefinitions="Auto,Auto,Auto,Auto"
+					  RowDefinitions="Auto,Auto,Auto,Auto,Auto"
 					  ColumnDefinitions="Auto,140"
 					  RowSpacing="6">
 
@@ -626,15 +626,30 @@
 							   FontWeight="Bold"
 							   HorizontalAlignment="Right"/>
 
+					<!-- VOORSCHOT — zichtbaar zodra bedrag > 0 -->
 					<TextBlock Grid.Row="3"
+							   Grid.Column="0"
+							   Text="Voorschot betaald"
+							   Foreground="#27AE60"
+							   FontWeight="SemiBold"
+							   IsVisible="{Binding HeeftVoorschot}"/>
+					<TextBlock Grid.Row="3"
+							   Grid.Column="1"
+							   Text="{Binding OfferteVoorschot, StringFormat=- € {0:N2}}"
+							   Foreground="#27AE60"
+							   FontWeight="Bold"
+							   HorizontalAlignment="Right"
+							   IsVisible="{Binding HeeftVoorschot}"/>
+
+					<TextBlock Grid.Row="4"
 					   Grid.Column="0"
 							   Text="Rest te betalen"
 							   Foreground="#C0392B"
 							   FontWeight="SemiBold"/>
 
-					<TextBlock Grid.Row="3"
+					<TextBlock Grid.Row="4"
 							   Grid.Column="1"
-							   Text="{Binding Offerte.RestTeBetalen, StringFormat=€ {0:N2}}"
+							   Text="{Binding OfferteRest, StringFormat=€ {0:N2}}"
 							   Foreground="#C0392B"
 							   FontWeight="Bold"
 							   HorizontalAlignment="Right"/>

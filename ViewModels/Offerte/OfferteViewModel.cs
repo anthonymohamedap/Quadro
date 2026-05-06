@@ -36,9 +36,12 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     // ── Forwarding properties: AXAML hoeft NIET te wijzigen ──
 
     // Totalen (footer)
-    public decimal OfferteEx    => Offerte?.SubtotaalExBtw ?? 0m;
-    public decimal OfferteBtw   => Offerte?.BtwBedrag ?? 0m;
-    public decimal OfferteIncl  => Offerte?.TotaalInclBtw ?? 0m;
+    public decimal OfferteEx        => Offerte?.SubtotaalExBtw   ?? 0m;
+    public decimal OfferteBtw       => Offerte?.BtwBedrag        ?? 0m;
+    public decimal OfferteIncl      => Offerte?.TotaalInclBtw    ?? 0m;
+    public decimal OfferteVoorschot  => Offerte?.VoorschotBedrag  ?? 0m;
+    public decimal OfferteRest       => Offerte?.RestTeBetalen    ?? 0m;
+    public bool    HeeftVoorschot    => OfferteVoorschot > 0m;
 
     // Workflow
     public string FactuurButtonText  => Workflow.FactuurButtonText;
@@ -770,6 +773,9 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         OnPropertyChanged(nameof(OfferteEx));
         OnPropertyChanged(nameof(OfferteBtw));
         OnPropertyChanged(nameof(OfferteIncl));
+        OnPropertyChanged(nameof(OfferteVoorschot));
+        OnPropertyChanged(nameof(OfferteRest));
+        OnPropertyChanged(nameof(HeeftVoorschot));
     }
 
     // ── Navigation ──
