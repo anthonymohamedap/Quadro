@@ -71,6 +71,16 @@
 				</DataTemplate>
 			</ItemsControl.ItemTemplate>
 		</ItemsControl>
+
+		<!-- Version badge – bottom-right, subtle -->
+		<TextBlock Text="{Binding AppVersion, StringFormat='QuadroApp {0}'}"
+				   HorizontalAlignment="Right"
+				   VerticalAlignment="Bottom"
+				   Margin="0,0,10,6"
+				   FontSize="11"
+				   Opacity="0.35"
+				   Foreground="#555555"
+				   IsHitTestVisible="False"/>
 	</Panel>
 
 </huskui:AppWindow>
