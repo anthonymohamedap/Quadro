@@ -120,6 +120,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         factuur.WerkBonId = updated.WerkBonId ?? factuur.WerkBonId;
         factuur.FactuurDatum = updated.FactuurDatum;
         factuur.VervalDatum = updated.VervalDatum;
+        factuur.GeplandeDatum = updated.GeplandeDatum;
         factuur.Opmerking = updated.Opmerking;
         factuur.AangenomenDoorInitialen = updated.AangenomenDoorInitialen;
         factuur.VoorschotBedrag = updated.VoorschotBedrag;
@@ -340,6 +341,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             KlantBtwNummer = klant?.BtwNummer,
             FactuurDatum = now,
             VervalDatum = now.AddDays(30),
+            GeplandeDatum = offerte.GeplandeDatum,
             IsBtwVrijgesteld = vrijgesteld,
             VoorschotBedrag = offerte.VoorschotBedrag,
             Status = FactuurStatus.Draft,

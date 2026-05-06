@@ -47,6 +47,7 @@ public class Factuur
 
     public DateTime FactuurDatum { get; set; }
     public DateTime VervalDatum { get; set; }
+    public DateTime? GeplandeDatum { get; set; }
 
     [MaxLength(2000)]
     public string? Opmerking { get; set; }

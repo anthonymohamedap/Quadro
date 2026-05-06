@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using QuadroApp.Model.DB;
@@ -75,20 +76,37 @@ namespace QuadroApp.ViewModels
 
         private async Task LoadDashboardAsync()
         {
-            await using var db = await _factory.CreateDbContextAsync();
+            // DB migrations run in the background after the window opens.
+            // Retry up to 10× (5 seconds total) in case VoorraadAlerts doesn't
+            // exist yet — this avoids a crash on first install after an update.
+            const int maxRetries = 10;
+            for (int attempt = 0; attempt < maxRetries; attempt++)
+            {
+                try
+                {
+                    await using var db = await _factory.CreateDbContextAsync();
 
-            var alerts = await db.VoorraadAlerts
-                .AsNoTracking()
-                .Include(x => x.TypeLijst)
-                .Where(x => x.Status == VoorraadAlertStatus.Open)
-                .OrderByDescending(x => x.AangemaaktOp)
-                .ToListAsync();
+                    var alerts = await db.VoorraadAlerts
+                        .AsNoTracking()
+                        .Include(x => x.TypeLijst)
+                        .Where(x => x.Status == VoorraadAlertStatus.Open)
+                        .OrderByDescending(x => x.AangemaaktOp)
+                        .ToListAsync();
 
-            OpenAlerts = new ObservableCollection<VoorraadAlert>(alerts.Take(6));
-            OpenAlertCount = alerts.Count;
-            LowStockCount = alerts.Count(x => x.AlertType is VoorraadAlertType.LowStock or VoorraadAlertType.BelowMinimum);
-            OpenShortageCount = alerts.Count(x => x.AlertType == VoorraadAlertType.OpenShortage);
-            OverdueOrderCount = alerts.Count(x => x.AlertType == VoorraadAlertType.OrderOverdue);
+                    OpenAlerts = new ObservableCollection<VoorraadAlert>(alerts.Take(6));
+                    OpenAlertCount = alerts.Count;
+                    LowStockCount = alerts.Count(x => x.AlertType is VoorraadAlertType.LowStock or VoorraadAlertType.BelowMinimum);
+                    OpenShortageCount = alerts.Count(x => x.AlertType == VoorraadAlertType.OpenShortage);
+                    OverdueOrderCount = alerts.Count(x => x.AlertType == VoorraadAlertType.OrderOverdue);
+                    return; // success
+                }
+                catch (SqliteException ex) when (ex.Message.Contains("no such table"))
+                {
+                    // DB migration hasn't run yet — wait 500 ms and retry
+                    if (attempt < maxRetries - 1)
+                        await Task.Delay(500);
+                }
+            }
         }
 
         private async Task OpenPlanningAsync()

@@ -21,6 +21,11 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     private const float ItemHeightEstimate = 140;
     private const float FooterReserve = 230;
 
+    // ── Openingsuren — één plek om aan te passen ──────────────────────────────
+    // TODO: bevestig juiste uren met Veerle op de meeting
+    private const string OpeningsUren =
+        "Di t/m Vr 10-12 & 13-18u  —  Za 10-17u doorlopend  —  Zo & Ma gesloten";
+
     private readonly ILogger<PdfFactuurExporter>? _logger;
 
     public PdfFactuurExporter(ILogger<PdfFactuurExporter>? logger = null)
@@ -121,7 +126,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             });
         });
 
-        col.Item().PaddingTop(4).Text("OPENINGSUREN: DINSDAG TOT VRIJDAG: 10-12U / 13-18U\nZATERDAG: 10-16U DOORLOPEND\nZONDAG EN MAANDAG GESLOTEN").Italic();
+        col.Item().PaddingTop(4).Text(OpeningsUren).Italic();
     }
 
     // ═══════════════════ SPECIALE MEDEDELING (Factuur.Opmerking) ═══════════════════
@@ -153,6 +158,8 @@ public sealed class PdfFactuurExporter : IFactuurExporter
                 c.Item().Text($"BTW: {factuur.KlantBtwNummer}");
             if (!string.IsNullOrWhiteSpace(factuur.AangenomenDoorInitialen))
                 c.Item().Text($"initialen: {factuur.AangenomenDoorInitialen}");
+            if (factuur.GeplandeDatum.HasValue)
+                c.Item().Text($"gepland op: {factuur.GeplandeDatum.Value:dd/MM/yyyy}").SemiBold();
         });
     }
 
@@ -272,7 +279,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
 
             col.Item().AlignCenter().Text("Liersesteenweg 64 - 3200 Aarschot - T 016 57 08 72 - kaders@quadro.be - www.quadro.be").FontSize(9);
             col.Item().AlignCenter().Text("BTW BE 0636 525 975 - BE28 7343 0100 1820 - BIC KREDBEBB").FontSize(9);
-            col.Item().AlignCenter().Text("Openingsuren : Di t/m Vr 10-12 & 13-18.00 - Za doorlopend 10-17 - Zo/Ma gesloten").FontSize(9);
+            col.Item().AlignCenter().Text(OpeningsUren).FontSize(9);
         });
     }
 

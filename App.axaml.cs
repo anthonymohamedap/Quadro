@@ -604,6 +604,11 @@ public partial class App : Application
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Offertes\" ADD COLUMN \"RowVersion\" BLOB NULL");
 
+        // AddGeplandeDatumToFactuur (20260506130000)
+        if (!await ColumnExistsAsync("Facturen", "GeplandeDatum"))
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"Facturen\" ADD COLUMN \"GeplandeDatum\" TEXT NULL");
+
         // AddVoorraadAlerts (20260506120000) — ensure table exists before HomeViewModel loads
         await db.Database.ExecuteSqlRawAsync(@"
 CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
@@ -639,6 +644,7 @@ CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
             "20260408140000_AddOfferteArchief",
             "20260506000000_AddRowVersionToOfferte",
             "20260506120000_AddVoorraadAlerts",
+            "20260506130000_AddGeplandeDatumToFactuur",
         };
 
         try
