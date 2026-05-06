@@ -18,11 +18,13 @@ jobs:
           - os: windows-latest
             rid: win-x64
             mainExe: QuadroApp.exe
+            channel: win
 
           # ── macOS Apple Silicon — M1/M2/M3 Macs (Veerle) ──
           - os: macos-latest
             rid: osx-arm64
             mainExe: QuadroApp
+            channel: osx
 
           # ── macOS Intel — older Macs (add if needed) ──
           # - os: macos-13
@@ -80,6 +82,7 @@ jobs:
           --packDir publish/
           --outputDir releases/
           --mainExe ${{ matrix.mainExe }}
+          --channel ${{ matrix.channel }}
 
       # ── 8. Publish MigrationTool (macOS only — one-time SQLite→PG migration) ────
       #   Self-contained single-file binary so Veerle's Mac needs no .NET SDK.

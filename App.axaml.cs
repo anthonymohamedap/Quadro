@@ -276,7 +276,7 @@ public partial class App : Application
             const string repoUrl = "https://github.com/anthonymohamedap/Quadro";
 #endif
 
-            var mgr = new UpdateManager(repoUrl);
+            var mgr = new UpdateManager(repoUrl, channel: "win");
 
             // Not running as a Velopack-installed app (e.g. dev machine) → skip silently.
             if (!mgr.IsInstalled) return;
