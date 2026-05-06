@@ -212,8 +212,16 @@ public partial class App : Application
     {
         try
         {
-            // ⚠️ Replace with your actual GitHub repo URL before the first release.
+            // ── Update-bron ────────────────────────────────────────────────────────────
+            // Productie : GitHub Releases (standaard).
+            // Lokale test: definieer LOCAL_TEST bij het bouwen — test-velopack-local.ps1
+            //              doet dit automatisch zodat de app http://localhost:8080 gebruikt.
+            // Terugzetten: git checkout App.axaml.cs
+#if LOCAL_TEST
+            const string repoUrl = "http://localhost:8080";
+#else
             const string repoUrl = "https://github.com/anthonymohamedap/Quadro";
+#endif
 
             var mgr = new UpdateManager(repoUrl);
 
@@ -232,7 +240,7 @@ public partial class App : Application
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 var toast = Services.GetService<IToastService>();
-                toast?.Info("🔄 Update gedownload — herstart de app om bij te werken.");
+                toast?.Info("🔄 Update gedownload.", "Herstart nu", () => mgr.ApplyUpdatesAndRestart(newVersion));
             });
         }
         catch (Exception ex)
@@ -492,12 +500,25 @@ public partial class App : Application
         }
 
         // ── Stap 1b: Schema-patches voor kolommen die mogelijk ontbreken op oudere DBs ─
-        // Elke patch zit in een eigen try/catch: kolom bestaat al → SQLite gooit een fout → negeer.
+        // PRAGMA table_info check first: no ALTER TABLE attempted when column already exists,
+        // so EF Core never logs a scary "fail:" line for a harmless duplicate-column error.
+
+        var conn = (Microsoft.Data.Sqlite.SqliteConnection)db.Database.GetDbConnection();
+        if (conn.State != System.Data.ConnectionState.Open)
+            await conn.OpenAsync();
+
+        async Task<bool> ColumnExistsAsync(string table, string column)
+        {
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = $"SELECT COUNT(*) FROM pragma_table_info('{table}') WHERE name='{column}'";
+            var result = await cmd.ExecuteScalarAsync();
+            return Convert.ToInt64(result) > 0;
+        }
 
         // AddAfwerkingsKleur (20260323120500) — Kleur op AfwerkingsOpties
-        try { await db.Database.ExecuteSqlRawAsync(
-            "ALTER TABLE \"AfwerkingsOpties\" ADD COLUMN \"Kleur\" TEXT NOT NULL DEFAULT 'Standaard'"); }
-        catch { /* kolom bestaat al */ }
+        if (!await ColumnExistsAsync("AfwerkingsOpties", "Kleur"))
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"AfwerkingsOpties\" ADD COLUMN \"Kleur\" TEXT NOT NULL DEFAULT 'Standaard'");
 
         // AddAfwerkingsKleur (20260323120500) — uniek index updaten naar versie mét Kleur
         try { await db.Database.ExecuteSqlRawAsync(
@@ -509,9 +530,9 @@ public partial class App : Application
         catch { /* index bestaat al */ }
 
         // AddTitelToOfferteRegel (20260321121423) — Titel op OfferteRegels
-        try { await db.Database.ExecuteSqlRawAsync(
-            "ALTER TABLE \"OfferteRegels\" ADD COLUMN \"Titel\" TEXT NULL"); }
-        catch { /* kolom bestaat al */ }
+        if (!await ColumnExistsAsync("OfferteRegels", "Titel"))
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"OfferteRegels\" ADD COLUMN \"Titel\" TEXT NULL");
 
         // ── Stap 2: EF migratie-historietabel + pre-existing migrations ──────
         var preExistingMigrations = new[]

@@ -1,4 +1,5 @@
 using QuadroApp.Service.Toast;
+using System;
 using System.Collections.ObjectModel;
 
 namespace QuadroApp.Service.Interfaces
@@ -17,5 +18,12 @@ namespace QuadroApp.Service.Interfaces
         void Error(string message);
         void Warning(string message);
         void Info(string message);
+
+        /// <summary>
+        /// Shows an Info toast with an action button (e.g. "Herstart nu").
+        /// The toast stays visible for <paramref name="durationMs"/> milliseconds
+        /// so the user has time to react.
+        /// </summary>
+        void Info(string message, string actionLabel, Action onAction, int durationMs = 30_000);
     }
 }

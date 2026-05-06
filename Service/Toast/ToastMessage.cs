@@ -1,5 +1,6 @@
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using System.Windows.Input;
 
 namespace QuadroApp.Service.Toast
 {
@@ -15,6 +16,15 @@ namespace QuadroApp.Service.Toast
 
         /// <summary>Alias used by AXAML DataTemplates that bind to {Binding Message}.</summary>
         public string Message => Content;
+
+        /// <summary>Optional label for an action button shown below the message.</summary>
+        public string? ActionLabel { get; init; }
+
+        /// <summary>Command invoked when the action button is clicked.</summary>
+        public ICommand? ActionCommand { get; init; }
+
+        /// <summary>True when this toast carries an action button.</summary>
+        public bool HasAction => ActionLabel is not null && ActionCommand is not null;
 
         public ToastType Type { get; }
 

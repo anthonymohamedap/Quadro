@@ -38,7 +38,7 @@ jobs:
       # ── 2. .NET 9 ─────────────────────────────────────────────────────────────
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '10.0.x'
 
       # ── 3. Extract semver from tag (strips the leading 'v') ───────────────────
       - name: Extract version
@@ -81,7 +81,25 @@ jobs:
           --outputDir releases/
           --mainExe ${{ matrix.mainExe }}
 
-      # ── 8. Upload to GitHub Releases ──────────────────────────────────────────
+      # ── 8. Publish MigrationTool (macOS only — one-time SQLite→PG migration) ────
+      #   Self-contained single-file binary so Veerle's Mac needs no .NET SDK.
+      #   Only built on the osx-arm64 runner; Windows users run MigrateAsync on Anthony's PC.
+      - name: Publish MigrationTool
+        if: matrix.rid == 'osx-arm64'
+        run: >
+          dotnet publish Scripts/MigrationTool/MigrationTool.csproj
+          -c Release
+          -r osx-arm64
+          --self-contained
+          -p:PublishSingleFile=true
+          -p:PublishTrimmed=false
+          -o migration-tool/
+
+      - name: Rename MigrationTool binary
+        if: matrix.rid == 'osx-arm64'
+        run: mv migration-tool/MigrationTool releases/MigrationTool-osx-arm64
+
+      # ── 9. Upload to GitHub Releases ──────────────────────────────────────────
       #   Both platforms upload to the same release.
       #   Velopack's UpdateManager picks the right package automatically.
       - name: Create GitHub Release
