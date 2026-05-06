@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using Velopack;
+using Velopack.Sources;
 namespace QuadroApp;
 
 public partial class App : Application
@@ -276,7 +277,8 @@ public partial class App : Application
             const string repoUrl = "https://github.com/anthonymohamedap/Quadro";
 #endif
 
-            var mgr = new UpdateManager(repoUrl, channel: "win");
+            var source = new GithubSource(repoUrl, accessToken: null, prerelease: false);
+            var mgr = new UpdateManager(source, new UpdateOptions { ExplicitChannel = "win" });
 
             // Not running as a Velopack-installed app (e.g. dev machine) → skip silently.
             if (!mgr.IsInstalled) return;
@@ -296,11 +298,16 @@ public partial class App : Application
                 toast?.Info("🔄 Update gedownload.", "Herstart nu", () => mgr.ApplyUpdatesAndRestart(newVersion));
             });
         }
+        catch (System.Net.Http.HttpRequestException httpEx)
+            when (httpEx.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            // 404 = release feed not found (no update published yet) — not an error worth logging.
+            _logger.LogInformation("[Update] Geen release-feed gevonden (404) — overgeslagen.");
+        }
         catch (Exception ex)
         {
             // Update check should never crash the app — log and move on.
             _logger.LogWarning(ex, "[Update] Update-controle mislukt (niet kritiek): {Message}", ex.Message);
-            // Also write to crash log so we can diagnose in release builds.
             LogException(ex);
         }
     }
@@ -597,6 +604,24 @@ public partial class App : Application
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Offertes\" ADD COLUMN \"RowVersion\" BLOB NULL");
 
+        // AddVoorraadAlerts (20260506120000) — ensure table exists before HomeViewModel loads
+        await db.Database.ExecuteSqlRawAsync(@"
+CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
+    ""Id""                    INTEGER NOT NULL CONSTRAINT ""PK_VoorraadAlerts"" PRIMARY KEY AUTOINCREMENT,
+    ""TypeLijstId""           INTEGER NULL,
+    ""AlertType""             TEXT    NOT NULL,
+    ""Status""                TEXT    NOT NULL,
+    ""AangemaaktOp""          TEXT    NOT NULL,
+    ""LaatstHerinnerdOp""     TEXT    NULL,
+    ""VolgendeHerinneringOp"" TEXT    NULL,
+    ""BronReferentie""        TEXT    NULL,
+    ""Bericht""               TEXT    NOT NULL,
+    CONSTRAINT ""FK_VoorraadAlerts_TypeLijsten_TypeLijstId""
+        FOREIGN KEY (""TypeLijstId"") REFERENCES ""TypeLijsten"" (""Id"") ON DELETE SET NULL
+)");
+        await db.Database.ExecuteSqlRawAsync(
+            @"CREATE INDEX IF NOT EXISTS ""IX_VoorraadAlerts_TypeLijstId"" ON ""VoorraadAlerts"" (""TypeLijstId"")");
+
         // ── Stap 2: EF migratie-historietabel + pre-existing migrations ──────
         var preExistingMigrations = new[]
         {
@@ -613,6 +638,7 @@ public partial class App : Application
             "20260408120000_AddWerkBonArchief",
             "20260408140000_AddOfferteArchief",
             "20260506000000_AddRowVersionToOfferte",
+            "20260506120000_AddVoorraadAlerts",
         };
 
         try
