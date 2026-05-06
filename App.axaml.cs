@@ -300,6 +300,8 @@ public partial class App : Application
         {
             // Update check should never crash the app — log and move on.
             _logger.LogWarning(ex, "[Update] Update-controle mislukt (niet kritiek): {Message}", ex.Message);
+            // Also write to crash log so we can diagnose in release builds.
+            LogException(ex);
         }
     }
 
