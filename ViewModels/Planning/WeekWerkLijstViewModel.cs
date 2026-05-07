@@ -93,7 +93,7 @@ public partial class WeekWerkLijstViewModel : ObservableObject
         if (item is null) return;
 
         var bestelDatum = DateTime.Today;
-        await _workflow.MarkLijstAsBesteldAsync(item.TaakId, bestelDatum);
+        await _workflow.MarkLijstAsBesteldAsync(item.TaakId, bestelDatum, item.GeselecteerdeBestelVorm);
         await LoadAsync();
     }
 
@@ -177,8 +177,33 @@ public partial class WeekWerkItem : ObservableObject
     [ObservableProperty] private string? bestellingNummer;
     [ObservableProperty] private DateTime? verwachteLeverdatum;
     [ObservableProperty] private string? leverancierNaam;
+    [ObservableProperty] private BestelVorm geselecteerdeBestelVorm = BestelVorm.Verstek;
 
-    public bool CanPlaceOrder => VoorraadStatus == VoorraadStatus.Shortage || (!IsOpVoorraad && !IsBesteld);
+    // RadioButton helpers
+    public bool BestelVormIsVerstek
+    {
+        get => GeselecteerdeBestelVorm == BestelVorm.Verstek;
+        set { if (value) GeselecteerdeBestelVorm = BestelVorm.Verstek; }
+    }
+    public bool BestelVormIsInLengte
+    {
+        get => GeselecteerdeBestelVorm == BestelVorm.InLengte;
+        set { if (value) GeselecteerdeBestelVorm = BestelVorm.InLengte; }
+    }
+    public bool BestelVormIsGemonteerd
+    {
+        get => GeselecteerdeBestelVorm == BestelVorm.Gemonteerd;
+        set { if (value) GeselecteerdeBestelVorm = BestelVorm.Gemonteerd; }
+    }
+
+    partial void OnGeselecteerdeBestelVormChanged(BestelVorm value)
+    {
+        OnPropertyChanged(nameof(BestelVormIsVerstek));
+        OnPropertyChanged(nameof(BestelVormIsInLengte));
+        OnPropertyChanged(nameof(BestelVormIsGemonteerd));
+    }
+
+    public bool CanPlaceOrder => !IsBesteld;
     public bool HasOrder => !string.IsNullOrWhiteSpace(BestellingNummer);
 
     public static WeekWerkItem FromTaak(WerkTaak t)
@@ -214,7 +239,8 @@ public partial class WeekWerkItem : ObservableObject
             VoorraadStatusText = GetVoorraadStatusText(t),
             BestellingNummer = bestelling?.BestelNummer,
             VerwachteLeverdatum = bestelling?.VerwachteLeverdatum,
-            LeverancierNaam = r?.TypeLijst?.Leverancier?.Naam
+            LeverancierNaam = r?.TypeLijst?.Leverancier?.Naam,
+            GeselecteerdeBestelVorm = t.LeverancierBestelLijn?.BestelVorm ?? BestelVorm.Verstek
         };
     }
 

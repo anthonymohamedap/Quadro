@@ -162,18 +162,29 @@
 																	<TextBlock Text="{Binding VerwachteLeverdatum, StringFormat='Verwacht: {0:dd/MM/yyyy}'}"
 																			   Foreground="Black"
 																			   IsVisible="{Binding HasOrder}"/>
-																	<StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+																	<StackPanel Spacing="4" IsVisible="{Binding CanPlaceOrder}">
+																		<StackPanel Orientation="Horizontal" Spacing="12">
+																			<TextBlock Text="Bestelwijze:" VerticalAlignment="Center" FontSize="11" Foreground="#555"/>
+																			<RadioButton Content="In verstek" FontSize="11"
+																						 GroupName="{Binding TaakId, StringFormat='BVW{0}'}"
+																						 IsChecked="{Binding BestelVormIsVerstek, Mode=TwoWay}"/>
+																			<RadioButton Content="In lengte" FontSize="11"
+																						 GroupName="{Binding TaakId, StringFormat='BVW{0}'}"
+																						 IsChecked="{Binding BestelVormIsInLengte, Mode=TwoWay}"/>
+																			<RadioButton Content="Gemonteerd" FontSize="11"
+																						 GroupName="{Binding TaakId, StringFormat='BVW{0}'}"
+																						 IsChecked="{Binding BestelVormIsGemonteerd, Mode=TwoWay}"/>
+																		</StackPanel>
 																		<Button Content="Maak bestelling"
 																				Background="#F5C242" Foreground="Black" FontWeight="Bold"
 																				Command="{Binding $parent[Window].((vm:WeekWerkLijstViewModel)DataContext).MarkeerBesteldCommand}"
-																				CommandParameter="{Binding}"
-																				IsVisible="{Binding CanPlaceOrder}"/>
-																		<TextBlock Text="{Binding BestelDatum, StringFormat='Besteld op: {0:dd/MM/yyyy}'}"
+																				CommandParameter="{Binding}"/>
+																	</StackPanel>
+																	<TextBlock Text="{Binding BestelDatum, StringFormat='Besteld op: {0:dd/MM/yyyy}'}"
 																				   VerticalAlignment="Center"
 																				   Foreground="#065F46"
 																				   FontWeight="SemiBold"
 																				   IsVisible="{Binding IsBesteld}"/>
-																	</StackPanel>
 																</StackPanel>
 															</Border>
 

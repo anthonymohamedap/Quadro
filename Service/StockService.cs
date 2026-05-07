@@ -161,7 +161,7 @@ namespace QuadroApp.Service
             }
         }
 
-        public async Task PlaceSupplierOrderForWerkTaakAsync(int werkTaakId, DateTime bestelDatum)
+        public async Task PlaceSupplierOrderForWerkTaakAsync(int werkTaakId, DateTime bestelDatum, BestelVorm bestelVorm = BestelVorm.Verstek)
         {
             try
             {
@@ -211,6 +211,7 @@ namespace QuadroApp.Service
                         AantalMeterBesteld = taak.BenodigdeMeter,
                         AantalMeterOntvangen = 0m,
                         RedenType = LeverancierBestelRedenType.TekortWerkTaak,
+                        BestelVorm = bestelVorm,
                         Opmerking = $"Automatisch aangemaakt voor werktaak {taak.Id}"
                     };
 
@@ -238,7 +239,7 @@ namespace QuadroApp.Service
             }
         }
 
-        public async Task CreateSupplierOrderAsync(int typeLijstId, decimal aantalMeter, DateTime bestelDatum, string? opmerking = null)
+        public async Task CreateSupplierOrderAsync(int typeLijstId, decimal aantalMeter, DateTime bestelDatum, string? opmerking = null, BestelVorm bestelVorm = BestelVorm.Verstek)
         {
             if (aantalMeter <= 0m)
                 throw new InvalidOperationException("Aantal meter moet groter zijn dan 0.");
@@ -272,6 +273,7 @@ namespace QuadroApp.Service
                         AantalMeterBesteld = aantalMeter,
                         AantalMeterOntvangen = 0m,
                         RedenType = LeverancierBestelRedenType.MinimumVoorraadAanvulling,
+                        BestelVorm = bestelVorm,
                         Opmerking = string.IsNullOrWhiteSpace(opmerking) ? "Handmatig aangemaakt vanuit leveranciersoverzicht" : opmerking.Trim()
                     };
 

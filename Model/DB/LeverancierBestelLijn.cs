@@ -12,6 +12,14 @@ namespace QuadroApp.Model.DB
         Correctie = 2
     }
 
+    /// <summary>Hoe de lijst besteld wordt bij de leverancier.</summary>
+    public enum BestelVorm
+    {
+        Verstek = 0,
+        InLengte = 1,
+        Gemonteerd = 2
+    }
+
     public class LeverancierBestelLijn
     {
         public int Id { get; set; }
@@ -32,6 +40,9 @@ namespace QuadroApp.Model.DB
         public decimal AantalMeterOntvangen { get; set; }
 
         public LeverancierBestelRedenType RedenType { get; set; } = LeverancierBestelRedenType.TekortWerkTaak;
+
+        /// <summary>Bestelwijze: in verstek, in lengte of gemonteerd.</summary>
+        public BestelVorm BestelVorm { get; set; } = BestelVorm.Verstek;
 
         [MaxLength(2000)]
         public string? Opmerking { get; set; }
