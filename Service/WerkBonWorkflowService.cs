@@ -2,7 +2,6 @@
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
-using QuadroApp.Service.Pricing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -388,3 +387,4 @@ namespace QuadroApp.Service
         }
     }
 }
+                                  

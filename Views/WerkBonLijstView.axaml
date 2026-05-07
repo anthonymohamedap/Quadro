@@ -257,6 +257,13 @@
 							</Grid>
 
 							<StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+								<Button Content="📄 Open bestelbon"
+										Command="{Binding OpenBestelBonCommand}"
+										Background="#E8F4FD"
+										Foreground="#1565C0"
+										FontWeight="Bold"
+										CornerRadius="6"
+										Padding="12,6"/>
 								<Button Content="💾 Opslaan status"
 										Command="{Binding SaveStatusCommand}"
 										Classes="MainBtn"

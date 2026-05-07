@@ -44,6 +44,9 @@ namespace QuadroApp.Model.DB
         /// <summary>Dag waarop je de offerte gaat uitwerken.</summary>
         public DateTime? GeplandeDatum { get; set; }
 
+        /// <summary>Datum waarop de klant zijn werk komt afhalen.</summary>
+        public DateTime? AfhaalDatum { get; set; }
+
         /// <summary>Tegen wanneer de offerte klaar moet zijn.</summary>
         public DateTime? DeadlineDatum { get; set; }
 

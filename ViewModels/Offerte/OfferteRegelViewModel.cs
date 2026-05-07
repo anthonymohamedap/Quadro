@@ -251,12 +251,21 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
             await using var db = await _dbFactory.CreateDbContextAsync();
             await LegacyAfwerkingCode.ApplyAsync(db, SelectedRegel, code);
 
-            SelectedRegel.GlasId = SelectedRegel.Glas?.Id;
-            SelectedRegel.PassePartout1Id = SelectedRegel.PassePartout1?.Id;
-            SelectedRegel.PassePartout2Id = SelectedRegel.PassePartout2?.Id;
-            SelectedRegel.DiepteKernId = SelectedRegel.DiepteKern?.Id;
-            SelectedRegel.OpklevenId = SelectedRegel.Opkleven?.Id;
-            SelectedRegel.RugId = SelectedRegel.Rug?.Id;
+            SelectedRegel.GlasId           = SelectedRegel.Glas?.Id;
+            SelectedRegel.PassePartout1Id  = SelectedRegel.PassePartout1?.Id;
+            SelectedRegel.PassePartout2Id  = SelectedRegel.PassePartout2?.Id;
+            SelectedRegel.DiepteKernId     = SelectedRegel.DiepteKern?.Id;
+            SelectedRegel.OpklevenId       = SelectedRegel.Opkleven?.Id;
+            SelectedRegel.RugId            = SelectedRegel.Rug?.Id;
+
+            // Relink nav-props to CATALOG instances so the level-2 ComboBoxes
+            // can match by reference (ApplyAsync uses a separate DB context).
+            if (SelectedRegel.GlasId is int gid)          SelectedRegel.Glas          = GlasOpties.FirstOrDefault(x => x.Id == gid);          else SelectedRegel.Glas          = null;
+            if (SelectedRegel.PassePartout1Id is int p1id) SelectedRegel.PassePartout1 = Passe1Opties.FirstOrDefault(x => x.Id == p1id); else SelectedRegel.PassePartout1 = null;
+            if (SelectedRegel.PassePartout2Id is int p2id) SelectedRegel.PassePartout2 = Passe2Opties.FirstOrDefault(x => x.Id == p2id); else SelectedRegel.PassePartout2 = null;
+            if (SelectedRegel.DiepteKernId is int did)     SelectedRegel.DiepteKern    = DiepteOpties.FirstOrDefault(x => x.Id == did);    else SelectedRegel.DiepteKern    = null;
+            if (SelectedRegel.OpklevenId is int oid)       SelectedRegel.Opkleven      = OpkleefOpties.FirstOrDefault(x => x.Id == oid);  else SelectedRegel.Opkleven      = null;
+            if (SelectedRegel.RugId is int rid)            SelectedRegel.Rug           = RugOpties.FirstOrDefault(x => x.Id == rid);      else SelectedRegel.Rug           = null;
 
             OnPropertyChanged(nameof(SelectedRegel));
             OnPropertyChanged(nameof(LegacyCode));

@@ -7,6 +7,18 @@
     x:DataType="vm:AfwerkingenViewModel"
     Background="#F5F5F5">
 
+    <UserControl.Resources>
+        <!-- Subtle chip style for variant rows -->
+        <ControlTheme x:Key="ChipTextBox" TargetType="TextBox">
+            <Setter Property="Background"     Value="White"/>
+            <Setter Property="BorderBrush"    Value="#D1D5DB"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"   Value="6"/>
+            <Setter Property="Padding"        Value="6,4"/>
+            <Setter Property="FontSize"       Value="13"/>
+        </ControlTheme>
+    </UserControl.Resources>
+
 	<Grid RowDefinitions="Auto,*,Auto">
 
 		<!-- ░░ HEADER ░░ -->
@@ -132,7 +144,7 @@
 															   Foreground="#111827"
 															   TextWrapping="NoWrap"
 															   TextTrimming="CharacterEllipsis"/>
-													<TextBlock Text="{Binding Kleur, StringFormat='Kleur: {0}'}"
+													<TextBlock Text="{Binding Varianten.Count, StringFormat='Varianten: {0}'}"
 															   Foreground="#6B7280"
 															   FontSize="11"
 															   TextWrapping="NoWrap"
@@ -191,7 +203,7 @@
 									<StackPanel>
 										<TextBlock Text="Basis" FontSize="18" FontWeight="SemiBold" Foreground="#222" Margin="0,6,0,10"/>
 
-										<Grid ColumnDefinitions="200,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="10">
+										<Grid ColumnDefinitions="200,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="10">
 
 											<TextBlock Grid.Row="0" Grid.Column="0" Text="Naam" Foreground="#555" FontSize="12" Margin="0,6,0,4"/>
 											<TextBox Grid.Row="0" Grid.Column="1"
@@ -211,15 +223,11 @@
 													 HorizontalContentAlignment="Center"
 													 FontWeight="SemiBold"/>
 
-											<TextBlock Grid.Row="2" Grid.Column="0" Text="Kleur" Foreground="#555" FontSize="12" Margin="0,6,0,4"/>
-											<TextBox Grid.Row="2" Grid.Column="1"
-													 Text="{Binding SelectedOptie.Kleur, Mode=TwoWay, TargetNullValue='Standaard', FallbackValue='Standaard'}"/>
-
-											<TextBlock Grid.Row="3" Grid.Column="0" Text="Leverancier" Foreground="#555" FontSize="12" Margin="0,6,0,4"/>
+											<TextBlock Grid.Row="2" Grid.Column="0" Text="Leverancier" Foreground="#555" FontSize="12" Margin="0,6,0,4"/>
 
 											<!-- ComboBox: ItemsSource blijft stabiel door VM-fix (Clear/Add),
                            plus Text is apart gebonden op LeverancierZoekterm -->
-											<StackPanel Grid.Row="3" Grid.Column="1" Spacing="6">
+											<StackPanel Grid.Row="2" Grid.Column="1" Spacing="6">
 
 												<!-- Huidige leverancier duidelijk zichtbaar -->
 												<Border Background="#EEF2FF"
@@ -252,14 +260,114 @@
 
 											</StackPanel>
 
-											<TextBlock Grid.Row="4" Grid.Column="0" Text="Dealeroptie" Foreground="#555" FontSize="12" Margin="0,6,0,4"/>
-											<ToggleSwitch Grid.Row="4" Grid.Column="1"
+											<TextBlock Grid.Row="3" Grid.Column="0" Text="Dealeroptie" Foreground="#555" FontSize="12" Margin="0,6,0,4"/>
+											<ToggleSwitch Grid.Row="3" Grid.Column="1"
 														  IsChecked="{Binding IsDealerOptie}"
 														  IsEnabled="False"/>
 										</Grid>
 									</StackPanel>
 
 									<Separator/>
+
+										<!-- ═══ Varianten ═══ -->
+										<StackPanel Spacing="10">
+
+											<Grid ColumnDefinitions="*,Auto">
+												<TextBlock Grid.Column="0"
+														   Text="Varianten"
+														   FontSize="18"
+														   FontWeight="SemiBold"
+														   Foreground="#222"
+														   VerticalAlignment="Center"
+														   Margin="0,6,0,6"/>
+												<Button Grid.Column="1"
+														Content="➕ Variant toevoegen"
+														Command="{Binding AddVariantCommand}"
+														Classes="MainBtn"
+														VerticalAlignment="Center"/>
+											</Grid>
+
+											<!-- Column headers -->
+											<Grid ColumnDefinitions="*,70,80,100,40" ColumnSpacing="8" Margin="0,0,0,2">
+												<TextBlock Grid.Column="0" Text="Beschrijving"  Foreground="#6B7280" FontSize="11" FontWeight="SemiBold"/>
+												<TextBlock Grid.Column="1" Text="Kleur hex"     Foreground="#6B7280" FontSize="11" FontWeight="SemiBold"/>
+												<TextBlock Grid.Column="2" Text="Code"          Foreground="#6B7280" FontSize="11" FontWeight="SemiBold"/>
+												<TextBlock Grid.Column="3" Text="Std / Actief"  Foreground="#6B7280" FontSize="11" FontWeight="SemiBold"/>
+											</Grid>
+
+											<!-- Empty-state message -->
+											<TextBlock Text="Geen varianten. Klik '➕ Variant toevoegen' om te beginnen."
+													   Foreground="#9CA3AF"
+													   FontStyle="Italic"
+													   FontSize="12"
+													   Margin="0,4,0,0"
+													   IsVisible="{Binding HeeftGeenVarianten}"/>
+
+											<!-- Variant rows -->
+											<ItemsControl ItemsSource="{Binding OptieVarianten}">
+												<ItemsControl.ItemTemplate>
+													<DataTemplate x:DataType="vm:AfwerkingsVariantViewModel">
+														<Border Background="#F9FAFB"
+																BorderBrush="#E5E7EB"
+																BorderThickness="1"
+																CornerRadius="8"
+																Padding="10,8"
+																Margin="0,0,0,6">
+															<Grid ColumnDefinitions="*,70,80,100,40" ColumnSpacing="8" VerticalAlignment="Center">
+
+																<!-- Beschrijving -->
+																<TextBox Grid.Column="0"
+																		 Watermark="Bijv. Zwart, Brons…"
+																		 Text="{Binding Beschrijving, Mode=TwoWay}"
+																		 Padding="6,4"
+																		 FontSize="13"/>
+
+																<!-- Hex kleurcode -->
+																<TextBox Grid.Column="1"
+																		 Watermark="#hex"
+																		 Text="{Binding Kleur, Mode=TwoWay}"
+																		 Padding="6,4"
+																		 FontSize="13"/>
+
+																<!-- Variant code -->
+																<TextBox Grid.Column="2"
+																		 Watermark="Code (bv. ZW)"
+																		 Text="{Binding VariantCode, Mode=TwoWay}"
+																		 Padding="6,4"
+																		 FontSize="13"/>
+
+																<!-- Standaard + Actief -->
+																<StackPanel Grid.Column="3"
+																				Orientation="Horizontal"
+																				Spacing="6"
+																				VerticalAlignment="Center">
+																	<CheckBox IsChecked="{Binding IsStandaard, Mode=TwoWay}"
+																			  Content="⭐"
+																			  ToolTip.Tip="Standaard variant — automatisch geselecteerd bij nieuwe regels"/>
+																	<ToggleSwitch IsChecked="{Binding IsActief, Mode=TwoWay}"
+																				  OnContent=""
+																				  OffContent=""
+																				  ToolTip.Tip="Actief/Inactief"/>
+																</StackPanel>
+
+																<!-- Verwijderen -->
+																<Button Grid.Column="4"
+																		Content="🗑️"
+																		Command="{Binding DeleteCommand}"
+																		Background="#FEE2E2"
+																		Foreground="#991B1B"
+																		Padding="8,4"
+																		CornerRadius="6"
+																		ToolTip.Tip="Variant verwijderen"/>
+															</Grid>
+														</Border>
+													</DataTemplate>
+												</ItemsControl.ItemTemplate>
+											</ItemsControl>
+
+										</StackPanel>
+
+										<Separator/>
 
 									<!-- Prijs & werk -->
 									<StackPanel>

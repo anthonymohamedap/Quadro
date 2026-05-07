@@ -50,8 +50,12 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         }
     }
 
-    partial void OnGekoppeldeWerkBonChanged(WerkBon? value) =>
+    partial void OnGekoppeldeWerkBonChanged(WerkBon? value)
+    {
         OnPropertyChanged(nameof(FactuurStatusText));
+        OnPropertyChanged(nameof(IsBevestigenZichtbaar));
+        OnPropertyChanged(nameof(IsPlanningZichtbaar));
+    }
 
     partial void OnGekoppeldeFactuurChanged(Factuur? value)
     {
@@ -59,7 +63,13 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         OnPropertyChanged(nameof(FactuurStatusText));
     }
 
+    // Bevestigen is alleen zichtbaar als er nog geen werkbon is.
+    // Zodra de werkbon bestaat → Planning-knop tonen i.p.v. Bevestigen-knop.
+    public bool IsBevestigenZichtbaar => GekoppeldeWerkBon is null;
+    public bool IsPlanningZichtbaar   => GekoppeldeWerkBon is not null;
+
     public IAsyncRelayCommand BevestigenCommand { get; }
+    public IAsyncRelayCommand OpenPlanningCommand { get; }
     public IAsyncRelayCommand FactuurCommand { get; }
 
     public OfferteWorkflowViewModel(
@@ -91,8 +101,9 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         _berekenAsync = berekenAsync;
         _runValidation = runValidation;
 
-        BevestigenCommand = new AsyncRelayCommand(BevestigenAsync);
-        FactuurCommand = new AsyncRelayCommand(OpenFactuurAsync);
+        BevestigenCommand   = new AsyncRelayCommand(BevestigenAsync);
+        OpenPlanningCommand = new AsyncRelayCommand(OpenPlanningAsync);
+        FactuurCommand      = new AsyncRelayCommand(OpenFactuurAsync);
     }
 
     public async Task LoadFactuurContextAsync(AppDbContext db, int offerteId)
@@ -167,6 +178,48 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         catch (Exception ex)
         {
             await _dialogs.ShowErrorAsync("Bevestigen mislukt", ex.GetBaseException().Message);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>
+    /// Opent de planningskalender voor de bestaande werkbon —
+    /// zonder opnieuw te bevestigen of een nieuwe werkbon aan te maken.
+    /// </summary>
+    private async Task OpenPlanningAsync()
+    {
+        if (IsBusy) return;
+
+        var werkBon = GekoppeldeWerkBon;
+        if (werkBon is null)
+        {
+            Toast.Error("Geen werkbon gevonden. Bevestig de offerte eerst.");
+            return;
+        }
+
+        try
+        {
+            IsBusy = true;
+
+            var vm = new PlanningCalendarViewModel(_dbFactory, _werkBonWorkflow, Toast, _statusWorkflow);
+            await vm.InitializeAsync(werkBon.Id);
+
+            var window = new PlanningCalendarWindow { DataContext = vm };
+
+            if (App.Current?.ApplicationLifetime is
+                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                var owner = desktop.MainWindow;
+                if (owner is null) return;
+                await window.ShowDialog(owner);
+            }
+        }
+        catch (Exception ex)
+        {
+            await _dialogs.ShowErrorAsync("Planning openen mislukt", ex.GetBaseException().Message);
         }
         finally
         {

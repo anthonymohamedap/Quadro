@@ -50,7 +50,7 @@
     <!-- ░░ MAIN CONTENT ░░ -->
     <Grid Grid.Row="1" ColumnDefinitions="1.1*,1.4*" Margin="24" ColumnSpacing="16">
       <StackPanel Grid.Column="0" Spacing="10">
-        <TextBlock Text="Facturen" FontSize="24" FontWeight="Bold"/>
+        <TextBlock Text="Bestelbonnen" FontSize="24" FontWeight="Bold"/>
         <TextBox Watermark="Filter op nummer / klant / status" Text="{Binding FilterTekst, Mode=TwoWay}"/>
         <ListBox ItemsSource="{Binding Facturen}" SelectedItem="{Binding GeselecteerdeFactuur, Mode=TwoWay}" Height="600">
           <ListBox.ItemTemplate>
@@ -110,4 +110,4 @@
     </Grid>
 
   </Grid>
-</UserControl>
+</UserContro

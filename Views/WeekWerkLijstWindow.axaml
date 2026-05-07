@@ -39,7 +39,17 @@
 					<TextBlock Text="{Binding Year}" Foreground="White" VerticalAlignment="Center"/>
 					<TextBlock Text="{Binding WeekNr, StringFormat='Week {0}'}" Foreground="White" VerticalAlignment="Center"/>
 
-					<Button Content="Terug"
+					<Button Content="🖨 PDF afdrukken"
+							Command="{Binding PrintPdfCommand}"
+							VerticalAlignment="Center"
+							Background="#27AE60"
+							Foreground="White"
+							FontWeight="Bold"
+							CornerRadius="8"
+							Padding="10,5"
+							Height="32"/>
+
+					<Button Content="← Terug"
 							Click="Close_Click"
 							VerticalAlignment="Top"
 							HorizontalAlignment="Right"

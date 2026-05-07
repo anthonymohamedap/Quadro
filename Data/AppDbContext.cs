@@ -11,6 +11,7 @@ namespace QuadroApp.Data
         public DbSet<TypeLijst> TypeLijsten => Set<TypeLijst>();
         public DbSet<AfwerkingsGroep> AfwerkingsGroepen => Set<AfwerkingsGroep>();
         public DbSet<AfwerkingsOptie> AfwerkingsOpties => Set<AfwerkingsOptie>();
+        public DbSet<AfwerkingsVariant> AfwerkingsVarianten => Set<AfwerkingsVariant>();
         public DbSet<Offerte> Offertes => Set<Offerte>();
         public DbSet<WerkBon> WerkBonnen => Set<WerkBon>();
         public DbSet<WerkTaak> WerkTaken => Set<WerkTaak>();
@@ -84,6 +85,20 @@ namespace QuadroApp.Data
                        .WithMany()
                       .HasForeignKey(x => x.LeverancierId)
                       .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasMany(x => x.Varianten)
+                      .WithOne(v => v.Optie)
+                      .HasForeignKey(v => v.AfwerkingsOptieId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // AfwerkingsVariant entity
+            b.Entity<AfwerkingsVariant>(entity =>
+            {
+                entity.Property(x => x.Beschrijving).HasMaxLength(80);
+                entity.Property(x => x.Kleur).HasMaxLength(20);
+                entity.Property(x => x.VariantCode).HasMaxLength(10);
+                entity.HasIndex(x => new { x.AfwerkingsOptieId, x.Beschrijving }).IsUnique();
             });
 
 

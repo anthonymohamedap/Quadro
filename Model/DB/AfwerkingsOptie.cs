@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace QuadroApp.Model.DB
@@ -39,5 +40,8 @@ namespace QuadroApp.Model.DB
 
         public int? LeverancierId { get; set; }
         public Leverancier? Leverancier { get; set; }
+
+        /// <summary>Kleur- en stijlvarianten van deze optie (bv. Zwart, Brons, Transparant).</summary>
+        public ICollection<AfwerkingsVariant> Varianten { get; set; } = new List<AfwerkingsVariant>();
     }
 }

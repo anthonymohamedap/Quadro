@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuadroApp.Model.DB
@@ -139,6 +140,10 @@ namespace QuadroApp.Model.DB
 
         [MaxLength(6)]
         public string? LegacyCode { get; set; }
+
+        /// <summary>Gewenste afhaal datum voor dit specifieke werkstuk.
+        /// Elke regel kan een eigen afhaal datum hebben (bv. niet alles klaar op hetzelfde moment).</summary>
+        public DateTime? AfhaalDatum { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal? AfgesprokenPrijsExcl { get; set; }

@@ -46,6 +46,7 @@ namespace QuadroApp.Service
                 .AsNoTracking()
                 .Include(o => o.Leverancier)
                 .Include(o => o.AfwerkingsGroep)
+                .Include(o => o.Varianten)
                 .AsQueryable();
 
             if (groepId.HasValue)
@@ -164,6 +165,55 @@ namespace QuadroApp.Service
             await using var db = await _dbFactory.CreateDbContextAsync();
             db.AfwerkingsOpties.Remove(optie);
             await db.SaveChangesAsync();
+        }
+
+        // ── Variant management ────────────────────────────────────────────────
+
+        public async Task<List<AfwerkingsVariant>> GetVariantenAsync(int optieId)
+        {
+            await using var db = await _dbFactory.CreateDbContextAsync();
+            return await db.AfwerkingsVarianten
+                .AsNoTracking()
+                .Where(v => v.AfwerkingsOptieId == optieId)
+                .OrderByDescending(v => v.IsStandaard)
+                .ThenBy(v => v.Beschrijving)
+                .ToListAsync();
+        }
+
+        public async Task<AfwerkingsVariant> SaveVariantAsync(AfwerkingsVariant variant)
+        {
+            await using var db = await _dbFactory.CreateDbContextAsync();
+
+            if (variant.Id == 0)
+            {
+                db.AfwerkingsVarianten.Add(variant);
+                await db.SaveChangesAsync();
+                return variant;
+            }
+
+            var bestaand = await db.AfwerkingsVarianten.FindAsync(variant.Id);
+            if (bestaand is null)
+                throw new InvalidOperationException($"Variant {variant.Id} niet gevonden.");
+
+            bestaand.Beschrijving = variant.Beschrijving?.Trim() ?? string.Empty;
+            bestaand.Kleur        = variant.Kleur?.Trim();
+            bestaand.VariantCode  = variant.VariantCode?.Trim();
+            bestaand.IsStandaard  = variant.IsStandaard;
+            bestaand.IsActief     = variant.IsActief;
+
+            await db.SaveChangesAsync();
+            return bestaand;
+        }
+
+        public async Task DeleteVariantAsync(int variantId)
+        {
+            await using var db = await _dbFactory.CreateDbContextAsync();
+            var v = await db.AfwerkingsVarianten.FindAsync(variantId);
+            if (v is not null)
+            {
+                db.AfwerkingsVarianten.Remove(v);
+                await db.SaveChangesAsync();
+            }
         }
 
         private static string NormalizeKleur(string? kleur)
