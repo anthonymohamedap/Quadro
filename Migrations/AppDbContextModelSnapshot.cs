@@ -1406,4 +1406,97 @@ namespace QuadroApp.Migrations
                         .HasForeignKey("QuadroApp.Model.DB.WerkBon", "OfferteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
+
+                    b.Navigation("Offerte");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.WerkTaak", b =>
+                {
+                    b.HasOne("QuadroApp.Model.DB.LeverancierBestelLijn", "LeverancierBestelLijn")
+                        .WithMany()
+                        .HasForeignKey("LeverancierBestelLijnId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("QuadroApp.Model.DB.OfferteRegel", "OfferteRegel")
+                        .WithMany()
+                        .HasForeignKey("OfferteRegelId");
+
+                    b.HasOne("QuadroApp.Model.DB.WerkBon", "WerkBon")
+                        .WithMany("Taken")
+                        .HasForeignKey("WerkBonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LeverancierBestelLijn");
+
+                    b.Navigation("OfferteRegel");
+
+                    b.Navigation("WerkBon");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.AfwerkingsGroep", b =>
+                {
+                    b.Navigation("Opties");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.AfwerkingsOptie", b =>
+                {
+                    b.Navigation("Varianten");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.Factuur", b =>
+                {
+                    b.Navigation("Lijnen");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.ImportSession", b =>
+                {
+                    b.Navigation("RowLogs");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.Klant", b =>
+                {
+                    b.Navigation("Offertes");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.Leverancier", b =>
+                {
+                    b.Navigation("Bestellingen");
+
+                    b.Navigation("TypeLijsten");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.LeverancierBestelLijn", b =>
+                {
+                    b.Navigation("VoorraadMutaties");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.LeverancierBestelling", b =>
+                {
+                    b.Navigation("Lijnen");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.Offerte", b =>
+                {
+                    b.Navigation("Regels");
+
+                    b.Navigation("WerkBon");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.TypeLijst", b =>
+                {
+                    b.Navigation("LeverancierBestelLijnen");
+
+                    b.Navigation("VoorraadAlerts");
+
+                    b.Navigation("VoorraadMutaties");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.WerkBon", b =>
+                {
+                    b.Navigation("Taken");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}
