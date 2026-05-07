@@ -495,6 +495,9 @@ namespace QuadroApp.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("BestelVorm")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("LeverancierBestellingId")
                         .HasColumnType("INTEGER");
 

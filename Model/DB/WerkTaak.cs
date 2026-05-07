@@ -48,7 +48,31 @@ namespace QuadroApp.Model.DB
         public VoorraadStatus VoorraadStatus { get; set; } = VoorraadStatus.Unknown;
 
         [System.ComponentModel.DataAnnotations.Schema.NotMapped]
-        public bool KanBesteldWorden => !IsBesteld && !IsOpVoorraad;
+        public bool KanBesteldWorden => !IsBesteld;
+
+        /// <summary>Bestelwijze geselecteerd door de gebruiker in de UI — niet opgeslagen in DB,
+        /// wordt doorgegeven bij het aanmaken van de bestelling.</summary>
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public BestelVorm GeselecteerdeBestelVorm { get; set; } = BestelVorm.Verstek;
+
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public bool BestelVormIsVerstek
+        {
+            get => GeselecteerdeBestelVorm == BestelVorm.Verstek;
+            set { if (value) GeselecteerdeBestelVorm = BestelVorm.Verstek; }
+        }
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public bool BestelVormIsInLengte
+        {
+            get => GeselecteerdeBestelVorm == BestelVorm.InLengte;
+            set { if (value) GeselecteerdeBestelVorm = BestelVorm.InLengte; }
+        }
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public bool BestelVormIsGemonteerd
+        {
+            get => GeselecteerdeBestelVorm == BestelVorm.Gemonteerd;
+            set { if (value) GeselecteerdeBestelVorm = BestelVorm.Gemonteerd; }
+        }
 
         public int? LeverancierBestelLijnId { get; set; }
         public LeverancierBestelLijn? LeverancierBestelLijn { get; set; }

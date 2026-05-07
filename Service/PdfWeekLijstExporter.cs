@@ -1,6 +1,7 @@
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using QuadroApp.Model.DB;
 using QuadroApp.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -199,6 +200,14 @@ public sealed class PdfWeekLijstExporter
 
     private static string GetBestelStatusLine(WeekWerkItem item)
     {
+        var vormLabel = item.GeselecteerdeBestelVorm switch
+        {
+            BestelVorm.Verstek    => "in verstek",
+            BestelVorm.InLengte   => "in lengte",
+            BestelVorm.Gemonteerd => "gemonteerd",
+            _                     => null
+        };
+
         if (item.IsOpVoorraad) return "✓ op voorraad";
         if (item.IsBesteld)
         {
@@ -207,9 +216,15 @@ public sealed class PdfWeekLijstExporter
                 s += $"  —  {item.BestellingNummer}";
             if (!string.IsNullOrWhiteSpace(item.LeverancierNaam))
                 s += $"  —  {item.LeverancierNaam}";
+            if (vormLabel is not null)
+                s += $"  —  {vormLabel}";
             return s;
         }
-        return "⚠ nog te bestellen";
+
+        var teBestellenLabel = "⚠ nog te bestellen";
+        if (vormLabel is not null)
+            teBestellenLabel += $" ({vormLabel})";
+        return teBestellenLabel;
     }
 
     // ══════════════════════════════════════════════════════════════════════════

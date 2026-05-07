@@ -36,6 +36,34 @@ public partial class LeveranciersViewModel : AsyncViewModelBase, IAsyncInitializ
     [ObservableProperty] private decimal? nieuwBestelAantalMeter = 1m;
     [ObservableProperty] private DateTimeOffset? nieuweBestellingDatum = DateTimeOffset.Now.Date;
     [ObservableProperty] private string nieuweBestellingOpmerking = string.Empty;
+    [ObservableProperty] private BestelVorm nieuweBestelVorm = BestelVorm.Verstek;
+
+    public IReadOnlyList<BestelVorm> BestelVormen { get; } =
+        new[] { BestelVorm.Verstek, BestelVorm.InLengte, BestelVorm.Gemonteerd };
+
+    // RadioButton helpers — each setter writes back to NieuweBestelVorm
+    public bool BestelVormIsVerstek
+    {
+        get => NieuweBestelVorm == BestelVorm.Verstek;
+        set { if (value) NieuweBestelVorm = BestelVorm.Verstek; }
+    }
+    public bool BestelVormIsInLengte
+    {
+        get => NieuweBestelVorm == BestelVorm.InLengte;
+        set { if (value) NieuweBestelVorm = BestelVorm.InLengte; }
+    }
+    public bool BestelVormIsGemonteerd
+    {
+        get => NieuweBestelVorm == BestelVorm.Gemonteerd;
+        set { if (value) NieuweBestelVorm = BestelVorm.Gemonteerd; }
+    }
+
+    partial void OnNieuweBestelVormChanged(BestelVorm value)
+    {
+        OnPropertyChanged(nameof(BestelVormIsVerstek));
+        OnPropertyChanged(nameof(BestelVormIsInLengte));
+        OnPropertyChanged(nameof(BestelVormIsGemonteerd));
+    }
 
     [ObservableProperty] private int leveranciersCurrentPage = 1;
     [ObservableProperty] private int leveranciersPageSize = 10;
@@ -149,6 +177,7 @@ public partial class LeveranciersViewModel : AsyncViewModelBase, IAsyncInitializ
         NieuwBestelAantalMeter = 1m;
         NieuweBestellingDatum = DateTimeOffset.Now.Date;
         NieuweBestellingOpmerking = string.Empty;
+        NieuweBestelVorm = BestelVorm.Verstek;
         OpenBestellingen = new ObservableCollection<LeverancierBestelling>(bestellingen);
         LeverancierAlerts = new ObservableCollection<VoorraadAlert>(alerts);
         IsDetailOpen = true;
@@ -268,6 +297,7 @@ public partial class LeveranciersViewModel : AsyncViewModelBase, IAsyncInitializ
         NieuwBestelAantalMeter = 1m;
         NieuweBestellingDatum = DateTimeOffset.Now.Date;
         NieuweBestellingOpmerking = string.Empty;
+        NieuweBestelVorm = BestelVorm.Verstek;
         LijstenCurrentPage = 1;
         NotifyLijstenPagingChanged();
         IsDetailOpen = true;
@@ -403,6 +433,7 @@ public partial class LeveranciersViewModel : AsyncViewModelBase, IAsyncInitializ
         NieuwBestelAantalMeter = 1m;
         NieuweBestellingDatum = DateTimeOffset.Now.Date;
         NieuweBestellingOpmerking = string.Empty;
+        NieuweBestelVorm = BestelVorm.Verstek;
         LijstenCurrentPage = 1;
         NotifyLijstenPagingChanged();
     }
@@ -485,7 +516,8 @@ public partial class LeveranciersViewModel : AsyncViewModelBase, IAsyncInitializ
                 SelectedBestelTypeLijst.Id,
                 decimal.Round(NieuwBestelAantalMeter.Value, 2, MidpointRounding.AwayFromZero),
                 bestelDatum,
-                NieuweBestellingOpmerking);
+                NieuweBestellingOpmerking,
+                NieuweBestelVorm);
 
             if (SelectedLeverancier is not null)
                 await LoadTypeLijstenForSelectedAsync(SelectedLeverancier);

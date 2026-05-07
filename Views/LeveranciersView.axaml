@@ -175,7 +175,7 @@
 								<TextBlock Text="Open bestellingen" FontSize="16" FontWeight="SemiBold"/>
 
 								<Border Grid.Row="1" Background="#F9FAFB" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="12">
-										<Grid RowDefinitions="Auto,Auto" RowSpacing="10">
+										<Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
 											<Grid ColumnDefinitions="2.2*,1*,1.1*" ColumnSpacing="10">
 												<ComboBox ItemsSource="{Binding BestelbareLijsten}"
                                                       SelectedItem="{Binding SelectedBestelTypeLijst, Mode=TwoWay}">
@@ -195,7 +195,21 @@
                                                         SelectedDate="{Binding NieuweBestellingDatum, Mode=TwoWay}"/>
 										</Grid>
 
-										<Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+										<!-- BESTELWIJZE -->
+										<StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="16" Margin="0,2,0,0">
+											<TextBlock Text="Bestelwijze:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+											<RadioButton Content="In verstek"
+                                                         GroupName="BestelVorm"
+                                                         IsChecked="{Binding BestelVormIsVerstek, Mode=TwoWay}"/>
+											<RadioButton Content="In lengte"
+                                                         GroupName="BestelVorm"
+                                                         IsChecked="{Binding BestelVormIsInLengte, Mode=TwoWay}"/>
+											<RadioButton Content="Gemonteerd"
+                                                         GroupName="BestelVorm"
+                                                         IsChecked="{Binding BestelVormIsGemonteerd, Mode=TwoWay}"/>
+										</StackPanel>
+
+										<Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="10">
 											<TextBox Watermark="Opmerking voor de bestelling (optioneel)"
                                                      Text="{Binding NieuweBestellingOpmerking, Mode=TwoWay}"/>
 
@@ -235,7 +249,20 @@
 																		<DataTemplate x:DataType="m:LeverancierBestelLijn">
 																			<Border BorderBrush="#F0F0F0" BorderThickness="1" CornerRadius="6" Padding="8" Background="#F9FAFB">
 																				<StackPanel Spacing="4">
-																					<TextBlock Text="{Binding TypeLijst.Artikelnummer}" FontWeight="SemiBold"/>
+																					<Grid ColumnDefinitions="*,Auto">
+																						<TextBlock Text="{Binding TypeLijst.Artikelnummer}" FontWeight="SemiBold"/>
+																						<Border Grid.Column="1"
+                                                                                                Background="#EEF2FF"
+                                                                                                BorderBrush="#C7D2FE"
+                                                                                                BorderThickness="1"
+                                                                                                CornerRadius="4"
+                                                                                                Padding="6,2">
+																							<TextBlock Text="{Binding BestelVorm}"
+                                                                                                       FontSize="11"
+                                                                                                       Foreground="#4338CA"
+                                                                                                       FontWeight="SemiBold"/>
+																						</Border>
+																					</Grid>
 																					<TextBlock Text="{Binding AantalMeterBesteld, StringFormat='Besteld: {0:0.##} m'}"/>
 																					<TextBlock Text="{Binding AantalMeterOntvangen, StringFormat='Ontvangen: {0:0.##} m'}"/>
 																					<TextBlock Text="{Binding ResterendTeOntvangenMeter, StringFormat='Resterend: {0:0.##} m'}"/>

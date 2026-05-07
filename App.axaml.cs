@@ -277,7 +277,8 @@ public partial class App : Application
 #endif
 
             var source = new GithubSource(repoUrl, accessToken: null, prerelease: false);
-            var mgr = new UpdateManager(source, new UpdateOptions { ExplicitChannel = "win" });
+            var channel = OperatingSystem.IsMacOS() ? "osx" : "win";
+            var mgr = new UpdateManager(source, new UpdateOptions { ExplicitChannel = channel });
 
             // Not running as a Velopack-installed app (e.g. dev machine) → skip silently.
             if (!mgr.IsInstalled) return;
@@ -298,16 +299,14 @@ public partial class App : Application
             });
         }
         catch (System.Net.Http.HttpRequestException httpEx)
-            when (httpEx.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
-            // 404 = release feed not found (no update published yet) — not an error worth logging.
-            _logger.LogInformation("[Update] Geen release-feed gevonden (404) — overgeslagen.");
+            // Netwerk niet beschikbaar, DNS-fout, 404, … — allemaal niet-kritiek.
+            _logger.LogInformation("[Update] Update-controle overgeslagen (netwerk): {Message}", httpEx.Message);
         }
         catch (Exception ex)
         {
-            // Update check should never crash the app — log and move on.
+            // Update check should never crash the app — only log, never write to crash.log.
             _logger.LogWarning(ex, "[Update] Update-controle mislukt (niet kritiek): {Message}", ex.Message);
-            LogException(ex);
         }
     }
 
@@ -646,6 +645,11 @@ WHERE NOT EXISTS (
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"OfferteRegels\" ADD COLUMN \"AfhaalDatum\" TEXT NULL");
 
+        // AddBestelVormToBestellijn (20260507093626)
+        if (!await ColumnExistsAsync("LeverancierBestelLijnen", "BestelVorm"))
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"LeverancierBestelLijnen\" ADD COLUMN \"BestelVorm\" INTEGER NOT NULL DEFAULT 0");
+
         // AddVoorraadAlerts (20260506120000) — ensure table exists before HomeViewModel loads
         await db.Database.ExecuteSqlRawAsync(@"
 CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
@@ -687,6 +691,7 @@ CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
             "20260507011133_tag10",
             "20260507023057_date",
             "20260507130000_AddAfhaalDatumToOfferteRegel",
+            "20260507093626_AddBestelVormToBestellijn",
         };
 
         try

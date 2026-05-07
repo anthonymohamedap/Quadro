@@ -9,6 +9,6 @@ namespace QuadroApp.Service.Interfaces
         Task ChangeOfferteStatusAsync(int offerteId, OfferteStatus newStatus);
         Task ChangeWerkBonStatusAsync(int werkBonId, WerkBonStatus newStatus);
         Task ReserveStockForWerkBonAsync(int werkBonId);
-        Task MarkLijstAsBesteldAsync(int werkTaakId, DateTime bestelDatum);
+        Task MarkLijstAsBesteldAsync(int werkTaakId, DateTime bestelDatum, BestelVorm bestelVorm = BestelVorm.Verstek);
     }
 }

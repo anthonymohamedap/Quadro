@@ -197,7 +197,7 @@ namespace QuadroApp.ViewModels
             try
             {
                 var bestelDatum = DateTime.Today;
-                await _statusWorkflow.MarkLijstAsBesteldAsync(taak.Id, bestelDatum);
+                await _statusWorkflow.MarkLijstAsBesteldAsync(taak.Id, bestelDatum, taak.GeselecteerdeBestelVorm);
             }
             catch (ValidationException ex)
             {

@@ -52,8 +52,8 @@ namespace QuadroApp.Service
             public Task ReserveStockForWerkBonAsync(int werkBonId) => _inner.ReserveStockForWerkBonAsync(werkBonId);
             public Task ConsumeReservationsForWerkBonAsync(int werkBonId) => _inner.ConsumeReservationsForWerkBonAsync(werkBonId);
             public Task ReleaseReservationsForWerkBonAsync(int werkBonId, bool cancelOpenOrders = false) => _inner.ReleaseReservationsForWerkBonAsync(werkBonId, cancelOpenOrders);
-            public Task PlaceSupplierOrderForWerkTaakAsync(int werkTaakId, DateTime bestelDatum) => _inner.PlaceSupplierOrderForWerkTaakAsync(werkTaakId, bestelDatum);
-            public Task CreateSupplierOrderAsync(int typeLijstId, decimal aantalMeter, DateTime bestelDatum, string? opmerking = null) => _inner.CreateSupplierOrderAsync(typeLijstId, aantalMeter, bestelDatum, opmerking);
+            public Task PlaceSupplierOrderForWerkTaakAsync(int werkTaakId, DateTime bestelDatum, BestelVorm bestelVorm = BestelVorm.Verstek) => _inner.PlaceSupplierOrderForWerkTaakAsync(werkTaakId, bestelDatum, bestelVorm);
+            public Task CreateSupplierOrderAsync(int typeLijstId, decimal aantalMeter, DateTime bestelDatum, string? opmerking = null, BestelVorm bestelVorm = BestelVorm.Verstek) => _inner.CreateSupplierOrderAsync(typeLijstId, aantalMeter, bestelDatum, opmerking, bestelVorm);
             public Task ReceiveSupplierOrderLineAsync(int bestelLijnId, decimal? aantalMeter = null) => _inner.ReceiveSupplierOrderLineAsync(bestelLijnId, aantalMeter);
             public Task CancelSupplierOrderAsync(int bestellingId) => _inner.CancelSupplierOrderAsync(bestellingId);
             public Task RefreshAlertsAsync() => _inner.RefreshAlertsAsync();
@@ -242,8 +242,8 @@ namespace QuadroApp.Service
         public async Task ReserveStockForWerkBonAsync(int werkBonId)
             => await _stock.ReserveStockForWerkBonAsync(werkBonId);
 
-        public async Task MarkLijstAsBesteldAsync(int werkTaakId, DateTime bestelDatum)
-            => await _stock.PlaceSupplierOrderForWerkTaakAsync(werkTaakId, bestelDatum);
+        public async Task MarkLijstAsBesteldAsync(int werkTaakId, DateTime bestelDatum, BestelVorm bestelVorm = BestelVorm.Verstek)
+            => await _stock.PlaceSupplierOrderForWerkTaakAsync(werkTaakId, bestelDatum, bestelVorm);
 
         // ── Validatie ───────────────────────────────────────────────────────
 
