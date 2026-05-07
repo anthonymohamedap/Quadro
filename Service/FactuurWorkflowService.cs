@@ -441,4 +441,3 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         factuur.BijgewerktOp = DateTime.UtcNow;
     }
 }
-                                  

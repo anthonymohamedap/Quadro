@@ -653,4 +653,3 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
             GefilterdeLeveranciers.Add(l);
     }
 }
-                               

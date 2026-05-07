@@ -387,4 +387,3 @@ namespace QuadroApp.Service
         }
     }
 }
-                                  

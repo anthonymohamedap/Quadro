@@ -800,4 +800,3 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
     [RelayCommand]
     private void Sluiten() => RequestClose?.Invoke(false);
 }
-                             

@@ -742,4 +742,3 @@ CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
 
 
 }
-                 
