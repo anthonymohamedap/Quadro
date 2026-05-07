@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
-using QuadroApp.Service.Pricing;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -49,9 +48,6 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
 
         if (werkbon is null)
             throw new InvalidOperationException("Werkbon niet gevonden.");
-
-        if (werkbon.Status != WerkBonStatus.Afgewerkt)
-            throw new InvalidOperationException("Factuur kan enkel gemaakt worden voor afgewerkte werkbonnen.");
 
         var offerte = werkbon.Offerte ?? throw new InvalidOperationException("Werkbon heeft geen offerte.");
         return await GetOrCreateFactuurAsync(db, offerte, werkBonId);
@@ -121,6 +117,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         factuur.FactuurDatum = updated.FactuurDatum;
         factuur.VervalDatum = updated.VervalDatum;
         factuur.GeplandeDatum = updated.GeplandeDatum;
+        factuur.AfhaalDatum = updated.AfhaalDatum;
         factuur.Opmerking = updated.Opmerking;
         factuur.AangenomenDoorInitialen = updated.AangenomenDoorInitialen;
         factuur.VoorschotBedrag = updated.VoorschotBedrag;
@@ -169,19 +166,19 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             if (!string.IsNullOrWhiteSpace(r.Titel))
                 segments.Add($"titel:{r.Titel}");
 
-            // Afwerkingen (tagged) — gebruik Naam
+            // Afwerkingen (tagged) — Naam + kleurvariant indien relevant
             if (r.Glas is not null)
-                segments.Add($"glas:{r.Glas.Naam}");
+                segments.Add($"glas:{AfwLabel(r.Glas)}");
             if (r.PassePartout1 is not null)
-                segments.Add($"pp1:{r.PassePartout1.Naam}");
+                segments.Add($"pp1:{AfwLabel(r.PassePartout1)}");
             if (r.PassePartout2 is not null)
-                segments.Add($"pp2:{r.PassePartout2.Naam}");
+                segments.Add($"pp2:{AfwLabel(r.PassePartout2)}");
             if (r.DiepteKern is not null)
-                segments.Add($"diepte:{r.DiepteKern.Naam}");
+                segments.Add($"diepte:{AfwLabel(r.DiepteKern)}");
             if (r.Opkleven is not null)
-                segments.Add($"opkleven:{r.Opkleven.Naam}");
+                segments.Add($"opkleven:{AfwLabel(r.Opkleven)}");
             if (r.Rug is not null)
-                segments.Add($"rug:{r.Rug.Naam}");
+                segments.Add($"rug:{AfwLabel(r.Rug)}");
 
             // TypeLijst opmerking (tagged)
             if (!string.IsNullOrWhiteSpace(r.TypeLijst?.Opmerking))
@@ -190,6 +187,10 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             // OfferteRegel opmerking (tagged)
             if (!string.IsNullOrWhiteSpace(r.Opmerking))
                 segments.Add($"opm:{r.Opmerking}");
+
+            // Afhaal datum per regel (tagged)
+            if (r.AfhaalDatum.HasValue)
+                segments.Add($"afhaal:{r.AfhaalDatum.Value:yyyy-MM-dd}");
 
             var omschrijving = string.Join(" | ", segments.Where(x => !string.IsNullOrWhiteSpace(x)));
 
@@ -209,6 +210,19 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         }
 
         return lijnen;
+    }
+
+    /// <summary>
+    /// Formatteert een afwerkingsoptie als leesbaar label.
+    /// Voegt de kleurvariant toe als die niet "Standaard" is.
+    /// Voorbeeld: "Mat Glas (Brons)"
+    /// </summary>
+    private static string AfwLabel(AfwerkingsOptie o)
+    {
+        var kleur = o.Kleur?.Trim();
+        return string.IsNullOrEmpty(kleur) || kleur.Equals("Standaard", StringComparison.OrdinalIgnoreCase)
+            ? o.Naam
+            : $"{o.Naam} ({kleur})";
     }
 
     private static FactuurLijn CreateLijn(string omschrijving, decimal aantal, string eenheid, decimal prijsExcl, decimal btwPct, int sortering)
@@ -304,6 +318,19 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
                 changed = true;
             }
 
+            // Sync planning dates from offerte so the PDF always reflects the
+            // latest AfhaalDatum/GeplandeDatum even if bestelbon was created earlier.
+            if (existing.GeplandeDatum != offerte.GeplandeDatum)
+            {
+                existing.GeplandeDatum = offerte.GeplandeDatum;
+                changed = true;
+            }
+            if (existing.AfhaalDatum != offerte.AfhaalDatum)
+            {
+                existing.AfhaalDatum = offerte.AfhaalDatum;
+                changed = true;
+            }
+
             if (NeedsDraftPrijsRefresh(existing))
             {
                 var btwPctExisting = await LeesBtwPctAsync(db);
@@ -342,6 +369,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             FactuurDatum = now,
             VervalDatum = now.AddDays(30),
             GeplandeDatum = offerte.GeplandeDatum,
+            AfhaalDatum = offerte.AfhaalDatum,
             IsBtwVrijgesteld = vrijgesteld,
             VoorschotBedrag = offerte.VoorschotBedrag,
             Status = FactuurStatus.Draft,
@@ -413,3 +441,4 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         factuur.BijgewerktOp = DateTime.UtcNow;
     }
 }
+                                  

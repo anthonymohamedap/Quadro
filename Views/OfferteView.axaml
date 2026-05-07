@@ -192,7 +192,7 @@
 					<!-- REGEL DETAILS -->
 					<Border Classes="quadro-card">
 						<Grid ColumnDefinitions="220,*"
-                             RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                             RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                               RowSpacing="10">
 
 							<TextBlock Text="Regel details"
@@ -314,6 +314,12 @@
 									 Height="70"
 									 TextWrapping="Wrap"
 									 Text="{Binding SelectedRegel.Opmerking, Mode=TwoWay}"/>
+
+							<!-- AFHAAL DATUM PER REGEL -->
+							<TextBlock Grid.Row="9" Grid.Column="0" Text="Afhaal datum" VerticalAlignment="Center"/>
+							<DatePicker Grid.Row="9"
+									    Grid.Column="1"
+									    SelectedDate="{Binding SelectedRegelAfhaalDatum, Mode=TwoWay}"/>
 						</Grid>
 					</Border>
 
@@ -356,19 +362,30 @@
 									   Opacity="0.8"
 									    Foreground="Black"/>
 
-							<ComboBox Grid.Row="1"
-									  Grid.Column="1"
-									  x:Name="GlasBox"
-									  ItemsSource="{Binding GlasOpties}"
-									  SelectedItem="{Binding SelectedRegelGlas, Mode=TwoWay}"
-									  MinWidth="200">
-
-								<ComboBox.ItemTemplate>
-									<DataTemplate x:DataType="m:AfwerkingsOptie">
-										<TextBlock Text="{Binding DisplayLabel}" />
-									</DataTemplate>
-								</ComboBox.ItemTemplate>
-							</ComboBox>
+							<StackPanel Grid.Row="1" Grid.Column="1" Spacing="4">
+								<ComboBox ItemsSource="{Binding GlasNamen}"
+										  SelectedItem="{Binding SelectedGlasNaam, Mode=TwoWay}"
+										  MinWidth="200"
+										  PlaceholderText="Glas type...">
+									<ComboBox.ItemTemplate>
+										<DataTemplate>
+											<TextBlock Text="{Binding}" />
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+								<ComboBox x:Name="GlasBox"
+										  ItemsSource="{Binding GefilterdeGlasVarianten}"
+										  SelectedItem="{Binding SelectedRegelGlas, Mode=TwoWay}"
+										  MinWidth="200"
+										  PlaceholderText="Variant..."
+										  IsVisible="{Binding SelectedGlasNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+									<ComboBox.ItemTemplate>
+										<DataTemplate x:DataType="m:AfwerkingsOptie">
+											<TextBlock Text="{Binding Kleur}" />
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+							</StackPanel>
 
 							<TextBlock Grid.Row="1"
 									   Grid.Column="2"
@@ -378,20 +395,31 @@
 									   Opacity="0.8"
 									    Foreground="Black"/>
 
-							<ComboBox Grid.Row="1"
-									  Grid.Column="3"
-									  x:Name="Passe1Box"
-									  ItemsSource="{Binding Passe1Opties}"
-									  SelectedItem="{Binding SelectedRegelPasse1, Mode=TwoWay}"
-									  MinWidth="200"
-									   Foreground="Black">
-
-								<ComboBox.ItemTemplate>
-									<DataTemplate x:DataType="m:AfwerkingsOptie">
-										<TextBlock Text="{Binding DisplayLabel}" />
-									</DataTemplate>
-								</ComboBox.ItemTemplate>
-							</ComboBox>
+							<StackPanel Grid.Row="1" Grid.Column="3" Spacing="4">
+								<ComboBox ItemsSource="{Binding Passe1Namen}"
+										  SelectedItem="{Binding SelectedPasse1Naam, Mode=TwoWay}"
+										  MinWidth="200"
+										  PlaceholderText="Passe-partout type...">
+									<ComboBox.ItemTemplate>
+										<DataTemplate>
+											<TextBlock Text="{Binding}" />
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+								<ComboBox x:Name="Passe1Box"
+										  ItemsSource="{Binding GefilterdePasse1Varianten}"
+										  SelectedItem="{Binding SelectedRegelPasse1, Mode=TwoWay}"
+										  MinWidth="200"
+										  PlaceholderText="Variant..."
+										  Foreground="Black"
+										  IsVisible="{Binding SelectedPasse1Naam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+									<ComboBox.ItemTemplate>
+										<DataTemplate x:DataType="m:AfwerkingsOptie">
+											<TextBlock Text="{Binding Kleur}" />
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+							</StackPanel>
 
 							<!-- ================= RIJ 2 ================= -->
 							<TextBlock Grid.Row="2"
@@ -402,19 +430,30 @@
 									   Opacity="0.8"
 									    Foreground="Black"/>
 
-							<ComboBox Grid.Row="2"
-									  Grid.Column="1"
-									  x:Name="Passe2Box"
-									  ItemsSource="{Binding Passe2Opties}"
-									  SelectedItem="{Binding SelectedRegelPasse2, Mode=TwoWay}"
-									  MinWidth="200">
-
-								<ComboBox.ItemTemplate>
-									<DataTemplate x:DataType="m:AfwerkingsOptie">
-										<TextBlock Text="{Binding DisplayLabel}" />
-									</DataTemplate>
-								</ComboBox.ItemTemplate>
-							</ComboBox>
+							<StackPanel Grid.Row="2" Grid.Column="1" Spacing="4">
+								<ComboBox ItemsSource="{Binding Passe2Namen}"
+										  SelectedItem="{Binding SelectedPasse2Naam, Mode=TwoWay}"
+										  MinWidth="200"
+										  PlaceholderText="Passe-partout type...">
+									<ComboBox.ItemTemplate>
+										<DataTemplate>
+											<TextBlock Text="{Binding}" />
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+								<ComboBox x:Name="Passe2Box"
+										  ItemsSource="{Binding GefilterdePasse2Varianten}"
+										  SelectedItem="{Binding SelectedRegelPasse2, Mode=TwoWay}"
+										  MinWidth="200"
+										  PlaceholderText="Variant..."
+										  IsVisible="{Binding SelectedPasse2Naam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+									<ComboBox.ItemTemplate>
+										<DataTemplate x:DataType="m:AfwerkingsOptie">
+											<TextBlock Text="{Binding Kleur}" />
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+							</StackPanel>
 
 							<TextBlock Grid.Row="2"
 									   Grid.Column="2"
@@ -424,19 +463,30 @@
 									   Opacity="0.8"
 									    Foreground="Black"/>
 
-							<ComboBox Grid.Row="2"
-									  Grid.Column="3"
-									  x:Name="DiepteBox"
-									  ItemsSource="{Binding DiepteOpties}"
-									  SelectedItem="{Binding SelectedRegelDiepte, Mode=TwoWay}"
-									  MinWidth="200">
-
-								<ComboBox.ItemTemplate>
-									<DataTemplate x:DataType="m:AfwerkingsOptie">
-										<TextBlock Text="{Binding DisplayLabel}" />
-									</DataTemplate>
-								</ComboBox.ItemTemplate>
-							</ComboBox>
+							<StackPanel Grid.Row="2" Grid.Column="3" Spacing="4">
+								<ComboBox ItemsSource="{Binding DiepteNamen}"
+										  SelectedItem="{Binding SelectedDiepteNaam, Mode=TwoWay}"
+										  MinWidth="200"
+										  PlaceholderText="Diepte type...">
+									<ComboBox.ItemTemplate>
+										<DataTemplate>
+											<TextBlock Text="{Binding}" />
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+								<ComboBox x:Name="DiepteBox"
+										  ItemsSource="{Binding GefilterdeDiepteVarianten}"
+										  SelectedItem="{Binding SelectedRegelDiepte, Mode=TwoWay}"
+										  MinWidth="200"
+										  PlaceholderText="Variant..."
+										  IsVisible="{Binding SelectedDiepteNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+									<ComboBox.ItemTemplate>
+										<DataTemplate x:DataType="m:AfwerkingsOptie">
+											<TextBlock Text="{Binding Kleur}" />
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+							</StackPanel>
 
 							<!-- ================= RIJ 3 ================= -->
 							<TextBlock Grid.Row="3"
@@ -447,19 +497,30 @@
 									   Opacity="0.8"
 									    Foreground="Black"/>
 
-							<ComboBox Grid.Row="3"
-									  Grid.Column="1"
-									  x:Name="OpklevenBox"
-									  ItemsSource="{Binding OpkleefOpties}"
-									  SelectedItem="{Binding SelectedRegelOpkleven, Mode=TwoWay}"
-									  MinWidth="200">
-
-								<ComboBox.ItemTemplate>
-									<DataTemplate x:DataType="m:AfwerkingsOptie">
-										<TextBlock Text="{Binding DisplayLabel}" />
-									</DataTemplate>
-								</ComboBox.ItemTemplate>
-							</ComboBox>
+							<StackPanel Grid.Row="3" Grid.Column="1" Spacing="4">
+								<ComboBox ItemsSource="{Binding OpklevenNamen}"
+										  SelectedItem="{Binding SelectedOpklevenNaam, Mode=TwoWay}"
+										  MinWidth="200"
+										  PlaceholderText="Opkleven type...">
+									<ComboBox.ItemTemplate>
+										<DataTemplate>
+											<TextBlock Text="{Binding}" />
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+								<ComboBox x:Name="OpklevenBox"
+										  ItemsSource="{Binding GefilterdeOpklevenVarianten}"
+										  SelectedItem="{Binding SelectedRegelOpkleven, Mode=TwoWay}"
+										  MinWidth="200"
+										  PlaceholderText="Variant..."
+										  IsVisible="{Binding SelectedOpklevenNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+									<ComboBox.ItemTemplate>
+										<DataTemplate x:DataType="m:AfwerkingsOptie">
+											<TextBlock Text="{Binding Kleur}" />
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+							</StackPanel>
 
 							<TextBlock Grid.Row="3"
 									   Grid.Column="2"
@@ -468,19 +529,30 @@
 									   FontWeight="SemiBold"
 									   Opacity="0.8"/>
 
-							<ComboBox Grid.Row="3"
-									  Grid.Column="3"
-									  x:Name="RugBox"
-									  ItemsSource="{Binding RugOpties}"
-									  SelectedItem="{Binding SelectedRegelRug, Mode=TwoWay}"
-									  MinWidth="200">
-
-								<ComboBox.ItemTemplate>
-									<DataTemplate x:DataType="m:AfwerkingsOptie">
-										<TextBlock Text="{Binding DisplayLabel}" />
-									</DataTemplate>
-								</ComboBox.ItemTemplate>
-							</ComboBox>
+							<StackPanel Grid.Row="3" Grid.Column="3" Spacing="4">
+								<ComboBox ItemsSource="{Binding RugNamen}"
+										  SelectedItem="{Binding SelectedRugNaam, Mode=TwoWay}"
+										  MinWidth="200"
+										  PlaceholderText="Rug type...">
+									<ComboBox.ItemTemplate>
+										<DataTemplate>
+											<TextBlock Text="{Binding}" />
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+								<ComboBox x:Name="RugBox"
+										  ItemsSource="{Binding GefilterdeRugVarianten}"
+										  SelectedItem="{Binding SelectedRegelRug, Mode=TwoWay}"
+										  MinWidth="200"
+										  PlaceholderText="Variant..."
+										  IsVisible="{Binding SelectedRugNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+									<ComboBox.ItemTemplate>
+										<DataTemplate x:DataType="m:AfwerkingsOptie">
+											<TextBlock Text="{Binding Kleur}" />
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+							</StackPanel>
 
 						</Grid>
 					</Border>
@@ -539,7 +611,7 @@
 								<TextBox Grid.Row="2"
 										 Grid.Column="1"
 										 Watermark="Bedrag"
-										 Text="{Binding Offerte.VoorschotBedrag, Mode=TwoWay}"/>
+										 Text="{Binding VoorschotBedragInput, Mode=TwoWay}"/>
 
 							</Grid>
 
@@ -583,10 +655,20 @@
 								Foreground="#123B68"
 								FontWeight="Bold"/>
 
+						<!-- Bevestigen: alleen zichtbaar als er nog GEEN werkbon is -->
 						<Button Content="Bevestigen → Bestelling"
 								Command="{Binding BevestigenCommand}"
+								IsVisible="{Binding IsBevestigenZichtbaar}"
 								Background="#F5C242"
 								Foreground="Black"
+								FontWeight="Bold"/>
+
+						<!-- Planning: zichtbaar zodra de werkbon bestaat -->
+						<Button Content="📅 Planning bekijken"
+								Command="{Binding OpenPlanningCommand}"
+								IsVisible="{Binding IsPlanningZichtbaar}"
+								Background="#D6F5D6"
+								Foreground="#1A5C1A"
 								FontWeight="Bold"/>
 					</StackPanel>
 

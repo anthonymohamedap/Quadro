@@ -3,10 +3,13 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
+using QuadroApp.Service;
 using QuadroApp.Service.Interfaces;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -94,6 +97,33 @@ public partial class WeekWerkLijstViewModel : ObservableObject
         await LoadAsync();
     }
 
+    // ── PDF afdrukken ──────────────────────────────────────────────────────────
+    [RelayCommand]
+    private void PrintPdf()
+    {
+        try
+        {
+            var exporter = new PdfWeekLijstExporter();
+            var path = exporter.Export(Year, WeekNr, Blocks);
+
+            if (!File.Exists(path))
+                return;
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = path,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            // Stille fout — in productie zou je hier een toast tonen.
+            // WeekWerkLijstViewModel erft niet van AsyncViewModelBase dus
+            // geen Toast beschikbaar; we loggen naar Debug.
+            Debug.WriteLine($"[WeekLijst PDF] Fout: {ex.Message}");
+        }
+    }
+
     // Save 1 notitie (per taak)
     [RelayCommand]
     private async Task SaveNotitieAsync(WeekWerkItem item)
@@ -129,6 +159,14 @@ public partial class WeekWerkItem : ObservableObject
     public string Inleg2 { get; init; } = "";
     public DateTime ProductieDatum { get; init; } // GeplandVan datum
 
+    // Afwerkings beschrijvingen — volledig leesbaar voor op de werkbon
+    public string? GlasBeschrijving { get; init; }
+    public string? Passe1Beschrijving { get; init; }
+    public string? Passe2Beschrijving { get; init; }
+    public string? DieptyeBeschrijving { get; init; }
+    public string? OpklevenBeschrijving { get; init; }
+    public string? RugBeschrijving { get; init; }
+
     [ObservableProperty] private string? notitie;
     [ObservableProperty] private bool isBesteld;
     [ObservableProperty] private DateTime? bestelDatum;
@@ -156,11 +194,17 @@ public partial class WeekWerkItem : ObservableObject
             Breedte = r?.BreedteCm ?? 0,
             Hoogte = r?.HoogteCm ?? 0,
             Omschrijving = t.Omschrijving ?? "",
-            Afw = r?.LegacyCode ?? "", // of maak op basis van G/P1/P2/D/O/R
+            Afw = r?.LegacyCode ?? "",
             Lijst = r?.TypeLijst?.Artikelnummer ?? "",
             Inleg1 = $"{r?.InlegBreedteCm}×{r?.InlegHoogteCm}",
             Inleg2 = "",
             ProductieDatum = t.GeplandVan.Date,
+            GlasBeschrijving      = AfwLabel(r?.Glas),
+            Passe1Beschrijving    = AfwLabel(r?.PassePartout1),
+            Passe2Beschrijving    = AfwLabel(r?.PassePartout2),
+            DieptyeBeschrijving   = AfwLabel(r?.DiepteKern),
+            OpklevenBeschrijving  = AfwLabel(r?.Opkleven),
+            RugBeschrijving       = AfwLabel(r?.Rug),
             Notitie = t.WeekNotitie,
             IsBesteld = t.IsBesteld,
             BestelDatum = t.BestelDatum,
@@ -172,6 +216,16 @@ public partial class WeekWerkItem : ObservableObject
             VerwachteLeverdatum = bestelling?.VerwachteLeverdatum,
             LeverancierNaam = r?.TypeLijst?.Leverancier?.Naam
         };
+    }
+
+    /// <summary>Leesbaar label: "Mat Glas (Brons)" of null als niet geselecteerd.</summary>
+    private static string? AfwLabel(AfwerkingsOptie? o)
+    {
+        if (o is null) return null;
+        var kleur = o.Kleur?.Trim();
+        return string.IsNullOrEmpty(kleur) || kleur.Equals("Standaard", StringComparison.OrdinalIgnoreCase)
+            ? o.Naam
+            : $"{o.Naam} ({kleur})";
     }
 
     private static string GetVoorraadStatusText(WerkTaak taak) =>

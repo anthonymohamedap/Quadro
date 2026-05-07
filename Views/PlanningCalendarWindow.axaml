@@ -194,7 +194,7 @@
 								Command="{Binding TodayCommand}"
 								Classes="GhostBtn"
 								Margin="8,0,0,0"/>
-						<Button Content="✓ Sluiten &amp; opslaan"
+						<Button Content="← Sluiten"
 								Classes="MainBtn"
 								Margin="16,0,0,0"
 								Click="SluitButton_Click"/>
@@ -544,6 +544,16 @@
 									</StackPanel>
 								</Border>
 							</StackPanel>
+
+							<Rectangle Classes="Divider" Margin="0,14,0,8"/>
+
+							<!-- ══ SLUITEN KNOP (onderaan panel) ══ -->
+							<Button Content="← Sluiten"
+									Classes="MainBtn"
+									HorizontalAlignment="Stretch"
+									HorizontalContentAlignment="Center"
+									Margin="0,0,0,4"
+									Click="SluitButton_Click"/>
 
 						</StackPanel>
 					</ScrollViewer>

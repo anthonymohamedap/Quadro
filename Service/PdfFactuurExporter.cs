@@ -65,7 +65,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
 
                 page.Content().Column(col =>
                 {
-                    col.Spacing(8);
+                    col.Spacing(5);
 
                     DrawHeader(col, factuur, logoBytes);
                     DrawSpecialeMededeling(col, factuur.Opmerking);
@@ -77,7 +77,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
                         DrawItemBlock(col, items[i], i + 1, ref currentY);
                     }
 
-                    DrawTotals(col, factuur.TotaalInclBtw, voorschot, teBetalenBijAfhalen);
+                    DrawTotals(col, factuur.TotaalExclBtw, factuur.TotaalBtw, factuur.TotaalInclBtw, voorschot, teBetalenBijAfhalen, factuur.IsBtwVrijgesteld);
                     DrawSignature(col);
                 });
 
@@ -101,7 +101,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     private static void DrawHeader(ColumnDescriptor col, Factuur factuur, byte[]? logoBytes)
     {
         if (logoBytes is not null)
-            col.Item().AlignCenter().Height(60).Image(logoBytes).FitHeight();
+            col.Item().AlignCenter().Height(90).Image(logoBytes).FitHeight();
 
         col.Item().Row(row =>
         {
@@ -117,16 +117,14 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             row.ConstantItem(220).AlignRight().Column(right =>
             {
                 right.Spacing(2);
-                var isFactuur = string.Equals(factuur.DocumentType, "Factuur", StringComparison.OrdinalIgnoreCase);
-                var nummerLabel = isFactuur ? "factuurnr." : "bestelbonnr.";
-                var datumLabel = isFactuur ? "factuurdatum" : "besteldatum";
-
-                right.Item().AlignRight().Text($"{nummerLabel} {factuur.FactuurNummer}").SemiBold();
-                right.Item().AlignRight().Text($"{datumLabel} {factuur.FactuurDatum:dd/MM/yyyy}");
+                right.Item().AlignRight().Text($"bestelbonnr. {factuur.FactuurNummer}").SemiBold();
+                right.Item().AlignRight().Text($"besteldatum {factuur.FactuurDatum:dd/MM/yyyy}");
+                if (factuur.GeplandeDatum.HasValue)
+                    right.Item().AlignRight().Text($"gepland op: {factuur.GeplandeDatum.Value:dd/MM/yyyy}").SemiBold();
             });
         });
 
-        col.Item().PaddingTop(4).Text(OpeningsUren).Italic();
+        col.Item().PaddingTop(2).Text(OpeningsUren).Italic().FontSize(9);
     }
 
     // ═══════════════════ SPECIALE MEDEDELING (Factuur.Opmerking) ═══════════════════
@@ -148,9 +146,9 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     // ═══════════════════ KLANTBLOK ═══════════════════
     private static void DrawCustomerBlock(ColumnDescriptor col, Factuur factuur)
     {
-        col.Item().PaddingTop(2).Column(c =>
+        col.Item().PaddingTop(1).Column(c =>
         {
-            c.Spacing(2);
+            c.Spacing(1);
             c.Item().Text(factuur.KlantNaam).SemiBold();
             if (!string.IsNullOrWhiteSpace(factuur.KlantAdres))
                 c.Item().Text(factuur.KlantAdres);
@@ -158,8 +156,6 @@ public sealed class PdfFactuurExporter : IFactuurExporter
                 c.Item().Text($"BTW: {factuur.KlantBtwNummer}");
             if (!string.IsNullOrWhiteSpace(factuur.AangenomenDoorInitialen))
                 c.Item().Text($"initialen: {factuur.AangenomenDoorInitialen}");
-            if (factuur.GeplandeDatum.HasValue)
-                c.Item().Text($"gepland op: {factuur.GeplandeDatum.Value:dd/MM/yyyy}").SemiBold();
         });
     }
 
@@ -172,9 +168,9 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             currentY = 120;
         }
 
-        col.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(8).Column(block =>
+        col.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(6).Column(block =>
         {
-            block.Spacing(3);
+            block.Spacing(2);
 
             // Titel: gebruik Titel als beschikbaar, anders artikelnummer
             var titelTekst = $"{index} stuk in te lijsten : {item.Title}";
@@ -206,20 +202,40 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             if (!string.IsNullOrWhiteSpace(item.LijstOpmerking))
                 block.Item().Text($"    lijst opmerking: {item.LijstOpmerking}").Italic().FontSize(10);
 
-            // Afwerkingen — label + bullets, alleen als er zijn
+            // Afwerkingen — 2-kolom raster (eerste helft links, tweede helft rechts)
             if (item.Afwerkingen.Count > 0)
             {
-                block.Item().Text("    Afwerkingen:").FontSize(10).SemiBold();
-                foreach (var afw in item.Afwerkingen)
-                    block.Item().Text($"    \u2022 {afw}").FontSize(10);
+                block.Item().Text("Afwerkingen:").FontSize(10).SemiBold();
+
+                var afw   = item.Afwerkingen;
+                var half  = (afw.Count + 1) / 2;
+                var left  = afw.Take(half).ToList();
+                var right = afw.Skip(half).ToList();
+
+                block.Item().Row(row =>
+                {
+                    row.RelativeItem().Column(col =>
+                    {
+                        col.Spacing(1);
+                        foreach (var a in left)
+                            col.Item().Text($"\u2022 {a}").FontSize(10);
+                    });
+                    row.RelativeItem().Column(col =>
+                    {
+                        col.Spacing(1);
+                        foreach (var a in right)
+                            col.Item().Text($"\u2022 {a}").FontSize(10);
+                    });
+                });
             }
 
             // Operatie-regels (backward compat voor oude data)
             foreach (var operation in item.OperationLines)
                 block.Item().Text(operation);
 
+            // Afhaal datum per werkstuk
             if (!string.IsNullOrWhiteSpace(item.AfhalenOp))
-                block.Item().Text($"afhalen op {item.AfhalenOp}");
+                block.Item().Text($"afhalen op: {item.AfhalenOp}").SemiBold().FontSize(10);
 
             // Prijs rechts
             block.Item().PaddingTop(2).Row(r =>
@@ -229,32 +245,59 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             });
         });
 
-        col.Item().PaddingBottom(6);
+        col.Item().PaddingBottom(3);
         currentY += ItemHeightEstimate;
     }
 
     // ═══════════════════ TOTALEN ═══════════════════
-    private static void DrawTotals(ColumnDescriptor col, decimal totaal, decimal voorschot, decimal teBetalen)
+    private static void DrawTotals(ColumnDescriptor col, decimal subtotaalExcl, decimal btwBedrag, decimal totaalIncl, decimal voorschot, decimal teBetalen, bool isBtwVrijgesteld)
     {
-        col.Item().PaddingTop(12).Row(row =>
+        col.Item().PaddingTop(6).Column(totaalCol =>
         {
-            row.RelativeItem().Column(left =>
+            totaalCol.Spacing(2);
+
+            // Subtotaal / BTW / Totaal breakdown
+            totaalCol.Item().Row(r =>
             {
-                left.Spacing(4);
-                left.Item().Text($"totaal prijs    {Eur(totaal)}");
-                left.Item().Text($"voorschot       {Eur(voorschot)}");
+                r.RelativeItem().Text("Subtotaal (excl. BTW)");
+                r.ConstantItem(130).AlignRight().Text(Eur(subtotaalExcl));
             });
 
-            row.RelativeItem().AlignRight().Column(right =>
+            if (!isBtwVrijgesteld)
             {
-                right.Item().AlignRight().Text($"te betalen bij afhalen {Eur(teBetalen)}").SemiBold().FontSize(14);
+                totaalCol.Item().Row(r =>
+                {
+                    r.RelativeItem().Text("BTW (21%)");
+                    r.ConstantItem(130).AlignRight().Text(Eur(btwBedrag));
+                });
+            }
+
+            totaalCol.Item().Row(r =>
+            {
+                r.RelativeItem().Text("Totaal (incl. BTW)").SemiBold();
+                r.ConstantItem(130).AlignRight().Text(Eur(totaalIncl)).SemiBold();
+            });
+
+            if (voorschot > 0)
+            {
+                totaalCol.Item().PaddingTop(4).Row(r =>
+                {
+                    r.RelativeItem().Text("Voorschot betaald");
+                    r.ConstantItem(130).AlignRight().Text($"- {Eur(voorschot)}");
+                });
+            }
+
+            totaalCol.Item().PaddingTop(6).Row(r =>
+            {
+                r.RelativeItem().Text("Te betalen bij afhalen").SemiBold().FontSize(13);
+                r.ConstantItem(160).AlignRight().Text(Eur(teBetalen)).SemiBold().FontSize(13);
             });
         });
     }
 
     private static void DrawSignature(ColumnDescriptor col)
     {
-        col.Item().PaddingTop(20).Text("VOOR AKKOORD : ______________________");
+        col.Item().PaddingTop(10).Text("VOOR AKKOORD : ______________________");
     }
 
     // ═══════════════════ FOOTER met logo's ═══════════════════
@@ -262,17 +305,17 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     {
         container.Column(col =>
         {
-            // Logo-rij onderaan
+            // Logo-rij onderaan — guild (Commended Framer) links, hib rechts
             if (hibLogo is not null || guildLogo is not null)
             {
                 col.Item().PaddingBottom(6).Row(row =>
                 {
                     row.RelativeItem();
-                    if (hibLogo is not null)
-                        row.ConstantItem(55).Height(28).Image(hibLogo).FitArea();
-                    row.ConstantItem(14);
                     if (guildLogo is not null)
-                        row.ConstantItem(55).Height(28).Image(guildLogo).FitArea();
+                        row.ConstantItem(55).Height(45).Image(guildLogo).FitArea();
+                    row.ConstantItem(14);
+                    if (hibLogo is not null)
+                        row.ConstantItem(55).Height(45).Image(hibLogo).FitArea();
                     row.RelativeItem();
                 });
             }
@@ -284,7 +327,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     }
 
     // ═══════════════════ BuildRenderItem — tagged parsing ═══════════════════
-    private static RenderItem BuildRenderItem(FactuurLijn lijn, int index)
+    private static RenderItem BuildRenderItem(FactuurLijn lijn, int index, string? afhalenOp = null)
     {
         var parts = lijn.Omschrijving
             .Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
@@ -314,9 +357,10 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         string? titel = null;
         string? regelOpmerking = null;
         string? lijstOpmerking = null;
+        string? regelAfhaalOp = null;
         var operations = new List<string>();
 
-        var knownTags = new[] { "titel:", "glas:", "pp1:", "pp2:", "diepte:", "opkleven:", "rug:", "lijst_opm:", "opm:" };
+        var knownTags = new[] { "titel:", "glas:", "pp1:", "pp2:", "diepte:", "opkleven:", "rug:", "lijst_opm:", "opm:", "afhaal:" };
         var tagLabels = new Dictionary<string, string>
         {
             ["glas:"]     = "Glas",
@@ -343,6 +387,15 @@ public sealed class PdfFactuurExporter : IFactuurExporter
                     regelOpmerking = value;
                 else if (matchedTag == "lijst_opm:")
                     lijstOpmerking = value;
+                else if (matchedTag == "afhaal:")
+                {
+                    // Parse ISO date yyyy-MM-dd → dd/MM/yyyy display
+                    if (DateTime.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                            DateTimeStyles.None, out var d))
+                        regelAfhaalOp = d.ToString("dd/MM/yyyy");
+                    else
+                        regelAfhaalOp = value;
+                }
                 else if (tagLabels.TryGetValue(matchedTag, out var label))
                     afwerkingen.Add($"{label}: {value}");
             }
@@ -360,6 +413,9 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             ? titel
             : !string.IsNullOrWhiteSpace(artikelnummer) ? artikelnummer : $"Werkstuk {index}";
 
+        // Per-regel AfhaalDatum heeft voorrang op factuur-niveau datum
+        var effectiefAfhalen = regelAfhaalOp ?? afhalenOp;
+
         return new RenderItem(
             Title: displayTitle,
             BreedteCm: breedte,
@@ -373,7 +429,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             RegelOpmerking: regelOpmerking,
             LijstOpmerking: lijstOpmerking,
             Titel: titel,
-            AfhalenOp: null,
+            AfhalenOp: effectiefAfhalen,
             ItemTotal: lijn.TotaalIncl);
     }
 

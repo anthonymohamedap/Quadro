@@ -25,6 +25,17 @@ namespace QuadroApp.Service.Interfaces
         /// message when the optie is still referenced by one or more OfferteRegels.
         /// </summary>
         Task DeleteOptieAsync(AfwerkingsOptie optie);
+
+        // ── Variant management ───────────────────────────────────────────────
+
+        /// <summary>Returns all variants for the given optie, ordered by IsStandaard desc, then Beschrijving.</summary>
+        Task<List<AfwerkingsVariant>> GetVariantenAsync(int optieId);
+
+        /// <summary>Inserts or updates a single variant. New records (Id == 0) are inserted; existing ones are updated.</summary>
+        Task<AfwerkingsVariant> SaveVariantAsync(AfwerkingsVariant variant);
+
+        /// <summary>Deletes a variant by its Id. No-op if not found.</summary>
+        Task DeleteVariantAsync(int variantId);
     }
 
 }

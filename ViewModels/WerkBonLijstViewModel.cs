@@ -16,6 +16,7 @@ namespace QuadroApp.ViewModels
     {
         private readonly IDbContextFactory<AppDbContext> _factory;
         private readonly INavigationService _nav;
+        private readonly IOfferteNavigationService _offerteNav;
         private readonly IWerkBonWorkflowService _workflow;
         private readonly IWorkflowService _statusWorkflow;
         private readonly IToastService _toast;
@@ -45,6 +46,7 @@ namespace QuadroApp.ViewModels
         public WerkBonLijstViewModel(
             IDbContextFactory<AppDbContext> factory,
             INavigationService nav,
+            IOfferteNavigationService offerteNav,
             IWerkBonWorkflowService workflow,
             IWorkflowService statusWorkflow,
             IToastService toast)
@@ -52,6 +54,7 @@ namespace QuadroApp.ViewModels
         {
             _factory = factory;
             _nav = nav;
+            _offerteNav = offerteNav;
             _toast = toast;
             _workflow = workflow;
             _statusWorkflow = statusWorkflow;
@@ -229,9 +232,21 @@ namespace QuadroApp.ViewModels
         }
 
         [RelayCommand]
+        private async Task OpenBestelBonAsync()
+        {
+            var offerteId = SelectedWerkBon?.Offerte?.Id ?? 0;
+            if (offerteId == 0)
+            {
+                _toast.Error("Geen gekoppelde offerte gevonden.");
+                return;
+            }
+
+            await _offerteNav.OpenOfferteAsync(offerteId);
+        }
+
+        [RelayCommand]
         private async Task GaTerugAsync()
         {
-            // pas aan naar jouw bestemming
             await _nav.NavigateToAsync<HomeViewModel>();
         }
     }

@@ -6,7 +6,6 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -609,6 +608,44 @@ public partial class App : Application
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Facturen\" ADD COLUMN \"GeplandeDatum\" TEXT NULL");
 
+        // AddAfwerkingsVariant (20260507110000)
+        await db.Database.ExecuteSqlRawAsync(@"
+CREATE TABLE IF NOT EXISTS ""AfwerkingsVarianten"" (
+    ""Id""                  INTEGER NOT NULL CONSTRAINT ""PK_AfwerkingsVarianten"" PRIMARY KEY AUTOINCREMENT,
+    ""AfwerkingsOptieId""   INTEGER NOT NULL,
+    ""Beschrijving""        TEXT    NOT NULL,
+    ""Kleur""               TEXT    NULL,
+    ""VariantCode""         TEXT    NULL,
+    ""IsStandaard""         INTEGER NOT NULL DEFAULT 0,
+    ""IsActief""            INTEGER NOT NULL DEFAULT 1,
+    CONSTRAINT ""FK_AfwerkingsVarianten_AfwerkingsOpties_AfwerkingsOptieId""
+        FOREIGN KEY (""AfwerkingsOptieId"") REFERENCES ""AfwerkingsOpties"" (""Id"") ON DELETE CASCADE
+);");
+        await db.Database.ExecuteSqlRawAsync(@"
+CREATE UNIQUE INDEX IF NOT EXISTS ""IX_AfwerkingsVarianten_OptieId_Beschrijving""
+    ON ""AfwerkingsVarianten"" (""AfwerkingsOptieId"", ""Beschrijving"");");
+        // Auto-migrate: maak 1 variant per bestaande optie als nog niet aangemaakt
+        await db.Database.ExecuteSqlRawAsync(@"
+INSERT OR IGNORE INTO ""AfwerkingsVarianten"" (""AfwerkingsOptieId"", ""Beschrijving"", ""IsStandaard"", ""IsActief"")
+SELECT ""Id"", COALESCE(NULLIF(TRIM(""Kleur""), ''), 'Standaard'), 1, 1
+FROM ""AfwerkingsOpties""
+WHERE NOT EXISTS (
+    SELECT 1 FROM ""AfwerkingsVarianten"" v WHERE v.""AfwerkingsOptieId"" = ""AfwerkingsOpties"".""Id""
+);");
+
+        // AddAfhaalDatum (20260507100000)
+        if (!await ColumnExistsAsync("Offertes", "AfhaalDatum"))
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"Offertes\" ADD COLUMN \"AfhaalDatum\" TEXT NULL");
+        if (!await ColumnExistsAsync("Facturen", "AfhaalDatum"))
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"Facturen\" ADD COLUMN \"AfhaalDatum\" TEXT NULL");
+
+        // AddAfhaalDatumToOfferteRegel (20260507130000)
+        if (!await ColumnExistsAsync("OfferteRegels", "AfhaalDatum"))
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"OfferteRegels\" ADD COLUMN \"AfhaalDatum\" TEXT NULL");
+
         // AddVoorraadAlerts (20260506120000) — ensure table exists before HomeViewModel loads
         await db.Database.ExecuteSqlRawAsync(@"
 CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
@@ -645,6 +682,11 @@ CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
             "20260506000000_AddRowVersionToOfferte",
             "20260506120000_AddVoorraadAlerts",
             "20260506130000_AddGeplandeDatumToFactuur",
+            "20260507100000_AddAfhaalDatum",
+            "20260507110000_AddAfwerkingsVariant",
+            "20260507011133_tag10",
+            "20260507023057_date",
+            "20260507130000_AddAfhaalDatumToOfferteRegel",
         };
 
         try
@@ -700,4 +742,4 @@ CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
 
 
 }
-
+                 
