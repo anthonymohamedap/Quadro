@@ -685,53 +685,77 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             if (reloadCatalog)
                 await LoadCatalogAsync();
 
-            await using var db = await _dbFactory.CreateDbContextAsync();
+            // ── Laad data op background thread om UI responsive te houden ──
+            var (offerte, regels, klantId) = await Task.Run(async () =>
+            {
+                await using var db = await _dbFactory.CreateDbContextAsync();
 
-            var o = await db.Offertes
-                .Include(x => x.Regels)
-                .AsNoTracking()
-                .FirstAsync(x => x.Id == offerteId);
+                var o = await db.Offertes
+                    .Include(x => x.Regels)
+                    .AsNoTracking()
+                    .FirstAsync(x => x.Id == offerteId);
 
-            Offerte = o;
-            await Workflow.LoadFactuurContextAsync(db, offerteId);
+                // Bouw lookup dictionaries voor snelle catalog matching (O(1) ipv O(n))
+                var typeLijstDict = Regelbeheer.TypeLijsten.ToDictionary(t => t.Id);
+                var glasDict = Regelbeheer.GlasOpties.ToDictionary(g => g.Id);
+                var passe1Dict = Regelbeheer.Passe1Opties.ToDictionary(p => p.Id);
+                var passe2Dict = Regelbeheer.Passe2Opties.ToDictionary(p => p.Id);
+                var diepteDict = Regelbeheer.DiepteOpties.ToDictionary(d => d.Id);
+                var opkleefDict = Regelbeheer.OpkleefOpties.ToDictionary(o => o.Id);
+                var rugDict = Regelbeheer.RugOpties.ToDictionary(r => r.Id);
+
+                var regelsList = new System.Collections.Generic.List<OfferteRegel>();
+                foreach (var dbRule in o.Regels)
+                {
+                    var rule = new OfferteRegel
+                    {
+                        Id = dbRule.Id, OfferteId = dbRule.OfferteId,
+                        AantalStuks = dbRule.AantalStuks, BreedteCm = dbRule.BreedteCm,
+                        HoogteCm = dbRule.HoogteCm, InlegBreedteCm = dbRule.InlegBreedteCm,
+                        InlegHoogteCm = dbRule.InlegHoogteCm, Titel = dbRule.Titel,
+                        Opmerking = dbRule.Opmerking, TypeLijstId = dbRule.TypeLijstId,
+                        GlasId = dbRule.GlasId, PassePartout1Id = dbRule.PassePartout1Id,
+                        PassePartout2Id = dbRule.PassePartout2Id, DiepteKernId = dbRule.DiepteKernId,
+                        OpklevenId = dbRule.OpklevenId, RugId = dbRule.RugId,
+                        ExtraWerkMinuten = dbRule.ExtraWerkMinuten, ExtraPrijs = dbRule.ExtraPrijs,
+                        Korting = dbRule.Korting, LegacyCode = dbRule.LegacyCode,
+                        AfgesprokenPrijsExcl = dbRule.AfgesprokenPrijsExcl,
+                        TotaalExcl = dbRule.TotaalExcl, SubtotaalExBtw = dbRule.SubtotaalExBtw,
+                        BtwBedrag = dbRule.BtwBedrag, TotaalInclBtw = dbRule.TotaalInclBtw,
+                        AfhaalDatum = dbRule.AfhaalDatum
+                    };
+
+                    // Gebruik dictionary lookups ipv LINQ FirstOrDefault (veel sneller)
+                    if (rule.TypeLijstId.HasValue && typeLijstDict.TryGetValue(rule.TypeLijstId.Value, out var typeLijst))
+                        rule.TypeLijst = typeLijst;
+                    if (rule.GlasId.HasValue && glasDict.TryGetValue(rule.GlasId.Value, out var glas))
+                        rule.Glas = glas;
+                    if (rule.PassePartout1Id.HasValue && passe1Dict.TryGetValue(rule.PassePartout1Id.Value, out var passe1))
+                        rule.PassePartout1 = passe1;
+                    if (rule.PassePartout2Id.HasValue && passe2Dict.TryGetValue(rule.PassePartout2Id.Value, out var passe2))
+                        rule.PassePartout2 = passe2;
+                    if (rule.DiepteKernId.HasValue && diepteDict.TryGetValue(rule.DiepteKernId.Value, out var diepte))
+                        rule.DiepteKern = diepte;
+                    if (rule.OpklevenId.HasValue && opkleefDict.TryGetValue(rule.OpklevenId.Value, out var opkleven))
+                        rule.Opkleven = opkleven;
+                    if (rule.RugId.HasValue && rugDict.TryGetValue(rule.RugId.Value, out var rug))
+                        rule.Rug = rug;
+
+                    regelsList.Add(rule);
+                }
+
+                return (o, regelsList, o.KlantId);
+            });
+
+            // ── Update UI op main thread ──
+            Offerte = offerte;
+            await Workflow.LoadFactuurContextAsync(await _dbFactory.CreateDbContextAsync(), offerteId);
 
             // Selecteer de juiste klant uit de al-geladen catalogus.
             // Niet SetKlanten aanroepen met de eigen collectie — dat wist hem eerst (self-clear bug).
-            KlantSelectie.SelectedKlant = KlantSelectie.Klanten.FirstOrDefault(k => k.Id == o.KlantId);
+            KlantSelectie.SelectedKlant = KlantSelectie.Klanten.FirstOrDefault(k => k.Id == klantId);
 
-            var regels = new ObservableCollection<OfferteRegel>();
-            foreach (var dbRule in o.Regels)
-            {
-                var rule = new OfferteRegel
-                {
-                    Id = dbRule.Id, OfferteId = dbRule.OfferteId,
-                    AantalStuks = dbRule.AantalStuks, BreedteCm = dbRule.BreedteCm,
-                    HoogteCm = dbRule.HoogteCm, InlegBreedteCm = dbRule.InlegBreedteCm,
-                    InlegHoogteCm = dbRule.InlegHoogteCm, Titel = dbRule.Titel,
-                    Opmerking = dbRule.Opmerking, TypeLijstId = dbRule.TypeLijstId,
-                    GlasId = dbRule.GlasId, PassePartout1Id = dbRule.PassePartout1Id,
-                    PassePartout2Id = dbRule.PassePartout2Id, DiepteKernId = dbRule.DiepteKernId,
-                    OpklevenId = dbRule.OpklevenId, RugId = dbRule.RugId,
-                    ExtraWerkMinuten = dbRule.ExtraWerkMinuten, ExtraPrijs = dbRule.ExtraPrijs,
-                    Korting = dbRule.Korting, LegacyCode = dbRule.LegacyCode,
-                    AfgesprokenPrijsExcl = dbRule.AfgesprokenPrijsExcl,
-                    TotaalExcl = dbRule.TotaalExcl, SubtotaalExBtw = dbRule.SubtotaalExBtw,
-                    BtwBedrag = dbRule.BtwBedrag, TotaalInclBtw = dbRule.TotaalInclBtw,
-                    AfhaalDatum = dbRule.AfhaalDatum
-                };
-
-                rule.TypeLijst    = Regelbeheer.TypeLijsten.FirstOrDefault(t => t.Id == rule.TypeLijstId);
-                rule.Glas         = Regelbeheer.GlasOpties.FirstOrDefault(g => g.Id == rule.GlasId);
-                rule.PassePartout1 = Regelbeheer.Passe1Opties.FirstOrDefault(p => p.Id == rule.PassePartout1Id);
-                rule.PassePartout2 = Regelbeheer.Passe2Opties.FirstOrDefault(p => p.Id == rule.PassePartout2Id);
-                rule.DiepteKern   = Regelbeheer.DiepteOpties.FirstOrDefault(x => x.Id == rule.DiepteKernId);
-                rule.Opkleven     = Regelbeheer.OpkleefOpties.FirstOrDefault(x => x.Id == rule.OpklevenId);
-                rule.Rug          = Regelbeheer.RugOpties.FirstOrDefault(x => x.Id == rule.RugId);
-
-                regels.Add(rule);
-            }
-
-            Regelbeheer.Regels = regels;
+            Regelbeheer.Regels = new ObservableCollection<OfferteRegel>(regels);
             Regelbeheer.SelectedRegel = null;  // Geen auto-selectie — gebruiker klikt zelf een regel aan.
 
             RefreshTotals();
