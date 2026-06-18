@@ -8,6 +8,9 @@
 	<Application.Styles>
 		<FluentTheme />
 		<huskui:HuskuiTheme />
+		<!-- DataGrid-thema (control-template). Zonder deze include renderen alle
+		     DataGrids leeg (geen koppen/rijen) — o.a. de bestelbon-preview. -->
+		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
 		<StyleInclude Source="avares://QuadroApp/Styles/QuadroTheme.axaml" />
 		<Style Selector="NumericUpDown">
 			<Setter Property="AllowSpin" Value="False"/>

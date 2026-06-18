@@ -409,13 +409,12 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
     private async Task DeleteAsync()
     {
         if (GeselecteerdeLijst is null)
-        {
             return;
-        }
 
         var ok = await _dialogs.ConfirmAsync(
-            "Lijst verwijderen",
-            $"Ben je zeker dat je lijst '{GeselecteerdeLijst.Artikelnummer}' wil verwijderen?");
+            "Lijst archiveren",
+            $"Ben je zeker dat je lijst '{GeselecteerdeLijst.Artikelnummer}' wil archiveren?\n\n" +
+            "De lijst wordt verborgen maar bestaande offertes en bestellingen blijven intact.");
 
         if (!ok) return;
 
@@ -425,14 +424,14 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
             Foutmelding = null;
 
             await using var db = await _dbFactory.CreateDbContextAsync();
-            var vr = await _validator.ValidateDeleteAsync(GeselecteerdeLijst);
-            if (!vr.IsValid)
-            {
-                _toast.Error(vr.ErrorText());
-                return;
-            }
 
-            db.TypeLijsten.Remove(new TypeLijst { Id = GeselecteerdeLijst.Id });
+            // Soft delete: vlag zetten i.p.v. record verwijderen.
+            // De Restrict FK op LeverancierBestelLijn.TypeLijstId blokkeert
+            // geen enkel probleem meer — er wordt niets verwijderd uit de DB.
+            var dbLijst = await db.TypeLijsten.FindAsync(GeselecteerdeLijst.Id);
+            if (dbLijst is null) return;
+
+            dbLijst.IsGearchiveerd = true;
             await db.SaveChangesAsync();
 
             await LoadAsync();
@@ -442,8 +441,8 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
         }
         catch (Exception ex)
         {
-            Foutmelding = $"Verwijderen mislukt: {ex.Message}";
-            await _dialogs.ShowErrorAsync("Verwijderen mislukt", Foutmelding);
+            Foutmelding = $"Archiveren mislukt: {ex.Message}";
+            await _dialogs.ShowErrorAsync("Archiveren mislukt", Foutmelding);
         }
         finally
         {

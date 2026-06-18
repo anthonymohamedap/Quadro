@@ -108,6 +108,15 @@ public partial class App : Application
                 });
             else
                 options.UseSqlite(connectionString);
+
+            // Schema wordt in dit project bewust beheerd via raw SQL-patches +
+            // voor-gemarkeerde migraties (zie ApplyPendingMigrationsAsync), waardoor het
+            // EF-model opzettelijk afwijkt van de migration-snapshot. EF 9/10 gooit hierop
+            // standaard een PendingModelChangesWarning als FOUT tijdens MigrateAsync, wat de
+            // openstaande migraties (o.a. soft-delete: IsGearchiveerd) zou blokkeren.
+            // Onderdruk die specifieke warning zodat MigrateAsync de migraties tóch toepast.
+            options.ConfigureWarnings(w =>
+                w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
         });
 
         // ==============================
@@ -607,6 +616,14 @@ public partial class App : Application
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Facturen\" ADD COLUMN \"GeplandeDatum\" TEXT NULL");
 
+        // AddKortingToFactuur (US-23) — korting expliciet op de bestelbon
+        if (!await ColumnExistsAsync("Facturen", "KortingPct"))
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"Facturen\" ADD COLUMN \"KortingPct\" TEXT NOT NULL DEFAULT '0'");
+        if (!await ColumnExistsAsync("Facturen", "KortingBedragExcl"))
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"Facturen\" ADD COLUMN \"KortingBedragExcl\" TEXT NOT NULL DEFAULT '0'");
+
         // AddAfwerkingsVariant (20260507110000)
         await db.Database.ExecuteSqlRawAsync(@"
 CREATE TABLE IF NOT EXISTS ""AfwerkingsVarianten"" (
@@ -650,6 +667,53 @@ WHERE NOT EXISTS (
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"LeverancierBestelLijnen\" ADD COLUMN \"BestelVorm\" INTEGER NOT NULL DEFAULT 0");
 
+        // Soft-delete (20260520000001..4) — IsGearchiveerd/GearchiveerdOp.
+        // De bijbehorende migraties missen hun [Migration]/Designer-bestanden en worden
+        // daardoor NIET door MigrateAsync herkend; de globale query-filters
+        // (!IsGearchiveerd) op Klant/TypeLijst/Leverancier/AfwerkingsOptie crashen
+        // zonder deze kolommen. Daarom hier als idempotente raw-patch.
+        if (!await ColumnExistsAsync("Klanten", "IsGearchiveerd"))
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"Klanten\" ADD COLUMN \"IsGearchiveerd\" INTEGER NOT NULL DEFAULT 0");
+        if (!await ColumnExistsAsync("Klanten", "GearchiveerdOp"))
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"Klanten\" ADD COLUMN \"GearchiveerdOp\" TEXT NULL");
+
+        if (!await ColumnExistsAsync("TypeLijsten", "IsGearchiveerd"))
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"TypeLijsten\" ADD COLUMN \"IsGearchiveerd\" INTEGER NOT NULL DEFAULT 0");
+
+        if (!await ColumnExistsAsync("Leveranciers", "IsGearchiveerd"))
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"Leveranciers\" ADD COLUMN \"IsGearchiveerd\" INTEGER NOT NULL DEFAULT 0");
+
+        if (!await ColumnExistsAsync("AfwerkingsOpties", "IsGearchiveerd"))
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"AfwerkingsOpties\" ADD COLUMN \"IsGearchiveerd\" INTEGER NOT NULL DEFAULT 0");
+
+        if (!await ColumnExistsAsync("AfwerkingsVarianten", "IsGearchiveerd"))
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"AfwerkingsVarianten\" ADD COLUMN \"IsGearchiveerd\" INTEGER NOT NULL DEFAULT 0");
+
+        // LeverancierBestellingen — never in an EF-recognised migration; always created by
+        // EnsureCreatedAsync for new DBs, but older DBs may be missing it.
+        await db.Database.ExecuteSqlRawAsync(@"
+CREATE TABLE IF NOT EXISTS ""LeverancierBestellingen"" (
+    ""Id""               INTEGER NOT NULL CONSTRAINT ""PK_LeverancierBestellingen"" PRIMARY KEY AUTOINCREMENT,
+    ""AangemaaktDoor""   TEXT    NULL,
+    ""BestelNummer""     TEXT    NOT NULL,
+    ""BesteldOp""        TEXT    NOT NULL,
+    ""LeverancierId""    INTEGER NULL,
+    ""OntvangenOp""      TEXT    NULL,
+    ""Opmerking""        TEXT    NULL,
+    ""Status""           TEXT    NOT NULL,
+    ""VerwachteLeverdatum"" TEXT NULL,
+    CONSTRAINT ""FK_LeverancierBestellingen_Leveranciers_LeverancierId""
+        FOREIGN KEY (""LeverancierId"") REFERENCES ""Leveranciers"" (""Id"") ON DELETE SET NULL
+);");
+        await db.Database.ExecuteSqlRawAsync(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_LeverancierBestellingen_BestelNummer"" ON ""LeverancierBestellingen"" (""BestelNummer"")");
+        await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_LeverancierBestellingen_LeverancierId"" ON ""LeverancierBestellingen"" (""LeverancierId"")");
+
         // AddVoorraadAlerts (20260506120000) — ensure table exists before HomeViewModel loads
         await db.Database.ExecuteSqlRawAsync(@"
 CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
@@ -692,6 +756,16 @@ CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
             "20260507023057_date",
             "20260507130000_AddAfhaalDatumToOfferteRegel",
             "20260507093626_AddBestelVormToBestellijn",
+            // Soft-delete: kolommen worden via raw-patch hierboven aangemaakt; markeer
+            // de (Designer-loze) migraties als toegepast zodat MigrateAsync ze niet probeert.
+            "20260520000001_AddSoftDeleteKlant",
+            "20260520000002_AddSoftDeleteTypeLijst",
+            "20260520000003_AddSoftDeleteAfwerkingen",
+            "20260520000004_AddSoftDeleteLeverancier",
+            // SyncPendingModelChanges adds columns already applied by raw patches above and
+            // rebuilds LeverancierBestellingen (also handled above).  Mark as applied so
+            // MigrateAsync does not try to run it against a DB with existing columns.
+            "20260617233009_SyncPendingModelChanges",
         };
 
         try

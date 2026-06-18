@@ -39,6 +39,15 @@ namespace QuadroApp.Data
         {
             base.OnModelCreating(b);
 
+            // ── Globale soft-delete query filters ────────────────────────────
+            // Gebruik .IgnoreQueryFilters() als je gearchiveerde records wél nodig hebt.
+            b.Entity<Klant>().HasQueryFilter(k => !k.IsGearchiveerd);
+            b.Entity<TypeLijst>().HasQueryFilter(t => !t.IsGearchiveerd);
+            b.Entity<Leverancier>().HasQueryFilter(l => !l.IsGearchiveerd);
+            b.Entity<AfwerkingsOptie>().HasQueryFilter(o => !o.IsGearchiveerd);
+            // AfwerkingsVariant: geen eigen filter — wordt altijd via parent Optie geladen.
+            // AfwerkingsGroep: nooit verwijderd, geen filter nodig.
+
             // TypeLijst entity
             b.Entity<TypeLijst>(entity =>
             {
@@ -116,10 +125,13 @@ namespace QuadroApp.Data
                 entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(30);
                 entity.Property(x => x.Opmerking).HasMaxLength(2000);
                 entity.Property(x => x.AangemaaktDoor).HasMaxLength(100);
+                // Leverancier is nullable na soft delete — SetNull zodat bestellingen
+                // intact blijven wanneer een leverancier gearchiveerd wordt.
                 entity.HasOne(x => x.Leverancier)
                     .WithMany(x => x.Bestellingen)
                     .HasForeignKey(x => x.LeverancierId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             b.Entity<LeverancierBestelLijn>(entity =>

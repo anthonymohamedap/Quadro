@@ -221,7 +221,7 @@
 							<DataTemplate>
 								<TextBlock Text="{Binding}"
 										   HorizontalAlignment="Center"
-										   FontSize="11"
+										   FontSize="13"
 										   FontWeight="SemiBold"
 										   Foreground="{StaticResource TextMuted}"
 										   Margin="0,0,0,8"
@@ -254,7 +254,7 @@
 										<!-- Day number -->
 										<TextBlock Text="{Binding DayNumber}"
 												   FontWeight="Bold"
-												   FontSize="13"
+												   FontSize="15"
 												   Foreground="{StaticResource TextPrimary}"/>
 
 										<!-- Capacity bar -->
@@ -389,6 +389,13 @@
 								<Button Content="Plan geselecteerde regels"
 										Command="{Binding PlanGeselecteerdeRegelsCommand}"
 										Classes="MainBtn"
+										HorizontalAlignment="Stretch"
+										HorizontalContentAlignment="Center"/>
+
+								<!-- US-21: aparte datum per inlijsting -->
+								<Button Content="Plan per regel (aparte datums)"
+										Command="{Binding PlanPerRegelCommand}"
+										Classes="GhostBtn"
 										HorizontalAlignment="Stretch"
 										HorizontalContentAlignment="Center"/>
 							</StackPanel>

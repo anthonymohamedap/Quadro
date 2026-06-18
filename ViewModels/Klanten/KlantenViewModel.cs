@@ -334,8 +334,9 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
         var displayNaam = $"{target.Voornaam} {target.Achternaam}".Trim();
 
         var ok = await _dialogs.ConfirmAsync(
-            "Klant verwijderen",
-            $"Ben je zeker dat je {displayNaam} wil verwijderen?"
+            "Klant archiveren",
+            $"Ben je zeker dat je {displayNaam} wil archiveren?\n\n" +
+            "De klant wordt verborgen maar bestaande offertes blijven bewaard."
         );
 
         if (!ok) return;
@@ -347,12 +348,18 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
 
             await using var db = await _dbFactory.CreateDbContextAsync();
 
-            db.Klanten.Remove(new Klant { Id = target.Id });
+            // Soft delete: vlag zetten i.p.v. record verwijderen.
+            // FindAsync negeert de query filter NIET — klant is op dit moment nog actief.
+            var dbKlant = await db.Klanten.FindAsync(target.Id);
+            if (dbKlant is null) return;   // al verwijderd in andere sessie
+
+            dbKlant.IsGearchiveerd = true;
+            dbKlant.GearchiveerdOp = DateTime.UtcNow;
             await db.SaveChangesAsync();
 
             var id = target.Id;
 
-            // UI verwijderen
+            // UI verwijderen (klant verdwijnt door query filter bij volgende load)
             var inAll = Klanten.FirstOrDefault(k => k.Id == id);
             if (inAll is not null) Klanten.Remove(inAll);
 
@@ -361,19 +368,11 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
 
             if (SelectedKlant?.Id == id)
                 SelectedKlant = null;
-
-        }
-        catch (DbUpdateException dbex)
-        {
-            // Vaak FK constraint (klant zit in offertes)
-            Foutmelding = $"❌ Verwijderen mislukt: {dbex.InnerException?.Message ?? dbex.Message}";
-            await _dialogs.ShowErrorAsync("Klant verwijderen mislukt",
-                "Deze klant kan niet verwijderd worden omdat hij nog gekoppeld is aan offertes/werkbonnen.\n\n" + Foutmelding);
         }
         catch (Exception ex)
         {
-            Foutmelding = $"❌ Verwijderen mislukt: {ex.InnerException?.Message ?? ex.Message}";
-            await _dialogs.ShowErrorAsync("Klant verwijderen mislukt", Foutmelding);
+            Foutmelding = $"❌ Archiveren mislukt: {ex.InnerException?.Message ?? ex.Message}";
+            await _dialogs.ShowErrorAsync("Klant archiveren mislukt", Foutmelding);
         }
         finally
         {

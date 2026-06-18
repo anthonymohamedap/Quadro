@@ -50,16 +50,19 @@ public sealed class TypeLijstValidator : ICrudValidator<TypeLijst>
         if (t.VoorraadMeter < 0) r.Warn(nameof(t.VoorraadMeter), "VoorraadMeter is negatief (controleer).");
         if (t.MinimumVoorraad < 0) r.Warn(nameof(t.MinimumVoorraad), "MinimumVoorraad is negatief (controleer).");
 
-        // Uniek artikelnummer check (optioneel maar sterk)
+        // Uniek artikelnummer check — IgnoreQueryFilters zodat ook gearchiveerde
+        // lijsten worden meegenomen en duplicaten worden geblokkeerd.
         if (!string.IsNullOrWhiteSpace(t.Artikelnummer))
         {
             await using var db = await _dbFactory.CreateDbContextAsync();
-            var exists = await db.TypeLijsten.AnyAsync(x =>
-                x.Artikelnummer == t.Artikelnummer &&
-                (!isUpdate || x.Id != t.Id));
+            var exists = await db.TypeLijsten
+                .IgnoreQueryFilters()
+                .AnyAsync(x =>
+                    x.Artikelnummer == t.Artikelnummer &&
+                    (!isUpdate || x.Id != t.Id));
 
             if (exists)
-                r.Error(nameof(t.Artikelnummer), "Artikelnummer bestaat al.");
+                r.Error(nameof(t.Artikelnummer), "Artikelnummer bestaat al (ook gearchiveerde lijsten worden gecontroleerd).");
         }
 
         return r;

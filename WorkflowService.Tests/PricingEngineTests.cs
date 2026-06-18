@@ -146,6 +146,45 @@ public class PricingEngineTests
         Assert.Equal(50m, regel.TotaalExcl);
     }
 
+    // US-22: een afgesproken prijs VERVANGT de berekende regelprijs, en het wissen
+    // ervan herstelt het totaal naar de oorspronkelijke berekening.
+    // (AfgesprokenPrijsExcl wordt door de gebruiker incl. BTW ingegeven en door de
+    //  engine gedeeld door 1+btw → 121 incl. = 100,00 excl.)
+    [Fact]
+    public void Calculate_AfgesprokenPrijs_ReplacesAndRestoresOnClear()
+    {
+        OfferteRegel Regel(decimal? afgesproken) => new OfferteRegel
+        {
+            AantalStuks = 1,
+            BreedteCm = 30m,
+            HoogteCm = 40m,
+            AfgesprokenPrijsExcl = afgesproken,
+            TypeLijst = new TypeLijst
+            {
+                BreedteCm = 5,
+                Soort = "HOU",
+                WinstFactor = 3.5m,
+                AfvalPercentage = 20m,
+                PrijsPerMeter = 10m,
+                VasteKost = 1m,
+                WerkMinuten = 30
+            }
+        };
+
+        decimal Total(decimal? afgesproken) =>
+            _sut.Calculate(new Offerte { Regels = [Regel(afgesproken)] }, 60m, 21m, 0m, 1m, 10m)
+                .Regels[0].TotaalExcl;
+
+        var berekend = Total(null);          // pure berekening
+        var metAfgesproken = Total(121m);    // 121 incl. → 100,00 excl. (vervangt)
+        var naWissen = Total(null);          // terug naar berekening
+
+        Assert.Equal(101.30m, berekend);          // identiek aan de pure-berekening test
+        Assert.Equal(100m, metAfgesproken);       // afgesproken prijs vervangt
+        Assert.NotEqual(berekend, metAfgesproken);
+        Assert.Equal(berekend, naWissen);         // wissen herstelt
+    }
+
     [Fact]
     public void Calculate_LijstWithoutPrijsPerMeter_FallsBackToDefaultPrijsPerMeter()
     {

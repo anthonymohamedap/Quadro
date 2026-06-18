@@ -128,14 +128,22 @@ namespace QuadroApp.Service
             var snapshot = JsonSerializer.Deserialize<WerkBonArchiefSnapshot>(archief.Snapshot, _jsonOpts)
                 ?? throw new InvalidOperationException("Snapshot kon niet gedeserialiseerd worden.");
 
+            // ── Controleer of de klant nog actief is (soft delete guard) ──
+            var klantActief = archief.KlantId.HasValue &&
+                await db.Klanten.AnyAsync(k => k.Id == archief.KlantId.Value);
+            var klantId     = klantActief ? archief.KlantId : null;
+            var klantSuffix = (!klantActief && archief.KlantId.HasValue)
+                                ? $" [Klant gearchiveerd: {archief.KlantNaam}]"
+                                : "";
+
             // ── Nieuwe offerte aanmaken op basis van snapshot ──────────
             var nieuweOfferte = new Offerte
             {
-                KlantId         = archief.KlantId,
+                KlantId         = klantId,
                 Datum           = DateTime.Today,
                 Status          = OfferteStatus.Concept,
                 Opmerking       = $"[HERSTELD uit archief #{archiefId} – orig. offerte #{archief.OfferteId}] " +
-                                  snapshot.Offerte.Opmerking,
+                                  snapshot.Offerte.Opmerking + klantSuffix,
                 SubtotaalExBtw  = snapshot.Offerte.SubtotaalExBtw,
                 BtwBedrag       = snapshot.Offerte.BtwBedrag,
                 TotaalInclBtw   = snapshot.Offerte.TotaalInclBtw,

@@ -19,8 +19,9 @@ namespace QuadroApp.Model.DB
     {
         public int Id { get; set; }
 
-        public int LeverancierId { get; set; }
-        public Leverancier Leverancier { get; set; } = null!;
+        // Nullable na soft delete van Leverancier (FK SetNull in OnModelCreating).
+        public int? LeverancierId { get; set; }
+        public Leverancier? Leverancier { get; set; }
 
         [MaxLength(40)]
         public string BestelNummer { get; set; } = string.Empty;

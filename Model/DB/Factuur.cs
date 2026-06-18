@@ -70,6 +70,14 @@ public class Factuur
     [Precision(18, 2)]
     public decimal VoorschotBedrag { get; set; } = 0m;
 
+    // US-23: korting expliciet op de bestelbon. KortingPct wordt overgenomen van
+    // de offerte; KortingBedragExcl wordt berekend bij het herberekenen van de totalen.
+    [Precision(18, 2)]
+    public decimal KortingPct { get; set; } = 0m;
+
+    [Precision(18, 2)]
+    public decimal KortingBedragExcl { get; set; } = 0m;
+
     [MaxLength(500)]
     public string? ExportPad { get; set; }
 
