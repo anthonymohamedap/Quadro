@@ -43,5 +43,9 @@ namespace QuadroApp.Model.DB
 
         /// <summary>Kleur- en stijlvarianten van deze optie (bv. Zwart, Brons, Transparant).</summary>
         public ICollection<AfwerkingsVariant> Varianten { get; set; } = new List<AfwerkingsVariant>();
+
+        // ── Soft delete ───────────────────────────────────────────────────────
+        /// <summary>True = gearchiveerd. Wordt door de globale query filter uitgesloten.</summary>
+        public bool IsGearchiveerd { get; set; } = false;
     }
 }

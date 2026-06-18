@@ -19,7 +19,10 @@ public class FactuurLijn
     [MaxLength(20)]
     public string Eenheid { get; set; } = "st";
 
-    [Precision(18, 2)]
+    // Hogere precisie: een afgesproken incl.-prijs wordt teruggerekend naar netto
+    // (bv. 100 / 1,21 = 82,644628…) en moet die precisie behouden zodat de incl.-prijs
+    // exact reproduceerbaar is. Afronding naar 2 decimalen gebeurt pas op de totalen.
+    [Precision(18, 6)]
     public decimal PrijsExcl { get; set; }
 
     [Precision(5, 2)]

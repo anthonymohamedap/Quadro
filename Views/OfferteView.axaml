@@ -288,7 +288,7 @@
 							<TextBlock Grid.Row="6" Grid.Column="0" Text="Afgesproken prijs (incl. BTW)"/>
 							<TextBox Grid.Row="6"
                                      Grid.Column="1"
-                                     Text="{Binding SelectedRegel.AfgesprokenPrijsExcl, Mode=TwoWay}"/>
+                                     Text="{Binding SelectedRegelAfgesprokenPrijs, Mode=TwoWay}"/>
 
 							<TextBlock Grid.Row="7" Grid.Column="0" Text="Inleg (B × H) cm"/>
 							<Grid Grid.Row="7"

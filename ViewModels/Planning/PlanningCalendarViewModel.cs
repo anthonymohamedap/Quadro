@@ -362,6 +362,114 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
         await RefreshAsync();
     }
 
+    // ───────── PLAN PER REGEL — eigen datum per inlijsting (US-21) ─────────
+
+    /// <summary>
+    /// US-21: plant elke geselecteerde inlijsting met een EIGEN datum. Toont één
+    /// tijd-dialoog per regel (met de regelnaam als context) en plant die regel
+    /// meteen op de gekozen dag. Zo kan inlijsting 1 op bv. 20/06 en inlijsting 2
+    /// op 27/06 — elke regel behoudt zijn eigen GeplandVan.
+    /// </summary>
+    [RelayCommand]
+    private async Task PlanPerRegelAsync()
+    {
+        if (WerkBonId == 0)
+        {
+            _toast.Error("Open planning vanuit een werkbon om regels te plannen.");
+            return;
+        }
+
+        var selectedIds = RegelsVanWerkBon.Where(x => x.IsSelected).Select(x => x.RegelId).ToList();
+        if (selectedIds.Count == 0) return;
+
+        await using var dbCalc = await _factory.CreateDbContextAsync();
+
+        // Statuscheck: afgewerkte/afgehaalde werkbonnen mogen niet (opnieuw) gepland worden
+        var werkBonStatus = await dbCalc.WerkBonnen
+            .Where(w => w.Id == WerkBonId)
+            .Select(w => (WerkBonStatus?)w.Status)
+            .FirstOrDefaultAsync();
+
+        if (werkBonStatus is WerkBonStatus.Afgewerkt or WerkBonStatus.Afgehaald)
+        {
+            _toast.Error("Deze werkbon is al afgewerkt of afgehaald en kan niet meer gepland worden.");
+            return;
+        }
+
+        var regels = await dbCalc.OfferteRegels
+            .Include(r => r.TypeLijst)
+            .Include(r => r.Glas)
+            .Include(r => r.PassePartout1)
+            .Include(r => r.PassePartout2)
+            .Include(r => r.DiepteKern)
+            .Include(r => r.Opkleven)
+            .Include(r => r.Rug)
+            .Where(r => selectedIds.Contains(r.Id))
+            .ToListAsync();
+
+        // Behoud de volgorde zoals in de lijst (Sortering volgt de RegelsVanWerkBon-volgorde).
+        var geordend = selectedIds
+            .Select(id => regels.FirstOrDefault(r => r.Id == id))
+            .Where(r => r is not null)
+            .Cast<OfferteRegel>()
+            .ToList();
+
+        int gepland = 0;
+        var standaardDag = SelectedDate.Date;
+
+        try
+        {
+            foreach (var r in geordend)
+            {
+                int duur = CalcMinutenVoorRegel(r);
+                var label = RegelsVanWerkBon.FirstOrDefault(x => x.RegelId == r.Id)?.Label
+                            ?? $"Regel #{r.Id}";
+
+                DateTime startDag;
+                if (ShowTijdDialogAsync is not null)
+                {
+                    var dialogVm = new PlanningTijdDialogViewModel
+                    {
+                        ContextLabel = $"Inlijsting: {label}",
+                        GeplandeDatum = new DateTimeOffset(standaardDag),
+                        TotaalMinuten = duur,
+                    };
+
+                    bool ok = await ShowTijdDialogAsync(dialogVm);
+                    if (!ok) continue;   // deze regel overslaan, ga door met de volgende
+
+                    startDag = dialogVm.GetStartDatum();
+                }
+                else
+                {
+                    startDag = standaardDag.AddHours(9);
+                }
+
+                await _workflow.PlanRegelMetDagCapaciteitAsync(
+                    WerkBonId,
+                    r.Id,
+                    startDag.Date,
+                    duur,
+                    CapaciteitMinuten,
+                    "Inlijsten");
+
+                // Volgende regel standaard op dezelfde gekozen dag voorstellen.
+                standaardDag = startDag.Date;
+                gepland++;
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            _toast.Error(ex.Message);
+            await RefreshAsync();
+            return;
+        }
+
+        if (gepland > 0)
+            _toast.Success($"{gepland} inlijsting(en) elk op eigen datum gepland.");
+        await RefreshAsync();
+    }
+
     /// <summary>
     /// Zoekt de eerste beschikbare dag (niet geblokkeerd) waar de taak past
     /// binnen de dagcapaciteit. Als de dag vol is, schuift door naar de volgende.

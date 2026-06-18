@@ -68,8 +68,8 @@ public sealed class PdfFactuurExporter : IFactuurExporter
                     col.Spacing(5);
 
                     DrawHeader(col, factuur, logoBytes);
+                    DrawKlantHeader(col, factuur);
                     DrawSpecialeMededeling(col, factuur.Opmerking);
-                    DrawCustomerBlock(col, factuur);
 
                     float currentY = 300;
                     for (var i = 0; i < items.Count; i++)
@@ -77,7 +77,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
                         DrawItemBlock(col, items[i], i + 1, ref currentY);
                     }
 
-                    DrawTotals(col, factuur.TotaalExclBtw, factuur.TotaalBtw, factuur.TotaalInclBtw, voorschot, teBetalenBijAfhalen, factuur.IsBtwVrijgesteld);
+                    DrawTotals(col, factuur.TotaalExclBtw, factuur.TotaalBtw, factuur.TotaalInclBtw, voorschot, teBetalenBijAfhalen, factuur.IsBtwVrijgesteld, factuur.KortingPct, factuur.KortingBedragExcl);
                     DrawSignature(col);
                 });
 
@@ -98,20 +98,16 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     }
 
     // ═══════════════════ HEADER ═══════════════════
+    // US-25: alleen logo links + bonnummer/datum rechts. De Quadro-bedrijfsgegevens
+    // staan enkel nog in de footer (DrawFooter), niet meer bovenaan.
     private static void DrawHeader(ColumnDescriptor col, Factuur factuur, byte[]? logoBytes)
     {
-        if (logoBytes is not null)
-            col.Item().AlignCenter().Height(90).Image(logoBytes).FitHeight();
-
         col.Item().Row(row =>
         {
-            row.RelativeItem().Column(left =>
+            row.RelativeItem().AlignLeft().Column(left =>
             {
-                left.Spacing(2);
-                left.Item().Text("QUADRO INLIJSTATELIER").SemiBold();
-                left.Item().Text("LIERSESTEENWEG 64");
-                left.Item().Text("3200 AARSCHOT");
-                left.Item().Text("Telnr : 016/57.08.72");
+                if (logoBytes is not null)
+                    left.Item().Height(70).AlignLeft().Image(logoBytes).FitHeight();
             });
 
             row.ConstantItem(220).AlignRight().Column(right =>
@@ -144,18 +140,20 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     }
 
     // ═══════════════════ KLANTBLOK ═══════════════════
-    private static void DrawCustomerBlock(ColumnDescriptor col, Factuur factuur)
+    // US-25: klantadres prominent (groot) net onder het logo. Bedrijfsgegevens
+    // van Quadro staan enkel in de footer.
+    private static void DrawKlantHeader(ColumnDescriptor col, Factuur factuur)
     {
-        col.Item().PaddingTop(1).Column(c =>
+        col.Item().PaddingTop(6).PaddingBottom(6).Column(c =>
         {
             c.Spacing(1);
-            c.Item().Text(factuur.KlantNaam).SemiBold();
+            c.Item().Text(factuur.KlantNaam).Bold().FontSize(13);
             if (!string.IsNullOrWhiteSpace(factuur.KlantAdres))
-                c.Item().Text(factuur.KlantAdres);
+                c.Item().Text(factuur.KlantAdres).FontSize(11);
             if (!string.IsNullOrWhiteSpace(factuur.KlantBtwNummer))
-                c.Item().Text($"BTW: {factuur.KlantBtwNummer}");
+                c.Item().Text($"BTW: {factuur.KlantBtwNummer}").FontSize(11);
             if (!string.IsNullOrWhiteSpace(factuur.AangenomenDoorInitialen))
-                c.Item().Text($"initialen: {factuur.AangenomenDoorInitialen}");
+                c.Item().Text($"initialen: {factuur.AangenomenDoorInitialen}").FontSize(10);
         });
     }
 
@@ -172,11 +170,14 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         {
             block.Spacing(2);
 
-            // Titel: gebruik Titel als beschikbaar, anders artikelnummer
-            var titelTekst = $"{index} stuk in te lijsten : {item.Title}";
+            // Titel: gebruik Titel als beschikbaar, anders artikelnummer.
+            // US-20: toon het werkelijke AantalStuks (niet de volgordeteller 'index').
+            block.Item().Text($"{item.AantalStuks:0.##} stuk in te lijsten : {item.Title}").SemiBold();
+
+            // US-24: de regelopmerking komt op een eigen, cursieve regel ONDER de titel
+            // (niet meer op dezelfde regel naast de titel).
             if (!string.IsNullOrWhiteSpace(item.RegelOpmerking))
-                titelTekst += $"  —  {item.RegelOpmerking}";
-            block.Item().Text(titelTekst).SemiBold();
+                block.Item().Text(item.RegelOpmerking).FontSize(10).Italic();
 
             // Als er een custom titel is, toon artikelnummer apart
             if (!string.IsNullOrWhiteSpace(item.Titel) && !string.IsNullOrWhiteSpace(item.LijstCode))
@@ -250,8 +251,13 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     }
 
     // ═══════════════════ TOTALEN ═══════════════════
-    private static void DrawTotals(ColumnDescriptor col, decimal subtotaalExcl, decimal btwBedrag, decimal totaalIncl, decimal voorschot, decimal teBetalen, bool isBtwVrijgesteld)
+    // subtotaalExcl = NETTO excl. BTW (reeds ná korting). kortingBedragExcl wordt
+    // bovenop opgeteld om het bruto-subtotaal te tonen, daarna expliciet afgetrokken (US-23).
+    private static void DrawTotals(ColumnDescriptor col, decimal subtotaalExcl, decimal btwBedrag, decimal totaalIncl, decimal voorschot, decimal teBetalen, bool isBtwVrijgesteld, decimal kortingPct = 0m, decimal kortingBedragExcl = 0m)
     {
+        var heeftKorting = kortingPct > 0m && kortingBedragExcl > 0m;
+        var brutoSubtotaalExcl = subtotaalExcl + (heeftKorting ? kortingBedragExcl : 0m);
+
         col.Item().PaddingTop(6).Column(totaalCol =>
         {
             totaalCol.Spacing(2);
@@ -260,8 +266,20 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             totaalCol.Item().Row(r =>
             {
                 r.RelativeItem().Text("Subtotaal (excl. BTW)");
-                r.ConstantItem(130).AlignRight().Text(Eur(subtotaalExcl));
+                r.ConstantItem(130).AlignRight().Text(Eur(brutoSubtotaalExcl));
             });
+
+            // US-23: korting expliciet tonen (rood accent) net onder het subtotaal.
+            if (heeftKorting)
+            {
+                totaalCol.Item().Row(r =>
+                {
+                    r.RelativeItem().Text($"Korting {kortingPct.ToString("0.##", CultureInfo.InvariantCulture)}%")
+                        .FontColor(Colors.Red.Darken2);
+                    r.ConstantItem(130).AlignRight().Text($"- {Eur(kortingBedragExcl)}")
+                        .FontColor(Colors.Red.Darken2);
+                });
+            }
 
             if (!isBtwVrijgesteld)
             {
@@ -418,6 +436,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
 
         return new RenderItem(
             Title: displayTitle,
+            AantalStuks: lijn.Aantal,
             BreedteCm: breedte,
             HoogteCm: hoogte,
             AfwCode: null,
@@ -467,6 +486,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
 
     private sealed record RenderItem(
         string Title,
+        decimal AantalStuks,
         decimal? BreedteCm,
         decimal? HoogteCm,
         string? AfwCode,

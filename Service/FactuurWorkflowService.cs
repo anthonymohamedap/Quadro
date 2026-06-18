@@ -153,7 +153,24 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         foreach (var r in offerte.Regels.OrderBy(x => x.Id))
         {
             var qty = Math.Max(1, r.AantalStuks);
-            var unitEx = qty == 0 ? r.TotaalExcl : Math.Round(r.TotaalExcl / qty, 2);
+
+            // Afgesproken prijs is autoritair op de bestelbon: gebruik hem RECHTSTREEKS
+            // i.p.v. het (mogelijk verouderde) berekende regeltotaal. De afgesproken prijs
+            // wordt door de gebruiker INCL btw ingegeven → terugrekenen naar excl per stuk
+            // (zelfde semantiek als PricingEngine).
+            decimal unitEx;
+            if (r.AfgesprokenPrijsExcl.HasValue)
+            {
+                // NIET afronden: volledige precisie zodat CreateLijn de incl.-prijs
+                // exact reproduceert (bv. € 100 blijft € 100, niet € 99,99).
+                unitEx = effectiefBtw <= 0
+                    ? r.AfgesprokenPrijsExcl.Value
+                    : r.AfgesprokenPrijsExcl.Value / (1m + (effectiefBtw / 100m));
+            }
+            else
+            {
+                unitEx = qty == 0 ? r.TotaalExcl : Math.Round(r.TotaalExcl / qty, 2);
+            }
 
             // Bouw verrijkte pipe-string met tagged segmenten
             var segments = new List<string>
@@ -227,8 +244,11 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
 
     private static FactuurLijn CreateLijn(string omschrijving, decimal aantal, string eenheid, decimal prijsExcl, decimal btwPct, int sortering)
     {
+        // BTW = bruto − netto: bereken de incl. prijs uit de (volledige-precisie) netto
+        // prijs en leid de BTW af als het verschil. Hierdoor blijft een afgesproken
+        // incl.-prijs (bv. € 100) exact behouden i.p.v. te verliezen op afronding (€ 99,99).
         var excl = Math.Round(aantal * prijsExcl, 2);
-        var btw = Math.Round(excl * (btwPct / 100m), 2);
+        var incl = Math.Round(aantal * prijsExcl * (1m + (btwPct / 100m)), 2);
         return new FactuurLijn
         {
             Omschrijving = omschrijving,
@@ -237,8 +257,8 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             PrijsExcl = prijsExcl,
             BtwPct = btwPct,
             TotaalExcl = excl,
-            TotaalBtw = btw,
-            TotaalIncl = excl + btw,
+            TotaalBtw = incl - excl,
+            TotaalIncl = incl,
             Sortering = sortering
         };
     }
@@ -247,14 +267,38 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
     {
         foreach (var lijn in factuur.Lijnen)
         {
+            // BTW = bruto − netto (incl. uit volledige-precisie netto), zodat een
+            // afgesproken incl.-prijs exact behouden blijft (zie CreateLijn).
             lijn.TotaalExcl = Math.Round(lijn.Aantal * lijn.PrijsExcl, 2);
-            lijn.TotaalBtw = Math.Round(lijn.TotaalExcl * (lijn.BtwPct / 100m), 2);
-            lijn.TotaalIncl = lijn.TotaalExcl + lijn.TotaalBtw;
+            lijn.TotaalIncl = Math.Round(lijn.Aantal * lijn.PrijsExcl * (1m + (lijn.BtwPct / 100m)), 2);
+            lijn.TotaalBtw = lijn.TotaalIncl - lijn.TotaalExcl;
         }
 
-        factuur.TotaalExclBtw = Math.Round(factuur.Lijnen.Sum(l => l.TotaalExcl), 2);
-        factuur.TotaalBtw = Math.Round(factuur.Lijnen.Sum(l => l.TotaalBtw), 2);
-        factuur.TotaalInclBtw = Math.Round(factuur.TotaalExclBtw + factuur.TotaalBtw, 2);
+        var brutoExcl = Math.Round(factuur.Lijnen.Sum(l => l.TotaalExcl), 2);
+        var brutoBtw = Math.Round(factuur.Lijnen.Sum(l => l.TotaalBtw), 2);
+
+        // US-23: pas de offerte-korting (KortingPct) toe op de bestelbon-totalen.
+        // De korting wordt proportioneel verrekend op BTW zodat gemengde tarieven
+        // en BTW-vrijstelling correct blijven. KortingBedragExcl wordt bewaard voor de PDF.
+        if (factuur.KortingPct > 0m && brutoExcl > 0m)
+        {
+            var kortingExcl = Math.Round(brutoExcl * (factuur.KortingPct / 100m), 2);
+            if (kortingExcl > brutoExcl) kortingExcl = brutoExcl;
+
+            var nettoFactor = (brutoExcl - kortingExcl) / brutoExcl;
+
+            factuur.KortingBedragExcl = kortingExcl;
+            factuur.TotaalExclBtw = Math.Round(brutoExcl - kortingExcl, 2);
+            factuur.TotaalBtw = Math.Round(brutoBtw * nettoFactor, 2);
+            factuur.TotaalInclBtw = Math.Round(factuur.TotaalExclBtw + factuur.TotaalBtw, 2);
+        }
+        else
+        {
+            factuur.KortingBedragExcl = 0m;
+            factuur.TotaalExclBtw = brutoExcl;
+            factuur.TotaalBtw = brutoBtw;
+            factuur.TotaalInclBtw = Math.Round(brutoExcl + brutoBtw, 2);
+        }
     }
 
     private static string BuildKlantNaam(Klant? klant)
@@ -372,6 +416,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             AfhaalDatum = offerte.AfhaalDatum,
             IsBtwVrijgesteld = vrijgesteld,
             VoorschotBedrag = offerte.VoorschotBedrag,
+            KortingPct = offerte.KortingPct,   // US-23
             Status = FactuurStatus.Draft,
             Lijnen = BuildLijnen(offerte, btwPct, vrijgesteld)
         };
@@ -433,6 +478,8 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             db.FactuurLijnen.RemoveRange(factuur.Lijnen);
 
         factuur.Lijnen.Clear();
+
+        factuur.KortingPct = offerte.KortingPct;   // US-23: korting up-to-date houden voor drafts
 
         foreach (var lijn in BuildLijnen(offerte, btwPct, vrijgesteld))
             factuur.Lijnen.Add(lijn);
