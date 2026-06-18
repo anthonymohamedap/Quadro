@@ -379,22 +379,39 @@ public partial class LeveranciersViewModel : AsyncViewModelBase, IAsyncInitializ
 
             await using var db = await _dbFactory.CreateDbContextAsync();
 
+            // Informeer over impact: lijsten verliezen koppeling (SetNull), bestellingen blijven.
             var aantalLijsten = await db.TypeLijsten
+                .IgnoreQueryFilters()   // ook al gearchiveerde lijsten tellen
                 .AsNoTracking()
                 .CountAsync(x => x.LeverancierId == SelectedLeverancier.Id);
 
-            var bevestiging = aantalLijsten > 0
-                ? $"Leverancier '{SelectedLeverancier.Naam}' heeft {aantalLijsten} gekoppelde lijst(en). Deze lijsten blijven bestaan maar verliezen hun leverancierskoppeling. Doorgaan?"
-                : $"Ben je zeker dat je leverancier '{SelectedLeverancier.Naam}' wil verwijderen?";
+            var aantalBestellingen = await db.LeverancierBestellingen
+                .AsNoTracking()
+                .CountAsync(x => x.LeverancierId == SelectedLeverancier.Id);
 
-            var ok = await _dialogs.ConfirmAsync("Leverancier verwijderen", bevestiging);
+            var impactTekst = new System.Text.StringBuilder();
+            impactTekst.AppendLine($"Leverancier '{SelectedLeverancier.Naam}' archiveren?");
+            impactTekst.AppendLine();
+            if (aantalLijsten > 0)
+                impactTekst.AppendLine($"• {aantalLijsten} lijst(en) verliezen hun leverancierskoppeling.");
+            if (aantalBestellingen > 0)
+                impactTekst.AppendLine($"• {aantalBestellingen} bestelling(en) blijven intact (leverancier wordt '—').");
+            impactTekst.AppendLine();
+            impactTekst.Append("De leverancier wordt verborgen maar geen data gaat verloren.");
+
+            var ok = await _dialogs.ConfirmAsync("Leverancier archiveren", impactTekst.ToString());
             if (!ok)
                 return;
 
-            db.Leveranciers.Remove(new Leverancier { Id = SelectedLeverancier.Id });
+            // Soft delete: vlag zetten i.p.v. record verwijderen.
+            // LeverancierBestelling.LeverancierId wordt automatisch null (FK SetNull).
+            var dbLeverancier = await db.Leveranciers.FindAsync(SelectedLeverancier.Id);
+            if (dbLeverancier is null) return;
+
+            dbLeverancier.IsGearchiveerd = true;
             await db.SaveChangesAsync();
 
-            _toast.Success("Leverancier verwijderd.");
+            _toast.Success("Leverancier gearchiveerd.");
 
             SelectedLeverancier = null;
             IsDetailOpen = false;

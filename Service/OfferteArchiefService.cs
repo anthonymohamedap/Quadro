@@ -136,14 +136,23 @@ namespace QuadroApp.Service
             var snap = JsonSerializer.Deserialize<OfferteArchiefSnapshot>(archief.Snapshot, _json)
                 ?? throw new InvalidOperationException("Snapshot kon niet worden gelezen.");
 
+            // ── Controleer of de klant nog actief is (soft delete guard) ─────
+            var klantActief = archief.KlantId.HasValue &&
+                await db.Klanten.AnyAsync(k => k.Id == archief.KlantId.Value);
+            var klantId       = klantActief ? archief.KlantId : null;
+            var klantSuffix   = (!klantActief && archief.KlantId.HasValue)
+                                  ? $" [Klant gearchiveerd: {archief.KlantNaam}]"
+                                  : "";
+
             // ── Nieuwe offerte ────────────────────────────────────────────────
             var nieuweOfferte = new Offerte
             {
-                KlantId            = archief.KlantId,
+                KlantId            = klantId,
                 Datum              = DateTime.Today,
                 Status             = OfferteStatus.Concept,
                 Opmerking          = $"[Hersteld uit archief #{archiefId} – orig. #{archief.OrigineleOfferteId}]"
-                                     + (snap.Offerte.Opmerking is { Length: > 0 } op ? " " + op : ""),
+                                     + (snap.Offerte.Opmerking is { Length: > 0 } op ? " " + op : "")
+                                     + klantSuffix,
                 SubtotaalExBtw     = snap.Offerte.SubtotaalExBtw,
                 BtwBedrag          = snap.Offerte.BtwBedrag,
                 TotaalInclBtw      = snap.Offerte.TotaalInclBtw,

@@ -38,6 +38,13 @@ public static class FactuurSchemaUpgrade
             if (!columns.Contains("VoorschotBedrag", StringComparer.OrdinalIgnoreCase))
                 await ExecuteNonQueryAsync(conn, "ALTER TABLE Facturen ADD COLUMN VoorschotBedrag TEXT NOT NULL DEFAULT '0';");
 
+            // US-23: korting expliciet op de bestelbon
+            if (!columns.Contains("KortingPct", StringComparer.OrdinalIgnoreCase))
+                await ExecuteNonQueryAsync(conn, "ALTER TABLE Facturen ADD COLUMN KortingPct TEXT NOT NULL DEFAULT '0';");
+
+            if (!columns.Contains("KortingBedragExcl", StringComparer.OrdinalIgnoreCase))
+                await ExecuteNonQueryAsync(conn, "ALTER TABLE Facturen ADD COLUMN KortingBedragExcl TEXT NOT NULL DEFAULT '0';");
+
             // GeblokkeerDagen: aangemaakt door home-migration; voor oude databases via raw SQL
             await ExecuteNonQueryAsync(conn, """
                 CREATE TABLE IF NOT EXISTS "GeblokkeerDagen" (

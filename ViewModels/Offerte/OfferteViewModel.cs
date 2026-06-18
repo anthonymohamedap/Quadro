@@ -159,6 +159,27 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         }
     }
 
+    /// <summary>
+    /// US-22: afgesproken prijs (incl. BTW) voor de geselecteerde regel.
+    /// Bindt via een VM-proxy zodat élke wijziging — invullen én leegmaken — een
+    /// herberekening triggert. Daardoor VERVANGT de afgesproken prijs de berekende
+    /// regelprijs (engine doet dit), en keert het totaal terug naar de berekening
+    /// zodra het veld leeggemaakt wordt. Voorheen schreef de TextBox rechtstreeks naar
+    /// het model zonder recalc → oude (opgetelde) totaal bleef staan.
+    /// </summary>
+    public decimal? SelectedRegelAfgesprokenPrijs
+    {
+        get => Regelbeheer.SelectedRegel?.AfgesprokenPrijsExcl;
+        set
+        {
+            if (Regelbeheer.SelectedRegel is null) return;
+            if (Regelbeheer.SelectedRegel.AfgesprokenPrijsExcl == value) return;
+            Regelbeheer.SelectedRegel.AfgesprokenPrijsExcl = value;
+            OnPropertyChanged();
+            if (!_suppressRecalc) Prijzen.TriggerRecalc();
+        }
+    }
+
     // ── TypeLijst selectie: zelfde patroon als SelectedKlant in KlantSelectieViewModel.
     //    SelectedTypeLijst is een echte [ObservableProperty] op Regelbeheer, dus Avalonia
     //    kan het betrouwbaar tracken zonder multi-segment path binding issues. ──
@@ -470,6 +491,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             OnPropertyChanged(nameof(SelectedRegelOpkleven));
             OnPropertyChanged(nameof(SelectedRegelRug));
             OnPropertyChanged(nameof(SelectedRegelAfhaalDatum));
+            OnPropertyChanged(nameof(SelectedRegelAfgesprokenPrijs));   // US-22
         }
     }
 

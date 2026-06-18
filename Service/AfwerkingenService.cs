@@ -152,18 +152,21 @@ namespace QuadroApp.Service
         /// <inheritdoc/>
         public async Task DeleteOptieAsync(AfwerkingsOptie optie)
         {
-            // Guard: refuse deletion when the optie is still used by existing offertes.
-            // Without this check the DB throws a raw FK-violation exception (SQLITE_CONSTRAINT
-            // on SQLite / ERROR 23503 on PostgreSQL) that surfaces as a cryptic error dialog.
-            var aantalInGebruik = await CountGebruikAsync(optie.Id);
-            if (aantalInGebruik > 0)
-                throw new InvalidOperationException(
-                    $"Deze afwerkingsoptie wordt nog gebruikt in {aantalInGebruik} " +
-                    $"offerteregel{(aantalInGebruik == 1 ? "" : "s")}. " +
-                    "Pas die offertes eerst aan voor je de optie verwijdert.");
-
             await using var db = await _dbFactory.CreateDbContextAsync();
-            db.AfwerkingsOpties.Remove(optie);
+
+            var dbOptie = await db.AfwerkingsOpties.FindAsync(optie.Id);
+            if (dbOptie is null) return;
+
+            // Soft delete: optie archiveren + cascade naar alle varianten.
+            // De guard op "in gebruik in offertes" vervalt: gearchiveerde opties
+            // blijven als soft-referentie geldig in bestaande OfferteRegels.
+            dbOptie.IsGearchiveerd = true;
+
+            // Cascade soft delete naar varianten via ExecuteUpdate (één DB-roundtrip).
+            await db.AfwerkingsVarianten
+                .Where(v => v.AfwerkingsOptieId == optie.Id)
+                .ExecuteUpdateAsync(s => s.SetProperty(v => v.IsGearchiveerd, true));
+
             await db.SaveChangesAsync();
         }
 

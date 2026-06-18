@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace QuadroApp.Model.DB
 {
@@ -16,6 +17,10 @@ namespace QuadroApp.Model.DB
         public string? BtwNummer { get; set; }
         public string? Opmerking { get; set; }
 
+        // ── Soft delete ───────────────────────────────────────────────────────
+        /// <summary>True = gearchiveerd. Wordt door de globale query filter uitgesloten.</summary>
+        public bool IsGearchiveerd { get; set; } = false;
+        public DateTime? GearchiveerdOp { get; set; }
 
         // Navigatie: één klant kan meerdere offertes of werkbonnen hebben
         public ICollection<Offerte> Offertes { get; set; } = new List<Offerte>();

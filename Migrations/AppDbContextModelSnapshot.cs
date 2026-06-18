@@ -50,6 +50,9 @@ namespace QuadroApp.Migrations
                     b.Property<int>("AfwerkingsGroepId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsGearchiveerd")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Kleur")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -106,6 +109,9 @@ namespace QuadroApp.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActief")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsGearchiveerd")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsStandaard")
@@ -183,6 +189,14 @@ namespace QuadroApp.Migrations
                     b.Property<string>("KlantNaam")
                         .IsRequired()
                         .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("KortingBedragExcl")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("KortingPct")
+                        .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("OfferteId")
@@ -435,8 +449,14 @@ namespace QuadroApp.Migrations
                     b.Property<string>("Email")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("GearchiveerdOp")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Gemeente")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsGearchiveerd")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Nummer")
                         .HasColumnType("TEXT");
@@ -466,6 +486,9 @@ namespace QuadroApp.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsGearchiveerd")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Naam")
@@ -545,7 +568,7 @@ namespace QuadroApp.Migrations
                     b.Property<DateTime>("BesteldOp")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("LeverancierId")
+                    b.Property<int?>("LeverancierId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("OntvangenOp")
@@ -847,6 +870,9 @@ namespace QuadroApp.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsDealer")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsGearchiveerd")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("LaatsteUpdate")
@@ -1275,8 +1301,7 @@ namespace QuadroApp.Migrations
                     b.HasOne("QuadroApp.Model.DB.Leverancier", "Leverancier")
                         .WithMany("Bestellingen")
                         .HasForeignKey("LeverancierId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Leverancier");
                 });

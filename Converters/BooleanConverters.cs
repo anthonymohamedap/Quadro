@@ -9,6 +9,10 @@ namespace QuadroApp.Converters
         public static readonly IValueConverter IsNotNull =
             new FuncValueConverter<object?, bool>(value => value is not null);
 
+        // ✅ True als een decimaal groter dan 0 is (bv. om een kortingregel te tonen)
+        public static readonly IValueConverter IsPositive =
+            new FuncValueConverter<decimal, bool>(value => value > 0m);
+
         // ✅ Geeft kleur terug bij selectie: eerste parameter = TrueColor|FalseColor
         public static readonly IValueConverter ToBrush =
             new FuncValueConverter<object?, IBrush?>(value =>
