@@ -34,6 +34,10 @@ public class AfwerkingsVariant
 
     public bool IsActief { get; set; } = true;
 
+    // ── Soft delete (cascade vanuit AfwerkingsOptie) ──────────────────────────
+    /// <summary>True = gearchiveerd samen met de parent Optie.</summary>
+    public bool IsGearchiveerd { get; set; } = false;
+
     /// <summary>"Mat Glas — Zwart"</summary>
     [NotMapped]
     public string DisplayLabel =>

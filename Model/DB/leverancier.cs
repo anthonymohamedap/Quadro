@@ -13,5 +13,9 @@ namespace QuadroApp.Model.DB
 
         public ICollection<TypeLijst> TypeLijsten { get; set; } = new List<TypeLijst>();
         public ICollection<LeverancierBestelling> Bestellingen { get; set; } = new List<LeverancierBestelling>();
+
+        // ── Soft delete ───────────────────────────────────────────────────────
+        /// <summary>True = gearchiveerd. Wordt door de globale query filter uitgesloten.</summary>
+        public bool IsGearchiveerd { get; set; } = false;
     }
 }

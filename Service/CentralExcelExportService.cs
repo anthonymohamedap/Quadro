@@ -596,7 +596,7 @@ public sealed class CentralExcelExportService : ICentralExcelExportService
                     async (db, ids) => (await db.LeverancierBestellingen.AsNoTracking()
                         .Include(x => x.Leverancier)
                         .Include(x => x.Lijnen)
-                        .Where(x => ids.Contains(x.LeverancierId))
+                        .Where(x => x.LeverancierId != null && ids.Contains(x.LeverancierId.Value))
                         .OrderByDescending(x => x.BesteldOp)
                         .ToListAsync()).Cast<object>().ToList()),
                 new RelatieDefinitie(

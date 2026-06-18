@@ -95,5 +95,9 @@ namespace QuadroApp.Model.DB
         public ICollection<VoorraadMutatie> VoorraadMutaties { get; set; } = new List<VoorraadMutatie>();
         public ICollection<VoorraadAlert> VoorraadAlerts { get; set; } = new List<VoorraadAlert>();
 
+        // ── Soft delete ───────────────────────────────────────────────────────
+        /// <summary>True = gearchiveerd. Wordt door de globale query filter uitgesloten.</summary>
+        public bool IsGearchiveerd { get; set; } = false;
+
     }
 }

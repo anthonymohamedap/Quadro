@@ -324,6 +324,13 @@ namespace QuadroApp.Service
                 if (ontvangst <= 0m)
                     throw new ValidationException("Ontvangsthoeveelheid moet groter zijn dan 0.");
 
+                // Guard: TypeLijst kan gearchiveerd zijn (soft delete + query filter).
+                // Ontvangst boeken op een gearchiveerde lijst is niet mogelijk.
+                if (lijn.TypeLijst is null)
+                    throw new InvalidOperationException(
+                        $"De gekoppelde lijst voor bestellijn {lijn.Id} is gearchiveerd. " +
+                        "Voorraadbeheer is niet meer mogelijk voor deze lijn.");
+
                 lijn.AantalMeterOntvangen += ontvangst;
                 lijn.TypeLijst.VoorraadMeter += ontvangst;
                 lijn.TypeLijst.InBestellingMeter = Math.Max(0m, lijn.TypeLijst.InBestellingMeter - ontvangst);
@@ -500,7 +507,10 @@ namespace QuadroApp.Service
             foreach (var lijn in bestelling.Lijnen)
             {
                 var nogNietOntvangen = Math.Max(0m, lijn.AantalMeterBesteld - lijn.AantalMeterOntvangen);
-                lijn.TypeLijst.InBestellingMeter = Math.Max(0m, lijn.TypeLijst.InBestellingMeter - nogNietOntvangen);
+                // TypeLijst kan gearchiveerd zijn — query filter retourneert null via Include.
+                // In dat geval is voorraadcorrectie niet meer mogelijk, maar annulering mag doorgaan.
+                if (lijn.TypeLijst is not null)
+                    lijn.TypeLijst.InBestellingMeter = Math.Max(0m, lijn.TypeLijst.InBestellingMeter - nogNietOntvangen);
 
                 var gekoppeldeTaken = await db.WerkTaken
                     .Where(t => t.LeverancierBestelLijnId == lijn.Id)
@@ -567,7 +577,8 @@ namespace QuadroApp.Service
                 {
                     UpsertAlert(db, alerts, desiredKeys, null, VoorraadAlertType.OrderOverdue,
                         $"Bestelling:{bestelling.Id}:OrderOverdue",
-                        $"Bestelling {bestelling.BestelNummer} voor leverancier {bestelling.Leverancier.Naam} is over tijd.");
+                        // Leverancier?.Naam: leverancier kan null zijn na soft delete (FK SetNull).
+                        $"Bestelling {bestelling.BestelNummer} voor leverancier {bestelling.Leverancier?.Naam ?? "—"} is over tijd.");
                 }
 
                 if (bestelling.Status == LeverancierBestellingStatus.DeelsOntvangen)

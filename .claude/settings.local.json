@@ -17,7 +17,11 @@
       "Bash(dotnet-ilspy Avalonia.Base.dll)",
       "Bash(powershell -Command \"Add-Type -Path 'Avalonia.Base.dll'; [Avalonia.Input.IDataTransfer].GetMembers\\(\\) | Select-Object Name\")",
       "Bash(powershell:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(Select-String \"SyncPending\")",
+      "Bash(dotnet tool *)",
+      "Bash(sqlite3 *)",
+      "PowerShell(Get-Command *)"
     ]
   }
 }
