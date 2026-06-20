@@ -71,10 +71,26 @@ jobs:
       - name: Install vpk
         run: dotnet tool install -g vpk
 
-      # ── 7. Pack with Velopack ─────────────────────────────────────────────────
+      # ── 7a. Import Apple signing certificate (macOS only) ────────────────────
+      - name: Import Apple certificate
+        if: matrix.rid == 'osx-arm64'
+        env:
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode > certificate.p12
+          security create-keychain -p "" build.keychain
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security list-keychains -s build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+
+      # ── 7b. Pack with Velopack ────────────────────────────────────────────────
       #   Windows → QuadroApp-win-Setup.exe + nupkg
-      #   macOS   → QuadroApp-osx.app.tar.gz + nupkg
-      - name: Pack
+      #   macOS   → QuadroApp-osx.app.tar.gz + nupkg (notarized)
+      - name: Pack (Windows)
+        if: matrix.rid == 'win-x64'
         run: >
           vpk pack
           --packId QuadroApp
@@ -83,6 +99,26 @@ jobs:
           --outputDir releases/
           --mainExe ${{ matrix.mainExe }}
           --channel ${{ matrix.channel }}
+
+      - name: Pack (macOS, with notarization)
+        if: matrix.rid == 'osx-arm64'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: >
+          vpk pack
+          --packId QuadroApp
+          --packVersion ${{ steps.ver.outputs.VERSION }}
+          --packDir publish/
+          --outputDir releases/
+          --mainExe ${{ matrix.mainExe }}
+          --channel ${{ matrix.channel }}
+          --signAppIdentity "$APPLE_SIGNING_IDENTITY"
+          --notaryProfile "QuadroNotary"
+        # notaryProfile is stored via: xcrun notarytool store-credentials "QuadroNotary"
+        #   --apple-id $APPLE_ID --password $APPLE_ID_PASSWORD --team-id $APPLE_TEAM_ID
 
       # ── 8. Publish MigrationTool (macOS only — one-time SQLite→PG migration) ────
       #   Self-contained single-file binary so Veerle's Mac needs no .NET SDK.
