@@ -31,7 +31,8 @@ public sealed partial class CentralExcelExportService
                     .ToDictionaryAsync(x => x.LeverancierId, x => x.Aantal);
 
                 var bestellingenPerLeverancier = await db.LeverancierBestellingen.AsNoTracking()
-                    .GroupBy(x => x.LeverancierId)
+                    .Where(x => x.LeverancierId.HasValue)
+                    .GroupBy(x => x.LeverancierId!.Value)
                     .Select(g => new { LeverancierId = g.Key, Aantal = g.Count() })
                     .ToDictionaryAsync(x => x.LeverancierId, x => x.Aantal);
 
