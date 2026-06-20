@@ -11,6 +11,7 @@
         Title="Weeklijst"
         Background="#F5F5F5">
 
+	<Panel>
 	<Grid RowDefinitions="Auto,*">
 
 		<!-- HEADER -->
@@ -39,6 +40,16 @@
 					<TextBlock Text="{Binding Year}" Foreground="White" VerticalAlignment="Center"/>
 					<TextBlock Text="{Binding WeekNr, StringFormat='Week {0}'}" Foreground="White" VerticalAlignment="Center"/>
 
+					<Button Content="🔄 Vernieuwen"
+							Command="{Binding VerversCommand}"
+							VerticalAlignment="Center"
+							Background="#3B82F6"
+							Foreground="White"
+							FontWeight="Bold"
+							CornerRadius="8"
+							Padding="10,5"
+							Height="32"/>
+
 					<Button Content="🖨 PDF afdrukken"
 							Command="{Binding PrintPdfCommand}"
 							VerticalAlignment="Center"
@@ -49,18 +60,6 @@
 							Padding="10,5"
 							Height="32"/>
 
-					<Button Content="← Terug"
-							Click="Close_Click"
-							VerticalAlignment="Top"
-							HorizontalAlignment="Right"
-							Margin="0,10,10,0"
-							Background="#F5C242"
-							Foreground="#222"
-							FontWeight="Bold"
-							CornerRadius="8"
-							Padding="10,5"
-							Width="100"
-							Height="32"/>
 				</StackPanel>
 			</DockPanel>
 		</Border>
@@ -109,6 +108,7 @@
 																	   FontWeight="Bold"
 																	   Foreground="Black"/>
 															<TextBlock Text="{Binding Omschrijving}" Foreground="Black"/>
+															<TextBlock Text="{Binding RegelOpmerking, StringFormat='opmerking: {0}'}" FontStyle="Italic" Foreground="#374151" TextWrapping="Wrap" IsVisible="{Binding RegelOpmerking, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
 															<Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="16" Margin="0,6,0,0">
 																<TextBlock Text="{Binding Breedte, StringFormat='breedte : {0} cm'}" />
@@ -128,8 +128,13 @@
 														<StackPanel Grid.Column="1" Spacing="4">
 															<TextBlock Text="{Binding Inleg1, StringFormat='inleg 1 : {0}'}" Foreground="Black"/>
 															<TextBlock Text="{Binding Inleg2, StringFormat='inleg 2 : {0}'}" Foreground="Black"/>
-															<TextBlock Text="artikel 1 :" Foreground="Black"/>
-															<TextBlock Text="artikel 2 :" Foreground="Black"/>
+															<TextBlock Text="Afwerkingen:" FontWeight="SemiBold" Foreground="#444" Margin="0,4,0,0"/>
+															<TextBlock Text="{Binding GlasBeschrijving, StringFormat='Glas: {0}'}" Foreground="Black" IsVisible="{Binding GlasBeschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+															<TextBlock Text="{Binding Passe1Beschrijving, StringFormat='PP1: {0}'}" Foreground="Black" IsVisible="{Binding Passe1Beschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+															<TextBlock Text="{Binding Passe2Beschrijving, StringFormat='PP2: {0}'}" Foreground="Black" IsVisible="{Binding Passe2Beschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+															<TextBlock Text="{Binding DieptyeBeschrijving, StringFormat='Diepte: {0}'}" Foreground="Black" IsVisible="{Binding DieptyeBeschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+															<TextBlock Text="{Binding OpklevenBeschrijving, StringFormat='Opkleven: {0}'}" Foreground="Black" IsVisible="{Binding OpklevenBeschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+															<TextBlock Text="{Binding RugBeschrijving, StringFormat='Rug: {0}'}" Foreground="Black" IsVisible="{Binding RugBeschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 														</StackPanel>
 
 														<Grid Grid.Row="1"
@@ -147,6 +152,9 @@
 																	<TextBlock Text="Bestellen"
 																			   FontWeight="Bold"
 																			   Foreground="Black"/>
+																	<Border IsVisible="{Binding IsBesteld}" Background="#16A34A" CornerRadius="10" Padding="8,2" HorizontalAlignment="Left" Margin="0,0,0,2">
+																		<TextBlock Text="✓ Reeds besteld" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+																	</Border>
 																	<TextBlock Text="{Binding VoorraadStatusText}"
 																			   Foreground="Black"
 																			   FontWeight="SemiBold"/>
@@ -175,6 +183,7 @@
 																						 GroupName="{Binding TaakId, StringFormat='BVW{0}'}"
 																						 IsChecked="{Binding BestelVormIsGemonteerd, Mode=TwoWay}"/>
 																		</StackPanel>
+																		<TextBlock Text="{Binding BestelEenheid, StringFormat='Eenheid: {0}'}" FontSize="11" Foreground="#555" Margin="0,2,0,0"/>
 																		<Button Content="Maak bestelling"
 																				Background="#F5C242" Foreground="Black" FontWeight="Bold"
 																				Command="{Binding $parent[Window].((vm:WeekWerkLijstViewModel)DataContext).MarkeerBesteldCommand}"
@@ -235,4 +244,18 @@
 
 	</Grid>
 
+		<!-- TOAST OVERLAY -->
+		<ItemsControl ItemsSource="{Binding ToastMessages}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,24,0,0" IsHitTestVisible="False">
+			<ItemsControl.ItemsPanel>
+				<ItemsPanelTemplate><StackPanel Spacing="8"/></ItemsPanelTemplate>
+			</ItemsControl.ItemsPanel>
+			<ItemsControl.ItemTemplate>
+				<DataTemplate>
+					<Border Padding="14,10" CornerRadius="8" Background="{Binding BackgroundBrush}" BorderBrush="#383C4A" BorderThickness="1" MinWidth="220" MaxWidth="380">
+						<TextBlock Text="{Binding Message}" Foreground="White" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap"/>
+					</Border>
+				</DataTemplate>
+			</ItemsControl.ItemTemplate>
+		</ItemsControl>
+	</Panel>
 </Window>

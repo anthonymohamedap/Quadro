@@ -1,9 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Converters;
 using Avalonia.Markup.Xaml;
-using Avalonia.Media;
 using Avalonia.Threading;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -19,11 +17,9 @@ using QuadroApp.Service.Toast;
 using QuadroApp.Validation;
 using QuadroApp.ViewModels;
 using System;
-using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
-using Velopack;
-using Velopack.Sources;
+
 namespace QuadroApp;
 
 public partial class App : Application
@@ -203,6 +199,16 @@ public partial class App : Application
         Services = services.BuildServiceProvider();
         _logger = Services.GetRequiredService<ILogger<App>>();
 
+        // UI-thread (dispatcher) excepties: begrens elke onverwachte fout met een toast
+        // en voorkom dat de app crasht. De gebruiker ziet dat er iets misging en dat de
+        // actie niet is uitgevoerd; de fout wordt naar crash.log geschreven.
+        Dispatcher.UIThread.UnhandledException += (_, e) =>
+        {
+            e.Handled = true;
+            LogToFile(e.Exception);
+            ShowErrorToast(e.Exception);
+        };
+
         // ==============================
         // 6️⃣ MAIN WINDOW — open first so the user sees the app immediately
         // ==============================
@@ -226,7 +232,7 @@ public partial class App : Application
         _ = InitializeInBackgroundAsync(mainVm);
 
         // Check for updates in the background — never blocks startup, never crashes the app.
-        _ = CheckForUpdatesAsync();
+        _ = VelopackUpdateChecker.CheckAndNotifyAsync(Services, _logger);
     }
     // ==============================
     // 🚀 BACKGROUND STARTUP
@@ -259,64 +265,6 @@ public partial class App : Application
 
         if (mainVm is not null)
             await Dispatcher.UIThread.InvokeAsync(() => mainVm.IsInitializing = false);
-    }
-
-    // ==============================
-    // 🔄 AUTO-UPDATE (Velopack)
-    // ==============================
-
-    /// <summary>
-    /// Silently checks GitHub Releases for a newer version.
-    /// Downloads it in the background and shows a toast when ready.
-    /// The update is applied on the next app restart — nothing interrupts the user.
-    /// </summary>
-    private static async Task CheckForUpdatesAsync()
-    {
-        try
-        {
-            // ── Update-bron ────────────────────────────────────────────────────────────
-            // Productie : GitHub Releases (standaard).
-            // Lokale test: definieer LOCAL_TEST bij het bouwen — test-velopack-local.ps1
-            //              doet dit automatisch zodat de app http://localhost:8080 gebruikt.
-            // Terugzetten: git checkout App.axaml.cs
-#if LOCAL_TEST
-            const string repoUrl = "http://localhost:8080";
-#else
-            const string repoUrl = "https://github.com/anthonymohamedap/Quadro";
-#endif
-
-            var source = new GithubSource(repoUrl, accessToken: null, prerelease: false);
-            var channel = OperatingSystem.IsMacOS() ? "osx" : "win";
-            var mgr = new UpdateManager(source, new UpdateOptions { ExplicitChannel = channel });
-
-            // Not running as a Velopack-installed app (e.g. dev machine) → skip silently.
-            if (!mgr.IsInstalled) return;
-
-            var newVersion = await mgr.CheckForUpdatesAsync();
-            if (newVersion == null) return;
-
-            _logger.LogInformation("[Update] Nieuwe versie beschikbaar: {Version}", newVersion.TargetFullRelease.Version);
-
-            await mgr.DownloadUpdatesAsync(newVersion);
-
-            _logger.LogInformation("[Update] Download klaar. Wordt toegepast bij volgende herstart.");
-
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                var toast = Services.GetService<IToastService>();
-                toast?.Info("🔄 Update gedownload.", "Herstart nu", () => mgr.ApplyUpdatesAndRestart(newVersion));
-            });
-        }
-        catch (System.Net.Http.HttpRequestException httpEx)
-        {
-            // Netwerk niet beschikbaar, DNS-fout, 404, … — allemaal niet-kritiek.
-            _logger.LogInformation("[Update] Update-controle overgeslagen (netwerk): {Message}", httpEx.Message);
-        }
-        catch (Exception ex)
-        {
-            // Update check should never crash the app — only log, never write to crash.log.
-            _logger.LogWarning(ex, "[Update] Update-controle mislukt (niet kritiek): {Message}", ex.Message);
-        }
     }
 
     // ==============================
@@ -415,12 +363,38 @@ public partial class App : Application
         return $"Data Source={newDbPath}";
     }
 
+    /// <summary>Schrijf een exception naar crash.log (faalt nooit zelf).</summary>
+    private static void LogToFile(Exception? ex)
+    {
+        if (ex == null) return;
+        try { File.AppendAllText(_crashLogPath, $"[{DateTime.Now}] {ex}\n\n"); }
+        catch { /* logging mag de app nooit laten vallen */ }
+    }
+
+    /// <summary>Toon een nette foutmelding-toast i.p.v. te crashen (UI-thread veilig).</summary>
+    private static void ShowErrorToast(Exception? ex)
+    {
+        if (ex is null) return;
+        try
+        {
+            var sp = Services;
+            var toast = sp?.GetService<IToastService>();
+            if (toast is null) return;
+
+            var detail = (ex.InnerException ?? ex).Message;
+            void Show() => toast.Error($"Er ging iets mis — de actie werd niet uitgevoerd. ({detail})");
+
+            if (Dispatcher.UIThread.CheckAccess()) Show();
+            else Dispatcher.UIThread.Post(Show);
+        }
+        catch { /* een fout-handler mag nooit zelf falen */ }
+    }
+
     private static void LogException(Exception? ex)
     {
         if (ex == null) return;
 
-        var text = $"[{DateTime.Now}] {ex}\n\n";
-        File.AppendAllText(_crashLogPath, text);
+        LogToFile(ex);
 
         if (Application.Current?.ApplicationLifetime
             is IClassicDesktopStyleApplicationLifetime desktop)
@@ -501,294 +475,9 @@ public partial class App : Application
         await db.Database.EnsureCreatedAsync();
 
         // Apply pending migrations safely.
-        await ApplyPendingMigrationsAsync(db);
+        await SqliteSchemaPatcher.PatchAsync(db, _logger);
     }
 
-    /// <summary>
-    /// Applies EF Core migrations safely, even on a DB that was originally
-    /// created via EnsureCreatedAsync (which has no __EFMigrationsHistory table).
-    /// Marks all pre-existing migrations as applied, then runs only new ones.
-    /// </summary>
-    private static async Task ApplyPendingMigrationsAsync(AppDbContext db)
-    {
-        const string historyTable = "__EFMigrationsHistory";
-
-        // ── Stap 1: archief-tabellen ALTIJD aanmaken via raw SQL ─────────────
-        // Dit staat los van het migratie-systeem zodat een vroeg-falende catch
-        // de tabelcreatie niet kan overslaan.
-#pragma warning disable EF1002  // Raw SQL with no user input — safe
-        try
-        {
-            await db.Database.ExecuteSqlRawAsync(
-                "CREATE TABLE IF NOT EXISTS \"WerkBonArchieven\" (" +
-                "\"Id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
-                "\"OrigineleWerkBonId\" INTEGER NOT NULL," +
-                "\"OfferteId\" INTEGER NOT NULL," +
-                "\"KlantNaam\" TEXT NOT NULL," +
-                "\"KlantId\" INTEGER NULL," +
-                "\"OfferteDatum\" TEXT NOT NULL," +
-                "\"OfferteStatusOpMoment\" TEXT NOT NULL," +
-                "\"WerkBonStatusOpMoment\" TEXT NOT NULL," +
-                "\"TotaalPrijsIncl\" TEXT NOT NULL," +
-                "\"GearchiveerdOp\" TEXT NOT NULL," +
-                "\"AnnuleringsReden\" TEXT NULL," +
-                "\"Snapshot\" TEXT NOT NULL," +
-                "\"IsHersteld\" INTEGER NOT NULL," +
-                "\"HersteldNaarOfferteId\" INTEGER NULL" +
-                ")");
-            await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_WerkBonArchieven_GearchiveerdOp""     ON ""WerkBonArchieven""(""GearchiveerdOp"")");
-            await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_WerkBonArchieven_OrigineleWerkBonId"" ON ""WerkBonArchieven""(""OrigineleWerkBonId"")");
-            await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_WerkBonArchieven_OfferteId""          ON ""WerkBonArchieven""(""OfferteId"")");
-
-            await db.Database.ExecuteSqlRawAsync(
-                "CREATE TABLE IF NOT EXISTS \"OfferteArchieven\" (" +
-                "\"Id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
-                "\"OrigineleOfferteId\" INTEGER NOT NULL," +
-                "\"KlantNaam\" TEXT NOT NULL," +
-                "\"KlantId\" INTEGER NULL," +
-                "\"OfferteDatum\" TEXT NOT NULL," +
-                "\"Jaar\" INTEGER NOT NULL," +
-                "\"StatusOpMoment\" TEXT NOT NULL," +
-                "\"TotaalInclBtw\" TEXT NOT NULL," +
-                "\"HadWerkBon\" INTEGER NOT NULL," +
-                "\"GearchiveerdOp\" TEXT NOT NULL," +
-                "\"Reden\" TEXT NULL," +
-                "\"Snapshot\" TEXT NOT NULL," +
-                "\"IsHersteld\" INTEGER NOT NULL," +
-                "\"HersteldNaarOfferteId\" INTEGER NULL" +
-                ")");
-            await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_OfferteArchieven_GearchiveerdOp""     ON ""OfferteArchieven""(""GearchiveerdOp"")");
-            await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_OfferteArchieven_Jaar""               ON ""OfferteArchieven""(""Jaar"")");
-            await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_OfferteArchieven_OrigineleOfferteId"" ON ""OfferteArchieven""(""OrigineleOfferteId"")");
-
-            _logger.LogInformation("[DB] Archief-tabellen gecontroleerd/aangemaakt.");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "[DB] FOUT bij aanmaken archief-tabellen: {Message}", ex.Message);
-        }
-
-        // ── Stap 1b: Schema-patches voor kolommen die mogelijk ontbreken op oudere DBs ─
-        // PRAGMA table_info check first: no ALTER TABLE attempted when column already exists,
-        // so EF Core never logs a scary "fail:" line for a harmless duplicate-column error.
-
-        var conn = (Microsoft.Data.Sqlite.SqliteConnection)db.Database.GetDbConnection();
-        if (conn.State != System.Data.ConnectionState.Open)
-            await conn.OpenAsync();
-
-        async Task<bool> ColumnExistsAsync(string table, string column)
-        {
-            await using var cmd = conn.CreateCommand();
-            cmd.CommandText = $"SELECT COUNT(*) FROM pragma_table_info('{table}') WHERE name='{column}'";
-            var result = await cmd.ExecuteScalarAsync();
-            return Convert.ToInt64(result) > 0;
-        }
-
-        // AddAfwerkingsKleur (20260323120500) — Kleur op AfwerkingsOpties
-        if (!await ColumnExistsAsync("AfwerkingsOpties", "Kleur"))
-            await db.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE \"AfwerkingsOpties\" ADD COLUMN \"Kleur\" TEXT NOT NULL DEFAULT 'Standaard'");
-
-        // AddAfwerkingsKleur (20260323120500) — uniek index updaten naar versie mét Kleur
-        // SQLite error 1 = SQLITE_ERROR; "no such index" is the only expected failure for DROP.
-        try { await db.Database.ExecuteSqlRawAsync(
-            "DROP INDEX IF EXISTS \"IX_AfwerkingsOpties_AfwerkingsGroepId_Volgnummer\""); }
-        catch (Microsoft.Data.Sqlite.SqliteException ex)
-            when (ex.Message.Contains("no such index", StringComparison.OrdinalIgnoreCase))
-        { /* index bestond al niet — prima */ }
-        // IF NOT EXISTS makes the CREATE idempotent; no catch needed.
-        await db.Database.ExecuteSqlRawAsync(
-            "CREATE UNIQUE INDEX IF NOT EXISTS \"IX_AfwerkingsOpties_AfwerkingsGroepId_Volgnummer_Kleur\" " +
-            "ON \"AfwerkingsOpties\" (\"AfwerkingsGroepId\", \"Volgnummer\", \"Kleur\")");
-
-        // AddTitelToOfferteRegel (20260321121423) — Titel op OfferteRegels
-        if (!await ColumnExistsAsync("OfferteRegels", "Titel"))
-            await db.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE \"OfferteRegels\" ADD COLUMN \"Titel\" TEXT NULL");
-
-        // AddRowVersionToOfferte (20260506000000) — optimistic concurrency token
-        if (!await ColumnExistsAsync("Offertes", "RowVersion"))
-            await db.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE \"Offertes\" ADD COLUMN \"RowVersion\" BLOB NULL");
-
-        // AddGeplandeDatumToFactuur (20260506130000)
-        if (!await ColumnExistsAsync("Facturen", "GeplandeDatum"))
-            await db.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE \"Facturen\" ADD COLUMN \"GeplandeDatum\" TEXT NULL");
-
-        // AddKortingToFactuur (US-23) — korting expliciet op de bestelbon
-        if (!await ColumnExistsAsync("Facturen", "KortingPct"))
-            await db.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE \"Facturen\" ADD COLUMN \"KortingPct\" TEXT NOT NULL DEFAULT '0'");
-        if (!await ColumnExistsAsync("Facturen", "KortingBedragExcl"))
-            await db.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE \"Facturen\" ADD COLUMN \"KortingBedragExcl\" TEXT NOT NULL DEFAULT '0'");
-
-        // AddAfwerkingsVariant (20260507110000)
-        await db.Database.ExecuteSqlRawAsync(@"
-CREATE TABLE IF NOT EXISTS ""AfwerkingsVarianten"" (
-    ""Id""                  INTEGER NOT NULL CONSTRAINT ""PK_AfwerkingsVarianten"" PRIMARY KEY AUTOINCREMENT,
-    ""AfwerkingsOptieId""   INTEGER NOT NULL,
-    ""Beschrijving""        TEXT    NOT NULL,
-    ""Kleur""               TEXT    NULL,
-    ""VariantCode""         TEXT    NULL,
-    ""IsStandaard""         INTEGER NOT NULL DEFAULT 0,
-    ""IsActief""            INTEGER NOT NULL DEFAULT 1,
-    CONSTRAINT ""FK_AfwerkingsVarianten_AfwerkingsOpties_AfwerkingsOptieId""
-        FOREIGN KEY (""AfwerkingsOptieId"") REFERENCES ""AfwerkingsOpties"" (""Id"") ON DELETE CASCADE
-);");
-        await db.Database.ExecuteSqlRawAsync(@"
-CREATE UNIQUE INDEX IF NOT EXISTS ""IX_AfwerkingsVarianten_OptieId_Beschrijving""
-    ON ""AfwerkingsVarianten"" (""AfwerkingsOptieId"", ""Beschrijving"");");
-        // Auto-migrate: maak 1 variant per bestaande optie als nog niet aangemaakt
-        await db.Database.ExecuteSqlRawAsync(@"
-INSERT OR IGNORE INTO ""AfwerkingsVarianten"" (""AfwerkingsOptieId"", ""Beschrijving"", ""IsStandaard"", ""IsActief"")
-SELECT ""Id"", COALESCE(NULLIF(TRIM(""Kleur""), ''), 'Standaard'), 1, 1
-FROM ""AfwerkingsOpties""
-WHERE NOT EXISTS (
-    SELECT 1 FROM ""AfwerkingsVarianten"" v WHERE v.""AfwerkingsOptieId"" = ""AfwerkingsOpties"".""Id""
-);");
-
-        // AddAfhaalDatum (20260507100000)
-        if (!await ColumnExistsAsync("Offertes", "AfhaalDatum"))
-            await db.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE \"Offertes\" ADD COLUMN \"AfhaalDatum\" TEXT NULL");
-        if (!await ColumnExistsAsync("Facturen", "AfhaalDatum"))
-            await db.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE \"Facturen\" ADD COLUMN \"AfhaalDatum\" TEXT NULL");
-
-        // AddAfhaalDatumToOfferteRegel (20260507130000)
-        if (!await ColumnExistsAsync("OfferteRegels", "AfhaalDatum"))
-            await db.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE \"OfferteRegels\" ADD COLUMN \"AfhaalDatum\" TEXT NULL");
-
-        // AddBestelVormToBestellijn (20260507093626)
-        if (!await ColumnExistsAsync("LeverancierBestelLijnen", "BestelVorm"))
-            await db.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE \"LeverancierBestelLijnen\" ADD COLUMN \"BestelVorm\" INTEGER NOT NULL DEFAULT 0");
-
-        // Soft-delete (20260520000001..4) — IsGearchiveerd/GearchiveerdOp.
-        // De bijbehorende migraties missen hun [Migration]/Designer-bestanden en worden
-        // daardoor NIET door MigrateAsync herkend; de globale query-filters
-        // (!IsGearchiveerd) op Klant/TypeLijst/Leverancier/AfwerkingsOptie crashen
-        // zonder deze kolommen. Daarom hier als idempotente raw-patch.
-        if (!await ColumnExistsAsync("Klanten", "IsGearchiveerd"))
-            await db.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE \"Klanten\" ADD COLUMN \"IsGearchiveerd\" INTEGER NOT NULL DEFAULT 0");
-        if (!await ColumnExistsAsync("Klanten", "GearchiveerdOp"))
-            await db.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE \"Klanten\" ADD COLUMN \"GearchiveerdOp\" TEXT NULL");
-
-        if (!await ColumnExistsAsync("TypeLijsten", "IsGearchiveerd"))
-            await db.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE \"TypeLijsten\" ADD COLUMN \"IsGearchiveerd\" INTEGER NOT NULL DEFAULT 0");
-
-        if (!await ColumnExistsAsync("Leveranciers", "IsGearchiveerd"))
-            await db.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE \"Leveranciers\" ADD COLUMN \"IsGearchiveerd\" INTEGER NOT NULL DEFAULT 0");
-
-        if (!await ColumnExistsAsync("AfwerkingsOpties", "IsGearchiveerd"))
-            await db.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE \"AfwerkingsOpties\" ADD COLUMN \"IsGearchiveerd\" INTEGER NOT NULL DEFAULT 0");
-
-        if (!await ColumnExistsAsync("AfwerkingsVarianten", "IsGearchiveerd"))
-            await db.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE \"AfwerkingsVarianten\" ADD COLUMN \"IsGearchiveerd\" INTEGER NOT NULL DEFAULT 0");
-
-        // LeverancierBestellingen — never in an EF-recognised migration; always created by
-        // EnsureCreatedAsync for new DBs, but older DBs may be missing it.
-        await db.Database.ExecuteSqlRawAsync(@"
-CREATE TABLE IF NOT EXISTS ""LeverancierBestellingen"" (
-    ""Id""               INTEGER NOT NULL CONSTRAINT ""PK_LeverancierBestellingen"" PRIMARY KEY AUTOINCREMENT,
-    ""AangemaaktDoor""   TEXT    NULL,
-    ""BestelNummer""     TEXT    NOT NULL,
-    ""BesteldOp""        TEXT    NOT NULL,
-    ""LeverancierId""    INTEGER NULL,
-    ""OntvangenOp""      TEXT    NULL,
-    ""Opmerking""        TEXT    NULL,
-    ""Status""           TEXT    NOT NULL,
-    ""VerwachteLeverdatum"" TEXT NULL,
-    CONSTRAINT ""FK_LeverancierBestellingen_Leveranciers_LeverancierId""
-        FOREIGN KEY (""LeverancierId"") REFERENCES ""Leveranciers"" (""Id"") ON DELETE SET NULL
-);");
-        await db.Database.ExecuteSqlRawAsync(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_LeverancierBestellingen_BestelNummer"" ON ""LeverancierBestellingen"" (""BestelNummer"")");
-        await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_LeverancierBestellingen_LeverancierId"" ON ""LeverancierBestellingen"" (""LeverancierId"")");
-
-        // AddVoorraadAlerts (20260506120000) — ensure table exists before HomeViewModel loads
-        await db.Database.ExecuteSqlRawAsync(@"
-CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
-    ""Id""                    INTEGER NOT NULL CONSTRAINT ""PK_VoorraadAlerts"" PRIMARY KEY AUTOINCREMENT,
-    ""TypeLijstId""           INTEGER NULL,
-    ""AlertType""             TEXT    NOT NULL,
-    ""Status""                TEXT    NOT NULL,
-    ""AangemaaktOp""          TEXT    NOT NULL,
-    ""LaatstHerinnerdOp""     TEXT    NULL,
-    ""VolgendeHerinneringOp"" TEXT    NULL,
-    ""BronReferentie""        TEXT    NULL,
-    ""Bericht""               TEXT    NOT NULL,
-    CONSTRAINT ""FK_VoorraadAlerts_TypeLijsten_TypeLijstId""
-        FOREIGN KEY (""TypeLijstId"") REFERENCES ""TypeLijsten"" (""Id"") ON DELETE SET NULL
-)");
-        await db.Database.ExecuteSqlRawAsync(
-            @"CREATE INDEX IF NOT EXISTS ""IX_VoorraadAlerts_TypeLijstId"" ON ""VoorraadAlerts"" (""TypeLijstId"")");
-
-        // ── Stap 2: EF migratie-historietabel + pre-existing migrations ──────
-        var preExistingMigrations = new[]
-        {
-            "20260228232856_InitialClean",
-            "20260303090000_AddStaaflijstSettingsAndFlag",
-            "20260303091000_RemoveTypeLijstMarginColumns",
-            "20260303141137_fixes",
-            "20260318000000_AddTypeLijstPerLijstPricingDropStaaflijst",
-            "20260321121423_AddTitelToOfferteRegel",
-            "20260323120500_AddAfwerkingsKleur",
-            "20260407000000_NullableLeverancierIdOnTypeLijst",
-            // "20260408161449_home" — removed: no matching .cs migration file exists,
-            // would crash MigrateAsync on an existing DB that doesn't have it applied.
-            "20260408120000_AddWerkBonArchief",
-            "20260408140000_AddOfferteArchief",
-            "20260506000000_AddRowVersionToOfferte",
-            "20260506120000_AddVoorraadAlerts",
-            "20260506130000_AddGeplandeDatumToFactuur",
-            "20260507100000_AddAfhaalDatum",
-            "20260507110000_AddAfwerkingsVariant",
-            "20260507011133_tag10",
-            "20260507023057_date",
-            "20260507130000_AddAfhaalDatumToOfferteRegel",
-            "20260507093626_AddBestelVormToBestellijn",
-            // Soft-delete: kolommen worden via raw-patch hierboven aangemaakt; markeer
-            // de (Designer-loze) migraties als toegepast zodat MigrateAsync ze niet probeert.
-            "20260520000001_AddSoftDeleteKlant",
-            "20260520000002_AddSoftDeleteTypeLijst",
-            "20260520000003_AddSoftDeleteAfwerkingen",
-            "20260520000004_AddSoftDeleteLeverancier",
-            // SyncPendingModelChanges adds columns already applied by raw patches above and
-            // rebuilds LeverancierBestellingen (also handled above).  Mark as applied so
-            // MigrateAsync does not try to run it against a DB with existing columns.
-            "20260617233009_SyncPendingModelChanges",
-        };
-
-        try
-        {
-            await db.Database.ExecuteSqlRawAsync(
-                $"CREATE TABLE IF NOT EXISTS \"{historyTable}\" " +
-                "(\"MigrationId\" TEXT NOT NULL CONSTRAINT \"PK___EFMigrationsHistory\" PRIMARY KEY, " +
-                "\"ProductVersion\" TEXT NOT NULL)");
-
-            foreach (var m in preExistingMigrations)
-            {
-                await db.Database.ExecuteSqlRawAsync(
-                    $"INSERT OR IGNORE INTO \"{historyTable}\" VALUES ('{m}', '9.0.0')");
-            }
-
-            await db.Database.MigrateAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "[Migration] Warning: {Message}", ex.Message);
-        }
-#pragma warning restore EF1002
-    }
 
     private static async Task RunStartupTasksAsync(IServiceProvider provider)
     {
@@ -800,22 +489,6 @@ CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
     }
 
 
-    public class ToastColorConverter : IValueConverter
-    {
-        public object? Convert(object? value, Type? targetType, object? parameter, CultureInfo culture)
-        {
-            return value switch
-            {
-                ToastType.Success => new SolidColorBrush(Color.Parse("#52c41a")),
-                ToastType.Error => new SolidColorBrush(Color.Parse("#ff4d4f")),
-                ToastType.Warning => new SolidColorBrush(Color.Parse("#faad14")),
-                _ => new SolidColorBrush(Color.Parse("#1677ff")),
-            };
-        }
-
-        public object? ConvertBack(object? value, Type? targetType, object? parameter, CultureInfo culture)
-            => throw new NotImplementedException();
-    }
 
 
 

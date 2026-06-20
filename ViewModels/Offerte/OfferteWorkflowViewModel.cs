@@ -28,6 +28,7 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
     private readonly Func<Task> _saveAndReload;
     private readonly Func<Task> _berekenAsync;
     private readonly Func<bool, Task<bool>> _runValidation;
+    private readonly Func<Task>? _reloadOnly;
 
     [ObservableProperty] private WerkBon? gekoppeldeWerkBon;
     [ObservableProperty] private Factuur? gekoppeldeFactuur;
@@ -85,7 +86,8 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         Func<int> getOfferteId,
         Func<Task> saveAndReload,
         Func<Task> berekenAsync,
-        Func<bool, Task<bool>> runValidation)
+        Func<bool, Task<bool>> runValidation,
+        Func<Task>? reloadOnly = null)
         : base(toast)
     {
         _dbFactory = dbFactory ?? throw new ArgumentNullException(nameof(dbFactory));
@@ -100,6 +102,7 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         _saveAndReload = saveAndReload;
         _berekenAsync = berekenAsync;
         _runValidation = runValidation;
+        _reloadOnly = reloadOnly;
 
         BevestigenCommand   = new AsyncRelayCommand(BevestigenAsync);
         OpenPlanningCommand = new AsyncRelayCommand(OpenPlanningAsync);
@@ -146,7 +149,6 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
             }
 
             await _workflow.BevestigAsync(offerteId);
-            Toast.Success("Offerte bevestigd. Werkbon aangemaakt.");
 
             await _saveAndReload();
 
@@ -173,6 +175,9 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
                 var owner = desktop.MainWindow;
                 if (owner is null) return;
                 await window.ShowDialog(owner);
+
+                // Herlaad de offerte zodat de via planning gezette afhaaldatum zichtbaar wordt.
+                if (_reloadOnly is not null) await _reloadOnly();
             }
         }
         catch (Exception ex)
@@ -215,6 +220,9 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
                 var owner = desktop.MainWindow;
                 if (owner is null) return;
                 await window.ShowDialog(owner);
+
+                // Herlaad de offerte zodat de via planning gezette afhaaldatum zichtbaar wordt.
+                if (_reloadOnly is not null) await _reloadOnly();
             }
         }
         catch (Exception ex)

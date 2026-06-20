@@ -171,8 +171,18 @@ namespace QuadroApp.ViewModels
             var wasAfgewerkt = SelectedWerkBon.Status == WerkBonStatus.Afgewerkt;
             var wordtAfgewerkt = SelectedWerkBonStatus == WerkBonStatus.Afgewerkt;
 
-            if (SelectedWerkBonStatus.HasValue && SelectedWerkBonStatus.Value != SelectedWerkBon.Status)
-                await _statusWorkflow.ChangeWerkBonStatusAsync(SelectedWerkBon.Id, SelectedWerkBonStatus.Value);
+            try
+            {
+                if (SelectedWerkBonStatus.HasValue && SelectedWerkBonStatus.Value != SelectedWerkBon.Status)
+                    await _statusWorkflow.ChangeWerkBonStatusAsync(SelectedWerkBon.Id, SelectedWerkBonStatus.Value);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Ongeldige statusovergang e.d.: toon een duidelijke melding en stop;
+                // de status wordt niet gewijzigd en de app crasht niet.
+                _toast.Warning(ex.Message);
+                return;
+            }
 
             var selectedWerkBonId = SelectedWerkBon.Id;
 

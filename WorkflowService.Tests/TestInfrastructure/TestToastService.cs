@@ -48,4 +48,7 @@ public sealed class TestToastService : IToastService
     public void Warning(string message) => WarningMessages.Add(message);
 
     public void Info(string message) => InfoMessages.Add(message);
+
+    public void Info(string message, string actionLabel, System.Action onAction, int durationMs = 30_000)
+        => InfoMessages.Add(message);
 }

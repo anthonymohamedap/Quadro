@@ -87,6 +87,8 @@ namespace QuadroApp.Service
                 bestaand.DuurMinuten = duurMinuten;
                 bestaand.BenodigdeMeter = benodigdeMeter;
                 if (omschrijving != null) bestaand.Omschrijving = omschrijving;
+                // US-27: sla geplande dag op als afhaaldatum op de offerteregel + offerte
+                await SyncAfhaalDatumNaPlanningAsync(db, regel, start.Date);
                 await db.SaveChangesAsync();
                 return;
             }
@@ -102,6 +104,8 @@ namespace QuadroApp.Service
                 BenodigdeMeter = benodigdeMeter
             });
 
+            // US-27: sla geplande dag op als afhaaldatum op de offerteregel + offerte
+            await SyncAfhaalDatumNaPlanningAsync(db, regel, start.Date);
             await db.SaveChangesAsync();
 
             if (werkBon.Status == WerkBonStatus.Gepland)
@@ -214,6 +218,8 @@ namespace QuadroApp.Service
             foreach (var overtolligeTaak in bestaandeTaken.Skip(segmenten.Count))
                 db.WerkTaken.Remove(overtolligeTaak);
 
+            // US-27: sla de laatste geplande dag op als afhaaldatum op de offerteregel + offerte
+            await SyncAfhaalDatumNaPlanningAsync(db, regel, segmenten[^1].Dag);
             await db.SaveChangesAsync();
 
             if (werkBon.Status == WerkBonStatus.Gepland)
@@ -355,6 +361,32 @@ namespace QuadroApp.Service
             }
 
             throw new InvalidOperationException("Geen beschikbare dag gevonden binnen het planningsvenster.");
+        }
+
+        /// <summary>
+        /// US-27: Slaat de geplande dag op als <see cref="OfferteRegel.AfhaalDatum"/> en
+        /// propageert de laatste afhaaldatum over alle regels naar <see cref="Offerte.AfhaalDatum"/>,
+        /// zodat <c>FactuurWorkflowService.GetOrCreateFactuurAsync</c> de factuur automatisch bijwerkt.
+        /// EF Core identity-mapping zorgt dat de zojuist gewijzigde regel consistent is in de
+        /// Max()-berekening (change tracker heeft de bijgewerkte waarde al).
+        /// </summary>
+        private static async Task SyncAfhaalDatumNaPlanningAsync(AppDbContext db, OfferteRegel regel, DateTime afhaaldatum)
+        {
+            regel.AfhaalDatum = afhaaldatum;
+
+            var offerte = await db.Offertes
+                .Include(o => o.Regels)
+                .FirstOrDefaultAsync(o => o.Id == regel.OfferteId);
+
+            if (offerte is null) return;
+
+            // Neem de laatste AfhaalDatum over alle regels (inclusief de zojuist bijgewerkte).
+            var latestAfhaalDatum = offerte.Regels
+                .Where(r => r.AfhaalDatum.HasValue)
+                .Max(r => (DateTime?)r.AfhaalDatum);
+
+            if (latestAfhaalDatum.HasValue)
+                offerte.AfhaalDatum = latestAfhaalDatum.Value;
         }
 
         private static List<decimal> VerdeelBenodigdeMeters(decimal totaleBenodigdeMeter, IReadOnlyList<int> segmentDuren)

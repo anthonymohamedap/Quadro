@@ -26,17 +26,17 @@ public sealed class BulkLijstenViewModelTests
         await vm.InitializeAsync();
         vm.UpdateSelectedLijsten(vm.FilteredLijsten.Where(x => x.Id == lijst1.Id || x.Id == lijst2.Id));
 
-        vm.BijwerkLeverancier = true;
-        vm.GeselecteerdeBulkLeverancier = leverancierB;
-        vm.BijwerkSoort = true;
-        vm.NieuweSoort = "PVC";
+        vm.LeverancierVeld.Bijwerken = true;
+        vm.LeverancierVeld.Waarde = leverancierB;
+        vm.SoortVeld.Bijwerken = true;
+        vm.SoortVeld.Waarde = "PVC";
         vm.BijwerkPrijsPerMeter = true;
         vm.GebruikPercentage = true;
         vm.PrijsWijzigingPct = 10m;
-        vm.BijwerkVasteKost = true;
-        vm.NieuweVasteKost = 4.25m;
-        vm.BijwerkIsDealer = true;
-        vm.NieuweIsDealer = true;
+        vm.VasteKostVeld.Bijwerken = true;
+        vm.VasteKostVeld.Waarde = 4.25m;
+        vm.IsDealerVeld.Bijwerken = true;
+        vm.IsDealerVeld.Waarde = true;
 
         await vm.ExecuteActionCommand.ExecuteAsync(null);
 
@@ -69,8 +69,8 @@ public sealed class BulkLijstenViewModelTests
         await vm.InitializeAsync();
         vm.UpdateSelectedLijsten(vm.FilteredLijsten.Where(x => x.Id == lijst1.Id || x.Id == lijst2.Id));
 
-        vm.BijwerkArtikelnummer = true;
-        vm.NieuwArtikelnummer = "ART-DUBBEL";
+        vm.ArtikelnummerVeld.Bijwerken = true;
+        vm.ArtikelnummerVeld.Waarde = "ART-DUBBEL";
 
         await vm.ExecuteActionCommand.ExecuteAsync(null);
 
@@ -103,8 +103,8 @@ public sealed class BulkLijstenViewModelTests
         await vm.InitializeAsync();
         vm.UpdateSelectedLijsten(vm.FilteredLijsten.Where(x => x.Id == lijst.Id));
 
-        vm.BijwerkMinimumVoorraad = true;
-        vm.NieuweMinimumVoorraad = 12.5m;
+        vm.MinimumVoorraadVeld.Bijwerken = true;
+        vm.MinimumVoorraadVeld.Waarde = 12.5m;
 
         await vm.ExecuteActionCommand.ExecuteAsync(null);
 
