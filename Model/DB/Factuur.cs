@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace QuadroApp.Model.DB;
 
@@ -77,6 +79,25 @@ public class Factuur
 
     [Precision(18, 2)]
     public decimal KortingBedragExcl { get; set; } = 0m;
+
+    // ── Berekende helpers voor de bon/preview (niet in de DB) ──
+    // Bruto (vóór korting) bedragen uit de lijnsommen, zodat de bon altijd de volledige
+    // excl -> BTW -> incl splitsing toont (ook wanneer korting van toepassing is).
+    [NotMapped]
+    public decimal BrutoExclBtw => Lijnen != null && Lijnen.Count > 0
+        ? System.Math.Round(Lijnen.Sum(l => l.TotaalExcl), 2)
+        : TotaalExclBtw;
+
+    [NotMapped]
+    public decimal BrutoBtw => Lijnen != null && Lijnen.Count > 0
+        ? System.Math.Round(Lijnen.Sum(l => l.TotaalBtw), 2)
+        : TotaalBtw;
+
+    [NotMapped]
+    public decimal BrutoInclBtw => System.Math.Round(BrutoExclBtw + BrutoBtw, 2);
+
+    [NotMapped]
+    public decimal RestTeBetalen => TotaalInclBtw - VoorschotBedrag;
 
     [MaxLength(500)]
     public string? ExportPad { get; set; }

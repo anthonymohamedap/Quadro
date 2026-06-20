@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:QuadroApp.Views.Controls"
              xmlns:vm="using:QuadroApp.ViewModels"
              xmlns:conv="clr-namespace:QuadroApp.Converters"
              x:Class="QuadroApp.Views.FacturenView"
@@ -25,28 +26,7 @@
   <Grid RowDefinitions="Auto,*">
 
     <!-- ░░ HEADER ░░ -->
-    <Border Grid.Row="0" Background="#444A50" Height="70">
-      <DockPanel LastChildFill="False" Margin="20,0">
-        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
-          <Ellipse Width="35" Height="35" Fill="#F5C242"/>
-          <TextBlock Text="QUADRO" Foreground="White" FontWeight="Bold" FontSize="20" VerticalAlignment="Center"/>
-          <TextBlock Text="FACTUREN" Foreground="#CCC" FontSize="13" Margin="5,0,0,0" VerticalAlignment="Center"/>
-        </StackPanel>
-        <Button Content="⬅️ Terug"
-                Command="{Binding GaTerugCommand}"
-                DockPanel.Dock="Right"
-                VerticalAlignment="Top"
-                HorizontalAlignment="Right"
-                Margin="0,10,10,0"
-                Background="#F5C242"
-                Foreground="#222"
-                FontWeight="Bold"
-                CornerRadius="8"
-                Padding="10,5"
-                Width="100"
-                Height="32"/>
-      </DockPanel>
-    </Border>
+    <controls:QuadroHeader Grid.Row="0" Title="FACTUREN" BackCommand="{Binding GaTerugCommand}"/>
 
     <!-- ░░ MAIN CONTENT ░░ -->
     <Grid Grid.Row="1" ColumnDefinitions="1.1*,1.4*" Margin="24" ColumnSpacing="16">

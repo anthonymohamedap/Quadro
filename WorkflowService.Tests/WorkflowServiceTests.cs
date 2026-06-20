@@ -653,5 +653,6 @@ public class WorkflowServiceTests
         public void Error(string message) { }
         public void Warning(string message) => WarningMessages.Add(message);
         public void Info(string message) { }
+        public void Info(string message, string actionLabel, System.Action onAction, int durationMs = 30_000) { }
     }
 }

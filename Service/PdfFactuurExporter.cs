@@ -47,13 +47,21 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         var hibLogoBytes   = LoadAsset("Assets/hib logo 7.4 Kb.jpg");
         var guildLogoBytes = LoadAsset("Assets/Guild Certified Framer logo 125px.png");
 
+        // US-26: de meerprijs-lijn wordt NIET afgedrukt als aparte regel. De lijn blijft
+        // in factuur.Lijnen zodat HerberekenTotalen de meerprijs wél meeneemt in de totalen.
         var items = factuur.Lijnen
             .OrderBy(x => x.Sortering)
+            .Where(lijn => !lijn.Omschrijving.Equals("Meerprijs", StringComparison.OrdinalIgnoreCase))
             .Select((lijn, index) => BuildRenderItem(lijn, index + 1))
             .ToList();
 
         var voorschot = factuur.VoorschotBedrag;
         var teBetalenBijAfhalen = factuur.TotaalInclBtw - voorschot;
+
+        // Bruto (vóór korting) excl./BTW uit de lijnsommen — zo toont de bon altijd de
+        // volledige excl -> BTW -> incl splitsing, ook wanneer korting van toepassing is.
+        var brutoExcl = Math.Round(factuur.Lijnen.Sum(l => l.TotaalExcl), 2);
+        var brutoBtw  = Math.Round(factuur.Lijnen.Sum(l => l.TotaalBtw), 2);
 
         var doc = Document.Create(container =>
         {
@@ -77,7 +85,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
                         DrawItemBlock(col, items[i], i + 1, ref currentY);
                     }
 
-                    DrawTotals(col, factuur.TotaalExclBtw, factuur.TotaalBtw, factuur.TotaalInclBtw, voorschot, teBetalenBijAfhalen, factuur.IsBtwVrijgesteld, factuur.KortingPct, factuur.KortingBedragExcl);
+                    DrawTotals(col, brutoExcl, brutoBtw, factuur.TotaalInclBtw, voorschot, teBetalenBijAfhalen, factuur.IsBtwVrijgesteld, factuur.KortingPct, factuur.KortingBedragExcl);
                     DrawSignature(col);
                 });
 
@@ -149,7 +157,8 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             c.Spacing(1);
             c.Item().Text(factuur.KlantNaam).Bold().FontSize(13);
             if (!string.IsNullOrWhiteSpace(factuur.KlantAdres))
-                c.Item().Text(factuur.KlantAdres).FontSize(11);
+                foreach (var regel in factuur.KlantAdres.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                    c.Item().Text(regel).FontSize(11);
             if (!string.IsNullOrWhiteSpace(factuur.KlantBtwNummer))
                 c.Item().Text($"BTW: {factuur.KlantBtwNummer}").FontSize(11);
             if (!string.IsNullOrWhiteSpace(factuur.AangenomenDoorInitialen))
@@ -251,51 +260,59 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     }
 
     // ═══════════════════ TOTALEN ═══════════════════
-    // subtotaalExcl = NETTO excl. BTW (reeds ná korting). kortingBedragExcl wordt
-    // bovenop opgeteld om het bruto-subtotaal te tonen, daarna expliciet afgetrokken (US-23).
-    private static void DrawTotals(ColumnDescriptor col, decimal subtotaalExcl, decimal btwBedrag, decimal totaalIncl, decimal voorschot, decimal teBetalen, bool isBtwVrijgesteld, decimal kortingPct = 0m, decimal kortingBedragExcl = 0m)
+    // Eén vaste opbouw: altijd de excl -> BTW -> incl splitsing; bij korting komt onder
+    // het incl-subtotaal de kortingregel + nieuw totaal; bij een voorschot wordt dat van
+    // het totaal afgetrokken. Onderaan altijd "Te betalen". (kortingBedragIncl = incl-bedrag, US-28.)
+    private static void DrawTotals(ColumnDescriptor col, decimal brutoExcl, decimal brutoBtw, decimal totaalIncl, decimal voorschot, decimal teBetalen, bool isBtwVrijgesteld, decimal kortingPct = 0m, decimal kortingBedragIncl = 0m)
     {
-        var heeftKorting = kortingPct > 0m && kortingBedragExcl > 0m;
-        var brutoSubtotaalExcl = subtotaalExcl + (heeftKorting ? kortingBedragExcl : 0m);
+        var heeftKorting = kortingPct > 0m && kortingBedragIncl > 0m;
+        var brutoIncl = Math.Round(brutoExcl + brutoBtw, 2);
 
         col.Item().PaddingTop(6).Column(totaalCol =>
         {
             totaalCol.Spacing(2);
 
-            // Subtotaal / BTW / Totaal breakdown
+            // Altijd: de excl -> incl splitsing
             totaalCol.Item().Row(r =>
             {
                 r.RelativeItem().Text("Subtotaal (excl. BTW)");
-                r.ConstantItem(130).AlignRight().Text(Eur(brutoSubtotaalExcl));
+                r.ConstantItem(130).AlignRight().Text(Eur(brutoExcl));
             });
-
-            // US-23: korting expliciet tonen (rood accent) net onder het subtotaal.
-            if (heeftKorting)
-            {
-                totaalCol.Item().Row(r =>
-                {
-                    r.RelativeItem().Text($"Korting {kortingPct.ToString("0.##", CultureInfo.InvariantCulture)}%")
-                        .FontColor(Colors.Red.Darken2);
-                    r.ConstantItem(130).AlignRight().Text($"- {Eur(kortingBedragExcl)}")
-                        .FontColor(Colors.Red.Darken2);
-                });
-            }
 
             if (!isBtwVrijgesteld)
             {
                 totaalCol.Item().Row(r =>
                 {
                     r.RelativeItem().Text("BTW (21%)");
-                    r.ConstantItem(130).AlignRight().Text(Eur(btwBedrag));
+                    r.ConstantItem(130).AlignRight().Text(Eur(brutoBtw));
                 });
             }
 
+            // Bij korting: incl-subtotaal + kortingregel (korting op incl-bedrag).
+            if (heeftKorting)
+            {
+                totaalCol.Item().Row(r =>
+                {
+                    r.RelativeItem().Text("Subtotaal (incl. BTW)");
+                    r.ConstantItem(130).AlignRight().Text(Eur(brutoIncl));
+                });
+                totaalCol.Item().Row(r =>
+                {
+                    r.RelativeItem().Text($"Korting {kortingPct.ToString("0.##", CultureInfo.InvariantCulture)}%")
+                        .FontColor(Colors.Red.Darken2);
+                    r.ConstantItem(130).AlignRight().Text($"- {Eur(kortingBedragIncl)}")
+                        .FontColor(Colors.Red.Darken2);
+                });
+            }
+
+            // Altijd: eindtotaal incl. BTW
             totaalCol.Item().Row(r =>
             {
                 r.RelativeItem().Text("Totaal (incl. BTW)").SemiBold();
                 r.ConstantItem(130).AlignRight().Text(Eur(totaalIncl)).SemiBold();
             });
 
+            // Voorschot (reeds betaald) — alleen indien aanwezig
             if (voorschot > 0)
             {
                 totaalCol.Item().PaddingTop(4).Row(r =>
@@ -305,6 +322,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
                 });
             }
 
+            // Te betalen (na voorschot)
             totaalCol.Item().PaddingTop(6).Row(r =>
             {
                 r.RelativeItem().Text("Te betalen bij afhalen").SemiBold().FontSize(13);

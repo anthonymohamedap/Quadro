@@ -35,7 +35,7 @@
                 <!-- Eenvoudige lijst-tabel (ItemsControl) i.p.v. DataGrid: rendert altijd,
                      onafhankelijk van het DataGrid-thema; lange omschrijvingen breken af. -->
                 <Grid RowDefinitions="Auto,Auto,*">
-                    <TextBlock Text="Factuurlijnen" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                    <TextBlock Text="Bestelbonlijnen" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
 
                     <!-- Kopregel -->
                     <Grid Grid.Row="1" ColumnDefinitions="*,60,90,100" Margin="0,0,0,2">
@@ -76,7 +76,7 @@
                     <TextBlock Text="{Binding Factuur.KlantAdres}" TextWrapping="Wrap"/>
                     <Separator/>
                     <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
-                        <TextBlock Text="Factuurdatum"/>
+                        <TextBlock Text="BestelBon datum"/>
                         <TextBlock Grid.Column="1" Text="{Binding Factuur.FactuurDatum, StringFormat={}{0:dd/MM/yyyy}}"/>
 
                         <TextBlock Grid.Row="1" Text="Vervaldatum"/>
@@ -91,27 +91,48 @@
                                TextWrapping="Wrap"/>
                     <Separator/>
 
-                    <!-- Korting — alleen tonen als er korting is (US-23) -->
-                    <Grid ColumnDefinitions="*,Auto"
-                          IsVisible="{Binding Factuur.KortingPct, Converter={x:Static conv:BooleanConverters.IsPositive}}">
-                        <TextBlock Text="{Binding Factuur.KortingPct, StringFormat='Korting {0:0.##}%'}"
-                                   Foreground="#B91C1C"/>
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding Factuur.KortingBedragExcl, StringFormat=- € {0:N2}}"
-                                   Foreground="#B91C1C"
-                                   HorizontalAlignment="Right"/>
-                    </Grid>
+                    <!-- Totalen: altijd excl -> BTW -> incl; korting + voorschot conditioneel -->
+                    <StackPanel Spacing="6">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Subtotaal (excl. BTW)"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Factuur.BrutoExclBtw, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
+                        </Grid>
 
-                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
-                        <TextBlock Text="Excl. BTW"/>
-                        <TextBlock Grid.Column="1" Text="{Binding Factuur.TotaalExclBtw, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
+                        <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding !Factuur.IsBtwVrijgesteld}">
+                            <TextBlock Text="BTW (21%)"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Factuur.BrutoBtw, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
+                        </Grid>
 
-                        <TextBlock Grid.Row="1" Text="BTW"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Factuur.TotaalBtw, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
+                        <!-- Alleen bij korting: incl-subtotaal + kortingregel -->
+                        <Grid ColumnDefinitions="*,Auto"
+                              IsVisible="{Binding Factuur.KortingPct, Converter={x:Static conv:BooleanConverters.IsPositive}}">
+                            <TextBlock Text="Subtotaal (incl. BTW)"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Factuur.BrutoInclBtw, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto"
+                              IsVisible="{Binding Factuur.KortingPct, Converter={x:Static conv:BooleanConverters.IsPositive}}">
+                            <TextBlock Text="{Binding Factuur.KortingPct, StringFormat='Korting {0:0.##}%'}" Foreground="#B91C1C"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Factuur.KortingBedragExcl, StringFormat=- € {0:N2}}" Foreground="#B91C1C" HorizontalAlignment="Right"/>
+                        </Grid>
 
-                        <TextBlock Grid.Row="2" Text="Incl. BTW" FontWeight="Bold"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Factuur.TotaalInclBtw, StringFormat=€ {0:N2}}" FontWeight="Bold" HorizontalAlignment="Right"/>
-                    </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Totaal (incl. BTW)" FontWeight="Bold"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Factuur.TotaalInclBtw, StringFormat=€ {0:N2}}" FontWeight="Bold" HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <!-- Alleen bij voorschot -->
+                        <Grid ColumnDefinitions="*,Auto"
+                              IsVisible="{Binding Factuur.VoorschotBedrag, Converter={x:Static conv:BooleanConverters.IsPositive}}">
+                            <TextBlock Text="Voorschot betaald"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Factuur.VoorschotBedrag, StringFormat=- € {0:N2}}" HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <Separator/>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Te betalen bij afhalen" FontWeight="Bold" FontSize="14"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Factuur.RestTeBetalen, StringFormat=€ {0:N2}}" FontWeight="Bold" FontSize="14" HorizontalAlignment="Right"/>
+                        </Grid>
+                    </StackPanel>
                 </StackPanel>
             </Border>
         </Grid>

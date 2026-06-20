@@ -131,6 +131,59 @@ namespace QuadroApp.Model.DB
         }
 
         // ========================
+        // AFWERKING VARIANTEN (los van de optie; bv. "Brons", "Zwart")
+        // Optioneel: een regel kan een afwerkingsoptie hebben zonder gekozen variant.
+        // ========================
+
+        private AfwerkingsVariant? _glasVariant;
+        public int? GlasVariantId { get; set; }
+        public AfwerkingsVariant? GlasVariant
+        {
+            get => _glasVariant;
+            set { _glasVariant = value; GlasVariantId = value?.Id; }
+        }
+
+        private AfwerkingsVariant? _passe1Variant;
+        public int? PassePartout1VariantId { get; set; }
+        public AfwerkingsVariant? PassePartout1Variant
+        {
+            get => _passe1Variant;
+            set { _passe1Variant = value; PassePartout1VariantId = value?.Id; }
+        }
+
+        private AfwerkingsVariant? _passe2Variant;
+        public int? PassePartout2VariantId { get; set; }
+        public AfwerkingsVariant? PassePartout2Variant
+        {
+            get => _passe2Variant;
+            set { _passe2Variant = value; PassePartout2VariantId = value?.Id; }
+        }
+
+        private AfwerkingsVariant? _diepteVariant;
+        public int? DiepteKernVariantId { get; set; }
+        public AfwerkingsVariant? DiepteKernVariant
+        {
+            get => _diepteVariant;
+            set { _diepteVariant = value; DiepteKernVariantId = value?.Id; }
+        }
+
+        private AfwerkingsVariant? _opklevenVariant;
+        public int? OpklevenVariantId { get; set; }
+        public AfwerkingsVariant? OpklevenVariant
+        {
+            get => _opklevenVariant;
+            set { _opklevenVariant = value; OpklevenVariantId = value?.Id; }
+        }
+
+        private AfwerkingsVariant? _rugVariant;
+        public int? RugVariantId { get; set; }
+        public AfwerkingsVariant? RugVariant
+        {
+            get => _rugVariant;
+            set { _rugVariant = value; RugVariantId = value?.Id; }
+        }
+
+        // ========================
         // EXTRA
         // ========================
 

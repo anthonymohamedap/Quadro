@@ -53,15 +53,14 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
     private ObservableCollection<Leverancier> gefilterdeLeveranciers = new();
 
     // ─────────────────────────────────────────────────────────────
-    // Variant management
+    // Variant management — beheer wordt gedelegeerd aan AfwerkingVariantBeheer
     // ─────────────────────────────────────────────────────────────
-    private readonly ObservableCollection<AfwerkingsVariantViewModel> _optieVarianten = new();
-    public ObservableCollection<AfwerkingsVariantViewModel> OptieVarianten => _optieVarianten;
+    public AfwerkingVariantBeheer VariantBeheer { get; }
 
-    /// <summary>Ids of variants deleted in the UI but not yet persisted.</summary>
-    private readonly List<int> _pendingDeleteVariantIds = new();
-
-    public bool HeeftGeenVarianten => !_optieVarianten.Any();
+    // Forwarding properties — AXAML bindt rechtstreeks aan de parent VM.
+    public ObservableCollection<AfwerkingsVariantViewModel> OptieVarianten => VariantBeheer.OptieVarianten;
+    public bool HeeftGeenVarianten => VariantBeheer.HeeftGeenVarianten;
+    public IRelayCommand AddVariantCommand => VariantBeheer.AddVariantCommand;
 
     private bool isSynchronizing;
 
@@ -76,7 +75,7 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
                 DeleteAsyncCommand.NotifyCanExecuteChanged();
                 SaveAsyncCommand.NotifyCanExecuteChanged();
                 SyncSelectedOptieBindings();
-                LoadVariantenForSelectedOptie();
+                VariantBeheer.LaadVoorOptie(value);
                 OnPropertyChanged(nameof(VolgnummerText));
                 OnPropertyChanged(nameof(PreviewPrijsText));
                 OnPropertyChanged(nameof(HeeftSelectie));
@@ -115,14 +114,20 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
         _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
         _validator = validator;
         _toast = toast;
+
+        VariantBeheer = new AfwerkingVariantBeheer(() => HasChanges = true);
+
+        // Propagate HeeftGeenVarianten changes zo dat AXAML-bindings op de parent VM blijven werken.
+        VariantBeheer.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(AfwerkingVariantBeheer.HeeftGeenVarianten))
+                OnPropertyChanged(nameof(HeeftGeenVarianten));
+        };
+
         RefreshAsyncCommand = new AsyncRelayCommand(RefreshAsync, () => !IsBusy);
         SaveAsyncCommand = new AsyncRelayCommand(SaveAsync, CanSave);
         NewAsyncCommand = new AsyncRelayCommand(NewAsync, () => !IsBusy);
         DeleteAsyncCommand = new AsyncRelayCommand(DeleteAsync, CanDelete);
-
-        // Notify "empty state" panel when variant collection changes.
-        _optieVarianten.CollectionChanged += (_, _) =>
-            OnPropertyChanged(nameof(HeeftGeenVarianten));
 
         Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
         {
@@ -391,11 +396,11 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
             IsBusy = true;
             Status = "Opslaan…";
 
-            // Sync leverancier (zoals je al doet)
+            // Sync leverancier
             SelectedOptie.LeverancierId = SelectedLeverancier?.Id;
             SelectedOptie.Leverancier = SelectedLeverancier;
 
-            // ✅ centrale validatie
+            // Centrale validatie
             var vr = await _validator.ValidateUpdateAsync(SelectedOptie);
 
             var warn = vr.WarningText();
@@ -411,18 +416,18 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
 
             await _service.SaveOptieAsync(SelectedOptie);
 
-            // ── Persist variants ──────────────────────────────────────────────
+            // Persist variants
             var optieId = SelectedOptie.Id;
-            foreach (var vvm in _optieVarianten.ToList())
+            foreach (var vvm in VariantBeheer.OptieVarianten.ToList())
             {
                 var variant = vvm.ToVariant();
                 variant.AfwerkingsOptieId = optieId;
                 await _service.SaveVariantAsync(variant);
             }
 
-            foreach (var delId in _pendingDeleteVariantIds)
+            foreach (var delId in VariantBeheer.PendingDeleteVariantIds)
                 await _service.DeleteVariantAsync(delId);
-            _pendingDeleteVariantIds.Clear();
+            VariantBeheer.ClearPendingDeletes();
 
             HasChanges = false;
             await LoadOptiesAsync();
@@ -534,70 +539,6 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
             ImportExcelCommand.NotifyCanExecuteChanged();
             AddVariantCommand.NotifyCanExecuteChanged();
         }
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // Variant commands & helpers
-    // ─────────────────────────────────────────────────────────────
-
-    /// <summary>Loads variants from the already-included navigation property of the selected optie.</summary>
-    private void LoadVariantenForSelectedOptie()
-    {
-        _optieVarianten.Clear();
-        _pendingDeleteVariantIds.Clear();
-
-        if (selectedOptie is null) return;
-
-        foreach (var v in (selectedOptie.Varianten ?? Enumerable.Empty<AfwerkingsVariant>())
-                     .OrderByDescending(x => x.IsStandaard)
-                     .ThenBy(x => x.Beschrijving))
-        {
-            _optieVarianten.Add(new AfwerkingsVariantViewModel(v, SetStandaard, DeleteVariant));
-        }
-    }
-
-    [RelayCommand(CanExecute = nameof(HeeftSelectie))]
-    private void AddVariant()
-    {
-        if (SelectedOptie is null) return;
-
-        var variant = new AfwerkingsVariant
-        {
-            AfwerkingsOptieId = SelectedOptie.Id,
-            Beschrijving = "",
-            IsActief  = true,
-            IsStandaard = !_optieVarianten.Any() // eerste variant is automatisch standaard
-        };
-
-        _optieVarianten.Add(new AfwerkingsVariantViewModel(variant, SetStandaard, DeleteVariant));
-        HasChanges = true;
-    }
-
-    private void DeleteVariant(AfwerkingsVariantViewModel vm)
-    {
-        // Persist delete on next Save.
-        if (vm.Id > 0)
-            _pendingDeleteVariantIds.Add(vm.Id);
-
-        _optieVarianten.Remove(vm);
-
-        // Promote first remaining active variant to standaard if none is set.
-        if (!_optieVarianten.Any(v => v.IsStandaard))
-        {
-            var first = _optieVarianten.FirstOrDefault(v => v.IsActief);
-            if (first is not null)
-                first.IsStandaard = true;
-        }
-
-        HasChanges = true;
-    }
-
-    /// <summary>Ensures only one variant carries IsStandaard = true.</summary>
-    private void SetStandaard(AfwerkingsVariantViewModel chosen)
-    {
-        foreach (var v in _optieVarianten.Where(v => v != chosen))
-            v.IsStandaard = false;
-        HasChanges = true;
     }
 
     // ─────────────────────────────────────────────────────────────
