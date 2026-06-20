@@ -143,7 +143,10 @@ public class PricingEngineTests
         var result = _sut.Calculate(offerte, 60m, 21m, 0m, 1m, 10m);
 
         var regel = Assert.Single(result.Regels);
-        Assert.Equal(50m, regel.TotaalExcl);
+        // Afgesproken prijs wordt incl. BTW ingegeven (UI-label "incl. BTW") en door de
+        // engine teruggerekend naar excl. (÷ 1,21). Bij 25 incl. × 2 stuks is het
+        // incl.-totaal dus exact 50, ongeacht de berekende regelprijs.
+        Assert.Equal(50m, regel.TotaalInclBtw);
     }
 
     // US-22: een afgesproken prijs VERVANGT de berekende regelprijs, en het wissen

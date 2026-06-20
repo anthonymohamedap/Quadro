@@ -25,8 +25,22 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
 
     private const int CapaciteitMinuten = 8 * 60;
 
+    // ───────── UITVOERING VM ─────────
+
+    public PlanningUitvoeringViewModel Uitvoering { get; }
+
     // Injecteer vanuit de code-behind om een PlanningTijdDialog te tonen.
-    public Func<PlanningTijdDialogViewModel, Task<bool>>? ShowTijdDialogAsync { get; set; }
+    // Wordt doorgestuurd naar de uitvoering VM.
+    public Func<PlanningTijdDialogViewModel, Task<bool>>? ShowTijdDialogAsync
+    {
+        set => Uitvoering.ShowTijdDialogAsync = value;
+    }
+
+    // Forwarding commands — AXAML en code-behind refereren rechtstreeks aan de calendar VM.
+    public IAsyncRelayCommand PlanGeselecteerdeRegelsCommand  => Uitvoering.PlanGeselecteerdeRegelsCommand;
+    public IAsyncRelayCommand PlanPerRegelCommand             => Uitvoering.PlanPerRegelCommand;
+    public IAsyncRelayCommand<WerkTaak> HerplanTaakCommand   => Uitvoering.HerplanTaakCommand;
+    public IAsyncRelayCommand<WerkTaak> VerwijderTaakCommand => Uitvoering.VerwijderTaakCommand;
 
     [ObservableProperty] private DayRow? selectedDayRow;
     [ObservableProperty] private int selectedWeekNr;
@@ -50,6 +64,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             OnPropertyChanged();
             OnPropertyChanged(nameof(HeeftWerkBon));
             OnPropertyChanged(nameof(GeenWerkBon));
+            Uitvoering.WerkBonId = value;
         }
     }
 
@@ -70,6 +85,12 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
 
         ToastMessages = toast.Messages;
 
+        Uitvoering = new PlanningUitvoeringViewModel(
+            factory, workflow, toast,
+            RefreshAsync,
+            IsDagGeblokkeerd);
+        Uitvoering.SelectedDate = SelectedDate;
+
         PrevMonthCommand = new RelayCommand(PrevMonth);
         NextMonthCommand = new RelayCommand(NextMonth);
         TodayCommand = new RelayCommand(SetToday);
@@ -85,7 +106,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
         var weekNr = ISOWeek.GetWeekOfYear(SelectedDate);
         var year = SelectedDate.Year;
 
-        var vm = new WeekWerkLijstViewModel(_factory, _statusWorkflow);
+        var vm = new WeekWerkLijstViewModel(_factory, _statusWorkflow, _toast);
         await vm.InitializeAsync(year, weekNr);
 
         var win = new QuadroApp.Views.WeekWerkLijstWindow { DataContext = vm };
@@ -122,8 +143,14 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
         set => SetProperty(ref _monthTitle, value);
     }
 
+    // Nederlandse cultuur voor maand-/dagnamen in de kalender (voluit geschreven, NL).
+    private static readonly CultureInfo Nl = CultureInfo.GetCultureInfo("nl-BE");
+
+    private static string Capitalize(string s) =>
+        string.IsNullOrEmpty(s) ? s : char.ToUpper(s[0], Nl) + s.Substring(1);
+
     private void UpdateMonthTitle() =>
-        MonthTitle = new DateTime(Year, Month, 1).ToString("MMMM yyyy", CultureInfo.CurrentCulture);
+        MonthTitle = Capitalize(new DateTime(Year, Month, 1).ToString("MMMM yyyy", Nl));
 
     private void PrevMonth()
     {
@@ -144,17 +171,21 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
         SelectedDate = t;
     }
 
+    // Voluit geschreven, Nederlandse dagnamen, maandag-eerst (maandag … zondag).
     public List<string> WeekHeaders =>
-        CultureInfo.CurrentCulture.DateTimeFormat
-            .AbbreviatedDayNames
+        Nl.DateTimeFormat.DayNames
             .Skip(1)
-            .Concat(new[] { CultureInfo.CurrentCulture.DateTimeFormat.AbbreviatedDayNames[0] })
+            .Concat(new[] { Nl.DateTimeFormat.DayNames[0] })
+            .Select(Capitalize)
             .ToList();
 
     // ───────── SELECTED DAG ─────────
 
     [ObservableProperty]
     private DateTime selectedDate = DateTime.Today;
+
+    /// <summary>Geselecteerde dag voluit in het Nederlands (bv. "Vrijdag 20 juni 2026").</summary>
+    public string SelectedDateLang => Capitalize(SelectedDate.ToString("dddd dd MMMM yyyy", Nl));
 
     partial void OnSelectedDayRowChanged(DayRow? value)
     {
@@ -165,6 +196,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
     partial void OnSelectedDateChanged(DateTime value)
     {
         SelectedWeekNr = ISOWeek.GetWeekOfYear(value);
+        OnPropertyChanged(nameof(SelectedDateLang));
         BuildWeekDayRows();
         UpdateTileSelection(value);
         RunAsync(LoadTakenVanDagAsync);
@@ -172,6 +204,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
         OnPropertyChanged(nameof(IsGeselecteerdeDagGeblokkeerd));
         OnPropertyChanged(nameof(BlokkeerDagButtonText));
         OnPropertyChanged(nameof(GeselecteerdeDagRedenTekst));
+        Uitvoering.SelectedDate = value;
     }
 
     // ───────── TILE SELECTION ─────────
@@ -201,6 +234,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
     {
         WerkBonId = 0;
         RegelsVanWerkBon = new ObservableCollection<RegelPlanItem>();
+        Uitvoering.RegelsVanWerkBon = RegelsVanWerkBon;
         await LoadAsync();
         await LoadTakenVanDagAsync();
         await LoadWeekRowsAsync(ISOWeek.GetWeekOfYear(SelectedDate));
@@ -248,324 +282,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
                 IsSelected = false
             })
         );
-    }
-
-    private static int CalcMinutenVoorRegel(OfferteRegel r)
-    {
-        int min = 0;
-        min += r.TypeLijst?.WerkMinuten ?? 0;
-        min += r.Glas?.WerkMinuten ?? 0;
-        min += r.PassePartout1?.WerkMinuten ?? 0;
-        min += r.PassePartout2?.WerkMinuten ?? 0;
-        min += r.DiepteKern?.WerkMinuten ?? 0;
-        min += r.Opkleven?.WerkMinuten ?? 0;
-        min += r.Rug?.WerkMinuten ?? 0;
-        min += r.ExtraWerkMinuten;
-
-        int stuks = r.AantalStuks <= 0 ? 1 : r.AantalStuks;
-        min *= stuks;
-        return Math.Max(min, 15);
-    }
-
-    // ───────── PLAN GESELECTEERDE REGELS (MET AUTO-SPREAD) ─────────
-
-    [RelayCommand]
-    private async Task PlanGeselecteerdeRegelsAsync()
-    {
-        if (WerkBonId == 0)
-        {
-            _toast.Error("Open planning vanuit een werkbon om regels te plannen.");
-            return;
-        }
-
-        var selectedIds = RegelsVanWerkBon.Where(x => x.IsSelected).Select(x => x.RegelId).ToList();
-        if (selectedIds.Count == 0) return;
-
-        // Regels laden om geschatte duur te berekenen
-        await using var dbCalc = await _factory.CreateDbContextAsync();
-
-        // Statuscheck: afgewerkte/afgehaalde werkbonnen mogen niet (opnieuw) gepland worden
-        var werkBonStatus = await dbCalc.WerkBonnen
-            .Where(w => w.Id == WerkBonId)
-            .Select(w => (WerkBonStatus?)w.Status)
-            .FirstOrDefaultAsync();
-
-        if (werkBonStatus is WerkBonStatus.Afgewerkt or WerkBonStatus.Afgehaald)
-        {
-            _toast.Error("Deze werkbon is al afgewerkt of afgehaald en kan niet meer gepland worden.");
-            return;
-        }
-
-        var regels = await dbCalc.OfferteRegels
-            .Include(r => r.TypeLijst)
-            .Include(r => r.Glas)
-            .Include(r => r.PassePartout1)
-            .Include(r => r.PassePartout2)
-            .Include(r => r.DiepteKern)
-            .Include(r => r.Opkleven)
-            .Include(r => r.Rug)
-            .Where(r => selectedIds.Contains(r.Id))
-            .ToListAsync();
-
-        int totaalGeschat = regels.Sum(CalcMinutenVoorRegel);
-
-        // Datum bepalen via dialoog
-        DateTime startDag;
-        if (ShowTijdDialogAsync is not null)
-        {
-            var werkBonLabel = await dbCalc.WerkBonnen
-                .Where(w => w.Id == WerkBonId)
-                .Select(w => w.Offerte.Klant != null ? w.Offerte.Klant.Achternaam : null)
-                .FirstOrDefaultAsync() ?? $"WerkBon #{WerkBonId}";
-
-            var dialogVm = new PlanningTijdDialogViewModel
-            {
-                ContextLabel = $"WerkBon #{WerkBonId} — {werkBonLabel} · {selectedIds.Count} regel(s)",
-                GeplandeDatum = new DateTimeOffset(SelectedDate.Date),
-                TotaalMinuten = totaalGeschat,
-            };
-
-            bool ok = await ShowTijdDialogAsync(dialogVm);
-            if (!ok) return;
-
-            startDag = dialogVm.GetStartDatum();
-        }
-        else
-        {
-            startDag = SelectedDate.Date.AddHours(9);
-        }
-
-        var huidigeDag = startDag.Date;
-
-        try
-        {
-            foreach (var r in regels)
-            {
-                int duur = CalcMinutenVoorRegel(r);
-                huidigeDag = await _workflow.PlanRegelMetDagCapaciteitAsync(
-                    WerkBonId,
-                    r.Id,
-                    huidigeDag,
-                    duur,
-                    CapaciteitMinuten,
-                    "Inlijsten");
-            }
-        }
-        catch (InvalidOperationException ex)
-        {
-            _toast.Error(ex.Message);
-            await RefreshAsync();
-            return;
-        }
-
-        _toast.Success($"{regels.Count} taken gepland vanaf {startDag:dd/MM}.");
-        await RefreshAsync();
-    }
-
-    // ───────── PLAN PER REGEL — eigen datum per inlijsting (US-21) ─────────
-
-    /// <summary>
-    /// US-21: plant elke geselecteerde inlijsting met een EIGEN datum. Toont één
-    /// tijd-dialoog per regel (met de regelnaam als context) en plant die regel
-    /// meteen op de gekozen dag. Zo kan inlijsting 1 op bv. 20/06 en inlijsting 2
-    /// op 27/06 — elke regel behoudt zijn eigen GeplandVan.
-    /// </summary>
-    [RelayCommand]
-    private async Task PlanPerRegelAsync()
-    {
-        if (WerkBonId == 0)
-        {
-            _toast.Error("Open planning vanuit een werkbon om regels te plannen.");
-            return;
-        }
-
-        var selectedIds = RegelsVanWerkBon.Where(x => x.IsSelected).Select(x => x.RegelId).ToList();
-        if (selectedIds.Count == 0) return;
-
-        await using var dbCalc = await _factory.CreateDbContextAsync();
-
-        // Statuscheck: afgewerkte/afgehaalde werkbonnen mogen niet (opnieuw) gepland worden
-        var werkBonStatus = await dbCalc.WerkBonnen
-            .Where(w => w.Id == WerkBonId)
-            .Select(w => (WerkBonStatus?)w.Status)
-            .FirstOrDefaultAsync();
-
-        if (werkBonStatus is WerkBonStatus.Afgewerkt or WerkBonStatus.Afgehaald)
-        {
-            _toast.Error("Deze werkbon is al afgewerkt of afgehaald en kan niet meer gepland worden.");
-            return;
-        }
-
-        var regels = await dbCalc.OfferteRegels
-            .Include(r => r.TypeLijst)
-            .Include(r => r.Glas)
-            .Include(r => r.PassePartout1)
-            .Include(r => r.PassePartout2)
-            .Include(r => r.DiepteKern)
-            .Include(r => r.Opkleven)
-            .Include(r => r.Rug)
-            .Where(r => selectedIds.Contains(r.Id))
-            .ToListAsync();
-
-        // Behoud de volgorde zoals in de lijst (Sortering volgt de RegelsVanWerkBon-volgorde).
-        var geordend = selectedIds
-            .Select(id => regels.FirstOrDefault(r => r.Id == id))
-            .Where(r => r is not null)
-            .Cast<OfferteRegel>()
-            .ToList();
-
-        int gepland = 0;
-        var standaardDag = SelectedDate.Date;
-
-        try
-        {
-            foreach (var r in geordend)
-            {
-                int duur = CalcMinutenVoorRegel(r);
-                var label = RegelsVanWerkBon.FirstOrDefault(x => x.RegelId == r.Id)?.Label
-                            ?? $"Regel #{r.Id}";
-
-                DateTime startDag;
-                if (ShowTijdDialogAsync is not null)
-                {
-                    var dialogVm = new PlanningTijdDialogViewModel
-                    {
-                        ContextLabel = $"Inlijsting: {label}",
-                        GeplandeDatum = new DateTimeOffset(standaardDag),
-                        TotaalMinuten = duur,
-                    };
-
-                    bool ok = await ShowTijdDialogAsync(dialogVm);
-                    if (!ok) continue;   // deze regel overslaan, ga door met de volgende
-
-                    startDag = dialogVm.GetStartDatum();
-                }
-                else
-                {
-                    startDag = standaardDag.AddHours(9);
-                }
-
-                await _workflow.PlanRegelMetDagCapaciteitAsync(
-                    WerkBonId,
-                    r.Id,
-                    startDag.Date,
-                    duur,
-                    CapaciteitMinuten,
-                    "Inlijsten");
-
-                // Volgende regel standaard op dezelfde gekozen dag voorstellen.
-                standaardDag = startDag.Date;
-                gepland++;
-            }
-        }
-        catch (InvalidOperationException ex)
-        {
-            _toast.Error(ex.Message);
-            await RefreshAsync();
-            return;
-        }
-
-        if (gepland > 0)
-            _toast.Success($"{gepland} inlijsting(en) elk op eigen datum gepland.");
-        await RefreshAsync();
-    }
-
-    /// <summary>
-    /// Zoekt de eerste beschikbare dag (niet geblokkeerd) waar de taak past
-    /// binnen de dagcapaciteit. Als de dag vol is, schuift door naar de volgende.
-    /// </summary>
-    private async Task<DateTime> ZoekBeschikbareDag(
-        AppDbContext db, DateTime vanafDag, int benodigdeMinuten, HashSet<DateTime> geblokkeerd)
-    {
-        var dag = vanafDag.Date;
-        for (int i = 0; i < 365; i++)
-        {
-            if (geblokkeerd.Contains(dag))
-            {
-                dag = dag.AddDays(1);
-                continue;
-            }
-
-            var dagBezet = await db.WerkTaken
-                .Where(t => t.GeplandVan.Date == dag)
-                .SumAsync(t => t.DuurMinuten);
-
-            if (dagBezet + benodigdeMinuten <= CapaciteitMinuten)
-                return dag;
-
-            dag = dag.AddDays(1);
-        }
-
-        return vanafDag.Date;
-    }
-
-    // ───────── HERPLANNEN ─────────
-
-    [RelayCommand]
-    private async Task HerplanTaakAsync(WerkTaak taak)
-    {
-        if (ShowTijdDialogAsync is null) return;
-
-        var dialogVm = new PlanningTijdDialogViewModel
-        {
-            ContextLabel = $"WerkBon #{taak.WerkBonId} — {taak.Omschrijving}",
-            GeplandeDatum = new DateTimeOffset(taak.GeplandVan.Date),
-            TotaalMinuten = taak.DuurMinuten,
-        };
-
-        bool ok = await ShowTijdDialogAsync(dialogVm);
-        if (!ok) return;
-
-        var nieuweDag = dialogVm.GetStartDatum();
-
-        // Check blokkering
-        if (await IsDagGeblokkeerd(nieuweDag))
-        {
-            _toast.Error("De gekozen datum is geblokkeerd.");
-            return;
-        }
-
-        if (taak.OfferteRegelId.HasValue && taak.DuurMinuten > CapaciteitMinuten)
-        {
-            await _workflow.PlanRegelMetDagCapaciteitAsync(
-                taak.WerkBonId,
-                taak.OfferteRegelId.Value,
-                nieuweDag,
-                taak.DuurMinuten,
-                CapaciteitMinuten,
-                taak.Omschrijving);
-        }
-        else
-        {
-            await using var db = await _factory.CreateDbContextAsync();
-            var dbTaak = await db.WerkTaken.FindAsync(taak.Id);
-            if (dbTaak is null) return;
-
-            dbTaak.GeplandVan = nieuweDag;
-            dbTaak.GeplandTot = nieuweDag.AddMinutes(taak.DuurMinuten);
-            dbTaak.DuurMinuten = taak.DuurMinuten;
-
-            await db.SaveChangesAsync();
-        }
-
-        _toast.Success($"Taak herplanned naar {nieuweDag:dd/MM} ({taak.DuurMinuten} min).");
-        await RefreshAsync();
-    }
-
-    // ───────── VERWIJDEREN ─────────
-
-    [RelayCommand]
-    private async Task VerwijderTaakAsync(WerkTaak taak)
-    {
-        await using var db = await _factory.CreateDbContextAsync();
-        var dbTaak = await db.WerkTaken.FindAsync(taak.Id);
-        if (dbTaak is null) return;
-
-        db.WerkTaken.Remove(dbTaak);
-        await db.SaveChangesAsync();
-
-        _toast.Success("Taak verwijderd.");
-        await RefreshAsync();
+        Uitvoering.RegelsVanWerkBon = RegelsVanWerkBon;
     }
 
     // ═══════════════════════════════════════════════════
@@ -778,7 +495,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             DayRows.Add(new DayRow
             {
                 WeekNr = ISOWeek.GetWeekOfYear(date),
-                Dag = date.ToString("ddd", CultureInfo.CurrentCulture),
+                Dag = date.ToString("dd d", Nl),
                 Datum = date.Date,
                 Uren = used / 60,
                 Minuten = used % 60,
@@ -851,56 +568,8 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
                 Afmeting = r is null ? "" : $"{r.AantalStuks}× {r.BreedteCm}×{r.HoogteCm}",
                 Lijst = r?.TypeLijst?.Artikelnummer ?? "",
                 LijstType = r?.TypeLijst?.Soort ?? "",
-                Dag = t.GeplandVan.ToString("ddd dd/MM", CultureInfo.CurrentCulture)
+                Dag = Capitalize(t.GeplandVan.ToString("ddd dd/MM", Nl))
             });
         }
     }
-}
-
-// ───────── SUPPORT CLASSES ─────────
-
-public partial class DayTile : ObservableObject
-{
-    public DateTime Date { get; set; }
-    public string DayNumber { get; set; } = "";
-    public string BusyLabel { get; set; } = "";
-    public double Busy { get; set; }
-    public IBrush BusyColor { get; set; } = Brushes.LimeGreen;
-    public double BusyBarWidth => Busy * 120;
-    public bool IsGeblokkeerd { get; set; }
-
-    [ObservableProperty] private IBrush background = Brushes.Transparent;
-    [ObservableProperty] private IBrush border = Brushes.Gray;
-    [ObservableProperty] private bool isSelected;
-}
-
-public class WeekSummary
-{
-    public string Title { get; set; } = "";
-    public string Range { get; set; } = "";
-    public string TotalLabel { get; set; } = "";
-    public IBrush Color { get; set; } = Brushes.Gray;
-}
-
-public class DayRow
-{
-    public int WeekNr { get; set; }
-    public string Dag { get; set; } = "";
-    public DateTime Datum { get; set; }
-    public int Uren { get; set; }
-    public int Minuten { get; set; }
-    public IBrush Kleur { get; set; } = Brushes.Gray;
-    public bool IsGeblokkeerd { get; set; }
-    public string UurMinText => IsGeblokkeerd ? "🚫" : $"{Uren:00}:{Minuten:00}";
-}
-
-public class WeekRow
-{
-    public int BonNr { get; set; }
-    public int DuurMin { get; set; }
-    public string KlantNaam { get; set; } = "";
-    public string Afmeting { get; set; } = "";
-    public string Lijst { get; set; } = "";
-    public string LijstType { get; set; } = "";
-    public string Dag { get; set; } = "";
 }

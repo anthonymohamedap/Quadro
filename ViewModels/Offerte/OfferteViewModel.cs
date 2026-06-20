@@ -197,6 +197,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         {
             if (Regelbeheer.SelectedRegel is null || _applyingNaamFilter) return;
             Regelbeheer.SelectedRegel.Glas = value;
+            OptieGewijzigd(value, GlasVarianten, v => Regelbeheer.SelectedRegel.GlasVariant = v, nameof(SelectedRegelGlasVariant));
             SyncNaamBackward(value?.Naam, ref _selectedGlasNaam, nameof(SelectedGlasNaam));
             OnPropertyChanged();
             if (!_suppressRecalc) Prijzen.TriggerRecalc();
@@ -209,6 +210,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         {
             if (Regelbeheer.SelectedRegel is null || _applyingNaamFilter) return;
             Regelbeheer.SelectedRegel.PassePartout1 = value;
+            OptieGewijzigd(value, Passe1VariantLijst, v => Regelbeheer.SelectedRegel.PassePartout1Variant = v, nameof(SelectedRegelPasse1Variant));
             SyncNaamBackward(value?.Naam, ref _selectedPasse1Naam, nameof(SelectedPasse1Naam));
             OnPropertyChanged();
             if (!_suppressRecalc) Prijzen.TriggerRecalc();
@@ -221,6 +223,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         {
             if (Regelbeheer.SelectedRegel is null || _applyingNaamFilter) return;
             Regelbeheer.SelectedRegel.PassePartout2 = value;
+            OptieGewijzigd(value, Passe2VariantLijst, v => Regelbeheer.SelectedRegel.PassePartout2Variant = v, nameof(SelectedRegelPasse2Variant));
             SyncNaamBackward(value?.Naam, ref _selectedPasse2Naam, nameof(SelectedPasse2Naam));
             OnPropertyChanged();
             if (!_suppressRecalc) Prijzen.TriggerRecalc();
@@ -233,6 +236,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         {
             if (Regelbeheer.SelectedRegel is null || _applyingNaamFilter) return;
             Regelbeheer.SelectedRegel.DiepteKern = value;
+            OptieGewijzigd(value, DiepteVariantLijst, v => Regelbeheer.SelectedRegel.DiepteKernVariant = v, nameof(SelectedRegelDiepteVariant));
             SyncNaamBackward(value?.Naam, ref _selectedDiepteNaam, nameof(SelectedDiepteNaam));
             OnPropertyChanged();
             if (!_suppressRecalc) Prijzen.TriggerRecalc();
@@ -245,6 +249,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         {
             if (Regelbeheer.SelectedRegel is null || _applyingNaamFilter) return;
             Regelbeheer.SelectedRegel.Opkleven = value;
+            OptieGewijzigd(value, OpklevenVariantLijst, v => Regelbeheer.SelectedRegel.OpklevenVariant = v, nameof(SelectedRegelOpklevenVariant));
             SyncNaamBackward(value?.Naam, ref _selectedOpklevenNaam, nameof(SelectedOpklevenNaam));
             OnPropertyChanged();
             if (!_suppressRecalc) Prijzen.TriggerRecalc();
@@ -257,10 +262,117 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         {
             if (Regelbeheer.SelectedRegel is null || _applyingNaamFilter) return;
             Regelbeheer.SelectedRegel.Rug = value;
+            OptieGewijzigd(value, RugVariantLijst, v => Regelbeheer.SelectedRegel.RugVariant = v, nameof(SelectedRegelRugVariant));
             SyncNaamBackward(value?.Naam, ref _selectedRugNaam, nameof(SelectedRugNaam));
             OnPropertyChanged();
             if (!_suppressRecalc) Prijzen.TriggerRecalc();
         }
+    }
+
+    // ── Niveau 3 — AfwerkingsVariant per slot (bv. "Brons"/"Zwart") ────────────
+    // De keuzelijst toont de Varianten van de gekozen optie; de keuze wordt op de
+    // OfferteRegel bewaard (GlasVariant enz.) en verschijnt op bestelbon + weeklijst.
+    public ObservableCollection<AfwerkingsVariant> GlasVarianten      { get; } = new();
+    public ObservableCollection<AfwerkingsVariant> Passe1VariantLijst { get; } = new();
+    public ObservableCollection<AfwerkingsVariant> Passe2VariantLijst { get; } = new();
+    public ObservableCollection<AfwerkingsVariant> DiepteVariantLijst { get; } = new();
+    public ObservableCollection<AfwerkingsVariant> OpklevenVariantLijst { get; } = new();
+    public ObservableCollection<AfwerkingsVariant> RugVariantLijst    { get; } = new();
+
+    public AfwerkingsVariant? SelectedRegelGlasVariant
+    {
+        get => Regelbeheer.SelectedRegel?.GlasVariant;
+        set { if (Regelbeheer.SelectedRegel is null || _applyingNaamFilter) return; Regelbeheer.SelectedRegel.GlasVariant = value; OnPropertyChanged(); }
+    }
+    public AfwerkingsVariant? SelectedRegelPasse1Variant
+    {
+        get => Regelbeheer.SelectedRegel?.PassePartout1Variant;
+        set { if (Regelbeheer.SelectedRegel is null || _applyingNaamFilter) return; Regelbeheer.SelectedRegel.PassePartout1Variant = value; OnPropertyChanged(); }
+    }
+    public AfwerkingsVariant? SelectedRegelPasse2Variant
+    {
+        get => Regelbeheer.SelectedRegel?.PassePartout2Variant;
+        set { if (Regelbeheer.SelectedRegel is null || _applyingNaamFilter) return; Regelbeheer.SelectedRegel.PassePartout2Variant = value; OnPropertyChanged(); }
+    }
+    public AfwerkingsVariant? SelectedRegelDiepteVariant
+    {
+        get => Regelbeheer.SelectedRegel?.DiepteKernVariant;
+        set { if (Regelbeheer.SelectedRegel is null || _applyingNaamFilter) return; Regelbeheer.SelectedRegel.DiepteKernVariant = value; OnPropertyChanged(); }
+    }
+    public AfwerkingsVariant? SelectedRegelOpklevenVariant
+    {
+        get => Regelbeheer.SelectedRegel?.OpklevenVariant;
+        set { if (Regelbeheer.SelectedRegel is null || _applyingNaamFilter) return; Regelbeheer.SelectedRegel.OpklevenVariant = value; OnPropertyChanged(); }
+    }
+    public AfwerkingsVariant? SelectedRegelRugVariant
+    {
+        get => Regelbeheer.SelectedRegel?.RugVariant;
+        set { if (Regelbeheer.SelectedRegel is null || _applyingNaamFilter) return; Regelbeheer.SelectedRegel.RugVariant = value; OnPropertyChanged(); }
+    }
+
+    private static void FillVarianten(ObservableCollection<AfwerkingsVariant> tgt, AfwerkingsOptie? optie)
+    {
+        var desired = optie is null
+            ? new System.Collections.Generic.List<AfwerkingsVariant>()
+            : optie.Varianten
+                   .Where(v => v.IsActief && !v.IsGearchiveerd)
+                   .OrderByDescending(v => v.IsStandaard)
+                   .ThenBy(v => v.Beschrijving)
+                   .ToList();
+
+        // Niet onnodig herbouwen: als de inhoud al identiek is (zelfde instanties,
+        // zelfde volgorde) laten we de keuzelijst met rust, zodat de ComboBox zijn
+        // selectie behoudt na opslaan/herladen.
+        if (tgt.Count == desired.Count && tgt.SequenceEqual(desired)) return;
+
+        tgt.Clear();
+        foreach (var v in desired) tgt.Add(v);
+    }
+
+    /// <summary>Herbouwt alle variant-keuzelijsten vanuit de opties van de geselecteerde regel
+    /// (behoudt de reeds gekozen varianten). Aangeroepen bij regelselectie/herladen.</summary>
+    private void RefreshAlleVarianten()
+    {
+        var r = Regelbeheer.SelectedRegel;
+        // Guard aan tijdens het herbouwen van de ItemsSource: zo negeren de
+        // variant-setters de null-writeback die Avalonia doet wanneer Clear()
+        // de keuzelijst even leegt (anders wordt de gekozen variant gewist).
+        _applyingNaamFilter = true;
+        try
+        {
+            FillVarianten(GlasVarianten, r?.Glas);
+            FillVarianten(Passe1VariantLijst, r?.PassePartout1);
+            FillVarianten(Passe2VariantLijst, r?.PassePartout2);
+            FillVarianten(DiepteVariantLijst, r?.DiepteKern);
+            FillVarianten(OpklevenVariantLijst, r?.Opkleven);
+            FillVarianten(RugVariantLijst, r?.Rug);
+        }
+        finally
+        {
+            _applyingNaamFilter = false;
+        }
+        OnPropertyChanged(nameof(SelectedRegelGlasVariant));
+        OnPropertyChanged(nameof(SelectedRegelPasse1Variant));
+        OnPropertyChanged(nameof(SelectedRegelPasse2Variant));
+        OnPropertyChanged(nameof(SelectedRegelDiepteVariant));
+        OnPropertyChanged(nameof(SelectedRegelOpklevenVariant));
+        OnPropertyChanged(nameof(SelectedRegelRugVariant));
+    }
+
+    /// <summary>Na het wijzigen van een afwerkingsoptie: vul de variantlijst en kies de
+    /// standaardvariant (of niets). Aangeroepen vanuit de optie-setters.</summary>
+    private void OptieGewijzigd(AfwerkingsOptie? optie, ObservableCollection<AfwerkingsVariant> tgt,
+                               System.Action<AfwerkingsVariant?> setVariant, string variantProxy)
+    {
+        // Guard aan tijdens herbouw zodat de binding-writeback de selectie niet wist;
+        // save/restore omdat dit ook vanuit ApplyNaamFilter (guard al aan) kan komen.
+        var prev = _applyingNaamFilter;
+        _applyingNaamFilter = true;
+        try { FillVarianten(tgt, optie); }
+        finally { _applyingNaamFilter = prev; }
+
+        setVariant(tgt.FirstOrDefault(v => v.IsStandaard) ?? tgt.FirstOrDefault());
+        OnPropertyChanged(variantProxy);
     }
 
     // ── Twee-niveau afwerking selectie ────────────────────────────────────────
@@ -298,7 +410,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             OnPropertyChanged();
             ApplyNaamFilter(Regelbeheer.GlasOpties, GefilterdeGlasVarianten, value,
                 () => SelectedRegelGlas,
-                v => { if (Regelbeheer.SelectedRegel is not null) { Regelbeheer.SelectedRegel.Glas = v; OnPropertyChanged(nameof(SelectedRegelGlas)); if (!_suppressRecalc) Prijzen.TriggerRecalc(); } });
+                v => { if (Regelbeheer.SelectedRegel is not null) { Regelbeheer.SelectedRegel.Glas = v; OptieGewijzigd(v, GlasVarianten, vr => Regelbeheer.SelectedRegel.GlasVariant = vr, nameof(SelectedRegelGlasVariant)); OnPropertyChanged(nameof(SelectedRegelGlas)); if (!_suppressRecalc) Prijzen.TriggerRecalc(); } });
         }
     }
     public string? SelectedPasse1Naam
@@ -311,7 +423,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             OnPropertyChanged();
             ApplyNaamFilter(Regelbeheer.Passe1Opties, GefilterdePasse1Varianten, value,
                 () => SelectedRegelPasse1,
-                v => { if (Regelbeheer.SelectedRegel is not null) { Regelbeheer.SelectedRegel.PassePartout1 = v; OnPropertyChanged(nameof(SelectedRegelPasse1)); if (!_suppressRecalc) Prijzen.TriggerRecalc(); } });
+                v => { if (Regelbeheer.SelectedRegel is not null) { Regelbeheer.SelectedRegel.PassePartout1 = v; OptieGewijzigd(v, Passe1VariantLijst, vr => Regelbeheer.SelectedRegel.PassePartout1Variant = vr, nameof(SelectedRegelPasse1Variant)); OnPropertyChanged(nameof(SelectedRegelPasse1)); if (!_suppressRecalc) Prijzen.TriggerRecalc(); } });
         }
     }
     public string? SelectedPasse2Naam
@@ -324,7 +436,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             OnPropertyChanged();
             ApplyNaamFilter(Regelbeheer.Passe2Opties, GefilterdePasse2Varianten, value,
                 () => SelectedRegelPasse2,
-                v => { if (Regelbeheer.SelectedRegel is not null) { Regelbeheer.SelectedRegel.PassePartout2 = v; OnPropertyChanged(nameof(SelectedRegelPasse2)); if (!_suppressRecalc) Prijzen.TriggerRecalc(); } });
+                v => { if (Regelbeheer.SelectedRegel is not null) { Regelbeheer.SelectedRegel.PassePartout2 = v; OptieGewijzigd(v, Passe2VariantLijst, vr => Regelbeheer.SelectedRegel.PassePartout2Variant = vr, nameof(SelectedRegelPasse2Variant)); OnPropertyChanged(nameof(SelectedRegelPasse2)); if (!_suppressRecalc) Prijzen.TriggerRecalc(); } });
         }
     }
     public string? SelectedDiepteNaam
@@ -337,7 +449,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             OnPropertyChanged();
             ApplyNaamFilter(Regelbeheer.DiepteOpties, GefilterdeDiepteVarianten, value,
                 () => SelectedRegelDiepte,
-                v => { if (Regelbeheer.SelectedRegel is not null) { Regelbeheer.SelectedRegel.DiepteKern = v; OnPropertyChanged(nameof(SelectedRegelDiepte)); if (!_suppressRecalc) Prijzen.TriggerRecalc(); } });
+                v => { if (Regelbeheer.SelectedRegel is not null) { Regelbeheer.SelectedRegel.DiepteKern = v; OptieGewijzigd(v, DiepteVariantLijst, vr => Regelbeheer.SelectedRegel.DiepteKernVariant = vr, nameof(SelectedRegelDiepteVariant)); OnPropertyChanged(nameof(SelectedRegelDiepte)); if (!_suppressRecalc) Prijzen.TriggerRecalc(); } });
         }
     }
     public string? SelectedOpklevenNaam
@@ -350,7 +462,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             OnPropertyChanged();
             ApplyNaamFilter(Regelbeheer.OpkleefOpties, GefilterdeOpklevenVarianten, value,
                 () => SelectedRegelOpkleven,
-                v => { if (Regelbeheer.SelectedRegel is not null) { Regelbeheer.SelectedRegel.Opkleven = v; OnPropertyChanged(nameof(SelectedRegelOpkleven)); if (!_suppressRecalc) Prijzen.TriggerRecalc(); } });
+                v => { if (Regelbeheer.SelectedRegel is not null) { Regelbeheer.SelectedRegel.Opkleven = v; OptieGewijzigd(v, OpklevenVariantLijst, vr => Regelbeheer.SelectedRegel.OpklevenVariant = vr, nameof(SelectedRegelOpklevenVariant)); OnPropertyChanged(nameof(SelectedRegelOpkleven)); if (!_suppressRecalc) Prijzen.TriggerRecalc(); } });
         }
     }
     public string? SelectedRugNaam
@@ -363,7 +475,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             OnPropertyChanged();
             ApplyNaamFilter(Regelbeheer.RugOpties, GefilterdeRugVarianten, value,
                 () => SelectedRegelRug,
-                v => { if (Regelbeheer.SelectedRegel is not null) { Regelbeheer.SelectedRegel.Rug = v; OnPropertyChanged(nameof(SelectedRegelRug)); if (!_suppressRecalc) Prijzen.TriggerRecalc(); } });
+                v => { if (Regelbeheer.SelectedRegel is not null) { Regelbeheer.SelectedRegel.Rug = v; OptieGewijzigd(v, RugVariantLijst, vr => Regelbeheer.SelectedRegel.RugVariant = vr, nameof(SelectedRegelRugVariant)); OnPropertyChanged(nameof(SelectedRegelRug)); if (!_suppressRecalc) Prijzen.TriggerRecalc(); } });
         }
     }
 
@@ -492,6 +604,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             OnPropertyChanged(nameof(SelectedRegelRug));
             OnPropertyChanged(nameof(SelectedRegelAfhaalDatum));
             OnPropertyChanged(nameof(SelectedRegelAfgesprokenPrijs));   // US-22
+            RefreshAlleVarianten();   // variant-keuzelijsten + selecties bijwerken
         }
     }
 
@@ -545,7 +658,26 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             saveAndReload: () => SaveCoreAsync(reloadAfterSave: true),
             berekenAsync: () => BerekenSilentAsync(),
             runValidation: showFeedback => RunValidationOrToastAsync(
-                o => validator.ValidateForPricingAsync(o), showFeedback));
+                o => validator.ValidateForPricingAsync(o), showFeedback),
+            // Alleen herladen (niet opslaan) — bv. na het sluiten van de planningskalender,
+            // zodat de via planning gezette afhaaldatum zichtbaar wordt zonder de
+            // in-memory waarden terug te schrijven.
+            reloadOnly: async () =>
+            {
+                if (Offerte is { Id: > 0 } o)
+                {
+                    var selectedId = Regelbeheer.SelectedRegel?.Id;
+                    await LoadAsync(o.Id, reloadCatalog: false);
+
+                    // Herstel de selectie zodat de (nu read-only) afhaaldatum van de
+                    // geselecteerde regel meteen zichtbaar is.
+                    if (selectedId is int id && id > 0)
+                    {
+                        Regelbeheer.SelectedRegel = Regelbeheer.Regels.FirstOrDefault(r => r.Id == id);
+                        OnPropertyChanged(nameof(SelectedRegel));
+                    }
+                }
+            });
 
         // Propageer PropertyChanged van sub-VMs naar root zodat AXAML bindings updaten
         KlantSelectie.PropertyChanged += (_, e) =>
@@ -656,6 +788,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             .FirstAsync();
 
         var list = await db.AfwerkingsOpties.AsNoTracking()
+            .Include(a => a.Varianten)
             .Where(a => a.AfwerkingsGroepId == groepId)
             .OrderBy(a => a.Volgnummer).ThenBy(a => a.Kleur).ThenBy(a => a.Naam)
             .ToListAsync();
@@ -739,6 +872,9 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                         GlasId = dbRule.GlasId, PassePartout1Id = dbRule.PassePartout1Id,
                         PassePartout2Id = dbRule.PassePartout2Id, DiepteKernId = dbRule.DiepteKernId,
                         OpklevenId = dbRule.OpklevenId, RugId = dbRule.RugId,
+                        GlasVariantId = dbRule.GlasVariantId, PassePartout1VariantId = dbRule.PassePartout1VariantId,
+                        PassePartout2VariantId = dbRule.PassePartout2VariantId, DiepteKernVariantId = dbRule.DiepteKernVariantId,
+                        OpklevenVariantId = dbRule.OpklevenVariantId, RugVariantId = dbRule.RugVariantId,
                         ExtraWerkMinuten = dbRule.ExtraWerkMinuten, ExtraPrijs = dbRule.ExtraPrijs,
                         Korting = dbRule.Korting, LegacyCode = dbRule.LegacyCode,
                         AfgesprokenPrijsExcl = dbRule.AfgesprokenPrijsExcl,
@@ -750,18 +886,42 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                     // Gebruik dictionary lookups ipv LINQ FirstOrDefault (veel sneller)
                     if (rule.TypeLijstId.HasValue && typeLijstDict.TryGetValue(rule.TypeLijstId.Value, out var typeLijst))
                         rule.TypeLijst = typeLijst;
+                    // Lokale helper: relink de gekozen variant uit de Varianten van de optie.
+                    static AfwerkingsVariant? Variant(AfwerkingsOptie? optie, int? variantId) =>
+                        optie is null || !variantId.HasValue
+                            ? null
+                            : optie.Varianten.FirstOrDefault(v => v.Id == variantId.Value);
+
                     if (rule.GlasId.HasValue && glasDict.TryGetValue(rule.GlasId.Value, out var glas))
+                    {
                         rule.Glas = glas;
+                        rule.GlasVariant = Variant(glas, rule.GlasVariantId);
+                    }
                     if (rule.PassePartout1Id.HasValue && passe1Dict.TryGetValue(rule.PassePartout1Id.Value, out var passe1))
+                    {
                         rule.PassePartout1 = passe1;
+                        rule.PassePartout1Variant = Variant(passe1, rule.PassePartout1VariantId);
+                    }
                     if (rule.PassePartout2Id.HasValue && passe2Dict.TryGetValue(rule.PassePartout2Id.Value, out var passe2))
+                    {
                         rule.PassePartout2 = passe2;
+                        rule.PassePartout2Variant = Variant(passe2, rule.PassePartout2VariantId);
+                    }
                     if (rule.DiepteKernId.HasValue && diepteDict.TryGetValue(rule.DiepteKernId.Value, out var diepte))
+                    {
                         rule.DiepteKern = diepte;
+                        rule.DiepteKernVariant = Variant(diepte, rule.DiepteKernVariantId);
+                    }
                     if (rule.OpklevenId.HasValue && opkleefDict.TryGetValue(rule.OpklevenId.Value, out var opkleven))
+                    {
                         rule.Opkleven = opkleven;
+                        rule.OpklevenVariant = Variant(opkleven, rule.OpklevenVariantId);
+                    }
                     if (rule.RugId.HasValue && rugDict.TryGetValue(rule.RugId.Value, out var rug))
+                    {
                         rule.Rug = rug;
+                        rule.RugVariant = Variant(rug, rule.RugVariantId);
+                    }
 
                     regelsList.Add(rule);
                 }
@@ -1167,6 +1327,9 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         PassePartout1Id = vmRule.PassePartout1?.Id, PassePartout2Id = vmRule.PassePartout2?.Id,
         DiepteKernId = vmRule.DiepteKern?.Id, OpklevenId = vmRule.Opkleven?.Id,
         RugId = vmRule.Rug?.Id, AfgesprokenPrijsExcl = vmRule.AfgesprokenPrijsExcl,
+        GlasVariantId = vmRule.GlasVariant?.Id, PassePartout1VariantId = vmRule.PassePartout1Variant?.Id,
+        PassePartout2VariantId = vmRule.PassePartout2Variant?.Id, DiepteKernVariantId = vmRule.DiepteKernVariant?.Id,
+        OpklevenVariantId = vmRule.OpklevenVariant?.Id, RugVariantId = vmRule.RugVariant?.Id,
         ExtraWerkMinuten = vmRule.ExtraWerkMinuten, ExtraPrijs = vmRule.ExtraPrijs,
         Korting = vmRule.Korting, LegacyCode = vmRule.LegacyCode, TotaalExcl = vmRule.TotaalExcl,
         SubtotaalExBtw = vmRule.SubtotaalExBtw, BtwBedrag = vmRule.BtwBedrag,
@@ -1182,6 +1345,12 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         dbRule.GlasId = vmRule.Glas?.Id; dbRule.PassePartout1Id = vmRule.PassePartout1?.Id;
         dbRule.PassePartout2Id = vmRule.PassePartout2?.Id; dbRule.DiepteKernId = vmRule.DiepteKern?.Id;
         dbRule.OpklevenId = vmRule.Opkleven?.Id; dbRule.RugId = vmRule.Rug?.Id;
+        dbRule.GlasVariantId = vmRule.GlasVariant?.Id;
+        dbRule.PassePartout1VariantId = vmRule.PassePartout1Variant?.Id;
+        dbRule.PassePartout2VariantId = vmRule.PassePartout2Variant?.Id;
+        dbRule.DiepteKernVariantId = vmRule.DiepteKernVariant?.Id;
+        dbRule.OpklevenVariantId = vmRule.OpklevenVariant?.Id;
+        dbRule.RugVariantId = vmRule.RugVariant?.Id;
         dbRule.AfgesprokenPrijsExcl = vmRule.AfgesprokenPrijsExcl;
         dbRule.ExtraWerkMinuten = vmRule.ExtraWerkMinuten; dbRule.ExtraPrijs = vmRule.ExtraPrijs;
         dbRule.Korting = vmRule.Korting; dbRule.LegacyCode = vmRule.LegacyCode;

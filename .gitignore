@@ -20,7 +20,7 @@ publish/
 # OS files
 .DS_Store
 Thumbs.db
-
+.claude
 # SQLite database (optioneel als je die niet wil pushen)
 *.db
 *.sqlite
@@ -30,3 +30,18 @@ Thumbs.db
 
 # App config — contains DB password, never commit
 appsettings.json
+appsettings.*.json
+
+# Backup / temp files
+*.bak
+*.tmp
+*.Backup.tmp
+*.quadro_backup
+*~
+
+# Linux fuse temp files (verschijnen bij opslaan over mounts)
+.fuse_hidden*
+
+# Velopack / release-artefacten
+Releases/
+*.nupkg

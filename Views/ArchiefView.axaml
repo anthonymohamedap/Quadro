@@ -1,6 +1,7 @@
 <UserControl
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:QuadroApp.Views.Controls"
     xmlns:vm="using:QuadroApp.ViewModels"
     xmlns:m="using:QuadroApp.Model.DB"
     xmlns:snap="using:QuadroApp.Model.Snapshot"
@@ -21,27 +22,7 @@
         <Grid RowDefinitions="Auto,Auto,*,Auto">
 
             <!-- HEADER -->
-            <Border Grid.Row="0" Background="#444A50" Height="70">
-                <DockPanel Margin="20,0">
-                    <StackPanel DockPanel.Dock="Left"
-                                Orientation="Horizontal"
-                                VerticalAlignment="Center"
-                                Spacing="10">
-                        <Ellipse Width="35" Height="35" Fill="#F5C242"/>
-                        <TextBlock Text="QUADRO" FontSize="20" FontWeight="Bold" Foreground="Black"/>
-                        <TextBlock Text="ARCHIEF" FontSize="13" Foreground="Black" Margin="20,0,0,0"/>
-                    </StackPanel>
-                    <Button Content="⬅ Terug"
-                            Command="{Binding GaTerugCommand}"
-                            DockPanel.Dock="Right"
-                            VerticalAlignment="Center"
-                            Background="#F5C242"
-                            Foreground="#222"
-                            FontWeight="Bold"
-                            CornerRadius="8"
-                            Padding="10,5"/>
-                </DockPanel>
-            </Border>
+            <controls:QuadroHeader Grid.Row="0" Title="ARCHIEF" BackCommand="{Binding GaTerugCommand}"/>
 
             <!-- FILTER-BALK -->
             <Border Grid.Row="1" Background="White" Padding="16,10"

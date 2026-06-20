@@ -45,7 +45,9 @@ namespace QuadroApp.Data
             b.Entity<TypeLijst>().HasQueryFilter(t => !t.IsGearchiveerd);
             b.Entity<Leverancier>().HasQueryFilter(l => !l.IsGearchiveerd);
             b.Entity<AfwerkingsOptie>().HasQueryFilter(o => !o.IsGearchiveerd);
-            // AfwerkingsVariant: geen eigen filter — wordt altijd via parent Optie geladen.
+            b.Entity<AfwerkingsVariant>().HasQueryFilter(v => !v.IsGearchiveerd);
+            b.Entity<LeverancierBestelLijn>().HasQueryFilter(l => !l.TypeLijst.IsGearchiveerd);
+            b.Entity<VoorraadMutatie>().HasQueryFilter(m => !m.TypeLijst.IsGearchiveerd);
             // AfwerkingsGroep: nooit verwijderd, geen filter nodig.
 
             // TypeLijst entity
@@ -350,6 +352,37 @@ namespace QuadroApp.Data
                 entity.HasOne(r => r.Rug)
                       .WithMany()
                       .HasForeignKey(r => r.RugId)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                // 6× AfwerkingsVariant (optioneel, NO ACTION om multiple cascade paths te vermijden)
+                entity.HasOne(r => r.GlasVariant)
+                      .WithMany()
+                      .HasForeignKey(r => r.GlasVariantId)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(r => r.PassePartout1Variant)
+                      .WithMany()
+                      .HasForeignKey(r => r.PassePartout1VariantId)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(r => r.PassePartout2Variant)
+                      .WithMany()
+                      .HasForeignKey(r => r.PassePartout2VariantId)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(r => r.DiepteKernVariant)
+                      .WithMany()
+                      .HasForeignKey(r => r.DiepteKernVariantId)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(r => r.OpklevenVariant)
+                      .WithMany()
+                      .HasForeignKey(r => r.OpklevenVariantId)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(r => r.RugVariant)
+                      .WithMany()
+                      .HasForeignKey(r => r.RugVariantId)
                       .OnDelete(DeleteBehavior.NoAction);
             });
 

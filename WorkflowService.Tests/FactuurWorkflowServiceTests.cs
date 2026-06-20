@@ -76,11 +76,12 @@ public class FactuurWorkflowServiceTests
 
         var factuur = await sut.MaakFactuurVanOfferteAsync(offerteId);
 
-        Assert.Equal(25m, factuur.TotaalExclBtw);
-        Assert.Equal(30.25m, factuur.TotaalInclBtw);
+        // Afgesproken prijs (25) is incl. BTW → regel-incl. = 25, excl. = 25 / 1,21 = 20,66.
+        Assert.Equal(20.66m, factuur.TotaalExclBtw);
+        Assert.Equal(25m, factuur.TotaalInclBtw);
         var lijn = Assert.Single(factuur.Lijnen);
-        Assert.Equal(25m, lijn.PrijsExcl);
-        Assert.Equal(30.25m, lijn.TotaalIncl);
+        Assert.Equal(20.66m, lijn.TotaalExcl);
+        Assert.Equal(25m, lijn.TotaalIncl);
     }
 
     private static FactuurWorkflowService CreateSut(IDbContextFactory<AppDbContext> factory)

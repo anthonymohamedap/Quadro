@@ -53,6 +53,32 @@ namespace QuadroApp.Model.DB
         [NotMapped]
         public decimal ResterendTeOntvangenMeter => AantalMeterBesteld - AantalMeterOntvangen;
 
+        // ── Eenheid-bewuste weergave ──────────────────────────────────────────────
+        // Verstek & In lengte → meter ("m"); Gemonteerd → stuks/kaders ("st").
+        // De hoeveelheid wordt in hetzelfde veld bewaard; alleen de eenheid verschilt.
+        [NotMapped]
+        public bool IsGemonteerd => BestelVorm == BestelVorm.Gemonteerd;
+
+        [NotMapped]
+        public string EenheidKort => IsGemonteerd ? "st" : "m";
+
+        [NotMapped]
+        public string BestelVormLabel => BestelVorm switch
+        {
+            BestelVorm.InLengte => "In lengte",
+            BestelVorm.Gemonteerd => "Gemonteerd",
+            _ => "In verstek"
+        };
+
+        [NotMapped]
+        public string BesteldLabel => $"Besteld: {AantalMeterBesteld:0.##} {EenheidKort}";
+
+        [NotMapped]
+        public string OntvangenLabel => $"Ontvangen: {AantalMeterOntvangen:0.##} {EenheidKort}";
+
+        [NotMapped]
+        public string ResterendLabel => $"Resterend: {ResterendTeOntvangenMeter:0.##} {EenheidKort}";
+
         public ICollection<VoorraadMutatie> VoorraadMutaties { get; set; } = new List<VoorraadMutatie>();
     }
 }
