@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QuadroApp.Data;
 
 #nullable disable
+#pragma warning disable CS8981
 
 namespace QuadroApp.Migrations
 {

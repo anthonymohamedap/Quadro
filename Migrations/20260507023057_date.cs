@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
+#pragma warning disable CS8981
 
 namespace QuadroApp.Migrations
 {
