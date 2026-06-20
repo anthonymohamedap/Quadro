@@ -61,8 +61,8 @@
                             <StackPanel Spacing="8">
                                 <CheckBox Content="Artikelnummer bijwerken"
                                           Foreground="Black"
-                                          IsChecked="{Binding BijwerkArtikelnummer}"/>
-                                <TextBox Text="{Binding NieuwArtikelnummer, Mode=TwoWay}"
+                                          IsChecked="{Binding ArtikelnummerVeld.Bijwerken}"/>
+                                <TextBox Text="{Binding ArtikelnummerVeld.Waarde, Mode=TwoWay}"
                                          Foreground = "Black"  Watermark="Nieuw artikelnummer"/>
                             </StackPanel>
                         </Border>
@@ -75,8 +75,8 @@
                             <StackPanel Spacing="8">
                                 <CheckBox Content="Levcode bijwerken"
                                           Foreground="Black"
-                                          IsChecked="{Binding BijwerkLevcode}"/>
-                                <TextBox Text="{Binding NieuweLevcode, Mode=TwoWay}"
+                                          IsChecked="{Binding LevcodeVeld.Bijwerken}"/>
+                                <TextBox Text="{Binding LevcodeVeld.Waarde, Mode=TwoWay}"
                                          Foreground = "Black"  Watermark="Nieuwe levcode"/>
                             </StackPanel>
                         </Border>
@@ -90,9 +90,9 @@
                                     Padding="10">
                                 <StackPanel Spacing="8">
                                     <CheckBox Content="Leverancier bijwerken"
-                                              IsChecked="{Binding BijwerkLeverancier}" Foreground = "Black" />
+                                              IsChecked="{Binding LeverancierVeld.Bijwerken}" Foreground = "Black" />
                                     <ComboBox ItemsSource="{Binding BulkLeveranciers}" Foreground = "Black" 
-                                              SelectedItem="{Binding GeselecteerdeBulkLeverancier, Mode=TwoWay}"
+                                              SelectedItem="{Binding LeverancierVeld.Waarde, Mode=TwoWay}"
                                               HorizontalAlignment="Stretch">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate x:DataType="m:Leverancier">
@@ -112,8 +112,8 @@
                                 <StackPanel Spacing="8">
                                     <CheckBox Content="Breedte (cm) bijwerken"
                                               Foreground="Black"
-                                              IsChecked="{Binding BijwerkBreedteCm}"/>
-                                    <NumericUpDown Value="{Binding NieuweBreedteCm, Mode=TwoWay}"
+                                              IsChecked="{Binding BreedteCmVeld.Bijwerken}"/>
+                                    <NumericUpDown Value="{Binding BreedteCmVeld.Waarde, Mode=TwoWay}"
                                                    Foreground="Black"
                                                    Increment="1"
                                                    FormatString="0"
@@ -130,8 +130,8 @@
                             <StackPanel Spacing="8">
                                 <CheckBox Content="Soort bijwerken"
                                           Foreground="Black"
-                                          IsChecked="{Binding BijwerkSoort}"/>
-                                <TextBox Text="{Binding NieuweSoort, Mode=TwoWay}"
+                                          IsChecked="{Binding SoortVeld.Bijwerken}"/>
+                                <TextBox Text="{Binding SoortVeld.Waarde, Mode=TwoWay}"
                                          Foreground="Black"
                                          Watermark="Nieuwe soort"/>
                             </StackPanel>
@@ -147,10 +147,10 @@
                                 <StackPanel Spacing="8">
                                     <CheckBox Content="Dealerstatus bijwerken"
                                               Foreground="Black"
-                                              IsChecked="{Binding BijwerkIsDealer}"/>
+                                              IsChecked="{Binding IsDealerVeld.Bijwerken}"/>
                                     <CheckBox Content="Instellen als dealer"
                                               Foreground="Black"
-                                              IsChecked="{Binding NieuweIsDealer}"/>
+                                              IsChecked="{Binding IsDealerVeld.Waarde}"/>
                                 </StackPanel>
                             </Border>
 
@@ -163,8 +163,8 @@
                                 <StackPanel Spacing="8">
                                     <CheckBox Content="Opmerking bijwerken"
                                               Foreground="Black"
-                                              IsChecked="{Binding BijwerkOpmerking}"/>
-                                    <TextBox Text="{Binding NieuweOpmerking, Mode=TwoWay}"
+                                              IsChecked="{Binding OpmerkingVeld.Bijwerken}"/>
+                                    <TextBox Text="{Binding OpmerkingVeld.Waarde, Mode=TwoWay}"
                                              Foreground="Black"
                                              Watermark="Nieuwe opmerking"/>
                                 </StackPanel>
@@ -217,13 +217,13 @@
                                 <StackPanel Spacing="8">
                                     <CheckBox Content="Winstfactor bijwerken"
                                               Foreground="Black"
-                                              IsChecked="{Binding BijwerkWinstFactor}"/>
+                                              IsChecked="{Binding WinstFactorVeld.Bijwerken}"/>
                                     <CheckBox Content="Winstfactor leegmaken"
                                               Foreground="Black"
-                                              IsChecked="{Binding WinstFactorLeegmaken}"/>
-                                    <NumericUpDown Value="{Binding NieuweWinstFactor, Mode=TwoWay}"
+                                              IsChecked="{Binding WinstFactorVeld.Leegmaken}"/>
+                                    <NumericUpDown Value="{Binding WinstFactorVeld.Waarde, Mode=TwoWay}"
                                                    Foreground="Black"
-                                                   IsEnabled="{Binding !WinstFactorLeegmaken}"
+                                                   IsEnabled="{Binding !WinstFactorVeld.Leegmaken}"
                                                    Increment="0.05"
                                                    FormatString="0.000"/>
                                 </StackPanel>
@@ -238,13 +238,13 @@
                                 <StackPanel Spacing="8">
                                     <CheckBox Content="Afvalpercentage bijwerken"
                                               Foreground="Black"
-                                              IsChecked="{Binding BijwerkAfvalPercentage}"/>
+                                              IsChecked="{Binding AfvalPercentageVeld.Bijwerken}"/>
                                     <CheckBox Content="Afvalpercentage leegmaken"
                                               Foreground="Black"
-                                              IsChecked="{Binding AfvalPercentageLeegmaken}"/>
-                                    <NumericUpDown Value="{Binding NieuwAfvalPercentage, Mode=TwoWay}"
+                                              IsChecked="{Binding AfvalPercentageVeld.Leegmaken}"/>
+                                    <NumericUpDown Value="{Binding AfvalPercentageVeld.Waarde, Mode=TwoWay}"
                                                    Foreground="Black"
-                                                   IsEnabled="{Binding !AfvalPercentageLeegmaken}"
+                                                   IsEnabled="{Binding !AfvalPercentageVeld.Leegmaken}"
                                                    Increment="0.25"
                                                    FormatString="0.00"/>
                                 </StackPanel>
@@ -261,8 +261,8 @@
                                 <StackPanel Spacing="8">
                                     <CheckBox Content="Vaste kost bijwerken"
                                               Foreground="Black"
-                                              IsChecked="{Binding BijwerkVasteKost}"/>
-                                    <NumericUpDown Value="{Binding NieuweVasteKost, Mode=TwoWay}"
+                                              IsChecked="{Binding VasteKostVeld.Bijwerken}"/>
+                                    <NumericUpDown Value="{Binding VasteKostVeld.Waarde, Mode=TwoWay}"
                                                    Foreground="Black"
                                                    Increment="0.50"
                                                    FormatString="0.00"/>
@@ -278,8 +278,8 @@
                                 <StackPanel Spacing="8">
                                     <CheckBox Content="Werkminuten bijwerken"
                                               Foreground="Black"
-                                              IsChecked="{Binding BijwerkWerkMinuten}"/>
-                                    <NumericUpDown Value="{Binding NieuweWerkMinuten, Mode=TwoWay}"
+                                              IsChecked="{Binding WerkMinutenVeld.Bijwerken}"/>
+                                    <NumericUpDown Value="{Binding WerkMinutenVeld.Waarde, Mode=TwoWay}"
                                                    Foreground="Black"
                                                    Increment="1"
                                                    FormatString="0"
@@ -298,8 +298,8 @@
                                 <StackPanel Spacing="8">
                                     <CheckBox Content="Voorraad bijwerken"
                                               Foreground="Black"
-                                              IsChecked="{Binding BijwerkVoorraadMeter}"/>
-                                    <NumericUpDown Value="{Binding NieuweVoorraadMeter, Mode=TwoWay}"
+                                              IsChecked="{Binding VoorraadMeterVeld.Bijwerken}"/>
+                                    <NumericUpDown Value="{Binding VoorraadMeterVeld.Waarde, Mode=TwoWay}"
                                                    Foreground="Black"
                                                    Increment="0.50"
                                                    FormatString="0.00"/>
@@ -315,8 +315,8 @@
                                 <StackPanel Spacing="8">
                                     <CheckBox Content="Inventariskost bijwerken"
                                               Foreground="Black"
-                                              IsChecked="{Binding BijwerkInventarisKost}"/>
-                                    <NumericUpDown Value="{Binding NieuweInventarisKost, Mode=TwoWay}"
+                                              IsChecked="{Binding InventarisKostVeld.Bijwerken}"/>
+                                    <NumericUpDown Value="{Binding InventarisKostVeld.Waarde, Mode=TwoWay}"
                                                    Foreground="Black"
                                                    Increment="0.50"
                                                    FormatString="0.00"/>
@@ -332,8 +332,8 @@
                             <StackPanel Spacing="8">
                                 <CheckBox Content="Minimumvoorraad bijwerken"
                                           Foreground="Black"
-                                          IsChecked="{Binding BijwerkMinimumVoorraad}"/>
-                                <NumericUpDown Value="{Binding NieuweMinimumVoorraad, Mode=TwoWay}"
+                                          IsChecked="{Binding MinimumVoorraadVeld.Bijwerken}"/>
+                                <NumericUpDown Value="{Binding MinimumVoorraadVeld.Waarde, Mode=TwoWay}"
                                                Foreground="Black"
                                                Increment="0.50"
                                                FormatString="0.00"/>

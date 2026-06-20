@@ -3,6 +3,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:QuadroApp.ViewModels"
     xmlns:m="clr-namespace:QuadroApp.Model.DB"
+    xmlns:conv="clr-namespace:QuadroApp.Converters"
+    xmlns:controls="clr-namespace:QuadroApp.Views.Controls"
     x:Class="QuadroApp.Views.OfferteView"
     x:DataType="vm:OfferteViewModel">
 
@@ -11,34 +13,7 @@
           TextElement.Foreground="Black">
 
 		<!-- ================= HEADER ================= -->
-		<Border Grid.Row="0"
-                Background="#444A50"
-                Height="70"
-                Padding="20,0">
-
-			<Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
-
-				<StackPanel>
-					<TextBlock Text="Offertebeheer"
-                               FontSize="20"
-                               FontWeight="Bold"
-                               Foreground="White"/>
-
-					<TextBlock Text="Beheer regels, afwerkingen en prijsberekening"
-                               FontSize="13"
-                               Foreground="#C9D1D9"/>
-				</StackPanel>
-
-				<Button Grid.Column="1"
-                        Content="⬅️ Terug"
-                        Command="{Binding GaTerugCommand}"
-                        Background="#F5C242"
-                        Foreground="Black"
-                        FontWeight="Bold"
-                        Width="110"
-                        Height="36"/>
-			</Grid>
-		</Border>
+		<controls:QuadroHeader Grid.Row="0" Title="OFFERTEBEHEER" BackCommand="{Binding GaTerugCommand}"/>
 
 		<!-- ================= BODY ================= -->
 		<ScrollViewer Grid.Row="1"
@@ -315,11 +290,22 @@
 									 TextWrapping="Wrap"
 									 Text="{Binding SelectedRegel.Opmerking, Mode=TwoWay}"/>
 
-							<!-- AFHAAL DATUM PER REGEL -->
+							<!-- AFHAAL DATUM PER REGEL — read-only: wordt bepaald via de planning (US-27) -->
 							<TextBlock Grid.Row="9" Grid.Column="0" Text="Afhaal datum" VerticalAlignment="Center"/>
-							<DatePicker Grid.Row="9"
-									    Grid.Column="1"
-									    SelectedDate="{Binding SelectedRegelAfhaalDatum, Mode=TwoWay}"/>
+							<StackPanel Grid.Row="9"
+										Grid.Column="1"
+										Orientation="Horizontal"
+										Spacing="8"
+										VerticalAlignment="Center">
+								<TextBlock Text="{Binding SelectedRegel.AfhaalDatum, StringFormat='{}{0:dd/MM/yyyy}', TargetNullValue='— nog niet gepland'}"
+										   VerticalAlignment="Center"
+										   FontWeight="SemiBold"
+										   Foreground="Black"/>
+								<TextBlock Text="(via planning)"
+										   FontSize="11"
+										   Foreground="#9CA3AF"
+										   VerticalAlignment="Center"/>
+							</StackPanel>
 						</Grid>
 					</Border>
 
@@ -374,14 +360,20 @@
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 								<ComboBox x:Name="GlasBox"
-										  ItemsSource="{Binding GefilterdeGlasVarianten}"
-										  SelectedItem="{Binding SelectedRegelGlas, Mode=TwoWay}"
+										  ItemsSource="{Binding GlasVarianten}"
+										  SelectedItem="{Binding SelectedRegelGlasVariant, Mode=TwoWay}"
 										  MinWidth="200"
 										  PlaceholderText="Variant..."
 										  IsVisible="{Binding SelectedGlasNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
 									<ComboBox.ItemTemplate>
-										<DataTemplate x:DataType="m:AfwerkingsOptie">
-											<TextBlock Text="{Binding Kleur}" />
+										<DataTemplate x:DataType="m:AfwerkingsVariant">
+											<StackPanel Orientation="Horizontal" Spacing="8">
+												<Border Width="14" Height="14" CornerRadius="3"
+												        VerticalAlignment="Center"
+												        BorderBrush="#999" BorderThickness="1"
+												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
+											<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center"/>
+											</StackPanel>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
@@ -407,15 +399,21 @@
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 								<ComboBox x:Name="Passe1Box"
-										  ItemsSource="{Binding GefilterdePasse1Varianten}"
-										  SelectedItem="{Binding SelectedRegelPasse1, Mode=TwoWay}"
+										  ItemsSource="{Binding Passe1VariantLijst}"
+										  SelectedItem="{Binding SelectedRegelPasse1Variant, Mode=TwoWay}"
 										  MinWidth="200"
 										  PlaceholderText="Variant..."
 										  Foreground="Black"
 										  IsVisible="{Binding SelectedPasse1Naam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
 									<ComboBox.ItemTemplate>
-										<DataTemplate x:DataType="m:AfwerkingsOptie">
-											<TextBlock Text="{Binding Kleur}" />
+										<DataTemplate x:DataType="m:AfwerkingsVariant">
+											<StackPanel Orientation="Horizontal" Spacing="8">
+												<Border Width="14" Height="14" CornerRadius="3"
+												        VerticalAlignment="Center"
+												        BorderBrush="#999" BorderThickness="1"
+												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
+											<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center"/>
+											</StackPanel>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
@@ -442,14 +440,20 @@
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 								<ComboBox x:Name="Passe2Box"
-										  ItemsSource="{Binding GefilterdePasse2Varianten}"
-										  SelectedItem="{Binding SelectedRegelPasse2, Mode=TwoWay}"
+										  ItemsSource="{Binding Passe2VariantLijst}"
+										  SelectedItem="{Binding SelectedRegelPasse2Variant, Mode=TwoWay}"
 										  MinWidth="200"
 										  PlaceholderText="Variant..."
 										  IsVisible="{Binding SelectedPasse2Naam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
 									<ComboBox.ItemTemplate>
-										<DataTemplate x:DataType="m:AfwerkingsOptie">
-											<TextBlock Text="{Binding Kleur}" />
+										<DataTemplate x:DataType="m:AfwerkingsVariant">
+											<StackPanel Orientation="Horizontal" Spacing="8">
+												<Border Width="14" Height="14" CornerRadius="3"
+												        VerticalAlignment="Center"
+												        BorderBrush="#999" BorderThickness="1"
+												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
+											<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center"/>
+											</StackPanel>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
@@ -475,14 +479,20 @@
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 								<ComboBox x:Name="DiepteBox"
-										  ItemsSource="{Binding GefilterdeDiepteVarianten}"
-										  SelectedItem="{Binding SelectedRegelDiepte, Mode=TwoWay}"
+										  ItemsSource="{Binding DiepteVariantLijst}"
+										  SelectedItem="{Binding SelectedRegelDiepteVariant, Mode=TwoWay}"
 										  MinWidth="200"
 										  PlaceholderText="Variant..."
 										  IsVisible="{Binding SelectedDiepteNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
 									<ComboBox.ItemTemplate>
-										<DataTemplate x:DataType="m:AfwerkingsOptie">
-											<TextBlock Text="{Binding Kleur}" />
+										<DataTemplate x:DataType="m:AfwerkingsVariant">
+											<StackPanel Orientation="Horizontal" Spacing="8">
+												<Border Width="14" Height="14" CornerRadius="3"
+												        VerticalAlignment="Center"
+												        BorderBrush="#999" BorderThickness="1"
+												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
+											<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center"/>
+											</StackPanel>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
@@ -509,14 +519,20 @@
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 								<ComboBox x:Name="OpklevenBox"
-										  ItemsSource="{Binding GefilterdeOpklevenVarianten}"
-										  SelectedItem="{Binding SelectedRegelOpkleven, Mode=TwoWay}"
+										  ItemsSource="{Binding OpklevenVariantLijst}"
+										  SelectedItem="{Binding SelectedRegelOpklevenVariant, Mode=TwoWay}"
 										  MinWidth="200"
 										  PlaceholderText="Variant..."
 										  IsVisible="{Binding SelectedOpklevenNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
 									<ComboBox.ItemTemplate>
-										<DataTemplate x:DataType="m:AfwerkingsOptie">
-											<TextBlock Text="{Binding Kleur}" />
+										<DataTemplate x:DataType="m:AfwerkingsVariant">
+											<StackPanel Orientation="Horizontal" Spacing="8">
+												<Border Width="14" Height="14" CornerRadius="3"
+												        VerticalAlignment="Center"
+												        BorderBrush="#999" BorderThickness="1"
+												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
+											<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center"/>
+											</StackPanel>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
@@ -541,14 +557,20 @@
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 								<ComboBox x:Name="RugBox"
-										  ItemsSource="{Binding GefilterdeRugVarianten}"
-										  SelectedItem="{Binding SelectedRegelRug, Mode=TwoWay}"
+										  ItemsSource="{Binding RugVariantLijst}"
+										  SelectedItem="{Binding SelectedRegelRugVariant, Mode=TwoWay}"
 										  MinWidth="200"
 										  PlaceholderText="Variant..."
 										  IsVisible="{Binding SelectedRugNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
 									<ComboBox.ItemTemplate>
-										<DataTemplate x:DataType="m:AfwerkingsOptie">
-											<TextBlock Text="{Binding Kleur}" />
+										<DataTemplate x:DataType="m:AfwerkingsVariant">
+											<StackPanel Orientation="Horizontal" Spacing="8">
+												<Border Width="14" Height="14" CornerRadius="3"
+												        VerticalAlignment="Center"
+												        BorderBrush="#999" BorderThickness="1"
+												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
+											<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center"/>
+											</StackPanel>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
@@ -608,10 +630,13 @@
 
 								<!-- VOORSCHOT -->
 								<TextBlock Grid.Row="2" Grid.Column="0" Text="Voorschot betaald"/>
-								<TextBox Grid.Row="2"
+								<NumericUpDown Grid.Row="2"
 										 Grid.Column="1"
+										 Minimum="0"
+										 Increment="5"
+										 FormatString="'€ '0.00"
 										 Watermark="Bedrag"
-										 Text="{Binding VoorschotBedragInput, Mode=TwoWay}"/>
+										 Value="{Binding VoorschotBedragInput, Mode=TwoWay}"/>
 
 							</Grid>
 
@@ -720,7 +745,7 @@
 							   Text="{Binding OfferteVoorschot, StringFormat=- € {0:N2}}"
 							   Foreground="#27AE60"
 							   FontWeight="Bold"
-							   HorizontalAlignment="Right"
+										   HorizontalAlignment="Right"
 							   IsVisible="{Binding HeeftVoorschot}"/>
 
 					<TextBlock Grid.Row="4"

@@ -44,6 +44,12 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.DiepteKern)
             .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.Opkleven)
             .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.Rug)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.GlasVariant)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.PassePartout1Variant)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.PassePartout2Variant)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.DiepteKernVariant)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.OpklevenVariant)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.RugVariant)
             .FirstOrDefaultAsync(w => w.Id == werkBonId);
 
         if (werkbon is null)
@@ -185,17 +191,17 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
 
             // Afwerkingen (tagged) — Naam + kleurvariant indien relevant
             if (r.Glas is not null)
-                segments.Add($"glas:{AfwLabel(r.Glas)}");
+                segments.Add($"glas:{AfwLabel(r.Glas, r.GlasVariant)}");
             if (r.PassePartout1 is not null)
-                segments.Add($"pp1:{AfwLabel(r.PassePartout1)}");
+                segments.Add($"pp1:{AfwLabel(r.PassePartout1, r.PassePartout1Variant)}");
             if (r.PassePartout2 is not null)
-                segments.Add($"pp2:{AfwLabel(r.PassePartout2)}");
+                segments.Add($"pp2:{AfwLabel(r.PassePartout2, r.PassePartout2Variant)}");
             if (r.DiepteKern is not null)
-                segments.Add($"diepte:{AfwLabel(r.DiepteKern)}");
+                segments.Add($"diepte:{AfwLabel(r.DiepteKern, r.DiepteKernVariant)}");
             if (r.Opkleven is not null)
-                segments.Add($"opkleven:{AfwLabel(r.Opkleven)}");
+                segments.Add($"opkleven:{AfwLabel(r.Opkleven, r.OpklevenVariant)}");
             if (r.Rug is not null)
-                segments.Add($"rug:{AfwLabel(r.Rug)}");
+                segments.Add($"rug:{AfwLabel(r.Rug, r.RugVariant)}");
 
             // TypeLijst opmerking (tagged)
             if (!string.IsNullOrWhiteSpace(r.TypeLijst?.Opmerking))
@@ -230,12 +236,15 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
     }
 
     /// <summary>
-    /// Formatteert een afwerkingsoptie als leesbaar label.
-    /// Voegt de kleurvariant toe als die niet "Standaard" is.
-    /// Voorbeeld: "Mat Glas (Brons)"
+    /// Formatteert een afwerkingsoptie + gekozen variant als leesbaar label.
+    /// Met variant: "Mat Glas — Brons". Zonder variant: "Mat Glas (Kleur)" of "Mat Glas".
     /// </summary>
-    private static string AfwLabel(AfwerkingsOptie o)
+    private static string AfwLabel(AfwerkingsOptie o, AfwerkingsVariant? variant = null)
     {
+        var bs = variant?.Beschrijving?.Trim();
+        if (!string.IsNullOrEmpty(bs) && !bs.Equals("Standaard", StringComparison.OrdinalIgnoreCase))
+            return $"{o.Naam} — {bs}";
+
         var kleur = o.Kleur?.Trim();
         return string.IsNullOrEmpty(kleur) || kleur.Equals("Standaard", StringComparison.OrdinalIgnoreCase)
             ? o.Naam
@@ -277,20 +286,26 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         var brutoExcl = Math.Round(factuur.Lijnen.Sum(l => l.TotaalExcl), 2);
         var brutoBtw = Math.Round(factuur.Lijnen.Sum(l => l.TotaalBtw), 2);
 
-        // US-23: pas de offerte-korting (KortingPct) toe op de bestelbon-totalen.
-        // De korting wordt proportioneel verrekend op BTW zodat gemengde tarieven
-        // en BTW-vrijstelling correct blijven. KortingBedragExcl wordt bewaard voor de PDF.
+        // US-28: korting wordt berekend op het incl.-BTW-bedrag (brutoIncl).
+        // KortingBedragExcl slaat het incl.-kortingbedrag op voor weergave op de PDF.
+        // De effectieve BTW-factor wordt afgeleid van de lijnen zodat geen aparte
+        // BtwPercent-kolom nodig is op Factuur — werkt ook correct bij gemengde tarieven
+        // en BTW-vrijstelling (btwFactor = 0 → TotaalExclBtw = TotaalInclBtw).
         if (factuur.KortingPct > 0m && brutoExcl > 0m)
         {
-            var kortingExcl = Math.Round(brutoExcl * (factuur.KortingPct / 100m), 2);
-            if (kortingExcl > brutoExcl) kortingExcl = brutoExcl;
+            var brutoIncl = Math.Round(brutoExcl + brutoBtw, 2);
+            var kortingIncl = Math.Round(brutoIncl * (factuur.KortingPct / 100m), 2);
+            if (kortingIncl > brutoIncl) kortingIncl = brutoIncl;
 
-            var nettoFactor = (brutoExcl - kortingExcl) / brutoExcl;
+            // Gewogen gemiddelde BTW-factor over alle lijnen.
+            var btwFactor = brutoExcl > 0m ? brutoBtw / brutoExcl : 0m;
 
-            factuur.KortingBedragExcl = kortingExcl;
-            factuur.TotaalExclBtw = Math.Round(brutoExcl - kortingExcl, 2);
-            factuur.TotaalBtw = Math.Round(brutoBtw * nettoFactor, 2);
-            factuur.TotaalInclBtw = Math.Round(factuur.TotaalExclBtw + factuur.TotaalBtw, 2);
+            factuur.KortingBedragExcl = kortingIncl;            // incl.-bedrag bewaard voor PDF (US-28)
+            factuur.TotaalInclBtw     = Math.Round(brutoIncl - kortingIncl, 2);
+            factuur.TotaalExclBtw     = btwFactor > 0m
+                ? Math.Round(factuur.TotaalInclBtw / (1m + btwFactor), 2)
+                : factuur.TotaalInclBtw;
+            factuur.TotaalBtw         = factuur.TotaalInclBtw - factuur.TotaalExclBtw;
         }
         else
         {
@@ -309,7 +324,8 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         if (klant is null) return null;
         var line1 = string.Join(" ", new[] { klant.Straat, klant.Nummer }.Where(x => !string.IsNullOrWhiteSpace(x)));
         var line2 = string.Join(" ", new[] { klant.Postcode, klant.Gemeente }.Where(x => !string.IsNullOrWhiteSpace(x)));
-        return string.Join(", ", new[] { line1, line2 }.Where(x => !string.IsNullOrWhiteSpace(x)));
+        // Postcode + gemeente op een nieuwe regel onder de straat.
+        return string.Join("\n", new[] { line1, line2 }.Where(x => !string.IsNullOrWhiteSpace(x)));
     }
 
     private static async Task<decimal> LeesBtwPctAsync(AppDbContext db)
@@ -335,6 +351,12 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             .Include(o => o.Regels).ThenInclude(r => r.DiepteKern)
             .Include(o => o.Regels).ThenInclude(r => r.Opkleven)
             .Include(o => o.Regels).ThenInclude(r => r.Rug)
+            .Include(o => o.Regels).ThenInclude(r => r.GlasVariant)
+            .Include(o => o.Regels).ThenInclude(r => r.PassePartout1Variant)
+            .Include(o => o.Regels).ThenInclude(r => r.PassePartout2Variant)
+            .Include(o => o.Regels).ThenInclude(r => r.DiepteKernVariant)
+            .Include(o => o.Regels).ThenInclude(r => r.OpklevenVariant)
+            .Include(o => o.Regels).ThenInclude(r => r.RugVariant)
             .FirstOrDefaultAsync(o => o.Id == offerteId);
 
         return offerte ?? throw new InvalidOperationException("Offerte niet gevonden.");
@@ -362,8 +384,8 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
                 changed = true;
             }
 
-            // Sync planning dates from offerte so the PDF always reflects the
-            // latest AfhaalDatum/GeplandeDatum even if bestelbon was created earlier.
+            // Sync planning dates and voorschot from offerte so the PDF always reflects
+            // the latest values even if the bestelbon was created earlier.
             if (existing.GeplandeDatum != offerte.GeplandeDatum)
             {
                 existing.GeplandeDatum = offerte.GeplandeDatum;
@@ -372,6 +394,11 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             if (existing.AfhaalDatum != offerte.AfhaalDatum)
             {
                 existing.AfhaalDatum = offerte.AfhaalDatum;
+                changed = true;
+            }
+            if (existing.VoorschotBedrag != offerte.VoorschotBedrag)
+            {
+                existing.VoorschotBedrag = offerte.VoorschotBedrag;
                 changed = true;
             }
 

@@ -405,7 +405,7 @@
 							<!-- ══ DAG DETAILS ══ -->
 							<StackPanel Spacing="2" Margin="0,0,0,12">
 								<TextBlock Text="DAG DETAILS" Classes="SectionLabel"/>
-								<TextBlock Text="{Binding SelectedDate, StringFormat='{}{0:dddd dd MMMM yyyy}'}"
+								<TextBlock Text="{Binding SelectedDateLang}"
 										   FontSize="18"
 										   FontWeight="Bold"
 										   Margin="0,4,0,0"/>

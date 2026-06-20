@@ -63,7 +63,13 @@ public partial class LeveranciersViewModel : AsyncViewModelBase, IAsyncInitializ
         OnPropertyChanged(nameof(BestelVormIsVerstek));
         OnPropertyChanged(nameof(BestelVormIsInLengte));
         OnPropertyChanged(nameof(BestelVormIsGemonteerd));
+        OnPropertyChanged(nameof(NieuweBestelEenheid));
+        OnPropertyChanged(nameof(NieuweBestelAantalLabel));
     }
+
+    // Eenheid voor de nieuwe bestelling: Gemonteerd → stuks, anders meter.
+    public string NieuweBestelEenheid => NieuweBestelVorm == BestelVorm.Gemonteerd ? "stuks" : "meter";
+    public string NieuweBestelAantalLabel => $"Aantal ({NieuweBestelEenheid})";
 
     [ObservableProperty] private int leveranciersCurrentPage = 1;
     [ObservableProperty] private int leveranciersPageSize = 10;
@@ -520,7 +526,7 @@ public partial class LeveranciersViewModel : AsyncViewModelBase, IAsyncInitializ
 
         if (!NieuwBestelAantalMeter.HasValue || NieuwBestelAantalMeter.Value <= 0m)
         {
-            _toast.Error("Aantal meter moet groter zijn dan 0.");
+            _toast.Error($"Aantal {NieuweBestelEenheid} moet groter zijn dan 0.");
             return;
         }
 

@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="QuadroApp.Views.Controls.QuadroHeader"
+             x:Name="Root"
+             x:CompileBindings="False">
+
+    <!-- Herbruikbare Quadro-header: donkere balk met links het logo + QUADRO +
+         de view-titel, en rechts (verticaal gecentreerd) een optionele Terug-knop. -->
+    <Border Background="#444A50" Height="70">
+        <DockPanel Margin="20,0" LastChildFill="True">
+
+            <Button DockPanel.Dock="Right"
+                    Content="⬅ Terug"
+                    Command="{Binding BackCommand, ElementName=Root}"
+                    IsVisible="{Binding ShowBackButton, ElementName=Root}"
+                    VerticalAlignment="Center"
+                    Background="#F5C242"
+                    Foreground="#222"
+                    FontWeight="Bold"
+                    CornerRadius="8"
+                    Padding="12,6"/>
+
+            <StackPanel Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Left"
+                        Spacing="12">
+
+                <Ellipse Width="35" Height="35" Fill="#F5C242"/>
+
+                <TextBlock Text="QUADRO"
+                           Foreground="White"
+                           FontWeight="Bold"
+                           FontSize="20"
+                           VerticalAlignment="Center"/>
+
+                <TextBlock Text="{Binding Title, ElementName=Root}"
+                           Foreground="#CCC"
+                           FontSize="13"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+        </DockPanel>
+    </Border>
+</UserControl>
