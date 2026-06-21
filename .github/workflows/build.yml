@@ -100,13 +100,22 @@ jobs:
           --mainExe ${{ matrix.mainExe }}
           --channel ${{ matrix.channel }}
 
+      - name: Store notarytool credentials
+        if: matrix.rid == 'osx-arm64'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          xcrun notarytool store-credentials "QuadroNotary" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID"
+
       - name: Pack (macOS, with notarization)
         if: matrix.rid == 'osx-arm64'
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: >
           vpk pack
           --packId QuadroApp
@@ -116,9 +125,7 @@ jobs:
           --mainExe ${{ matrix.mainExe }}
           --channel ${{ matrix.channel }}
           --signAppIdentity "$APPLE_SIGNING_IDENTITY"
-          --notaryUsername "$APPLE_ID"
-          --notaryPassword "$APPLE_ID_PASSWORD"
-          --notaryTeamId "$APPLE_TEAM_ID"
+          --notaryProfile "QuadroNotary"
 
       # ── 8. Publish MigrationTool (macOS only — one-time SQLite→PG migration) ────
       #   Self-contained single-file binary so Veerle's Mac needs no .NET SDK.
