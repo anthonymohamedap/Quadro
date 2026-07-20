@@ -144,6 +144,9 @@ public partial class App : Application
         services.AddScoped<ICentralExcelExportService, CentralExcelExportService>();
         services.AddScoped<IFactuurExporter, PdfFactuurExporter>();
 
+        // US-32: authenticatie & autorisatie (singleton — CurrentUser is app-breed)
+        services.AddSingleton<IAuthService, AuthService>();
+
         // US-34: daily automatic backups (SQLite online-backup API)
         services.AddSingleton<IBackupService>(sp => new BackupService(
             connectionString,
@@ -511,6 +514,10 @@ public partial class App : Application
 
         _logger.LogInformation("[Startup] Refreshing voorraad alerts...");
         await stockService.RefreshAlertsAsync();
+
+        // US-32: standaard admin aanmaken wanneer er nog geen gebruikers zijn.
+        var auth = provider.GetRequiredService<IAuthService>();
+        await auth.SeedDefaultAdminAsync();
 
         // US-34: daily backup — runs after DB init, never blocks or crashes startup.
         var backupService = scope.ServiceProvider.GetRequiredService<IBackupService>();
