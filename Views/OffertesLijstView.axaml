@@ -7,35 +7,32 @@
     xmlns:conv="using:QuadroApp.Converters"
     x:Class="QuadroApp.Views.OffertesLijstView"
     x:DataType="vm:OffertesLijstViewModel"
-    Background="#F5F5F5">
+    Background="{DynamicResource SurfaceMuted}">
 
     <UserControl.Resources>
         <conv:JaarConverter x:Key="JaarConv"/>
     </UserControl.Resources>
 
-    <Grid RowDefinitions="Auto,*,Auto">
+    <Grid RowDefinitions="Auto,*">
 
-        <controls:QuadroHeader Grid.ColumnSpan="2" Title="OFFERTES" BackCommand="{Binding GaTerugCommand}"/>
+        <controls:QuadroHeader Title="OFFERTES" BackCommand="{Binding GaTerugCommand}"/>
 
-        <StackPanel Grid.Row="1" Margin="20" Spacing="14">
+        <!-- Star-rij zodat de lijst de resthoogte vult en zelf scrolt -->
+        <Grid Grid.Row="1" Margin="24" RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="12">
 
-            <TextBlock Text="Offertes"
-                       FontSize="24"
-                       FontWeight="Bold"
-                       Foreground="#222"
-                       Margin="0,0,0,4"/>
+            <TextBlock Text="Offertes" Classes="h1" TextTrimming="CharacterEllipsis"/>
 
-            <StackPanel Orientation="Horizontal"
-                        Spacing="10"
-                        Margin="0,0,0,10">
-                <TextBox Width="220"
+            <!-- Toolbar: wrapt op smalle vensters -->
+            <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,*" ColumnSpacing="10">
+                <TextBox MinWidth="200"
                          Watermark="Zoek offerte..."
                          Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
                 <!-- Jaar-filter -->
-                <ComboBox ItemsSource="{Binding BeschikbareJaren}"
+                <ComboBox Grid.Column="1"
+                          ItemsSource="{Binding BeschikbareJaren}"
                           SelectedItem="{Binding GeselecteerdJaar, Mode=TwoWay}"
-                          Width="110"
+                          MinWidth="100"
                           VerticalAlignment="Center">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
@@ -44,45 +41,54 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
 
-                <Button Content="&#x21BB; Vernieuwen"
-                        Command="{Binding LoadCommand}"
-                        CornerRadius="6"
-                        Padding="10,5"/>
-                <Button Content="+ Nieuw"
-                        Command="{Binding NewCommand}"
-                        Classes="MainBtn"/>
-                <Button Content="Naar archief"
-                        Command="{Binding DeleteCommand}"
-                        Background="#7B5EA7"
-                        Foreground="White"
-                        CornerRadius="6"
-                        Padding="10,5"
-                        FontWeight="SemiBold"/>
-                <Button Content="Archief bekijken"
-                        Command="{Binding OpenArchiefCommand}"
-                        Background="#37474F"
-                        Foreground="White"
-                        CornerRadius="6"
-                        Padding="10,5"
-                        FontWeight="SemiBold"/>
-            </StackPanel>
-
-            <Grid ColumnDefinitions="0.7*,2*,1.1*,1.1*,1.1*,0.9*,1.1*,1.2*,Auto"
-                  Margin="6,0,6,6">
-                <TextBlock Text="Nr."          Grid.Column="0" FontWeight="Bold" Foreground="#000"/>
-                <TextBlock Text="Klant"        Grid.Column="1" FontWeight="Bold" Foreground="#000"/>
-                <TextBlock Text="Datum"        Grid.Column="2" FontWeight="Bold" Foreground="#000"/>
-                <TextBlock Text="Gepland"      Grid.Column="3" FontWeight="Bold" Foreground="#000"/>
-                <TextBlock Text="Deadline"     Grid.Column="4" FontWeight="Bold" Foreground="#000"/>
-                <TextBlock Text="Tijd (min)"   Grid.Column="5" FontWeight="Bold" Foreground="#000"/>
-                <TextBlock Text="Status"       Grid.Column="6" FontWeight="Bold" Foreground="#000"/>
-                <TextBlock Text="Totaal incl." Grid.Column="7" FontWeight="Bold" Foreground="#000" HorizontalAlignment="Right"/>
+                <WrapPanel Grid.Column="2" VerticalAlignment="Center">
+                    <Button Content="&#x21BB; Vernieuwen"
+                            Command="{Binding LoadCommand}"
+                            CornerRadius="6"
+                            Padding="10,5"
+                            Margin="0,0,8,6"/>
+                    <Button Content="+ Nieuw"
+                            Command="{Binding NewCommand}"
+                            Classes="MainBtn"
+                            Margin="0,0,8,6"/>
+                    <Button Content="Naar archief"
+                            Command="{Binding DeleteCommand}"
+                            Background="{DynamicResource StatPurpleText}"
+                            Foreground="{DynamicResource TextOnDark}"
+                            CornerRadius="6"
+                            Padding="10,5"
+                            FontWeight="SemiBold"
+                            Margin="0,0,8,6"/>
+                    <Button Content="Archief bekijken"
+                            Command="{Binding OpenArchiefCommand}"
+                            Background="{DynamicResource BrandDark}"
+                            Foreground="{DynamicResource TextOnDark}"
+                            CornerRadius="6"
+                            Padding="10,5"
+                            FontWeight="SemiBold"
+                            Margin="0,0,0,6"/>
+                </WrapPanel>
             </Grid>
 
-            <Border BorderBrush="#DDD"
+            <Grid Grid.Row="2"
+                  ColumnDefinitions="0.7*,2*,1.1*,1.1*,1.1*,0.9*,1.1*,1.2*,Auto"
+                  ColumnSpacing="8"
+                  Margin="16,0,16,0">
+                <TextBlock Text="Nr."          Grid.Column="0" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="Klant"        Grid.Column="1" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="Datum"        Grid.Column="2" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="Gepland"      Grid.Column="3" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="Deadline"     Grid.Column="4" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="Tijd (min)"   Grid.Column="5" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="Status"       Grid.Column="6" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="Totaal incl." Grid.Column="7" Classes="label" Foreground="{DynamicResource TextHeading}" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
+            </Grid>
+
+            <Border Grid.Row="3"
+                    BorderBrush="{DynamicResource BorderSubtle}"
                     BorderThickness="1"
                     CornerRadius="8"
-                    Background="White">
+                    Background="{DynamicResource Surface}">
 
                 <ListBox x:Name="OffertesList"
                          ItemsSource="{Binding FilteredOffertes}"
@@ -100,17 +106,23 @@
 
                                 <TextBlock Grid.Column="0"
                                            Text="{Binding Id}"
-                                           Foreground="#222"
-                                           FontSize="15"
-                                           FontWeight="Bold"
+                                           Classes="h3"
                                            VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis"/>
 
                                 <StackPanel Grid.Column="1">
-                                    <TextBlock Foreground="#222"
-                                               FontSize="15"
-                                               FontWeight="Bold"
+                                    <TextBlock Classes="h3"
                                                TextTrimming="CharacterEllipsis">
+                                        <ToolTip.Tip>
+                                            <TextBlock>
+                                                <TextBlock.Text>
+                                                    <MultiBinding StringFormat="{}{0} {1}">
+                                                        <Binding Path="Klant.Voornaam"/>
+                                                        <Binding Path="Klant.Achternaam"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </ToolTip.Tip>
                                         <TextBlock.Text>
                                             <MultiBinding StringFormat="{}{0} {1}">
                                                 <Binding Path="Klant.Voornaam"/>
@@ -118,45 +130,47 @@
                                             </MultiBinding>
                                         </TextBlock.Text>
                                     </TextBlock>
-                                    <TextBlock Foreground="#666"
-                                               FontSize="13"
+                                    <TextBlock Classes="body"
+                                               Foreground="{DynamicResource TextSecondary}"
                                                TextTrimming="CharacterEllipsis"
+                                               ToolTip.Tip="{Binding Klant.Email}"
                                                Text="{Binding Klant.Email}"/>
                                 </StackPanel>
 
                                 <TextBlock Grid.Column="2"
                                            Text="{Binding Datum, StringFormat='{}{0:dd/MM/yyyy}'}"
-                                           Foreground="#333"
+                                           Foreground="{DynamicResource TextPrimary}"
                                            VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis"/>
 
                                 <TextBlock Grid.Column="3"
                                            Text="{Binding GeplandeDatum, StringFormat='{}{0:dd/MM}'}"
-                                           Foreground="#333"
+                                           Foreground="{DynamicResource TextPrimary}"
                                            VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis"/>
 
                                 <TextBlock Grid.Column="4"
                                            Text="{Binding DeadlineDatum, StringFormat='{}{0:dd/MM}'}"
-                                           Foreground="#333"
+                                           Foreground="{DynamicResource TextPrimary}"
                                            VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis"/>
 
                                 <TextBlock Grid.Column="5"
                                            Text="{Binding GeschatteMinuten}"
-                                           Foreground="#333"
+                                           Foreground="{DynamicResource TextPrimary}"
                                            VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis"/>
 
                                 <TextBlock Grid.Column="6"
                                            Text="{Binding Status}"
-                                           Foreground="#333"
+                                           Foreground="{DynamicResource TextPrimary}"
                                            VerticalAlignment="Center"
-                                           TextTrimming="CharacterEllipsis"/>
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip.Tip="{Binding Status}"/>
 
                                 <TextBlock Grid.Column="7"
                                            Text="{Binding TotaalInclBtw, StringFormat='€ {0:0.00}'}"
-                                           Foreground="#333"
+                                           Foreground="{DynamicResource TextPrimary}"
                                            VerticalAlignment="Center"
                                            HorizontalAlignment="Right"
                                            TextTrimming="CharacterEllipsis"/>
@@ -167,15 +181,11 @@
                 </ListBox>
             </Border>
 
-            <TextBlock Text="{Binding FilteredOffertes.Count, StringFormat='Aantal offertes: {0}'}"
+            <TextBlock Grid.Row="4"
+                       Text="{Binding FilteredOffertes.Count, StringFormat='Aantal offertes: {0}'}"
                        HorizontalAlignment="Center"
-                       Foreground="#666"
-                       Margin="0,6,0,0"/>
-        </StackPanel>
-
-        <Border Grid.Row="2" Background="#F5F5F5" Padding="8">
-            <TextBlock Text=" " />
-        </Border>
+                       Classes="caption"/>
+        </Grid>
 
     </Grid>
 
