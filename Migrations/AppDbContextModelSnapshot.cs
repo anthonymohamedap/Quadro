@@ -133,6 +133,48 @@ namespace QuadroApp.Migrations
                     b.ToTable("AfwerkingsVarianten");
                 });
 
+            modelBuilder.Entity("QuadroApp.Model.DB.AuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actie")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntiteitId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntiteitType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Gebruiker")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Tijdstip")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Wijzigingen")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Tijdstip");
+
+                    b.HasIndex("EntiteitType", "EntiteitId");
+
+                    b.ToTable("AuditLogs");
+                });
+
             modelBuilder.Entity("QuadroApp.Model.DB.Factuur", b =>
                 {
                     b.Property<int>("Id")
