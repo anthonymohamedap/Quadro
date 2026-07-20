@@ -5,19 +5,19 @@
         x:DataType="m:Klant"
         Width="460"
         Height="620"
-        CanResize="False"
+        MinWidth="400"
+        MinHeight="460"
+        CanResize="True"
         Title="Klantgegevens"
-        Background="#F5F5F5">
+        Background="{DynamicResource SurfaceMuted}">
 
-	<Border BorderBrush="#DDD" BorderThickness="1" CornerRadius="10" Background="White" Margin="10">
-		<ScrollViewer>
-			<StackPanel Margin="20" Spacing="10">
+	<Border BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="10" Background="{DynamicResource Surface}" Margin="12">
+		<ScrollViewer VerticalScrollBarVisibility="Auto">
+			<StackPanel Margin="16" Spacing="8">
 
 				<TextBlock Text="Klantgegevens"
-						   FontSize="22"
-						   FontWeight="Bold"
-						   Foreground="#222"
-						   Margin="0,0,0,10"/>
+						   Classes="h1"
+						   Margin="0,0,0,12"/>
 
 				<TextBox Watermark="Voornaam"   Text="{Binding Voornaam, Mode=TwoWay}"/>
 				<TextBox Watermark="Achternaam" Text="{Binding Achternaam, Mode=TwoWay}"/>
@@ -39,21 +39,21 @@
 						 MinHeight="90"/>
 
 				<StackPanel Orientation="Horizontal"
-							Spacing="10"
-							Margin="0,20,0,0"
+							Spacing="8"
+							Margin="0,16,0,0"
 							HorizontalAlignment="Right">
 
 					<Button Content="Annuleren"
-							Width="110"
-							Background="#DDD"
-							Foreground="#333"
+							MinWidth="110"
+							Background="{DynamicResource BorderSubtle}"
+							Foreground="{DynamicResource TextPrimary}"
 							CornerRadius="8"
 							Click="Annuleren_Click"/>
 
 					<Button Content="Opslaan"
-							Width="110"
-							Background="#444A50"
-							Foreground="White"
+							MinWidth="110"
+							Background="{DynamicResource BrandDark}"
+							Foreground="{DynamicResource TextOnDark}"
 							FontWeight="Bold"
 							CornerRadius="8"
 							Click="Opslaan_Click"/>

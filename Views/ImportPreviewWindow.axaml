@@ -5,39 +5,41 @@
         x:Class="QuadroApp.Views.ImportPreviewWindow"
         x:DataType="vm:ImportPreviewViewModel"
         Width="1100" Height="700"
+        MinWidth="800" MinHeight="520"
+        CanResize="True"
         Title="Importvoorbeeld">
 
   <Window.Styles>
     <Style Selector="TextBlock">
-      <Setter Property="Foreground" Value="Black"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
     </Style>
   </Window.Styles>
 
   <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="2*,1*" Margin="12">
 
     <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Spacing="6">
-      <TextBlock Text="Voorbeeld van Excel-import" FontSize="20" FontWeight="Bold"/>
-      <TextBlock Text="{Binding SummaryText}" Opacity="0.8"/>
-      <TextBlock Text="{Binding WarningText}" IsVisible="{Binding HasWarnings}"/>
+      <TextBlock Text="Voorbeeld van Excel-import" Classes="h1"/>
+      <TextBlock Text="{Binding SummaryText}" Classes="body" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+      <TextBlock Text="{Binding WarningText}" Classes="body" Foreground="{DynamicResource Warning}" TextWrapping="Wrap" IsVisible="{Binding HasWarnings}"/>
     </StackPanel>
 
-    <Border Grid.Row="1" Grid.Column="0" Margin="0,12,12,12" CornerRadius="8" BorderThickness="1" Padding="8">
+    <Border Grid.Row="1" Grid.Column="0" Margin="0,12,12,12" CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource BorderSubtle}" Padding="8">
       <ListBox ItemsSource="{Binding Rows}">
         <ListBox.ItemTemplate>
           <DataTemplate x:DataType="vm:PreviewRowItem">
-            <Border BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,0,0,8">
+            <Border BorderThickness="1" BorderBrush="{DynamicResource BorderSubtle}" CornerRadius="6" Padding="8" Margin="0,0,0,8">
               <StackPanel>
                 <DockPanel>
-                  <TextBlock DockPanel.Dock="Left" Text="{Binding Title}" FontWeight="Bold" />
-                  <TextBlock DockPanel.Dock="Right" Text="{Binding StateLabel}" FontWeight="SemiBold" />
+                  <TextBlock DockPanel.Dock="Right" Text="{Binding StateLabel}" Classes="body" FontWeight="SemiBold" Margin="8,0,0,0"/>
+                  <TextBlock Text="{Binding Title}" Classes="body" FontWeight="Bold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Title}"/>
                 </DockPanel>
                 <ItemsControl ItemsSource="{Binding Values}">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                      <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="{Binding Key, StringFormat={}{0}: }" />
-                        <TextBlock Text="{Binding Value}" />
-                      </StackPanel>
+                      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                        <TextBlock Grid.Column="0" Classes="body" Text="{Binding Key, StringFormat={}{0}: }"/>
+                        <TextBlock Grid.Column="1" Classes="body" Text="{Binding Value}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Value}"/>
+                      </Grid>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -48,25 +50,26 @@
       </ListBox>
     </Border>
 
-    <Border Grid.Row="1" Grid.Column="1" Margin="0,12,0,12" CornerRadius="8" BorderThickness="1">
-      <StackPanel>
-        <TextBlock Text="Problemen" FontSize="16" FontWeight="Bold" Margin="10,10,10,6"/>
-        <ListBox ItemsSource="{Binding Issues}" Margin="10,0,10,10">
+    <Border Grid.Row="1" Grid.Column="1" Margin="0,12,0,12" CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource BorderSubtle}">
+      <Grid RowDefinitions="Auto,*">
+        <TextBlock Grid.Row="0" Text="Problemen" Classes="h3" Margin="10,10,10,6"/>
+        <ListBox Grid.Row="1" ItemsSource="{Binding Issues}" Margin="10,0,10,10">
           <ListBox.ItemTemplate>
             <DataTemplate x:DataType="imp:ImportIssue">
               <StackPanel Margin="0,4">
-                <TextBlock Text="{Binding RowNumber, StringFormat=Rij {0}}" FontWeight="Bold"/>
-                <TextBlock Text="{Binding Message}" Opacity="0.9" TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding RowNumber, StringFormat=Rij {0}}" Classes="body" FontWeight="Bold"/>
+                <TextBlock Text="{Binding Message}" Classes="body" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
               </StackPanel>
             </DataTemplate>
           </ListBox.ItemTemplate>
         </ListBox>
-      </StackPanel>
+      </Grid>
     </Border>
 
     <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-      <Button Content="Annuleren" Command="{Binding CancelCommand}" />
+      <Button Content="Annuleren" MinWidth="100" Command="{Binding CancelCommand}" />
       <Button Content="Importeer"
+              MinWidth="110"
               Command="{Binding ConfirmCommand}"
               IsEnabled="{Binding CanConfirm}" />
     </StackPanel>
