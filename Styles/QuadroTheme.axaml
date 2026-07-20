@@ -57,7 +57,9 @@
 		<Color x:Key="WarningBgColor">#FEF3C7</Color>
 		<SolidColorBrush x:Key="Danger" Color="{StaticResource DangerColor}"/>
 		<SolidColorBrush x:Key="DangerBg" Color="{StaticResource DangerBgColor}"/>
+		<Color x:Key="SuccessBorderColor">#A7F3D0</Color>
 		<SolidColorBrush x:Key="Success" Color="{StaticResource SuccessColor}"/>
+		<SolidColorBrush x:Key="SuccessBorder" Color="{StaticResource SuccessBorderColor}"/>
 		<SolidColorBrush x:Key="SuccessBg" Color="{StaticResource SuccessBgColor}"/>
 		<SolidColorBrush x:Key="Warning" Color="{StaticResource WarningColor}"/>
 		<SolidColorBrush x:Key="WarningBg" Color="{StaticResource WarningBgColor}"/>
@@ -113,6 +115,22 @@
 		<SolidColorBrush x:Key="IconRoseBg" Color="{StaticResource IconRoseBgColor}"/>
 		<SolidColorBrush x:Key="IconSlate" Color="{StaticResource IconSlateColor}"/>
 		<SolidColorBrush x:Key="IconSlateBg" Color="{StaticResource IconSlateBgColor}"/>
+
+		<!-- Fase 3 — donker planning-thema (PlanningTijdDialog, PlanningCalendarWindow) -->
+		<Color x:Key="PlanningBgColor">#0F1117</Color>
+		<Color x:Key="PlanningSurfaceColor">#16181F</Color>
+		<Color x:Key="PlanningSurfaceAltColor">#1E2029</Color>
+		<Color x:Key="PlanningBorderColor">#2A2D38</Color>
+		<Color x:Key="PlanningTextColor">#F0F2F8</Color>
+		<Color x:Key="PlanningTextMutedColor">#9299AE</Color>
+		<Color x:Key="PlanningTextFaintColor">#5A6075</Color>
+		<SolidColorBrush x:Key="PlanningBg" Color="{StaticResource PlanningBgColor}"/>
+		<SolidColorBrush x:Key="PlanningSurface" Color="{StaticResource PlanningSurfaceColor}"/>
+		<SolidColorBrush x:Key="PlanningSurfaceAlt" Color="{StaticResource PlanningSurfaceAltColor}"/>
+		<SolidColorBrush x:Key="PlanningBorder" Color="{StaticResource PlanningBorderColor}"/>
+		<SolidColorBrush x:Key="PlanningText" Color="{StaticResource PlanningTextColor}"/>
+		<SolidColorBrush x:Key="PlanningTextMuted" Color="{StaticResource PlanningTextMutedColor}"/>
+		<SolidColorBrush x:Key="PlanningTextFaint" Color="{StaticResource PlanningTextFaintColor}"/>
 
 		<!-- Spacing-schaal 4/8/12/16/24/32 -->
 		<Thickness x:Key="SpaceXs">4</Thickness>
