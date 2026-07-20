@@ -1,8 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using QuadroApp.Service.Interfaces;
+using System;
 using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Avalonia.Threading;
 
 namespace QuadroApp.ViewModels
 {
@@ -57,17 +59,107 @@ namespace QuadroApp.ViewModels
 
         public MainWindowViewModel(
             INavigationService nav,
-            IToastService toast)
+            IToastService toast,
+            IAuthService auth)
         {
             _nav = nav;
             _toast = toast;
+            _auth = auth;
 
             GoLeveranciersCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<LeveranciersViewModel>());
+            LoginCommand = new AsyncRelayCommand(LoginAsync);
+            VergrendelCommand = new RelayCommand(Vergrendel);
 
             _nav.CurrentViewModelChanged += vm => CurrentViewModel = vm;
 
+            // US-32: auto-lock na inactiviteit (standaard 15 min)
+            _idleTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
+            _idleTimer.Tick += (_, _) =>
+            {
+                if (!IsLocked && DateTime.Now - _laatsteActiviteit > TimeSpan.FromMinutes(LockNaMinuten))
+                    Vergrendel();
+            };
+            _idleTimer.Start();
+
             _ = _nav.NavigateToAsync<HomeViewModel>();
         }
+
+        // ══════════════ US-32: login / vergrendeling ══════════════
+
+        private readonly IAuthService _auth;
+        private readonly DispatcherTimer _idleTimer;
+        private DateTime _laatsteActiviteit = DateTime.Now;
+
+        /// <summary>Auto-lock drempel in minuten.</summary>
+        public int LockNaMinuten { get; set; } = 15;
+
+        public IAsyncRelayCommand LoginCommand { get; }
+        public IRelayCommand VergrendelCommand { get; }
+
+        private bool _isLocked = true;
+        /// <summary>True zolang niemand is ingelogd — toont het login-overlay.</summary>
+        public bool IsLocked
+        {
+            get => _isLocked;
+            private set { _isLocked = value; OnPropertyChanged(); }
+        }
+
+        private string _loginGebruikersnaam = "";
+        public string LoginGebruikersnaam
+        {
+            get => _loginGebruikersnaam;
+            set { _loginGebruikersnaam = value; OnPropertyChanged(); }
+        }
+
+        private string _loginWachtwoord = "";
+        public string LoginWachtwoord
+        {
+            get => _loginWachtwoord;
+            set { _loginWachtwoord = value; OnPropertyChanged(); }
+        }
+
+        private string? _loginFout;
+        public string? LoginFout
+        {
+            get => _loginFout;
+            private set { _loginFout = value; OnPropertyChanged(); }
+        }
+
+        private string _ingelogdeGebruiker = "";
+        public string IngelogdeGebruiker
+        {
+            get => _ingelogdeGebruiker;
+            private set { _ingelogdeGebruiker = value; OnPropertyChanged(); }
+        }
+
+        private async System.Threading.Tasks.Task LoginAsync()
+        {
+            LoginFout = null;
+            var fout = await _auth.LoginAsync(LoginGebruikersnaam, LoginWachtwoord);
+            if (fout is not null)
+            {
+                LoginFout = fout;
+                return;
+            }
+
+            LoginWachtwoord = "";
+            IngelogdeGebruiker = _auth.CurrentUser?.VolledigeNaam ?? _auth.CurrentUser?.GebruikersNaam ?? "";
+            _laatsteActiviteit = DateTime.Now;
+            IsLocked = false;
+
+            if (_auth.CurrentUser?.MoetWachtwoordWijzigen == true)
+                _toast.Warning("Wijzig het standaardwachtwoord via Instellingen (verplicht bij eerste gebruik).");
+        }
+
+        private void Vergrendel()
+        {
+            _auth.Logout();
+            LoginWachtwoord = "";
+            IsLocked = true;
+        }
+
+        /// <summary>Aangeroepen vanuit MainWindow bij muis/toetsenbord-activiteit.</summary>
+        public void RegistreerActiviteit() => _laatsteActiviteit = DateTime.Now;
 
 
         public event PropertyChangedEventHandler? PropertyChanged;

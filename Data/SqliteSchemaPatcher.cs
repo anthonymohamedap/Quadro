@@ -259,16 +259,19 @@ CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
 
     /// <summary>
     /// Aligns __EFMigrationsHistory with the migrations defined in the assembly:
-    /// removes stale pre-squash entries and marks all defined migrations
-    /// (i.e. Baseline) as applied — the healer just guaranteed the schema shape.
+    /// removes stale pre-squash entries and marks ONLY the Baseline migration
+    /// as applied (the healer just guaranteed exactly that schema shape).
+    /// Migrations ná Baseline worden bewust NIET gemarkeerd — die moeten
+    /// gewoon uitgevoerd worden door MigrateAsync.
     /// </summary>
     private static async Task SyncMigrationHistoryAsync(AppDbContext db, ILogger logger)
     {
         const string historyTable = "__EFMigrationsHistory";
         var defined = db.Database.GetMigrations().ToList();
-        if (defined.Count == 0)
+        var baseline = defined.FirstOrDefault(m => m.EndsWith("_Baseline", StringComparison.Ordinal));
+        if (baseline is null)
         {
-            logger.LogWarning("[Migration] Geen migraties gevonden in de assembly — Baseline ontbreekt?");
+            logger.LogWarning("[Migration] Baseline-migratie niet gevonden in de assembly.");
             return;
         }
 
@@ -284,11 +287,8 @@ CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
         if (removed > 0)
             logger.LogInformation("[Migration] {Count} verouderde (pre-squash) history-rijen verwijderd.", removed);
 
-        foreach (var m in defined)
-        {
-            await db.Database.ExecuteSqlRawAsync(
-                $"INSERT OR IGNORE INTO \"{historyTable}\" VALUES ('{m}', '10.0.0')");
-        }
+        await db.Database.ExecuteSqlRawAsync(
+            $"INSERT OR IGNORE INTO \"{historyTable}\" VALUES ('{baseline}', '10.0.0')");
 #pragma warning restore EF1002
     }
 

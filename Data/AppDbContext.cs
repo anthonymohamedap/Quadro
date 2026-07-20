@@ -17,6 +17,7 @@ namespace QuadroApp.Data
         public DbSet<WerkTaak> WerkTaken => Set<WerkTaak>();
         public DbSet<OfferteRegel> OfferteRegels { get; set; } = default!;
         public DbSet<Instelling> Instellingen => Set<Instelling>();
+        public DbSet<Gebruiker> Gebruikers => Set<Gebruiker>();
         public DbSet<Leverancier> Leveranciers => Set<Leverancier>();
         public DbSet<LeverancierBestelling> LeverancierBestellingen => Set<LeverancierBestelling>();
         public DbSet<LeverancierBestelLijn> LeverancierBestelLijnen => Set<LeverancierBestelLijn>();
@@ -38,6 +39,9 @@ namespace QuadroApp.Data
         protected override void OnModelCreating(ModelBuilder b)
         {
             base.OnModelCreating(b);
+
+            // ── US-32: Gebruikers ────────────────────────────────────────────
+            b.Entity<Gebruiker>().HasIndex(g => g.GebruikersNaam).IsUnique();
 
             // ── Globale soft-delete query filters ────────────────────────────
             // Gebruik .IgnoreQueryFilters() als je gearchiveerde records wél nodig hebt.

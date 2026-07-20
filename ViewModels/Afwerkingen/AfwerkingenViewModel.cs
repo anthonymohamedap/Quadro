@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Import;
@@ -97,6 +97,8 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
 
 
     // ─────────────────────────────────────────────────────────────
+    private readonly IAuthService _auth;
+
     // Constructor
     // ─────────────────────────────────────────────────────────────
     public AfwerkingenViewModel(
@@ -105,9 +107,11 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
         AfwerkingsOptieImportDefinition afwerkingsImportDefinition,
         IDialogService dialogs,
         ICrudValidator<AfwerkingsOptie> validator,
-    IToastService toast)
+    IToastService toast,
+        IAuthService auth)
         : base(toast)
     {
+        _auth = auth;
         _nav = nav ?? throw new ArgumentNullException(nameof(nav));
         _service = service ?? throw new ArgumentNullException(nameof(service));
         _afwerkingsImportDefinition = afwerkingsImportDefinition ?? throw new ArgumentNullException(nameof(afwerkingsImportDefinition));
@@ -390,6 +394,14 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
             if (SelectedOptie is null)
             {
                 _toast.Warning("Selecteer eerst een afwerkingsoptie.");
+                return;
+            }
+
+            // US-32: prijzen wijzigen is rol-afhankelijk
+            if (!_auth.HeeftPermissie(QuadroApp.Service.Security.Permissie.PrijzenWijzigen))
+            {
+                _toast.Warning("Onvoldoende rechten om prijzen te wijzigen.");
+                Status = "Geen rechten";
                 return;
             }
 
