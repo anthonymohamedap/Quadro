@@ -107,6 +107,10 @@
 		<Setter Property="FontSize" Value="12"/>
 		<Setter Property="FontWeight" Value="Medium"/>
 	</Style>
+	<!-- Icon-glyphs (emoji) — vaste maten toegestaan als icoon -->
+	<Style Selector="TextBlock.iconLarge">
+		<Setter Property="FontSize" Value="36"/>
+	</Style>
 
 	<!-- ============================================================= -->
 	<!-- HERBRUIKBARE LAYOUT-STIJLEN (fase 0)                          -->
