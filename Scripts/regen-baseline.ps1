@@ -5,6 +5,27 @@ param()
 
 $ErrorActionPreference = "Stop"
 
+# Locate dotnet: PATH first, then common install locations (same as verify.ps1)
+if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
+    $candidates = @(
+        "$env:ProgramFiles\dotnet\dotnet.exe",
+        "$env:LocalAppData\Microsoft\dotnet\dotnet.exe",
+        "$env:USERPROFILE\.dotnet\dotnet.exe"
+    )
+    $found = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if ($found) {
+        $env:PATH = (Split-Path $found) + ";" + $env:PATH
+        Write-Host "Using dotnet at $found" -ForegroundColor Yellow
+    } else {
+        Write-Host ".NET SDK niet gevonden. Installeer met: winget install Microsoft.DotNet.SDK.10" -ForegroundColor Red
+        exit 1
+    }
+}
+# Global tools (dotnet-ef) live here; ensure it is on PATH too
+if (Test-Path "$env:USERPROFILE\.dotnet\tools") {
+    $env:PATH = "$env:USERPROFILE\.dotnet\tools;" + $env:PATH
+}
+
 # dotnet-ef beschikbaar?
 $ef = dotnet tool list --global | Select-String "dotnet-ef"
 if (-not $ef) {
