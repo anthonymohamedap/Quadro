@@ -4,11 +4,11 @@
              xmlns:m="using:QuadroApp.Model.DB"
              x:Class="QuadroApp.Views.HomeView"
              x:DataType="vm:HomeViewModel"
-             Background="#F7F8FA">
+             Background="{DynamicResource SurfaceMutedAlt}">
 
     <Grid ColumnDefinitions="260,*">
 
-        <Border Background="#3F464C">
+        <Border Background="{DynamicResource BrandDark}">
             <Grid RowDefinitions="Auto,*,Auto" Margin="16">
                 <StackPanel Spacing="16" Margin="0,8,0,24">
                     <StackPanel Orientation="Horizontal" Spacing="12">
@@ -18,7 +18,8 @@
                     </StackPanel>
                 </StackPanel>
 
-                <StackPanel Grid.Row="1" Spacing="8">
+                <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="8">
 					<Button Command="{Binding OpenKlantenCommand}" Classes="NavButton">
 						<StackPanel Orientation="Horizontal" Spacing="8">
 							<Path Data="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"
@@ -99,13 +100,15 @@
 						</StackPanel>
 					</Button>
                 </StackPanel>
+                </ScrollViewer>
 
                 <StackPanel Grid.Row="2" Spacing="12">
                   
 
                     <TextBlock Text="© 2025 QuadroApp - Anthony Mohamed"
-                               Foreground="#9CA3AF"
-                               FontSize="12"
+                               Classes="label"
+                               Foreground="{DynamicResource TextMutedOnDark}"
+                               TextTrimming="CharacterEllipsis"
                                HorizontalAlignment="Center"/>
                 </StackPanel>
             </Grid>
@@ -115,41 +118,40 @@
             <StackPanel Margin="32" Spacing="24">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Welkom terug"
-                               FontSize="24"
-                               FontWeight="Bold"
-                               Foreground="#1F2933"/>
+                               Classes="h1"/>
 
                     <TextBlock Text="Start snel of bekijk de huidige status van je atelier."
-                               FontSize="14"
-                               Foreground="#5F6C7B"/>
+                               Classes="body"
+                               Foreground="{DynamicResource TextSecondary}"
+                               TextWrapping="Wrap"/>
                 </StackPanel>
 
-				<Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="12" Padding="18">
+				<Border Classes="Card">
 					<StackPanel Spacing="12">
-						<TextBlock Text="Voorraadoverzicht" FontSize="18" FontWeight="Bold" Foreground="Black"/>
+						<TextBlock Text="Voorraadoverzicht" Classes="h2"/>
 						<Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="10">
-							<Border Grid.Column="0" Background="#FFF7ED" CornerRadius="8" Padding="12">
+							<Border Grid.Column="0" Background="{DynamicResource StatOrangeBg}" CornerRadius="8" Padding="12">
 								<StackPanel>
-									<TextBlock Text="Open waarschuwingen" Foreground="#7C2D12"/>
-									<TextBlock Text="{Binding OpenAlertCount}" FontSize="22" FontWeight="Bold" Foreground="Black"/>
+									<TextBlock Text="Open waarschuwingen" Foreground="{DynamicResource StatOrangeText}" TextWrapping="Wrap"/>
+									<TextBlock Text="{Binding OpenAlertCount}" Classes="h1"/>
 								</StackPanel>
 							</Border>
-							<Border Grid.Column="1" Background="#FEF2F2" CornerRadius="8" Padding="12">
+							<Border Grid.Column="1" Background="{DynamicResource StatRedBg}" CornerRadius="8" Padding="12">
 								<StackPanel>
-									<TextBlock Text="Lage voorraad" Foreground="#991B1B"/>
-									<TextBlock Text="{Binding LowStockCount}" FontSize="22" FontWeight="Bold" Foreground="Black"/>
+									<TextBlock Text="Lage voorraad" Foreground="{DynamicResource StatRedText}" TextWrapping="Wrap"/>
+									<TextBlock Text="{Binding LowStockCount}" Classes="h1"/>
 								</StackPanel>
 							</Border>
-							<Border Grid.Column="2" Background="#EFF6FF" CornerRadius="8" Padding="12">
+							<Border Grid.Column="2" Background="{DynamicResource StatBlueBg}" CornerRadius="8" Padding="12">
 								<StackPanel>
-									<TextBlock Text="Open tekorten" Foreground="#1D4ED8"/>
-									<TextBlock Text="{Binding OpenShortageCount}" FontSize="22" FontWeight="Bold" Foreground="Black"/>
+									<TextBlock Text="Open tekorten" Foreground="{DynamicResource StatBlueText}" TextWrapping="Wrap"/>
+									<TextBlock Text="{Binding OpenShortageCount}" Classes="h1"/>
 								</StackPanel>
 							</Border>
-							<Border Grid.Column="3" Background="#FDF4FF" CornerRadius="8" Padding="12">
+							<Border Grid.Column="3" Background="{DynamicResource StatPurpleBg}" CornerRadius="8" Padding="12">
 								<StackPanel>
-									<TextBlock Text="Te late bestellingen" Foreground="#7E22CE"/>
-									<TextBlock Text="{Binding OverdueOrderCount}" FontSize="22" FontWeight="Bold" Foreground="Black"/>
+									<TextBlock Text="Te late bestellingen" Foreground="{DynamicResource StatPurpleText}" TextWrapping="Wrap"/>
+									<TextBlock Text="{Binding OverdueOrderCount}" Classes="h1"/>
 								</StackPanel>
 							</Border>
 						</Grid>
@@ -157,10 +159,10 @@
 						<ItemsControl ItemsSource="{Binding OpenAlerts}">
 							<ItemsControl.ItemTemplate>
 								<DataTemplate x:DataType="m:VoorraadAlert">
-									<Border Background="#F9FAFB" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
+									<Border Background="{DynamicResource SurfaceMutedAlt}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
 										<StackPanel Spacing="3">
-											<TextBlock Text="{Binding AlertType}" FontWeight="SemiBold" Foreground="Black"/>
-											<TextBlock Text="{Binding Bericht}" Foreground="Black" TextWrapping="Wrap"/>
+											<TextBlock Text="{Binding AlertType}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding AlertType}"/>
+											<TextBlock Text="{Binding Bericht}" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap"/>
 										</StackPanel>
 									</Border>
 								</DataTemplate>
@@ -174,14 +176,14 @@
 					<!-- Prijsberekening -->
 					<Button Classes="CardButton" Command="{Binding OpenOffertesLijstCommand}">
 						<StackPanel Spacing="10">
-							<Border Background="#EEF4FF" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+							<Border Background="{DynamicResource IconBlueBg}" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
 								<Path Data="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"
-									  Fill="#3B82F6" Width="20" Height="20" Stretch="Uniform"
+									  Fill="{DynamicResource IconBlue}" Width="20" Height="20" Stretch="Uniform"
 									  HorizontalAlignment="Center" VerticalAlignment="Center"/>
 							</Border>
 							<StackPanel Spacing="3">
-								<TextBlock Text="Prijsberekening" FontSize="15" Foreground="Black" FontWeight="SemiBold"/>
-								<TextBlock Text="Maak of bewerk offertes" FontSize="12" Foreground="#5F6C7B"/>
+								<TextBlock Text="Prijsberekening" Classes="h3" TextTrimming="CharacterEllipsis"/>
+								<TextBlock Text="Maak of bewerk offertes" Classes="label" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
 							</StackPanel>
 						</StackPanel>
 					</Button>
@@ -189,14 +191,14 @@
 					<!-- Klanten -->
 					<Button Classes="CardButton" Command="{Binding OpenKlantenCommand}">
 						<StackPanel Spacing="10">
-							<Border Background="#F0FDF4" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+							<Border Background="{DynamicResource IconGreenBg}" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
 								<Path Data="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"
-									  Fill="#22C55E" Width="20" Height="20" Stretch="Uniform"
+									  Fill="{DynamicResource IconGreen}" Width="20" Height="20" Stretch="Uniform"
 									  HorizontalAlignment="Center" VerticalAlignment="Center"/>
 							</Border>
 							<StackPanel Spacing="3">
-								<TextBlock Text="Klanten" FontSize="15" Foreground="Black" FontWeight="SemiBold"/>
-								<TextBlock Text="Beheer klantgegevens" FontSize="12" Foreground="#5F6C7B"/>
+								<TextBlock Text="Klanten" Classes="h3" TextTrimming="CharacterEllipsis"/>
+								<TextBlock Text="Beheer klantgegevens" Classes="label" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
 							</StackPanel>
 						</StackPanel>
 					</Button>
@@ -204,14 +206,14 @@
 					<!-- Lijsten -->
 					<Button Classes="CardButton" Command="{Binding OpenLijstenCommand}">
 						<StackPanel Spacing="10">
-							<Border Background="#FFF7ED" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+							<Border Background="{DynamicResource IconOrangeBg}" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
 								<Path Data="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"
-									  Fill="#F97316" Width="20" Height="20" Stretch="Uniform"
+									  Fill="{DynamicResource IconOrange}" Width="20" Height="20" Stretch="Uniform"
 									  HorizontalAlignment="Center" VerticalAlignment="Center"/>
 							</Border>
 							<StackPanel Spacing="3">
-								<TextBlock Text="Lijsten" FontSize="15" Foreground="Black" FontWeight="SemiBold"/>
-								<TextBlock Text="Type-lijsten en prijzen" FontSize="12" Foreground="#5F6C7B"/>
+								<TextBlock Text="Lijsten" Classes="h3" TextTrimming="CharacterEllipsis"/>
+								<TextBlock Text="Type-lijsten en prijzen" Classes="label" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
 							</StackPanel>
 						</StackPanel>
 					</Button>
@@ -219,14 +221,14 @@
 					<!-- Leveranciers -->
 					<Button Classes="CardButton" Command="{Binding OpenLeveranciersCommand}">
 						<StackPanel Spacing="10">
-							<Border Background="#FDF4FF" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+							<Border Background="{DynamicResource IconPurpleBg}" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
 								<Path Data="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"
-									  Fill="#A855F7" Width="20" Height="20" Stretch="Uniform"
+									  Fill="{DynamicResource IconPurple}" Width="20" Height="20" Stretch="Uniform"
 									  HorizontalAlignment="Center" VerticalAlignment="Center"/>
 							</Border>
 							<StackPanel Spacing="3">
-								<TextBlock Text="Leveranciers" FontSize="15" Foreground="Black" FontWeight="SemiBold"/>
-								<TextBlock Text="Beheer leverancierscodes" FontSize="12" Foreground="#5F6C7B"/>
+								<TextBlock Text="Leveranciers" Classes="h3" TextTrimming="CharacterEllipsis"/>
+								<TextBlock Text="Beheer leverancierscodes" Classes="label" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
 							</StackPanel>
 						</StackPanel>
 					</Button>
@@ -234,14 +236,14 @@
 					<!-- Excel export -->
 					<Button Classes="CardButton" Command="{Binding OpenExportCenterCommand}">
 						<StackPanel Spacing="10">
-							<Border Background="#ECFDF5" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+							<Border Background="{DynamicResource IconEmeraldBg}" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
 								<Path Data="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7 7-7z"
-									  Fill="#10B981" Width="20" Height="20" Stretch="Uniform"
+									  Fill="{DynamicResource IconEmerald}" Width="20" Height="20" Stretch="Uniform"
 									  HorizontalAlignment="Center" VerticalAlignment="Center"/>
 							</Border>
 							<StackPanel Spacing="3">
-								<TextBlock Text="Excel export" FontSize="15" Foreground="Black" FontWeight="SemiBold"/>
-								<TextBlock Text="Exporteer alle basisdata naar .xlsx" FontSize="12" Foreground="#5F6C7B"/>
+								<TextBlock Text="Excel export" Classes="h3" TextTrimming="CharacterEllipsis"/>
+								<TextBlock Text="Exporteer alle basisdata naar .xlsx" Classes="label" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
 							</StackPanel>
 						</StackPanel>
 					</Button>
@@ -249,14 +251,14 @@
 					<!-- Planning -->
 					<Button Classes="CardButton" Command="{Binding OpenPlanningCommand}">
 						<StackPanel Spacing="10">
-							<Border Background="#FFF1F2" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+							<Border Background="{DynamicResource IconRoseBg}" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
 								<Path Data="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"
-									  Fill="#F43F5E" Width="20" Height="20" Stretch="Uniform"
+									  Fill="{DynamicResource IconRose}" Width="20" Height="20" Stretch="Uniform"
 									  HorizontalAlignment="Center" VerticalAlignment="Center"/>
 							</Border>
 							<StackPanel Spacing="3">
-								<TextBlock Text="Planning" FontSize="15" Foreground="Black" FontWeight="SemiBold"/>
-								<TextBlock Text="Bekijk werkbezetting" FontSize="12" Foreground="#5F6C7B"/>
+								<TextBlock Text="Planning" Classes="h3" TextTrimming="CharacterEllipsis"/>
+								<TextBlock Text="Bekijk werkbezetting" Classes="label" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
 							</StackPanel>
 						</StackPanel>
 					</Button>
@@ -264,14 +266,14 @@
 					<!-- Instellingen -->
 					<Button Classes="CardButton" Command="{Binding OpenInstellingenCommand}">
 						<StackPanel Spacing="10">
-							<Border Background="#F8FAFC" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+							<Border Background="{DynamicResource IconSlateBg}" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
 								<Path Data="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"
-									  Fill="#64748B" Width="20" Height="20" Stretch="Uniform"
+									  Fill="{DynamicResource IconSlate}" Width="20" Height="20" Stretch="Uniform"
 									  HorizontalAlignment="Center" VerticalAlignment="Center"/>
 							</Border>
 							<StackPanel Spacing="3">
-								<TextBlock Text="Instellingen" FontSize="15" Foreground="Black" FontWeight="SemiBold"/>
-								<TextBlock Text="Algemene prijsinstellingen" FontSize="12" Foreground="#5F6C7B"/>
+								<TextBlock Text="Instellingen" Classes="h3" TextTrimming="CharacterEllipsis"/>
+								<TextBlock Text="Algemene prijsinstellingen" Classes="label" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
 							</StackPanel>
 						</StackPanel>
 					</Button>
@@ -292,12 +294,12 @@
         </Style>
 
         <Style Selector="Button.NavButton:pointerover">
-            <Setter Property="Background" Value="#55606A"/>
+            <Setter Property="Background" Value="{DynamicResource BrandDarkHover}"/>
         </Style>
 
         <Style Selector="Button.CardButton">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#E6E8EB"/>
+            <Setter Property="Background" Value="{DynamicResource Surface}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="16"/>
             <Setter Property="Padding" Value="20"/>
@@ -305,8 +307,8 @@
         </Style>
 
         <Style Selector="Button.CardButton:pointerover">
-            <Setter Property="Background" Value="#FFF4CC"/>
-            <Setter Property="BorderBrush" Value="#F5C242"/>
+            <Setter Property="Background" Value="{DynamicResource BrandYellowHover}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandYellow}"/>
         </Style>
     </UserControl.Styles>
 </UserControl>

@@ -31,7 +31,6 @@
 
 <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="EfCore.SchemaCompare" Version="8.2.0" />
     <PackageReference Include="EPPlus" Version="8.4.1" />
     <PackageReference Include="Huskui.Avalonia" Version="0.10.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.9" />
@@ -39,9 +38,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.9" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.9" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.9">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -50,11 +47,19 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
+    <!-- US-31: gestructureerde logging naar roterend bestand -->
+    <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
     <PackageReference Include="QuestPDF" Version="2024.7.1" />
     <!-- Auto-update -->
     <PackageReference Include="Velopack" Version="0.0.869" />
     <!-- Security: override vulnerable transitive deps with patched versions -->
     <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.6" />
+    <!-- US-33: DPAPI encryption for the DB secret file (Windows) -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
+    <!-- Security: GHSA-2m69-gcr7-jv3q (CVE-2025-6965) = SQLite engine < 3.50.2.
+         All 2.1.x bundles ship an older engine; 3.0.3 ships SQLite 3.50.4+. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
     <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
     <!-- Config (appsettings.json — used for DB connection string) -->
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />

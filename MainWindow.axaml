@@ -7,7 +7,9 @@
     x:DataType="vm:MainWindowViewModel"
     Title="{Binding AppVersion, StringFormat='QuadroApp {0}'}"
     Width="1200"
-    Height="820">
+    Height="820"
+    MinWidth="1024"
+    MinHeight="700">
 
 	<Panel>
 		<ContentControl Content="{Binding CurrentViewModel}" />
@@ -74,6 +76,49 @@
 				</DataTemplate>
 			</ItemsControl.ItemTemplate>
 		</ItemsControl>
+
+		<!-- US-32: login / lock overlay -->
+		<Border IsVisible="{Binding IsLocked}"
+				Background="#E6444A50">
+			<Border Background="White"
+					CornerRadius="10"
+					Padding="32"
+					Width="360"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Center">
+				<StackPanel Spacing="12">
+					<TextBlock Text="QuadroApp"
+							   FontSize="22" FontWeight="Bold"
+							   HorizontalAlignment="Center"
+							   Foreground="#444A50"/>
+					<TextBlock Text="Meld je aan om verder te gaan"
+							   FontSize="13" Opacity="0.7"
+							   HorizontalAlignment="Center"/>
+					<TextBox Watermark="Gebruikersnaam"
+							 Text="{Binding LoginGebruikersnaam}"/>
+					<TextBox Watermark="Wachtwoord"
+							 PasswordChar="●"
+							 Text="{Binding LoginWachtwoord}">
+						<TextBox.KeyBindings>
+							<KeyBinding Gesture="Enter" Command="{Binding LoginCommand}"/>
+						</TextBox.KeyBindings>
+					</TextBox>
+					<TextBlock Text="{Binding LoginFout}"
+							   Foreground="#C0392B"
+							   FontSize="12"
+							   TextWrapping="Wrap"
+							   IsVisible="{Binding LoginFout, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+					<Button Content="Aanmelden"
+							Command="{Binding LoginCommand}"
+							HorizontalAlignment="Stretch"
+							HorizontalContentAlignment="Center"
+							Background="#F5C242"
+							Foreground="#444A50"
+							FontWeight="SemiBold"
+							Padding="0,10"/>
+				</StackPanel>
+			</Border>
+		</Border>
 
 		<!-- Version badge – bottom-right, subtle -->
 		<TextBlock Text="{Binding AppVersion, StringFormat='QuadroApp2 {0}'}"

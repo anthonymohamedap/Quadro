@@ -45,3 +45,5 @@ appsettings.*.json
 # Velopack / release-artefacten
 Releases/
 *.nupkg
+# Persoonlijke notities blijven lokaal
+docs/notities/

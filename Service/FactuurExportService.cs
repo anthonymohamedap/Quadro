@@ -32,7 +32,6 @@ public sealed class FactuurExportService : IFactuurExportService
         _logger?.LogInformation("Factuur export gestart. FactuurId={FactuurId}, Formaat={Formaat}, Folder={Folder}", factuurId, formaat, exportFolder);
 
         await using var db = await _factory.CreateDbContextAsync();
-        await FactuurSchemaUpgrade.EnsureAsync(db);
         var factuur = await db.Facturen.Include(x => x.Lijnen.OrderBy(l => l.Sortering)).FirstOrDefaultAsync(x => x.Id == factuurId);
         if (factuur is null)
             throw new InvalidOperationException("Factuur niet gevonden.");
@@ -65,7 +64,6 @@ public sealed class FactuurExportService : IFactuurExportService
         _logger?.LogInformation("Factuur preview gestart. FactuurId={FactuurId}, Formaat={Formaat}, Folder={Folder}", factuurId, formaat, exportFolder);
 
         await using var db = await _factory.CreateDbContextAsync();
-        await FactuurSchemaUpgrade.EnsureAsync(db);
         var factuur = await db.Facturen.Include(x => x.Lijnen.OrderBy(l => l.Sortering)).FirstOrDefaultAsync(x => x.Id == factuurId);
         if (factuur is null)
             throw new InvalidOperationException("Factuur niet gevonden.");
