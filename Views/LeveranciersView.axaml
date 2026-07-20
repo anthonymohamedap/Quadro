@@ -160,13 +160,15 @@
 								<Border Grid.Row="1" Background="{DynamicResource SurfaceMutedAlt}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="8" Padding="14">
 										<StackPanel Spacing="10">
 
-											<!-- Veld-labels + invoer -->
-											<Grid ColumnDefinitions="2.2*,1*,1.2*" ColumnSpacing="10" RowDefinitions="Auto,Auto" RowSpacing="3">
-												<TextBlock Text="Lijst" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="1" Text="{Binding NieuweBestelAantalLabel}" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="2" Text="Besteldatum" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+											<!-- Veld-labels + invoer.
+											     Twee rijen i.p.v. drie kolommen: de DatePicker heeft
+											     ~250px nodig en clipte anders buiten het 520px-paneel. -->
+											<Grid ColumnDefinitions="1*,1.4*" ColumnSpacing="10"
+											      RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="3">
+												<TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+												           Text="Lijst" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
 
-												<ComboBox Grid.Row="1" Grid.Column="0"
+												<ComboBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                                                           HorizontalAlignment="Stretch"
                                                           ItemsSource="{Binding BestelbareLijsten}"
                                                           SelectedItem="{Binding SelectedBestelTypeLijst, Mode=TwoWay}">
@@ -177,12 +179,20 @@
 													</ComboBox.ItemTemplate>
 												</ComboBox>
 
-												<NumericUpDown Grid.Row="1" Grid.Column="1"
+												<TextBlock Grid.Row="2" Grid.Column="0" Margin="0,8,0,0"
+												           Text="{Binding NieuweBestelAantalLabel}" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Row="2" Grid.Column="1" Margin="0,8,0,0"
+												           Text="Besteldatum" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+
+												<NumericUpDown Grid.Row="3" Grid.Column="0"
+                                                               MinWidth="120"
+                                                               HorizontalAlignment="Stretch"
                                                                Value="{Binding NieuwBestelAantalMeter, Mode=TwoWay}"
                                                                Minimum="0.01"
                                                                FormatString="0.00"/>
 
-												<DatePicker Grid.Row="1" Grid.Column="2"
+												<DatePicker Grid.Row="3" Grid.Column="1"
+                                                            HorizontalAlignment="Stretch"
                                                             SelectedDate="{Binding NieuweBestellingDatum, Mode=TwoWay}"/>
 											</Grid>
 
