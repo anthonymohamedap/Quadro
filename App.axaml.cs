@@ -107,14 +107,9 @@ public partial class App : Application
             else
                 options.UseSqlite(connectionString);
 
-            // Schema wordt in dit project bewust beheerd via raw SQL-patches +
-            // voor-gemarkeerde migraties (zie ApplyPendingMigrationsAsync), waardoor het
-            // EF-model opzettelijk afwijkt van de migration-snapshot. EF 9/10 gooit hierop
-            // standaard een PendingModelChangesWarning als FOUT tijdens MigrateAsync, wat de
-            // openstaande migraties (o.a. soft-delete: IsGearchiveerd) zou blokkeren.
-            // Onderdruk die specifieke warning zodat MigrateAsync de migraties tóch toepast.
-            options.ConfigureWarnings(w =>
-                w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+            // US-30: schema wordt beheerd via echte EF-migraties (Baseline-squash).
+            // De vroegere PendingModelChangesWarning-onderdrukking is verwijderd:
+            // model-drift moet nu een fout geven i.p.v. stil genegeerd te worden.
         });
 
         // ==============================
@@ -499,15 +494,12 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// SQLite initialisation — existing path with preExistingMigrations hack and
-    /// defensive ALTER TABLE patches. Unchanged so existing installs keep working.
+    /// US-30: SQLite initialisation via echte EF-migraties.
+    /// Fresh DB → MigrateAsync (Baseline). Bestaande DB → healer-patches +
+    /// Baseline-markering + MigrateAsync. Zie SqliteSchemaPatcher.
     /// </summary>
     private static async Task InitializeSqliteDatabaseAsync(AppDbContext db)
     {
-        // Ensure DB file exists (new installs)
-        await db.Database.EnsureCreatedAsync();
-
-        // Apply pending migrations safely.
         await SqliteSchemaPatcher.PatchAsync(db, _logger);
     }
 
