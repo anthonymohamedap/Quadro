@@ -5,6 +5,9 @@
         Title="Lijstenbeheer"
         Width="1150"
         Height="780"
+        MinWidth="900"
+        MinHeight="600"
+        CanResize="True"
         WindowStartupLocation="CenterOwner">
     <views:LijstenView/>
 </Window>

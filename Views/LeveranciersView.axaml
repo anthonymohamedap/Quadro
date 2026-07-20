@@ -7,7 +7,7 @@
     xmlns:conv="using:QuadroApp.Converters"
     x:Class="QuadroApp.Views.LeveranciersView"
     x:DataType="vm:LeveranciersViewModel"
-    Background="#F5F5F5">
+    Background="{DynamicResource SurfaceMuted}">
 
  	<UserControl.Resources>
  		<conv:BoolToThicknessConverter x:Key="BoolToThicknessSlide"
@@ -21,50 +21,50 @@
   	</UserControl.Resources>
 
 	<Grid RowDefinitions="Auto,*">
-		<controls:QuadroHeader Grid.ColumnSpan="2" Title="LEVERANCIERS" BackCommand="{Binding GaTerugCommand}"/>
+		<controls:QuadroHeader Title="LEVERANCIERS" BackCommand="{Binding GaTerugCommand}"/>
 
-		<Grid Grid.Row="1" Margin="20" ColumnDefinitions="*,Auto" ColumnSpacing="20">
-			<StackPanel Grid.Column="0" Spacing="14">
-				<TextBlock Text="Leveranciers" FontSize="22" FontWeight="Bold"/>
+		<Grid Grid.Row="1" Margin="24" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+			<!-- Star-rij zodat de leverancierslijst de resthoogte vult en zelf scrolt -->
+			<Grid Grid.Column="0" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="12">
+				<TextBlock Text="Leveranciers" Classes="h1" TextTrimming="CharacterEllipsis"/>
 
-				<Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="10">
+				<Grid Grid.Row="1" ColumnDefinitions="Auto,*" ColumnSpacing="10">
 					<TextBox Grid.Column="0"
-                             Width="280"
-                             Height="34"
+                             MinWidth="220"
                              Watermark="Zoek leveranciercode…"
                              Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-					<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-						<Button Content="Nieuw" Command="{Binding NieuwCommand}" Classes="MainBtn"/>
-						<Button Content="🗑️ Verwijderen" Command="{Binding VerwijderCommand}" Classes="MainBtn"/>
-					</StackPanel>
+					<WrapPanel Grid.Column="1" VerticalAlignment="Center">
+						<Button Content="Nieuw" Command="{Binding NieuwCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
+						<Button Content="🗑️ Verwijderen" Command="{Binding VerwijderCommand}" Classes="MainBtn" Margin="0,0,0,6"/>
+					</WrapPanel>
 				</Grid>
 
-				<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+				<StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
 					<Button Content="◀ Vorige" Command="{Binding PrevLeveranciersPageCommand}" Classes="MainBtn"/>
 					<TextBlock VerticalAlignment="Center"
                                Text="{Binding LeveranciersPageLabel}"/>
 					<Button Content="Volgende ▶" Command="{Binding NextLeveranciersPageCommand}" Classes="MainBtn"/>
 				</StackPanel>
 
-				<Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8">
-					<ListBox ItemsSource="{Binding Leveranciers}" SelectedItem="{Binding SelectedLeverancier, Mode=TwoWay}">
+				<Border Grid.Row="3" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="8">
+					<ListBox ItemsSource="{Binding Leveranciers}" SelectedItem="{Binding SelectedLeverancier, Mode=TwoWay}" Background="Transparent" BorderThickness="0" ScrollViewer.VerticalScrollBarVisibility="Auto">
 						<ListBox.ItemTemplate>
 							<DataTemplate x:DataType="m:Leverancier">
 								<Border Padding="10,8">
-									<TextBlock Text="{Binding Naam}" FontWeight="SemiBold"/>
+									<TextBlock Text="{Binding Naam}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Naam}"/>
 								</Border>
 							</DataTemplate>
 						</ListBox.ItemTemplate>
 					</ListBox>
 				</Border>
-			</StackPanel>
+			</Grid>
 
 			<Border Grid.Column="1"
                     Width="520"
                     Padding="24"
-                    Background="White"
+                    Background="{DynamicResource Surface}"
                     CornerRadius="10"
-                    BorderBrush="#E0E0E0"
+                    BorderBrush="{DynamicResource BorderSubtle}"
                     BorderThickness="1"
                     IsHitTestVisible="{Binding IsDetailOpen}">
 				<Border.Transitions>
@@ -82,10 +82,10 @@
 				</Border.Opacity>
 
 				<Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="12">
-					<TextBlock Text="Leveranciersdetail" FontSize="22" FontWeight="Bold"/>
+					<TextBlock Text="Leveranciersdetail" Classes="h1" TextTrimming="CharacterEllipsis"/>
 
 					<Grid Grid.Row="1" ColumnDefinitions="2*,3*" RowDefinitions="Auto" ColumnSpacing="14">
-						<TextBlock Text="Naam (3 tekens)" Grid.Column="0" FontWeight="Bold"/>
+						<TextBlock Text="Naam (3 tekens)" Grid.Column="0" Classes="label" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
 						<TextBox Grid.Column="1" Text="{Binding SelectedLeverancier.Naam, Mode=TwoWay}" MaxLength="3"/>
 					</Grid>
 
@@ -97,7 +97,7 @@
 					<TabControl Grid.Row="3" Margin="0,6,0,0">
 						<TabItem Header="Typelijsten">
 							<Grid Margin="0,12,0,0" RowDefinitions="Auto,Auto,*" RowSpacing="10">
-								<TextBlock Text="Gekoppelde typelijsten" FontSize="16" FontWeight="SemiBold"/>
+								<TextBlock Text="Gekoppelde typelijsten" Classes="h3" TextTrimming="CharacterEllipsis"/>
 
 								<StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
 									<Button Content="◀ Vorige" Command="{Binding PrevLijstenPageCommand}" Classes="MainBtn"/>
@@ -109,21 +109,22 @@
 								<Grid Grid.Row="2" RowDefinitions="Auto,*" RowSpacing="12">
 									<TextBlock Margin="0,0,0,12"
 													Text="Geen gekoppelde typelijsten voor deze leverancier."
-                                               Foreground="#6B7280"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               TextWrapping="Wrap"
                                                IsVisible="{Binding LijstenVanLeverancier.Count, Converter={StaticResource EmptyCountToBool}}"/>
 
-									<Border Grid.Row="1" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8">
+									<Border Grid.Row="1" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="8">
 										<Grid RowDefinitions="Auto,*">
-											<Border Background="#F3F4F6" Padding="10,6" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1">
+											<Border Background="{DynamicResource SurfaceHeader}" Padding="10,6" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="0,0,0,1">
 												<Grid ColumnDefinitions="Auto,1.5*,1.2*,1*" ColumnSpacing="12">
 													<Border Width="10" Height="10" Background="Transparent"/>
-													<TextBlock Grid.Column="1" Text="Artikelnummer" FontWeight="SemiBold"/>
-													<TextBlock Grid.Column="2" Text="Levcode" FontWeight="SemiBold"/>
-													<TextBlock Grid.Column="3" Text="Voorraad" FontWeight="SemiBold"/>
+													<TextBlock Grid.Column="1" Text="Artikelnummer" Classes="label" TextTrimming="CharacterEllipsis"/>
+													<TextBlock Grid.Column="2" Text="Levcode" Classes="label" TextTrimming="CharacterEllipsis"/>
+													<TextBlock Grid.Column="3" Text="Voorraad" Classes="label" TextTrimming="CharacterEllipsis"/>
 												</Grid>
 											</Border>
 
-											<ListBox Grid.Row="1" ItemsSource="{Binding LijstenVanLeverancier}" BorderThickness="0" Background="Transparent">
+											<ListBox Grid.Row="1" ItemsSource="{Binding LijstenVanLeverancier}" BorderThickness="0" Background="Transparent" ScrollViewer.VerticalScrollBarVisibility="Auto">
 												<ListBox.ItemTemplate>
 													<DataTemplate x:DataType="m:TypeLijst">
 														<Border Padding="10,6">
@@ -133,13 +134,13 @@
                                                                         VerticalAlignment="Center"
                                                                         CornerRadius="5"
                                                                         Background="{Binding VoorraadStatusRatio, Converter={StaticResource StockStatusBrush}}"/>
-																<TextBlock Grid.Column="1" Text="{Binding Artikelnummer}" VerticalAlignment="Center"/>
-																<TextBlock Grid.Column="2" Text="{Binding Levcode}" VerticalAlignment="Center"/>
+																<TextBlock Grid.Column="1" Text="{Binding Artikelnummer}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Artikelnummer}"/>
+																<TextBlock Grid.Column="2" Text="{Binding Levcode}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
 																<StackPanel Grid.Column="3" Spacing="2">
-																	<TextBlock Text="{Binding BeschikbareVoorraadMeter, StringFormat='{}{0:0.##} m'}"/>
+																	<TextBlock Text="{Binding BeschikbareVoorraadMeter, StringFormat='{}{0:0.##} m'}" TextTrimming="CharacterEllipsis"/>
 																	<TextBlock Text="{Binding VoorraadStatusLabel}"
-                                                                               FontSize="11"
-                                                                               Foreground="#6B7280"/>
+                                                                               Classes="caption"
+                                                                               TextTrimming="CharacterEllipsis"/>
 																</StackPanel>
 															</Grid>
 														</Border>
@@ -153,54 +154,63 @@
 						</TabItem>
 
 						<TabItem Header="Bestellingen">
-							<Grid Margin="0,12,0,0" RowDefinitions="Auto,Auto,*" RowSpacing="10">
-								<TextBlock Text="Open bestellingen" FontSize="16" FontWeight="SemiBold"/>
+							<!-- Hele tab scrolt als één geheel: het invoerblok is hoog,
+							     anders bleef er geen ruimte over om bestellingen te zien. -->
+							<ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,12,0,0">
+							<Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
+								<TextBlock Text="Open bestellingen" Classes="h3" TextTrimming="CharacterEllipsis"/>
 
-								<Border Grid.Row="1" Background="#F9FAFB" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="14">
+								<Border Grid.Row="1" Background="{DynamicResource SurfaceMutedAlt}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="8" Padding="14">
 										<StackPanel Spacing="10">
 
-											<!-- Veld-labels + invoer -->
-											<Grid ColumnDefinitions="2.2*,1*,1.2*" ColumnSpacing="10" RowDefinitions="Auto,Auto" RowSpacing="3">
-												<TextBlock Text="Lijst" FontSize="11" FontWeight="SemiBold" Foreground="#6B7280"/>
-												<TextBlock Grid.Column="1" Text="{Binding NieuweBestelAantalLabel}" FontSize="11" FontWeight="SemiBold" Foreground="#6B7280"/>
-												<TextBlock Grid.Column="2" Text="Besteldatum" FontSize="11" FontWeight="SemiBold" Foreground="#6B7280"/>
+											<!-- Veld-labels + invoer.
+											     Elk veld op een eigen rij: de Fluent DatePicker heeft
+											     ~300px minimum nodig en clipte anders buiten het paneel. -->
+											<StackPanel Spacing="3">
+												<TextBlock Text="Lijst" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
 
-												<ComboBox Grid.Row="1" Grid.Column="0"
-                                                          HorizontalAlignment="Stretch"
+												<ComboBox HorizontalAlignment="Stretch"
                                                           ItemsSource="{Binding BestelbareLijsten}"
                                                           SelectedItem="{Binding SelectedBestelTypeLijst, Mode=TwoWay}">
 													<ComboBox.ItemTemplate>
 														<DataTemplate x:DataType="m:TypeLijst">
-															<TextBlock Text="{Binding Artikelnummer}"/>
+															<TextBlock Text="{Binding Artikelnummer}" TextTrimming="CharacterEllipsis"/>
 														</DataTemplate>
 													</ComboBox.ItemTemplate>
 												</ComboBox>
 
-												<NumericUpDown Grid.Row="1" Grid.Column="1"
+												<TextBlock Margin="0,8,0,0"
+												           Text="{Binding NieuweBestelAantalLabel}" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<NumericUpDown MinWidth="120"
+                                                               HorizontalAlignment="Left"
                                                                Value="{Binding NieuwBestelAantalMeter, Mode=TwoWay}"
                                                                Minimum="0.01"
                                                                FormatString="0.00"/>
 
-												<DatePicker Grid.Row="1" Grid.Column="2"
+												<TextBlock Margin="0,8,0,0"
+												           Text="Besteldatum" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<DatePicker HorizontalAlignment="Left"
                                                             SelectedDate="{Binding NieuweBestellingDatum, Mode=TwoWay}"/>
-											</Grid>
+											</StackPanel>
 
 											<!-- BESTELWIJZE -->
 											<StackPanel Spacing="3">
-												<TextBlock Text="Bestelwijze" FontSize="11" FontWeight="SemiBold" Foreground="#6B7280"/>
-												<StackPanel Orientation="Horizontal" Spacing="16">
+												<TextBlock Text="Bestelwijze" Classes="caption" FontWeight="SemiBold"/>
+												<WrapPanel>
 													<RadioButton Content="In verstek"
                                                                  GroupName="BestelVorm"
+                                                                 Margin="0,0,16,0"
                                                                  IsChecked="{Binding BestelVormIsVerstek, Mode=TwoWay}"/>
 													<RadioButton Content="In lengte"
                                                                  GroupName="BestelVorm"
+                                                                 Margin="0,0,16,0"
                                                                  IsChecked="{Binding BestelVormIsInLengte, Mode=TwoWay}"/>
 													<RadioButton Content="Gemonteerd"
                                                                  GroupName="BestelVorm"
                                                                  IsChecked="{Binding BestelVormIsGemonteerd, Mode=TwoWay}"/>
-												</StackPanel>
+												</WrapPanel>
 												<TextBlock Text="In verstek &amp; In lengte: in meter  ·  Gemonteerd: in stuks (kaders)"
-                                                           FontSize="10" Foreground="#9CA3AF"/>
+                                                           Classes="caption" TextWrapping="Wrap"/>
 											</StackPanel>
 
 											<Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
@@ -215,28 +225,28 @@
 										</StackPanel>
 								</Border>
 
-								<Grid Grid.Row="2" RowDefinitions="Auto,*" RowSpacing="12">
-									<TextBlock Margin="0,0,0,12"
+								<StackPanel Grid.Row="2" Spacing="12">
+									<TextBlock
                                                 Text="Geen open bestellingen voor deze leverancier."
-                                                Foreground="#6B7280"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                TextWrapping="Wrap"
                                                 IsVisible="{Binding OpenBestellingen.Count, Converter={StaticResource EmptyCountToBool}}"/>
 
-									<Border Grid.Row="1" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="10" Background="#FAFAFA">
-										<ScrollViewer VerticalScrollBarVisibility="Auto">
+									<Border BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="8" Padding="10" Background="{DynamicResource SurfaceMutedAlt}">
 											<ItemsControl ItemsSource="{Binding OpenBestellingen}">
 												<ItemsControl.ItemTemplate>
 													<DataTemplate x:DataType="m:LeverancierBestelling">
-														<Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,8" Background="White">
+														<Border BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,8" Background="{DynamicResource Surface}">
 															<StackPanel Spacing="6">
-																<Grid ColumnDefinitions="*,Auto">
-																	<TextBlock Text="{Binding BestelNummer}" FontWeight="Bold" VerticalAlignment="Center"/>
+																<Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+																	<TextBlock Text="{Binding BestelNummer}" FontWeight="Bold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding BestelNummer}"/>
 																	<Border Grid.Column="1" CornerRadius="10" Padding="9,2"
                                                                             Background="{Binding Status, Converter={x:Static conv:BooleanConverters.BestelStatusToBrush}}">
-																		<TextBlock Text="{Binding Status}" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+																		<TextBlock Text="{Binding Status}" Foreground="{DynamicResource TextOnDark}" Classes="caption" FontWeight="SemiBold"/>
 																	</Border>
 																</Grid>
-																<TextBlock Text="{Binding BesteldOp, StringFormat='Besteld op: {0:dd/MM/yyyy}'}" FontSize="12" Foreground="#6B7280"/>
-																<TextBlock Text="{Binding VerwachteLeverdatum, StringFormat='Verwacht: {0:dd/MM/yyyy}'}" FontSize="12" Foreground="#6B7280"/>
+																<TextBlock Text="{Binding BesteldOp, StringFormat='Besteld op: {0:dd/MM/yyyy}'}" Classes="label" Foreground="{DynamicResource TextSecondary}"/>
+																<TextBlock Text="{Binding VerwachteLeverdatum, StringFormat='Verwacht: {0:dd/MM/yyyy}'}" Classes="label" Foreground="{DynamicResource TextSecondary}"/>
 																<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
 																	<Button Content="Annuleer bestelling"
 																			Command="{Binding $parent[UserControl].((vm:LeveranciersViewModel)DataContext).AnnuleerBestellingCommand}"
@@ -246,32 +256,32 @@
 																<ItemsControl ItemsSource="{Binding Lijnen}">
 																	<ItemsControl.ItemTemplate>
 																		<DataTemplate x:DataType="m:LeverancierBestelLijn">
-																			<Border BorderBrush="#F0F0F0" BorderThickness="1" CornerRadius="6" Padding="8" Background="#F9FAFB">
+																			<Border BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="6" Padding="8" Background="{DynamicResource SurfaceMutedAlt}">
 																				<StackPanel Spacing="4">
-																					<Grid ColumnDefinitions="*,Auto">
-																						<TextBlock Text="{Binding TypeLijst.Artikelnummer}" FontWeight="SemiBold"/>
+																					<Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+																						<TextBlock Text="{Binding TypeLijst.Artikelnummer}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding TypeLijst.Artikelnummer}"/>
 																						<Border Grid.Column="1"
-                                                                                                Background="#EEF2FF"
-                                                                                                BorderBrush="#C7D2FE"
+                                                                                                Background="{DynamicResource InfoBg}"
+                                                                                                BorderBrush="{DynamicResource InfoBorder}"
                                                                                                 BorderThickness="1"
                                                                                                 CornerRadius="4"
                                                                                                 Padding="6,2">
 																							<TextBlock Text="{Binding BestelVormLabel}"
-                                                                                                       FontSize="11"
-                                                                                                       Foreground="#4338CA"
+                                                                                                       Classes="caption"
+                                                                                                       Foreground="{DynamicResource InfoText}"
                                                                                                        FontWeight="SemiBold"/>
 																						</Border>
 																					</Grid>
-																					<TextBlock Text="{Binding BesteldLabel}"/>
-																					<TextBlock Text="{Binding OntvangenLabel}"/>
-																					<TextBlock Text="{Binding ResterendLabel}" Foreground="#6B7280"/>
+																					<TextBlock Text="{Binding BesteldLabel}" TextTrimming="CharacterEllipsis"/>
+																					<TextBlock Text="{Binding OntvangenLabel}" TextTrimming="CharacterEllipsis"/>
+																					<TextBlock Text="{Binding ResterendLabel}" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
 																					<StackPanel Orientation="Horizontal" Spacing="8">
 																						<NumericUpDown Width="110"
 																									   Minimum="0.01"
 																									   Maximum="{Binding ResterendTeOntvangenMeter}"
 																									   Value="{Binding OntvangstInputMeter, Mode=TwoWay}"
 																									   FormatString="0.00"/>
-																						<TextBlock Text="{Binding EenheidKort}" VerticalAlignment="Center" Foreground="#6B7280"/>
+																						<TextBlock Text="{Binding EenheidKort}" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}"/>
 																						<Button Content="Ontvang"
 																								Command="{Binding $parent[UserControl].((vm:LeveranciersViewModel)DataContext).OntvangBestelLijnCommand}"
 																								CommandParameter="{Binding}"/>
@@ -286,30 +296,31 @@
 													</DataTemplate>
 												</ItemsControl.ItemTemplate>
 											</ItemsControl>
-										</ScrollViewer>
 									</Border>
-								</Grid>
+								</StackPanel>
 							</Grid>
+							</ScrollViewer>
 						</TabItem>
 
 						<TabItem Header="Waarschuwingen">
 							<Grid Margin="0,12,0,0" RowDefinitions="Auto,*" RowSpacing="10">
-								<TextBlock Text="Voorraadwaarschuwingen" FontSize="16" FontWeight="SemiBold"/>
+								<TextBlock Text="Voorraadwaarschuwingen" Classes="h3" TextTrimming="CharacterEllipsis"/>
 
 								<Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="12">
 									<TextBlock Margin="0,0,0,12"
 											   Text="Geen open voorraadwaarschuwingen voor deze leverancier."
-											   Foreground="#6B7280"
+											   Foreground="{DynamicResource TextSecondary}"
+											   TextWrapping="Wrap"
 											   IsVisible="{Binding LeverancierAlerts.Count, Converter={StaticResource EmptyCountToBool}}"/>
 
-									<Border Grid.Row="1" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="10" Background="#FAFAFA">
+									<Border Grid.Row="1" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="8" Padding="10" Background="{DynamicResource SurfaceMutedAlt}">
 										<ScrollViewer VerticalScrollBarVisibility="Auto">
 											<ItemsControl ItemsSource="{Binding LeverancierAlerts}">
 												<ItemsControl.ItemTemplate>
 													<DataTemplate x:DataType="m:VoorraadAlert">
-														<Border BorderBrush="#F3D27A" BorderThickness="1" CornerRadius="6" Padding="8" Background="#FFF8E6" Margin="0,0,0,8">
+														<Border BorderBrush="{DynamicResource BrandYellow}" BorderThickness="1" CornerRadius="6" Padding="8" Background="{DynamicResource WarningBg}" Margin="0,0,0,8">
 															<StackPanel Spacing="3">
-																<TextBlock Text="{Binding AlertType}" FontWeight="SemiBold"/>
+																<TextBlock Text="{Binding AlertType}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
 																<TextBlock Text="{Binding Bericht}" TextWrapping="Wrap"/>
 															</StackPanel>
 														</Border>

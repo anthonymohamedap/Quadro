@@ -8,57 +8,61 @@
     x:DataType="vm:FactuurPreviewViewModel"
     Width="860"
     Height="620"
-    MinWidth="760"
+    MinWidth="720"
     MinHeight="520"
+    CanResize="True"
     Title="Bestelbon preview"
     WindowStartupLocation="CenterOwner">
 
-    <Grid RowDefinitions="Auto,Auto,*,Auto" Background="#F7F8FA">
-        <Border Grid.Row="0" Background="#123B68" Padding="18">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Background="{DynamicResource SurfaceMutedAlt}">
+        <Border Grid.Row="0" Background="{DynamicResource BrandDark}" Padding="18">
             <StackPanel>
-                <TextBlock Text="{Binding Titel}" FontSize="20" FontWeight="Bold" Foreground="White"/>
-                <TextBlock Text="{Binding StatusTekst}" Foreground="#D9EAFE"/>
+                <TextBlock Text="{Binding Titel}" Classes="h2" Foreground="{DynamicResource TextOnDark}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Titel}"/>
+                <TextBlock Text="{Binding StatusTekst}" Classes="body" Foreground="{DynamicResource TextMutedOnDark}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding StatusTekst}"/>
             </StackPanel>
         </Border>
 
-        <Border Grid.Row="1" Margin="18,18,18,0" Padding="14" Background="#EEF4FB" CornerRadius="8">
+        <Border Grid.Row="1" Margin="18,18,18,0" Padding="14" Background="{DynamicResource InfoBg}" BorderBrush="{DynamicResource InfoBorder}" BorderThickness="1" CornerRadius="8">
             <StackPanel Spacing="8">
                 <TextBlock Text="De PDF-preview wordt geopend in je standaard PDF-viewer."
+                           Classes="body"
                            FontWeight="SemiBold"
-                           Foreground="#123B68"/>
-                <TextBlock Text="{Binding PreviewPad}" TextWrapping="Wrap" Foreground="#38506A"/>
+                           Foreground="{DynamicResource InfoText}"
+                           TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding PreviewPad}" Classes="caption" TextWrapping="Wrap"/>
             </StackPanel>
         </Border>
 
         <Grid Grid.Row="2" Margin="18" ColumnDefinitions="1.2*,0.8*" ColumnSpacing="18">
-            <Border Padding="14" Background="White" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+            <Border Padding="14" Background="{DynamicResource Surface}" CornerRadius="10" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1">
                 <!-- Eenvoudige lijst-tabel (ItemsControl) i.p.v. DataGrid: rendert altijd,
                      onafhankelijk van het DataGrid-thema; lange omschrijvingen breken af. -->
                 <Grid RowDefinitions="Auto,Auto,*">
-                    <TextBlock Text="Bestelbonlijnen" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                    <TextBlock Text="Bestelbonlijnen" Classes="h3" Margin="0,0,0,10"/>
 
                     <!-- Kopregel -->
                     <Grid Grid.Row="1" ColumnDefinitions="*,60,90,100" Margin="0,0,0,2">
-                        <TextBlock Text="Omschrijving" FontWeight="SemiBold" Foreground="#6B7280"/>
-                        <TextBlock Grid.Column="1" Text="Aantal" FontWeight="SemiBold" Foreground="#6B7280" TextAlignment="Right"/>
-                        <TextBlock Grid.Column="2" Text="Prijs" FontWeight="SemiBold" Foreground="#6B7280" TextAlignment="Right"/>
-                        <TextBlock Grid.Column="3" Text="Totaal" FontWeight="SemiBold" Foreground="#6B7280" TextAlignment="Right"/>
+                        <TextBlock Text="Omschrijving" Classes="label" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Grid.Column="1" Text="Aantal" Classes="label" Foreground="{DynamicResource TextSecondary}" TextAlignment="Right"/>
+                        <TextBlock Grid.Column="2" Text="Prijs" Classes="label" Foreground="{DynamicResource TextSecondary}" TextAlignment="Right"/>
+                        <TextBlock Grid.Column="3" Text="Totaal" Classes="label" Foreground="{DynamicResource TextSecondary}" TextAlignment="Right"/>
                     </Grid>
 
                     <ScrollViewer Grid.Row="2" Margin="0,4,0,0">
                         <ItemsControl ItemsSource="{Binding Lijnen}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="m:FactuurLijn">
-                                    <Border BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="0,6">
+                                    <Border BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="0,0,0,1" Padding="0,6">
                                         <Grid ColumnDefinitions="*,60,90,100">
                                             <TextBlock Text="{Binding Omschrijving, Converter={x:Static conv:FactuurOmschrijvingConverter.Instance}}"
+                                                       Classes="body"
                                                        TextWrapping="Wrap"
                                                        Margin="0,0,8,0"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding Aantal}"
+                                            <TextBlock Grid.Column="1" Text="{Binding Aantal}" Classes="body"
                                                        TextAlignment="Right" VerticalAlignment="Top"/>
-                                            <TextBlock Grid.Column="2" Text="{Binding PrijsExcl, StringFormat=€ {0:N2}}"
+                                            <TextBlock Grid.Column="2" Text="{Binding PrijsExcl, StringFormat=€ {0:N2}}" Classes="body"
                                                        TextAlignment="Right" VerticalAlignment="Top"/>
-                                            <TextBlock Grid.Column="3" Text="{Binding TotaalIncl, StringFormat=€ {0:N2}}"
+                                            <TextBlock Grid.Column="3" Text="{Binding TotaalIncl, StringFormat=€ {0:N2}}" Classes="body"
                                                        TextAlignment="Right" VerticalAlignment="Top"/>
                                         </Grid>
                                     </Border>
@@ -69,88 +73,91 @@
                 </Grid>
             </Border>
 
-            <Border Grid.Column="1" Padding="14" Background="White" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="Samenvatting" FontSize="16" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding Factuur.KlantNaam}" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding Factuur.KlantAdres}" TextWrapping="Wrap"/>
-                    <Separator/>
-                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
-                        <TextBlock Text="BestelBon datum"/>
-                        <TextBlock Grid.Column="1" Text="{Binding Factuur.FactuurDatum, StringFormat={}{0:dd/MM/yyyy}}"/>
-
-                        <TextBlock Grid.Row="1" Text="Vervaldatum"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Factuur.VervalDatum, StringFormat={}{0:dd/MM/yyyy}}"/>
-
-                        <TextBlock Grid.Row="2" Text="Initialen"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Factuur.AangenomenDoorInitialen, TargetNullValue='-'}"/>
-                    </Grid>
-                    <Separator/>
-                    <TextBlock Text="Opmerking" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding Factuur.Opmerking, TargetNullValue='Geen extra opmerking'}"
-                               TextWrapping="Wrap"/>
-                    <Separator/>
-
-                    <!-- Totalen: altijd excl -> BTW -> incl; korting + voorschot conditioneel -->
-                    <StackPanel Spacing="6">
-                        <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Text="Subtotaal (excl. BTW)"/>
-                            <TextBlock Grid.Column="1" Text="{Binding Factuur.BrutoExclBtw, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
-                        </Grid>
-
-                        <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding !Factuur.IsBtwVrijgesteld}">
-                            <TextBlock Text="BTW (21%)"/>
-                            <TextBlock Grid.Column="1" Text="{Binding Factuur.BrutoBtw, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
-                        </Grid>
-
-                        <!-- Alleen bij korting: incl-subtotaal + kortingregel -->
-                        <Grid ColumnDefinitions="*,Auto"
-                              IsVisible="{Binding Factuur.KortingPct, Converter={x:Static conv:BooleanConverters.IsPositive}}">
-                            <TextBlock Text="Subtotaal (incl. BTW)"/>
-                            <TextBlock Grid.Column="1" Text="{Binding Factuur.BrutoInclBtw, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
-                        </Grid>
-                        <Grid ColumnDefinitions="*,Auto"
-                              IsVisible="{Binding Factuur.KortingPct, Converter={x:Static conv:BooleanConverters.IsPositive}}">
-                            <TextBlock Text="{Binding Factuur.KortingPct, StringFormat='Korting {0:0.##}%'}" Foreground="#B91C1C"/>
-                            <TextBlock Grid.Column="1" Text="{Binding Factuur.KortingBedragExcl, StringFormat=- € {0:N2}}" Foreground="#B91C1C" HorizontalAlignment="Right"/>
-                        </Grid>
-
-                        <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Text="Totaal (incl. BTW)" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="1" Text="{Binding Factuur.TotaalInclBtw, StringFormat=€ {0:N2}}" FontWeight="Bold" HorizontalAlignment="Right"/>
-                        </Grid>
-
-                        <!-- Alleen bij voorschot -->
-                        <Grid ColumnDefinitions="*,Auto"
-                              IsVisible="{Binding Factuur.VoorschotBedrag, Converter={x:Static conv:BooleanConverters.IsPositive}}">
-                            <TextBlock Text="Voorschot betaald"/>
-                            <TextBlock Grid.Column="1" Text="{Binding Factuur.VoorschotBedrag, StringFormat=- € {0:N2}}" HorizontalAlignment="Right"/>
-                        </Grid>
-
+            <Border Grid.Column="1" Padding="14" Background="{DynamicResource Surface}" CornerRadius="10" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Samenvatting" Classes="h3"/>
+                        <TextBlock Text="{Binding Factuur.KlantNaam}" Classes="body" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Factuur.KlantNaam}"/>
+                        <TextBlock Text="{Binding Factuur.KlantAdres}" Classes="body" TextWrapping="Wrap"/>
                         <Separator/>
-                        <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Text="Te betalen bij afhalen" FontWeight="Bold" FontSize="14"/>
-                            <TextBlock Grid.Column="1" Text="{Binding Factuur.RestTeBetalen, StringFormat=€ {0:N2}}" FontWeight="Bold" FontSize="14" HorizontalAlignment="Right"/>
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+                            <TextBlock Text="BestelBon datum" Classes="body"/>
+                            <TextBlock Grid.Column="1" Classes="body" Text="{Binding Factuur.FactuurDatum, StringFormat={}{0:dd/MM/yyyy}}"/>
+
+                            <TextBlock Grid.Row="1" Text="Vervaldatum" Classes="body"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Classes="body" Text="{Binding Factuur.VervalDatum, StringFormat={}{0:dd/MM/yyyy}}"/>
+
+                            <TextBlock Grid.Row="2" Text="Initialen" Classes="body"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Classes="body" Text="{Binding Factuur.AangenomenDoorInitialen, TargetNullValue='-'}"/>
                         </Grid>
+                        <Separator/>
+                        <TextBlock Text="Opmerking" Classes="body" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding Factuur.Opmerking, TargetNullValue='Geen extra opmerking'}"
+                                   Classes="body"
+                                   TextWrapping="Wrap"/>
+                        <Separator/>
+
+                        <!-- Totalen: altijd excl -> BTW -> incl; korting + voorschot conditioneel -->
+                        <StackPanel Spacing="6">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Subtotaal (excl. BTW)" Classes="body"/>
+                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Factuur.BrutoExclBtw, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding !Factuur.IsBtwVrijgesteld}">
+                                <TextBlock Text="BTW (21%)" Classes="body"/>
+                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Factuur.BrutoBtw, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
+                            </Grid>
+
+                            <!-- Alleen bij korting: incl-subtotaal + kortingregel -->
+                            <Grid ColumnDefinitions="*,Auto"
+                                  IsVisible="{Binding Factuur.KortingPct, Converter={x:Static conv:BooleanConverters.IsPositive}}">
+                                <TextBlock Text="Subtotaal (incl. BTW)" Classes="body"/>
+                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Factuur.BrutoInclBtw, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Grid ColumnDefinitions="*,Auto"
+                                  IsVisible="{Binding Factuur.KortingPct, Converter={x:Static conv:BooleanConverters.IsPositive}}">
+                                <TextBlock Text="{Binding Factuur.KortingPct, StringFormat='Korting {0:0.##}%'}" Classes="body" Foreground="{DynamicResource Danger}"/>
+                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Factuur.KortingBedragExcl, StringFormat=- € {0:N2}}" Foreground="{DynamicResource Danger}" HorizontalAlignment="Right"/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Totaal (incl. BTW)" Classes="body" FontWeight="Bold"/>
+                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Factuur.TotaalInclBtw, StringFormat=€ {0:N2}}" FontWeight="Bold" HorizontalAlignment="Right"/>
+                            </Grid>
+
+                            <!-- Alleen bij voorschot -->
+                            <Grid ColumnDefinitions="*,Auto"
+                                  IsVisible="{Binding Factuur.VoorschotBedrag, Converter={x:Static conv:BooleanConverters.IsPositive}}">
+                                <TextBlock Text="Voorschot betaald" Classes="body"/>
+                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Factuur.VoorschotBedrag, StringFormat=- € {0:N2}}" HorizontalAlignment="Right"/>
+                            </Grid>
+
+                            <Separator/>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Te betalen bij afhalen" Classes="h3"/>
+                                <TextBlock Grid.Column="1" Classes="h3" Text="{Binding Factuur.RestTeBetalen, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </StackPanel>
                     </StackPanel>
-                </StackPanel>
+                </ScrollViewer>
             </Border>
         </Grid>
 
-        <Border Grid.Row="3" Background="White" BorderBrush="#E5E7EB" BorderThickness="1,1,1,0" Padding="18">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
-                <Button Content="Open preview" Command="{Binding OpenPreviewCommand}"/>
+        <Border Grid.Row="3" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1,1,1,0" Padding="18,12">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <Button Content="Open preview" MinWidth="110" Command="{Binding OpenPreviewCommand}"/>
                 <Button Content="Opslaan bij offerte"
+                        MinWidth="130"
                         Command="{Binding BewaarBijOfferteCommand}"
-                        Background="#D9EAFE"
-                        Foreground="#123B68"
+                        Background="{DynamicResource InfoBg}"
+                        Foreground="{DynamicResource InfoText}"
                         FontWeight="Bold"/>
                 <Button Content="Exporteer PDF"
+                        MinWidth="120"
                         Command="{Binding ExporteerCommand}"
-                        Background="#F5C242"
-                        Foreground="Black"
-                        FontWeight="Bold"/>
-                <Button Content="Sluiten" Command="{Binding SluitCommand}"/>
+                        Classes="AccentBtn"/>
+                <Button Content="Sluiten" MinWidth="90" Command="{Binding SluitCommand}"/>
             </StackPanel>
         </Border>
     </Grid>

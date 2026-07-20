@@ -1,48 +1,49 @@
-<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:vm="using:QuadroApp.ViewModels" xmlns:m="using:QuadroApp.Model.DB" xmlns:controls="clr-namespace:QuadroApp.Views.Controls" x:Class="QuadroApp.Views.KlantenView" x:DataType="vm:KlantenViewModel" Background="#F5F5F5">
-	<Grid RowDefinitions="Auto,*,Auto">
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:vm="using:QuadroApp.ViewModels" xmlns:m="using:QuadroApp.Model.DB" xmlns:controls="clr-namespace:QuadroApp.Views.Controls" x:Class="QuadroApp.Views.KlantenView" x:DataType="vm:KlantenViewModel" Background="{DynamicResource SurfaceMuted}">
+	<Grid RowDefinitions="Auto,*">
 		<!-- ░░ HEADER ░░ -->
-		<controls:QuadroHeader Grid.ColumnSpan="2" Title="KLANTENBEHEER" BackCommand="{Binding GaTerugCommand}"/>
-		<!-- ░░ MAIN CONTENT ░░ -->
-		<StackPanel Grid.Row="1" Margin="20" Spacing="14">
-			<TextBlock Text="👥 Klantenbeheer" FontSize="24" FontWeight="Bold" Foreground="#222" Margin="0,0,0,4"/>
-			<!-- Toolbar -->
-			<Grid ColumnDefinitions="Auto,*" ColumnSpacing="12" Margin="0,0,0,10">
-				<TextBox Grid.Column="0" Width="280" Watermark="Zoek klant…" Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-				<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-					<Button Content="➕ Nieuw" Command="{Binding NewCommand}" Classes="MainBtn"/>
-					<Button Content="✏️ Bewerken" Command="{Binding EditCommand}" Classes="MainBtn"/>
-					<Button Content="📂 Details bekijken" Command="{Binding OpenKlantDetailCommand}" CommandParameter="{Binding SelectedKlant}" Classes="MainBtn"/>
-					<Button Content="🗑️ Verwijderen" Command="{Binding DeleteCommand}" Classes="MainBtn"/>
-					<Button Content="🔄 Ververs" Command="{Binding RefreshCommand}" Classes="MainBtn"/>
-					<Button Content="📥 Excel-import" Command="{Binding ImportExcelCommand}" Classes="MainBtn"/>
-				</StackPanel>
+		<controls:QuadroHeader Title="KLANTENBEHEER" BackCommand="{Binding GaTerugCommand}"/>
+		<!-- ░░ MAIN CONTENT ░░
+		     Grid met star-rij zodat de lijst de resthoogte vult en zelf scrolt. -->
+		<Grid Grid.Row="1" Margin="24" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" RowSpacing="12">
+			<TextBlock Text="👥 Klantenbeheer" Classes="h1" TextTrimming="CharacterEllipsis"/>
+			<!-- Toolbar: zoekveld + knoppenrij die meewrapt op smalle vensters -->
+			<Grid Grid.Row="1" ColumnDefinitions="Auto,*" ColumnSpacing="12">
+				<TextBox Grid.Column="0" MinWidth="220" Watermark="Zoek klant…" Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+				<WrapPanel Grid.Column="1">
+					<Button Content="➕ Nieuw" Command="{Binding NewCommand}" Classes="MainBtn" Margin="0,0,8,6"/>
+					<Button Content="✏️ Bewerken" Command="{Binding EditCommand}" Classes="MainBtn" Margin="0,0,8,6"/>
+					<Button Content="📂 Details bekijken" Command="{Binding OpenKlantDetailCommand}" CommandParameter="{Binding SelectedKlant}" Classes="MainBtn" Margin="0,0,8,6"/>
+					<Button Content="🗑️ Verwijderen" Command="{Binding DeleteCommand}" Classes="MainBtn" Margin="0,0,8,6"/>
+					<Button Content="🔄 Ververs" Command="{Binding RefreshCommand}" Classes="MainBtn" Margin="0,0,8,6"/>
+					<Button Content="📥 Excel-import" Command="{Binding ImportExcelCommand}" Classes="MainBtn" Margin="0,0,0,6"/>
+				</WrapPanel>
 			</Grid>
-			<Border Background="#FFF8E1" BorderBrush="#F5C242" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
-				<TextBlock Foreground="#333" Text="Selecteer een klant en gebruik ‘Bewerken’ of ‘Details bekijken’. Dubbelklik op een rij om meteen naar de details te gaan."/>
+			<Border Grid.Row="2" Background="{DynamicResource WarningBg}" BorderBrush="{DynamicResource BrandYellow}" BorderThickness="1" CornerRadius="8" Padding="10">
+				<TextBlock Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" Text="Selecteer een klant en gebruik ‘Bewerken’ of ‘Details bekijken’. Dubbelklik op een rij om meteen naar de details te gaan."/>
 			</Border>
-			<Grid ColumnDefinitions="2*,2.5*,1.5*,3*,2*,3*" Margin="6,0,6,6">
-				<TextBlock Text="Naam" Grid.Column="0" FontWeight="Bold" Foreground="#000"/>
-				<TextBlock Text="E-mail" Grid.Column="1" FontWeight="Bold" Foreground="#000"/>
-				<TextBlock Text="Telefoon" Grid.Column="2" FontWeight="Bold" Foreground="#000"/>
-				<TextBlock Text="Opmerking" Grid.Column="3" FontWeight="Bold" Foreground="#000"/>
-				<TextBlock Text="Btw-nummer" Grid.Column="4" FontWeight="Bold" Foreground="#000"/>
-				<TextBlock Text="Adres" Grid.Column="5" FontWeight="Bold" Foreground="#000"/>
+			<Grid Grid.Row="3" ColumnDefinitions="2*,2.5*,1.5*,3*,2*,3*" ColumnSpacing="8" Margin="16,0,16,0">
+				<TextBlock Text="Naam" Grid.Column="0" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
+				<TextBlock Text="E-mail" Grid.Column="1" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
+				<TextBlock Text="Telefoon" Grid.Column="2" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
+				<TextBlock Text="Opmerking" Grid.Column="3" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
+				<TextBlock Text="Btw-nummer" Grid.Column="4" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
+				<TextBlock Text="Adres" Grid.Column="5" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
 			</Grid>
-			<Border BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Background="White">
+			<Border Grid.Row="4" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource Surface}">
 				<ListBox ItemsSource="{Binding FilteredKlanten}" SelectedItem="{Binding SelectedKlant, Mode=TwoWay}" BorderThickness="0" Background="Transparent" ScrollViewer.VerticalScrollBarVisibility="Auto" DoubleTapped="KlantenList_DoubleTapped">
 					<ListBox.ItemTemplate>
 						<DataTemplate x:DataType="m:Klant">
 							<Grid ColumnDefinitions="2*,2.5*,1.5*,3*,2*,3*" VerticalAlignment="Center" ColumnSpacing="8">
 								<StackPanel Grid.Column="0">
-									<TextBlock Text="{Binding Voornaam, TargetNullValue='', FallbackValue=''}" Foreground="#222" FontSize="15" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
-									<TextBlock Text="{Binding Achternaam, TargetNullValue='', FallbackValue=''}" Foreground="#555" FontSize="13" TextTrimming="CharacterEllipsis"/>
+									<TextBlock Text="{Binding Voornaam, TargetNullValue='', FallbackValue=''}" Classes="h3" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Voornaam}"/>
+									<TextBlock Text="{Binding Achternaam, TargetNullValue='', FallbackValue=''}" Classes="body" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Achternaam}"/>
 								</StackPanel>
-								<TextBlock Grid.Column="1" Text="{Binding Email, TargetNullValue='', FallbackValue=''}" Foreground="#333" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-								<TextBlock Grid.Column="2" Text="{Binding Telefoon, TargetNullValue='', FallbackValue=''}" Foreground="#333" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-								<TextBlock Grid.Column="3" Text="{Binding Opmerking, TargetNullValue='', FallbackValue=''}" Foreground="#666" FontStyle="Italic" VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
-								<TextBlock Grid.Column="4" Text="{Binding BtwNummer, TargetNullValue='', FallbackValue=''}" Foreground="#333" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+								<TextBlock Grid.Column="1" Text="{Binding Email, TargetNullValue='', FallbackValue=''}" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Email}"/>
+								<TextBlock Grid.Column="2" Text="{Binding Telefoon, TargetNullValue='', FallbackValue=''}" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Telefoon}"/>
+								<TextBlock Grid.Column="3" Text="{Binding Opmerking, TargetNullValue='', FallbackValue=''}" Foreground="{DynamicResource TextSecondary}" FontStyle="Italic" VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Opmerking}"/>
+								<TextBlock Grid.Column="4" Text="{Binding BtwNummer, TargetNullValue='', FallbackValue=''}" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding BtwNummer}"/>
 								<StackPanel Grid.Column="5">
-									<TextBlock Foreground="#333" TextTrimming="CharacterEllipsis">
+									<TextBlock Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis">
 										<TextBlock.Text>
 											<MultiBinding StringFormat="{}{0}, {1}">
 												<Binding Path="Straat" TargetNullValue=""/>
@@ -50,24 +51,21 @@
 											</MultiBinding>
 										</TextBlock.Text>
 									</TextBlock>
-									<TextBlock Foreground="#666" FontSize="13" TextTrimming="CharacterEllipsis">
+									<TextBlock Foreground="{DynamicResource TextSecondary}" Classes="body" TextTrimming="CharacterEllipsis">
 										<TextBlock.Text>
 											<MultiBinding StringFormat="{}{0}, {1}">
 												<Binding Path="Postcode" TargetNullValue=""/>
 												<Binding Path="Gemeente" TargetNullValue=""/>
 											</MultiBinding>
-												</TextBlock.Text>
-											</TextBlock>
-										</StackPanel>
+										</TextBlock.Text>
+									</TextBlock>
+								</StackPanel>
 							</Grid>
 						</DataTemplate>
 					</ListBox.ItemTemplate>
 				</ListBox>
 			</Border>
-			<TextBlock Text="{Binding FilteredKlanten.Count, StringFormat='Aantal geladen klanten: {0}'}" HorizontalAlignment="Center" Foreground="#666" Margin="0,6,0,0"/>
-		</StackPanel>
-		<Border Grid.Row="2" Background="#F5F5F5" Padding="8">
-			<TextBlock Text=" " />
-		</Border>
+			<TextBlock Grid.Row="5" Text="{Binding FilteredKlanten.Count, StringFormat='Aantal geladen klanten: {0}'}" HorizontalAlignment="Center" Classes="caption"/>
+		</Grid>
 	</Grid>
 </UserControl>
