@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using QuadroApp.Model.DB;
 
 namespace QuadroApp.Service.Security;
@@ -10,7 +10,8 @@ public enum Permissie
     LijstVerwijderen,
     PrijzenWijzigen,
     Factureren,
-    GebruikersBeheren
+    GebruikersBeheren,
+    GdprBeheer
 }
 
 /// <summary>Statische rol → permissie mapping. Admin mag alles.</summary>
