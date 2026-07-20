@@ -42,6 +42,8 @@ public class PasswordHasherTests
 }
 
 /// <summary>US-32 — login, rollen en autorisatie.</summary>
+/// <remarks>Zelfde collection als AuditTrailTests wegens statische AuditContext.</remarks>
+[Collection("StaticAuthState")]
 public class AuthServiceTests
 {
     private static AuthService CreateSut(SqliteTestDatabase db) =>
