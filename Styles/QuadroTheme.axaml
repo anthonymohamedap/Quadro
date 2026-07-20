@@ -116,21 +116,11 @@
 		<SolidColorBrush x:Key="IconSlate" Color="{StaticResource IconSlateColor}"/>
 		<SolidColorBrush x:Key="IconSlateBg" Color="{StaticResource IconSlateBgColor}"/>
 
-		<!-- Fase 3 — donker planning-thema (PlanningTijdDialog, PlanningCalendarWindow) -->
-		<Color x:Key="PlanningBgColor">#0F1117</Color>
-		<Color x:Key="PlanningSurfaceColor">#16181F</Color>
-		<Color x:Key="PlanningSurfaceAltColor">#1E2029</Color>
-		<Color x:Key="PlanningBorderColor">#2A2D38</Color>
-		<Color x:Key="PlanningTextColor">#F0F2F8</Color>
-		<Color x:Key="PlanningTextMutedColor">#9299AE</Color>
-		<Color x:Key="PlanningTextFaintColor">#5A6075</Color>
-		<SolidColorBrush x:Key="PlanningBg" Color="{StaticResource PlanningBgColor}"/>
-		<SolidColorBrush x:Key="PlanningSurface" Color="{StaticResource PlanningSurfaceColor}"/>
-		<SolidColorBrush x:Key="PlanningSurfaceAlt" Color="{StaticResource PlanningSurfaceAltColor}"/>
-		<SolidColorBrush x:Key="PlanningBorder" Color="{StaticResource PlanningBorderColor}"/>
-		<SolidColorBrush x:Key="PlanningText" Color="{StaticResource PlanningTextColor}"/>
-		<SolidColorBrush x:Key="PlanningTextMuted" Color="{StaticResource PlanningTextMutedColor}"/>
-		<SolidColorBrush x:Key="PlanningTextFaint" Color="{StaticResource PlanningTextFaintColor}"/>
+		<!-- Planning — capaciteitskleuren dagbezetting (kalender), semantisch -->
+		<SolidColorBrush x:Key="CapacityLow" Color="{StaticResource SuccessColor}"/>
+		<SolidColorBrush x:Key="CapacityMid" Color="{StaticResource BrandYellowColor}"/>
+		<SolidColorBrush x:Key="CapacityHigh" Color="{StaticResource IconOrangeColor}"/>
+		<SolidColorBrush x:Key="CapacityFull" Color="{StaticResource DangerColor}"/>
 
 		<!-- Spacing-schaal 4/8/12/16/24/32 -->
 		<Thickness x:Key="SpaceXs">4</Thickness>
@@ -305,11 +295,11 @@
 		<Setter Property="Background" Value="{DynamicResource BrandYellowHover}"/>
 	</Style>
 
-	<!-- Button.GhostBtn (herbruikbaar, donkere achtergrond) -->
+	<!-- Button.GhostBtn (herbruikbaar, secundaire actie op lichte achtergrond) -->
 	<Style Selector="Button.GhostBtn">
 		<Setter Property="Background" Value="Transparent"/>
-		<Setter Property="Foreground" Value="#9299AE"/>
-		<Setter Property="BorderBrush" Value="#9299AE"/>
+		<Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+		<Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
 		<Setter Property="BorderThickness" Value="1"/>
 		<Setter Property="CornerRadius" Value="8"/>
 		<Setter Property="Padding" Value="12,6"/>
@@ -317,7 +307,22 @@
 		<Setter Property="Cursor" Value="Hand"/>
 	</Style>
 	<Style Selector="Button.GhostBtn:pointerover /template/ ContentPresenter">
-		<Setter Property="Background" Value="#252830"/>
+		<Setter Property="Background" Value="{DynamicResource SurfaceMuted}"/>
+	</Style>
+
+	<!-- Button.DangerBtn (herbruikbaar, destructieve/blokkeer-actie) -->
+	<Style Selector="Button.DangerBtn">
+		<Setter Property="Background" Value="Transparent"/>
+		<Setter Property="Foreground" Value="{DynamicResource Danger}"/>
+		<Setter Property="BorderBrush" Value="{DynamicResource Danger}"/>
+		<Setter Property="BorderThickness" Value="1"/>
+		<Setter Property="CornerRadius" Value="8"/>
+		<Setter Property="Padding" Value="12,6"/>
+		<Setter Property="FontSize" Value="12"/>
+		<Setter Property="Cursor" Value="Hand"/>
+	</Style>
+	<Style Selector="Button.DangerBtn:pointerover /template/ ContentPresenter">
+		<Setter Property="Background" Value="{DynamicResource DangerBg}"/>
 	</Style>
 
 	<!-- TextBlock: standaard zwart voor lichte views -->
