@@ -5,103 +5,105 @@
         x:DataType="vm:PlanningTijdDialogViewModel"
         Title="Taak plannen"
         Width="420"
+        MinWidth="360"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
-        CanResize="False"
-        Background="#0F1117">
+        CanResize="True"
+        Background="{DynamicResource PlanningBg}">
 
     <Window.Styles>
         <Style Selector="TextBlock">
-            <Setter Property="Foreground" Value="#F0F2F8"/>
+            <Setter Property="Foreground" Value="{DynamicResource PlanningText}"/>
             <Setter Property="FontFamily" Value="Segoe UI, sans-serif"/>
         </Style>
         <Style Selector="DatePicker">
-            <Setter Property="Background"   Value="#1E2029"/>
-            <Setter Property="Foreground"   Value="#F0F2F8"/>
-            <Setter Property="BorderBrush"  Value="#2A2D38"/>
+            <Setter Property="Background"   Value="{DynamicResource PlanningSurfaceAlt}"/>
+            <Setter Property="Foreground"   Value="{DynamicResource PlanningText}"/>
+            <Setter Property="BorderBrush"  Value="{DynamicResource PlanningBorder}"/>
         </Style>
     </Window.Styles>
 
-    <Border Padding="24" Background="#16181F">
-        <StackPanel Spacing="18">
+    <Border Padding="24" Background="{DynamicResource PlanningSurface}">
+        <StackPanel Spacing="16">
 
             <!-- Titel -->
             <StackPanel Spacing="2">
                 <TextBlock Text="Taak plannen"
-                           FontSize="18"
-                           FontWeight="Bold"
-                           Foreground="#F5C242"/>
+                           Classes="h2"
+                           Foreground="{DynamicResource BrandYellow}"/>
                 <TextBlock Text="Kies startdatum — taken worden automatisch verdeeld als de dag vol is."
-                           FontSize="12"
-                           Foreground="#5A6075"
+                           Classes="label"
+                           Foreground="{DynamicResource PlanningTextFaint}"
                            TextWrapping="Wrap"/>
             </StackPanel>
 
             <!-- Context info -->
-            <Border Background="#1E2029"
-                    BorderBrush="#2A2D38"
+            <Border Background="{DynamicResource PlanningSurfaceAlt}"
+                    BorderBrush="{DynamicResource PlanningBorder}"
                     BorderThickness="1"
                     CornerRadius="8"
                     Padding="12,10">
                 <TextBlock Text="{Binding ContextLabel}"
-                           FontSize="12"
-                           Foreground="#9299AE"
+                           Classes="label"
+                           Foreground="{DynamicResource PlanningTextMuted}"
                            TextWrapping="Wrap"/>
             </Border>
 
             <!-- Startdatum -->
             <StackPanel Spacing="6">
                 <TextBlock Text="STARTDATUM"
-                           FontSize="11"
+                           Classes="caption"
                            FontWeight="SemiBold"
-                           Foreground="#5A6075"
+                           Foreground="{DynamicResource PlanningTextFaint}"
                            LetterSpacing="1.5"/>
                 <DatePicker SelectedDate="{Binding GeplandeDatum}"
                             HorizontalAlignment="Stretch"/>
             </StackPanel>
 
             <!-- Geschat werk (read-only) -->
-            <Border Background="#1E2029"
-                    BorderBrush="#2A2D38"
+            <Border Background="{DynamicResource PlanningSurfaceAlt}"
+                    BorderBrush="{DynamicResource PlanningBorder}"
                     BorderThickness="1"
                     CornerRadius="8"
                     Padding="14,10">
                 <StackPanel Spacing="6">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
                         <TextBlock Text="Totaal geschat werk:"
-                                   FontSize="12"
-                                   Foreground="#9299AE"
+                                   Classes="label"
+                                   Foreground="{DynamicResource PlanningTextMuted}"
                                    VerticalAlignment="Center"/>
                         <TextBlock Text="{Binding DuurLabel}"
-                                   FontSize="15"
-                                   FontWeight="Bold"
-                                   Foreground="#F5C242"
+                                   Classes="h3"
+                                   Foreground="{DynamicResource BrandYellow}"
                                    VerticalAlignment="Center"/>
                     </StackPanel>
                     <TextBlock Text="{Binding SpreadLabel}"
-                               FontSize="12"
-                               Foreground="#9299AE"/>
+                               Classes="label"
+                               Foreground="{DynamicResource PlanningTextMuted}"
+                               TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
 
             <!-- Knoppen -->
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Right"
-                        Spacing="10"
+                        Spacing="8"
                         Margin="0,4,0,0">
                 <Button Content="Annuleer"
+                        MinWidth="100"
                         Command="{Binding AnnuleerCommand}"
                         Background="Transparent"
-                        Foreground="#9299AE"
-                        BorderBrush="#2A2D38"
+                        Foreground="{DynamicResource PlanningTextMuted}"
+                        BorderBrush="{DynamicResource PlanningBorder}"
                         BorderThickness="1"
                         CornerRadius="8"
                         Padding="16,8"
                         Cursor="Hand"/>
                 <Button Content="Bevestig"
+                        MinWidth="100"
                         Command="{Binding BevestigCommand}"
-                        Background="#F5C242"
-                        Foreground="#0F1117"
+                        Background="{DynamicResource BrandYellow}"
+                        Foreground="{DynamicResource PlanningBg}"
                         FontWeight="SemiBold"
                         CornerRadius="8"
                         Padding="16,8"
