@@ -7,7 +7,9 @@
     x:DataType="vm:MainWindowViewModel"
     Title="{Binding AppVersion, StringFormat='QuadroApp {0}'}"
     Width="1200"
-    Height="820">
+    Height="820"
+    MinWidth="1024"
+    MinHeight="700">
 
 	<Panel>
 		<ContentControl Content="{Binding CurrentViewModel}" />
