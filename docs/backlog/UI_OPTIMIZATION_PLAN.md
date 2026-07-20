@@ -68,7 +68,7 @@ Focus: resizable + min-maten, `SizeToContent` waar passend, knoppenrijen die nie
 
 | Fase | Status |
 |---|---|
-| 0 — Fundament | ⬜ |
+| 0 — Fundament | ✅ 20-07-2026 (branch `feature/ui-fase-0`, verify groen) |
 | 1 — Kernschermen | ⬜ |
 | 2 — Beheerschermen | ⬜ |
 | 3 — Dialogen & import | ⬜ |
