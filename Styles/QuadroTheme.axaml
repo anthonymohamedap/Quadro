@@ -62,6 +62,58 @@
 		<SolidColorBrush x:Key="Warning" Color="{StaticResource WarningColor}"/>
 		<SolidColorBrush x:Key="WarningBg" Color="{StaticResource WarningBgColor}"/>
 
+		<!-- Fase 1 — dark sidebar (HomeView) -->
+		<Color x:Key="BrandDarkHoverColor">#55606A</Color>
+		<Color x:Key="TextMutedOnDarkColor">#9CA3AF</Color>
+		<SolidColorBrush x:Key="BrandDarkHover" Color="{StaticResource BrandDarkHoverColor}"/>
+		<SolidColorBrush x:Key="TextMutedOnDark" Color="{StaticResource TextMutedOnDarkColor}"/>
+
+		<!-- Fase 1 — stat-tegels (dashboard) -->
+		<Color x:Key="StatOrangeBgColor">#FFF7ED</Color>
+		<Color x:Key="StatOrangeTextColor">#7C2D12</Color>
+		<Color x:Key="StatRedBgColor">#FEF2F2</Color>
+		<Color x:Key="StatRedTextColor">#991B1B</Color>
+		<Color x:Key="StatBlueBgColor">#EFF6FF</Color>
+		<Color x:Key="StatBlueTextColor">#1D4ED8</Color>
+		<Color x:Key="StatPurpleBgColor">#FDF4FF</Color>
+		<Color x:Key="StatPurpleTextColor">#7E22CE</Color>
+		<SolidColorBrush x:Key="StatOrangeBg" Color="{StaticResource StatOrangeBgColor}"/>
+		<SolidColorBrush x:Key="StatOrangeText" Color="{StaticResource StatOrangeTextColor}"/>
+		<SolidColorBrush x:Key="StatRedBg" Color="{StaticResource StatRedBgColor}"/>
+		<SolidColorBrush x:Key="StatRedText" Color="{StaticResource StatRedTextColor}"/>
+		<SolidColorBrush x:Key="StatBlueBg" Color="{StaticResource StatBlueBgColor}"/>
+		<SolidColorBrush x:Key="StatBlueText" Color="{StaticResource StatBlueTextColor}"/>
+		<SolidColorBrush x:Key="StatPurpleBg" Color="{StaticResource StatPurpleBgColor}"/>
+		<SolidColorBrush x:Key="StatPurpleText" Color="{StaticResource StatPurpleTextColor}"/>
+
+		<!-- Fase 1 — icoon-accenten (kaartknoppen) -->
+		<Color x:Key="IconBlueColor">#3B82F6</Color>
+		<Color x:Key="IconBlueBgColor">#EEF4FF</Color>
+		<Color x:Key="IconGreenColor">#22C55E</Color>
+		<Color x:Key="IconGreenBgColor">#F0FDF4</Color>
+		<Color x:Key="IconOrangeColor">#F97316</Color>
+		<Color x:Key="IconPurpleColor">#A855F7</Color>
+		<Color x:Key="IconEmeraldColor">#10B981</Color>
+		<Color x:Key="IconEmeraldBgColor">#ECFDF5</Color>
+		<Color x:Key="IconRoseColor">#F43F5E</Color>
+		<Color x:Key="IconRoseBgColor">#FFF1F2</Color>
+		<Color x:Key="IconSlateColor">#64748B</Color>
+		<Color x:Key="IconSlateBgColor">#F8FAFC</Color>
+		<SolidColorBrush x:Key="IconBlue" Color="{StaticResource IconBlueColor}"/>
+		<SolidColorBrush x:Key="IconBlueBg" Color="{StaticResource IconBlueBgColor}"/>
+		<SolidColorBrush x:Key="IconGreen" Color="{StaticResource IconGreenColor}"/>
+		<SolidColorBrush x:Key="IconGreenBg" Color="{StaticResource IconGreenBgColor}"/>
+		<SolidColorBrush x:Key="IconOrange" Color="{StaticResource IconOrangeColor}"/>
+		<SolidColorBrush x:Key="IconOrangeBg" Color="{StaticResource StatOrangeBgColor}"/>
+		<SolidColorBrush x:Key="IconPurple" Color="{StaticResource IconPurpleColor}"/>
+		<SolidColorBrush x:Key="IconPurpleBg" Color="{StaticResource StatPurpleBgColor}"/>
+		<SolidColorBrush x:Key="IconEmerald" Color="{StaticResource IconEmeraldColor}"/>
+		<SolidColorBrush x:Key="IconEmeraldBg" Color="{StaticResource IconEmeraldBgColor}"/>
+		<SolidColorBrush x:Key="IconRose" Color="{StaticResource IconRoseColor}"/>
+		<SolidColorBrush x:Key="IconRoseBg" Color="{StaticResource IconRoseBgColor}"/>
+		<SolidColorBrush x:Key="IconSlate" Color="{StaticResource IconSlateColor}"/>
+		<SolidColorBrush x:Key="IconSlateBg" Color="{StaticResource IconSlateBgColor}"/>
+
 		<!-- Spacing-schaal 4/8/12/16/24/32 -->
 		<Thickness x:Key="SpaceXs">4</Thickness>
 		<Thickness x:Key="SpaceSm">8</Thickness>
@@ -93,6 +145,11 @@
 	</Style>
 	<Style Selector="TextBlock.h2">
 		<Setter Property="FontSize" Value="17"/>
+		<Setter Property="FontWeight" Value="SemiBold"/>
+		<Setter Property="Foreground" Value="{DynamicResource TextHeading}"/>
+	</Style>
+	<Style Selector="TextBlock.h3">
+		<Setter Property="FontSize" Value="15"/>
 		<Setter Property="FontWeight" Value="SemiBold"/>
 		<Setter Property="Foreground" Value="{DynamicResource TextHeading}"/>
 	</Style>
