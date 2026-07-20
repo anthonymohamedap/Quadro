@@ -161,15 +161,12 @@
 										<StackPanel Spacing="10">
 
 											<!-- Veld-labels + invoer.
-											     Twee rijen i.p.v. drie kolommen: de DatePicker heeft
-											     ~250px nodig en clipte anders buiten het 520px-paneel. -->
-											<Grid ColumnDefinitions="1*,1.4*" ColumnSpacing="10"
-											      RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="3">
-												<TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
-												           Text="Lijst" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+											     Elk veld op een eigen rij: de Fluent DatePicker heeft
+											     ~300px minimum nodig en clipte anders buiten het paneel. -->
+											<StackPanel Spacing="3">
+												<TextBlock Text="Lijst" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
 
-												<ComboBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-                                                          HorizontalAlignment="Stretch"
+												<ComboBox HorizontalAlignment="Stretch"
                                                           ItemsSource="{Binding BestelbareLijsten}"
                                                           SelectedItem="{Binding SelectedBestelTypeLijst, Mode=TwoWay}">
 													<ComboBox.ItemTemplate>
@@ -179,22 +176,19 @@
 													</ComboBox.ItemTemplate>
 												</ComboBox>
 
-												<TextBlock Grid.Row="2" Grid.Column="0" Margin="0,8,0,0"
+												<TextBlock Margin="0,8,0,0"
 												           Text="{Binding NieuweBestelAantalLabel}" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Row="2" Grid.Column="1" Margin="0,8,0,0"
-												           Text="Besteldatum" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-
-												<NumericUpDown Grid.Row="3" Grid.Column="0"
-                                                               MinWidth="120"
-                                                               HorizontalAlignment="Stretch"
+												<NumericUpDown MinWidth="120"
+                                                               HorizontalAlignment="Left"
                                                                Value="{Binding NieuwBestelAantalMeter, Mode=TwoWay}"
                                                                Minimum="0.01"
                                                                FormatString="0.00"/>
 
-												<DatePicker Grid.Row="3" Grid.Column="1"
-                                                            HorizontalAlignment="Stretch"
+												<TextBlock Margin="0,8,0,0"
+												           Text="Besteldatum" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<DatePicker HorizontalAlignment="Left"
                                                             SelectedDate="{Binding NieuweBestellingDatum, Mode=TwoWay}"/>
-											</Grid>
+											</StackPanel>
 
 											<!-- BESTELWIJZE -->
 											<StackPanel Spacing="3">
