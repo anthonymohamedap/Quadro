@@ -1,4 +1,5 @@
-# verify.ps1 — run after every change: builds the solution and runs all tests.
+﻿
+# verify.ps1 - run after every change: builds the solution and runs all tests.
 # Usage:  .\verify.ps1        (build + test)
 #         .\verify.ps1 -SkipTests   (build only, faster)
 param([switch]$SkipTests)

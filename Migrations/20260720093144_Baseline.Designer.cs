@@ -11,8 +11,8 @@ using QuadroApp.Data;
 namespace QuadroApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260507011133_tag10")]
-    partial class tag10
+    [Migration("20260720093144_Baseline")]
+    partial class Baseline
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -51,6 +51,9 @@ namespace QuadroApp.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("AfwerkingsGroepId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsGearchiveerd")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Kleur")
@@ -109,6 +112,9 @@ namespace QuadroApp.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActief")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsGearchiveerd")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsStandaard")
@@ -186,6 +192,14 @@ namespace QuadroApp.Migrations
                     b.Property<string>("KlantNaam")
                         .IsRequired()
                         .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("KortingBedragExcl")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("KortingPct")
+                        .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("OfferteId")
@@ -438,8 +452,14 @@ namespace QuadroApp.Migrations
                     b.Property<string>("Email")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("GearchiveerdOp")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Gemeente")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsGearchiveerd")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Nummer")
                         .HasColumnType("TEXT");
@@ -471,6 +491,9 @@ namespace QuadroApp.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsGearchiveerd")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Naam")
                         .IsRequired()
                         .HasMaxLength(3)
@@ -497,6 +520,9 @@ namespace QuadroApp.Migrations
                     b.Property<decimal>("AantalMeterOntvangen")
                         .HasPrecision(10, 2)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("BestelVorm")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("LeverancierBestellingId")
                         .HasColumnType("INTEGER");
@@ -545,7 +571,7 @@ namespace QuadroApp.Migrations
                     b.Property<DateTime>("BesteldOp")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("LeverancierId")
+                    b.Property<int?>("LeverancierId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("OntvangenOp")
@@ -712,6 +738,9 @@ namespace QuadroApp.Migrations
                     b.Property<decimal?>("AfgesprokenPrijsExcl")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<DateTime?>("AfhaalDatum")
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal>("BreedteCm")
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
@@ -723,6 +752,9 @@ namespace QuadroApp.Migrations
                     b.Property<int?>("DiepteKernId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("DiepteKernVariantId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<decimal>("ExtraPrijs")
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
@@ -731,6 +763,9 @@ namespace QuadroApp.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("GlasId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("GlasVariantId")
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("HoogteCm")
@@ -757,6 +792,9 @@ namespace QuadroApp.Migrations
                     b.Property<int?>("OpklevenId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("OpklevenVariantId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Opmerking")
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
@@ -764,10 +802,19 @@ namespace QuadroApp.Migrations
                     b.Property<int?>("PassePartout1Id")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("PassePartout1VariantId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("PassePartout2Id")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("PassePartout2VariantId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("RugId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("RugVariantId")
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("SubtotaalExBtw")
@@ -792,17 +839,29 @@ namespace QuadroApp.Migrations
 
                     b.HasIndex("DiepteKernId");
 
+                    b.HasIndex("DiepteKernVariantId");
+
                     b.HasIndex("GlasId");
+
+                    b.HasIndex("GlasVariantId");
 
                     b.HasIndex("OfferteId");
 
                     b.HasIndex("OpklevenId");
 
+                    b.HasIndex("OpklevenVariantId");
+
                     b.HasIndex("PassePartout1Id");
+
+                    b.HasIndex("PassePartout1VariantId");
 
                     b.HasIndex("PassePartout2Id");
 
+                    b.HasIndex("PassePartout2VariantId");
+
                     b.HasIndex("RugId");
+
+                    b.HasIndex("RugVariantId");
 
                     b.HasIndex("TypeLijstId");
 
@@ -844,6 +903,9 @@ namespace QuadroApp.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsDealer")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsGearchiveerd")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("LaatsteUpdate")
@@ -1272,8 +1334,7 @@ namespace QuadroApp.Migrations
                     b.HasOne("QuadroApp.Model.DB.Leverancier", "Leverancier")
                         .WithMany("Bestellingen")
                         .HasForeignKey("LeverancierId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Leverancier");
                 });
@@ -1294,9 +1355,19 @@ namespace QuadroApp.Migrations
                         .HasForeignKey("DiepteKernId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsVariant", "DiepteKernVariant")
+                        .WithMany()
+                        .HasForeignKey("DiepteKernVariantId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("QuadroApp.Model.DB.AfwerkingsOptie", "Glas")
                         .WithMany()
                         .HasForeignKey("GlasId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsVariant", "GlasVariant")
+                        .WithMany()
+                        .HasForeignKey("GlasVariantId")
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("QuadroApp.Model.DB.Offerte", "Offerte")
@@ -1310,9 +1381,19 @@ namespace QuadroApp.Migrations
                         .HasForeignKey("OpklevenId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsVariant", "OpklevenVariant")
+                        .WithMany()
+                        .HasForeignKey("OpklevenVariantId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("QuadroApp.Model.DB.AfwerkingsOptie", "PassePartout1")
                         .WithMany()
                         .HasForeignKey("PassePartout1Id")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsVariant", "PassePartout1Variant")
+                        .WithMany()
+                        .HasForeignKey("PassePartout1VariantId")
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("QuadroApp.Model.DB.AfwerkingsOptie", "PassePartout2")
@@ -1320,9 +1401,19 @@ namespace QuadroApp.Migrations
                         .HasForeignKey("PassePartout2Id")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsVariant", "PassePartout2Variant")
+                        .WithMany()
+                        .HasForeignKey("PassePartout2VariantId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("QuadroApp.Model.DB.AfwerkingsOptie", "Rug")
                         .WithMany()
                         .HasForeignKey("RugId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsVariant", "RugVariant")
+                        .WithMany()
+                        .HasForeignKey("RugVariantId")
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("QuadroApp.Model.DB.TypeLijst", "TypeLijst")
@@ -1332,17 +1423,29 @@ namespace QuadroApp.Migrations
 
                     b.Navigation("DiepteKern");
 
+                    b.Navigation("DiepteKernVariant");
+
                     b.Navigation("Glas");
+
+                    b.Navigation("GlasVariant");
 
                     b.Navigation("Offerte");
 
                     b.Navigation("Opkleven");
 
+                    b.Navigation("OpklevenVariant");
+
                     b.Navigation("PassePartout1");
+
+                    b.Navigation("PassePartout1Variant");
 
                     b.Navigation("PassePartout2");
 
+                    b.Navigation("PassePartout2Variant");
+
                     b.Navigation("Rug");
+
+                    b.Navigation("RugVariant");
 
                     b.Navigation("TypeLijst");
                 });

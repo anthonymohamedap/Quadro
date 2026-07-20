@@ -749,6 +749,9 @@ namespace QuadroApp.Migrations
                     b.Property<int?>("DiepteKernId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("DiepteKernVariantId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<decimal>("ExtraPrijs")
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
@@ -757,6 +760,9 @@ namespace QuadroApp.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("GlasId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("GlasVariantId")
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("HoogteCm")
@@ -783,6 +789,9 @@ namespace QuadroApp.Migrations
                     b.Property<int?>("OpklevenId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("OpklevenVariantId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Opmerking")
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
@@ -790,10 +799,19 @@ namespace QuadroApp.Migrations
                     b.Property<int?>("PassePartout1Id")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("PassePartout1VariantId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("PassePartout2Id")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("PassePartout2VariantId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("RugId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("RugVariantId")
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("SubtotaalExBtw")
@@ -818,17 +836,29 @@ namespace QuadroApp.Migrations
 
                     b.HasIndex("DiepteKernId");
 
+                    b.HasIndex("DiepteKernVariantId");
+
                     b.HasIndex("GlasId");
+
+                    b.HasIndex("GlasVariantId");
 
                     b.HasIndex("OfferteId");
 
                     b.HasIndex("OpklevenId");
 
+                    b.HasIndex("OpklevenVariantId");
+
                     b.HasIndex("PassePartout1Id");
+
+                    b.HasIndex("PassePartout1VariantId");
 
                     b.HasIndex("PassePartout2Id");
 
+                    b.HasIndex("PassePartout2VariantId");
+
                     b.HasIndex("RugId");
+
+                    b.HasIndex("RugVariantId");
 
                     b.HasIndex("TypeLijstId");
 
@@ -1322,9 +1352,19 @@ namespace QuadroApp.Migrations
                         .HasForeignKey("DiepteKernId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsVariant", "DiepteKernVariant")
+                        .WithMany()
+                        .HasForeignKey("DiepteKernVariantId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("QuadroApp.Model.DB.AfwerkingsOptie", "Glas")
                         .WithMany()
                         .HasForeignKey("GlasId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsVariant", "GlasVariant")
+                        .WithMany()
+                        .HasForeignKey("GlasVariantId")
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("QuadroApp.Model.DB.Offerte", "Offerte")
@@ -1338,9 +1378,19 @@ namespace QuadroApp.Migrations
                         .HasForeignKey("OpklevenId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsVariant", "OpklevenVariant")
+                        .WithMany()
+                        .HasForeignKey("OpklevenVariantId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("QuadroApp.Model.DB.AfwerkingsOptie", "PassePartout1")
                         .WithMany()
                         .HasForeignKey("PassePartout1Id")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsVariant", "PassePartout1Variant")
+                        .WithMany()
+                        .HasForeignKey("PassePartout1VariantId")
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("QuadroApp.Model.DB.AfwerkingsOptie", "PassePartout2")
@@ -1348,9 +1398,19 @@ namespace QuadroApp.Migrations
                         .HasForeignKey("PassePartout2Id")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsVariant", "PassePartout2Variant")
+                        .WithMany()
+                        .HasForeignKey("PassePartout2VariantId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("QuadroApp.Model.DB.AfwerkingsOptie", "Rug")
                         .WithMany()
                         .HasForeignKey("RugId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("QuadroApp.Model.DB.AfwerkingsVariant", "RugVariant")
+                        .WithMany()
+                        .HasForeignKey("RugVariantId")
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("QuadroApp.Model.DB.TypeLijst", "TypeLijst")
@@ -1360,17 +1420,29 @@ namespace QuadroApp.Migrations
 
                     b.Navigation("DiepteKern");
 
+                    b.Navigation("DiepteKernVariant");
+
                     b.Navigation("Glas");
+
+                    b.Navigation("GlasVariant");
 
                     b.Navigation("Offerte");
 
                     b.Navigation("Opkleven");
 
+                    b.Navigation("OpklevenVariant");
+
                     b.Navigation("PassePartout1");
+
+                    b.Navigation("PassePartout1Variant");
 
                     b.Navigation("PassePartout2");
 
+                    b.Navigation("PassePartout2Variant");
+
                     b.Navigation("Rug");
+
+                    b.Navigation("RugVariant");
 
                     b.Navigation("TypeLijst");
                 });
