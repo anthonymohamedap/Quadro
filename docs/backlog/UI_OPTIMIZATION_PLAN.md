@@ -69,7 +69,7 @@ Focus: resizable + min-maten, `SizeToContent` waar passend, knoppenrijen die nie
 | Fase | Status |
 |---|---|
 | 0 — Fundament | ✅ 20-07-2026 (branch `feature/ui-fase-0`, verify groen) |
-| 1 — Kernschermen | ⬜ |
+| 1 — Kernschermen | 🟡 20-07-2026 — alle 5 schermen gecommit op `feature/ui-fase-1` (offerte, werkbonlijst, facturen, planning, home); nog te doen: `.\verify.ps1` + visuele checklist + merge |
 | 2 — Beheerschermen | ⬜ |
 | 3 — Dialogen & import | ⬜ |
 | 4 — Consistentie & QA | ⬜ |
