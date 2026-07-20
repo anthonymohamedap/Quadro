@@ -1,9 +1,9 @@
-# backup-postgres.ps1 — US-34: daily PostgreSQL backup via pg_dump.
+﻿# backup-postgres.ps1 - US-34: daily PostgreSQL backup via pg_dump.
 # Schedule on PC 1 with Windows Task Scheduler (daily, e.g. 12:30):
 #   powershell -File "C:\...\Scripts\backup-postgres.ps1" -BackupDir "D:\QuadroBackups"
 #
 # Password comes from the QUADRO_DB_PASSWORD environment variable or the
-# standard %APPDATA%\postgresql\pgpass.conf — never hardcode it here.
+# standard %APPDATA%\postgresql\pgpass.conf - never hardcode it here.
 param(
     [string]$BackupDir = "$env:LOCALAPPDATA\QuadroApp\Backups",
     [string]$DbHost = "localhost",

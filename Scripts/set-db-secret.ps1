@@ -1,4 +1,4 @@
-# set-db-secret.ps1 — stores the PostgreSQL password DPAPI-encrypted in
+﻿# set-db-secret.ps1 - stores the PostgreSQL password DPAPI-encrypted in
 # %LOCALAPPDATA%\QuadroApp\db.secret. Run once per PC, per Windows account
 # that runs QuadroApp. The password never touches appsettings.json.
 #
