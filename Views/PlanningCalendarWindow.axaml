@@ -43,14 +43,28 @@
 			<Setter Property="BorderBrush" Value="{DynamicResource BrandYellow}"/>
 		</Style>
 
-		<!-- Capaciteitsbalk: proportioneel (0..1), kleur per niveau -->
+		<!-- Capaciteitsbalk: proportioneel (0..1), kleur per niveau.
+		     Eigen template zodat de vulling altijd de Foreground volgt,
+		     onafhankelijk van het (Huskui-)theme-template. -->
 		<Style Selector="ProgressBar.Capacity">
 			<Setter Property="Minimum"  Value="0"/>
 			<Setter Property="Maximum"  Value="1"/>
 			<Setter Property="Height"   Value="4"/>
 			<Setter Property="MinWidth" Value="0"/>
-			<Setter Property="CornerRadius" Value="2"/>
+			<Setter Property="Foreground" Value="{DynamicResource CapacityLow}"/>
 			<Setter Property="Background" Value="{DynamicResource BorderSubtle}"/>
+			<Setter Property="Template">
+				<ControlTemplate>
+					<Border Background="{TemplateBinding Background}"
+							CornerRadius="2"
+							ClipToBounds="True">
+						<Border Name="PART_Indicator"
+								Background="{TemplateBinding Foreground}"
+								CornerRadius="2"
+								HorizontalAlignment="Left"/>
+					</Border>
+				</ControlTemplate>
+			</Setter>
 		</Style>
 		<Style Selector="ProgressBar.capLow">
 			<Setter Property="Foreground" Value="{DynamicResource CapacityLow}"/>
