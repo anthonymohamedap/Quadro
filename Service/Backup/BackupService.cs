@@ -115,7 +115,7 @@ public sealed class BackupService : IBackupService
     }
 
     /// <summary>Parses the date from "quadro-backup-yyyyMMdd.db"; null when it doesn't match.</summary>
-    internal static DateTime? ParseBackupDate(string filePath)
+    public static DateTime? ParseBackupDate(string filePath)
     {
         var name = Path.GetFileNameWithoutExtension(filePath);
         const string prefix = "quadro-backup-";
@@ -125,7 +125,7 @@ public sealed class BackupService : IBackupService
     }
 
     /// <summary>Extracts the file path from a SQLite connection string; null for non-SQLite.</summary>
-    internal static string? GetSqlitePath(string connectionString)
+    public static string? GetSqlitePath(string connectionString)
     {
         if (string.IsNullOrWhiteSpace(connectionString)) return null;
         if (connectionString.Contains("Host=", StringComparison.OrdinalIgnoreCase)) return null; // PostgreSQL
