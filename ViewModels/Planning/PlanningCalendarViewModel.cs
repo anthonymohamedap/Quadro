@@ -404,7 +404,12 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
         var firstOfMonth = new DateTime(Year, Month, 1);
         int offset = ((int)firstOfMonth.DayOfWeek + 6) % 7;
         var start = firstOfMonth.AddDays(-offset);
-        var end = start.AddDays(35);
+
+        // Aantal cellen dynamisch (5 óf 6 weken): een maand die laat in de week
+        // start en 30/31 dagen telt, beslaat 6 kalenderweken — bij vaste 35
+        // cellen vielen de laatste dagen weg.
+        int totalCells = (int)Math.Ceiling((offset + DateTime.DaysInMonth(Year, Month)) / 7.0) * 7;
+        var end = start.AddDays(totalCells);
 
         var taken = await db.WerkTaken
             .Where(t => t.GeplandVan >= start && t.GeplandVan < end)
@@ -422,7 +427,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
         WeekSummaries.Clear();
         DayRows.Clear();
 
-        for (int i = 0; i < 35; i++)
+        for (int i = 0; i < totalCells; i++)
         {
             var date = start.AddDays(i);
             var dagTaken = taken.Where(t => t.GeplandVan.Date == date.Date).ToList();
