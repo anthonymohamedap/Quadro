@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -57,6 +57,7 @@ public sealed class AuthService : IAuthService
         await db.SaveChangesAsync();
 
         CurrentUser = user;
+        AuditContext.CurrentUserName = user.GebruikersNaam; // US-36
         CurrentUserChanged?.Invoke(this, EventArgs.Empty);
         _logger.LogInformation("[Auth] '{User}' ingelogd (rol: {Rol}).", user.GebruikersNaam, user.Rol);
         return null;
@@ -67,6 +68,7 @@ public sealed class AuthService : IAuthService
         if (CurrentUser is null) return;
         _logger.LogInformation("[Auth] '{User}' uitgelogd/vergrendeld.", CurrentUser.GebruikersNaam);
         CurrentUser = null;
+        AuditContext.Reset(); // US-36
         CurrentUserChanged?.Invoke(this, EventArgs.Empty);
     }
 
