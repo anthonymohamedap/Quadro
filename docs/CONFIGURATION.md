@@ -40,6 +40,16 @@ De placeholder wordt bij het opstarten vervangen, in deze volgorde:
 bash Scripts/set-db-secret.sh
 ```
 
+## Logging (US-31)
+
+Logs staan in `%LOCALAPPDATA%\QuadroApp\logs\quadro-JJJJMMDD.log` (macOS: `~/Library/Application Support/QuadroApp/logs/`), 14 dagen retentie. Niveau instellen in `appsettings.json`:
+
+```json
+{ "Logging": { "MinimumLevel": "Debug" } }
+```
+
+Geldige niveaus: `Verbose`, `Debug`, `Information` (standaard), `Warning`, `Error`. Onafgevangen crashes staan zowel in het log als in `crash.log`.
+
 ## Probleemoplossing
 
 - App valt terug op SQLite terwijl je Postgres verwacht → controleer of `appsettings.json` naast de exe staat en geldige JSON is.

@@ -21,6 +21,7 @@ public partial class WeekWerkLijstViewModel : ObservableObject
     private readonly IDbContextFactory<AppDbContext> _factory;
     private readonly IWorkflowService _workflow;
     private readonly IToastService? _toast;
+    private readonly Microsoft.Extensions.Logging.ILogger<WeekWerkLijstViewModel>? _logger;
 
     [ObservableProperty] private int year;
     [ObservableProperty] private int weekNr;
@@ -32,11 +33,12 @@ public partial class WeekWerkLijstViewModel : ObservableObject
     /// als StockService gebruikt, dus succes-/foutmeldingen van het bestellen verschijnen hier).</summary>
     public ReadOnlyObservableCollection<ToastMessage>? ToastMessages => _toast?.Messages;
 
-    public WeekWerkLijstViewModel(IDbContextFactory<AppDbContext> factory, IWorkflowService workflow, IToastService? toast = null)
+    public WeekWerkLijstViewModel(IDbContextFactory<AppDbContext> factory, IWorkflowService workflow, IToastService? toast = null, Microsoft.Extensions.Logging.ILogger<WeekWerkLijstViewModel>? logger = null)
     {
         _factory = factory;
         _workflow = workflow;
         _toast = toast;
+        _logger = logger;
     }
 
     public async Task InitializeAsync(int year, int weekNr)
@@ -143,10 +145,10 @@ public partial class WeekWerkLijstViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            // Stille fout — in productie zou je hier een toast tonen.
-            // WeekWerkLijstViewModel erft niet van AsyncViewModelBase dus
-            // geen Toast beschikbaar; we loggen naar Debug.
-            Debug.WriteLine($"[WeekLijst PDF] Fout: {ex.Message}");
+            // US-31: gestructureerd loggen + gebruiker informeren via toast.
+            if (_logger is not null)
+                Microsoft.Extensions.Logging.LoggerExtensions.LogError(_logger, ex, "[WeekLijst PDF] Fout: {Message}", ex.Message);
+            _toast?.Error($"PDF openen mislukt: {ex.Message}");
         }
     }
 
