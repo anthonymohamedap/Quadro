@@ -71,7 +71,8 @@ Focus: resizable + min-maten, `SizeToContent` waar passend, knoppenrijen die nie
 | 0 — Fundament | ✅ 20-07-2026 (branch `feature/ui-fase-0`, verify groen) |
 | 1 — Kernschermen | ✅ 20-07-2026 (branch `feature/ui-fase-1`, verify groen) |
 | 2 — Beheerschermen | 🟡 20/21-07-2026 (branch `feature/ui-fase-2`, alle 8 schermen gecommit; verify.ps1 + visuele QA + merge nog uit te voeren op Windows) |
-| 3 — Dialogen & import | 🟡 21-07-2026 (branch `feature/ui-fase-3`, alle 12 vensters aangepast; verify.ps1 + visuele QA + merge nog uit te voeren op Windows). Nieuw in theme: `Planning*`-tokens (donker planningsthema) en `SuccessBorder`. |
+| 3 — Dialogen & import | 🟡 21-07-2026 (branch `feature/ui-fase-3`, alle 12 vensters aangepast; verify.ps1 + visuele QA + merge nog uit te voeren op Windows). Nieuw in theme: `SuccessBorder`. De in deze fase toegevoegde `Planning*`-tokens (donker planningsthema) zijn in de planning-redesign weer verwijderd. |
+| Planning-redesign | 🟡 21-07-2026 (branch `feature/ui-planning-redesign`, afgetakt van `feature/ui-fase-3`). Donker sub-thema volledig verwijderd; volledig planning-pad naar huisstijl: `Planning*`-tokens weg, `GhostBtn` licht + nieuwe `DangerBtn` + `Capacity*`-tokens in theme; PlanningCalendarWindow licht met QuadroHeader-taal, DayTile-styling van C# (IBrush) naar AXAML-classes, proportionele capaciteitsbalk (was 120px vast → overflow-bug), toasts bovenaan; PlanningTijdDialog licht (AccentBtn/GhostBtn); WeekWerkLijstWindow AccentBtn-header, Black/White → tokens, star-kolommen + MinWidth. Aparte fix-commit: kalendergrid dynamisch 35/42 cellen (6-weken-maanden verloren laatste dagen). Nog uit te voeren op Windows: `.\verify.ps1` + visuele checklist (min-venster, lange klantnamen, 1366×768) + merge. |
 | 4 — Consistentie & QA | ⬜ |
 
 *Vink af (✅ + datum) na merge van elke fase-branch, zodat een volgende chat de stand kent.*
