@@ -9,6 +9,11 @@ using Xunit;
 namespace WorkflowService.Tests;
 
 /// <summary>US-36 — audit trail via SaveChangesAsync.</summary>
+/// <remarks>
+/// Zelfde collection als AuthServiceTests: beide raken de statische
+/// AuditContext, dus ze mogen niet parallel lopen.
+/// </remarks>
+[Collection("StaticAuthState")]
 public class AuditTrailTests
 {
     public AuditTrailTests() => AuditContext.Reset();
