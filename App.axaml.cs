@@ -18,6 +18,7 @@ using QuadroApp.Service.Security;
 using QuadroApp.Service.Toast;
 using QuadroApp.Validation;
 using QuadroApp.ViewModels;
+using Serilog;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -76,12 +77,14 @@ public partial class App : Application
 
         var services = new ServiceCollection();
 
-        // 🔹 Logging
+        // 🔹 Logging (US-31): Serilog roterend bestand + console/debug voor dev.
+        var serilog = Service.LoggingSetup.CreateLogger(GetDataDirectory(), GetConfigValue("Logging:MinimumLevel"));
         services.AddLogging(builder =>
         {
             builder.AddDebug();
             builder.AddConsole();
-            builder.SetMinimumLevel(LogLevel.Information);
+            builder.AddSerilog(serilog, dispose: true);
+            builder.SetMinimumLevel(LogLevel.Debug); // Serilog filtert zelf op niveau
         });
 
         // 🔹 Database — connection string comes from appsettings.json when present,
@@ -427,6 +430,10 @@ public partial class App : Application
 
         LogToFile(ex);
 
+        // US-31: ook naar het gestructureerde log (wanneer DI al opgestart is).
+        try { _logger?.LogError(ex, "Onafgevangen exceptie: {Message}", ex.Message); }
+        catch { /* logging mag nooit zelf crashen */ }
+
         if (Application.Current?.ApplicationLifetime
             is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -522,6 +529,23 @@ public partial class App : Application
         // US-34: daily backup — runs after DB init, never blocks or crashes startup.
         var backupService = scope.ServiceProvider.GetRequiredService<IBackupService>();
         await backupService.RunDailyBackupAsync();
+    }
+
+    /// <summary>US-31: leest één configuratiewaarde uit appsettings.json (null bij afwezigheid/fout).</summary>
+    private static string? GetConfigValue(string key)
+    {
+        try
+        {
+            var config = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+                .Build();
+            return config[key];
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>US-34: reads the optional Backup section from appsettings.json.</summary>

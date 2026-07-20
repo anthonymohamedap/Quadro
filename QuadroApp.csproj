@@ -50,6 +50,9 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
+    <!-- US-31: gestructureerde logging naar roterend bestand -->
+    <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
     <PackageReference Include="QuestPDF" Version="2024.7.1" />
     <!-- Auto-update -->
     <PackageReference Include="Velopack" Version="0.0.869" />
