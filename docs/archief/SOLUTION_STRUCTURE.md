@@ -1,3 +1,5 @@
+> ⚠️ **ARCHIEF** — dit document is een momentopname en niet meer actueel. Zie de README en docs/ voor de huidige stand.
+
 # Solution Structure Analysis
 
 This repository contains a single desktop application solution built with **.NET 9**, **Avalonia UI**, and **Entity Framework Core**.

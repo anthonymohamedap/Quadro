@@ -1,3 +1,5 @@
+> ⚠️ **ARCHIEF** — dit document is een momentopname en niet meer actueel. Zie de README en docs/ voor de huidige stand.
+
 # QuadroApp — Project Analysis
 *Gegenereerd op 4 april 2026 · .NET 9 / Avalonia 11.3 / EF Core 9 / SQLite*
 
