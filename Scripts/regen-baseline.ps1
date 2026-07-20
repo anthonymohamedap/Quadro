@@ -26,24 +26,28 @@ if (Test-Path "$env:USERPROFILE\.dotnet\tools") {
     $env:PATH = "$env:USERPROFILE\.dotnet\tools;" + $env:PATH
 }
 
-# dotnet-ef beschikbaar?
+# Werk altijd vanuit de repo-root, ongeacht waar het script gestart werd
+$repoRoot = Split-Path $PSScriptRoot -Parent
+Set-Location $repoRoot
+
+# dotnet-ef MOET dezelfde major-versie hebben als de EF Core packages (9.0.9).
+# 'latest' (10.x) geeft: "Unable to retrieve project metadata".
+$efVersion = "9.0.9"
 $ef = dotnet tool list --global | Select-String "dotnet-ef"
-if (-not $ef) {
-    Write-Host "dotnet-ef installeren..." -ForegroundColor Cyan
-    dotnet tool install --global dotnet-ef
+if (-not $ef -or ($ef -notmatch [regex]::Escape($efVersion))) {
+    Write-Host "dotnet-ef $efVersion installeren..." -ForegroundColor Cyan
+    dotnet tool update --global dotnet-ef --version $efVersion
     if ($LASTEXITCODE -ne 0) { exit 1 }
 }
 
-if (Test-Path "Migrations") {
-    $existing = Get-ChildItem "Migrations" -Filter "*.cs" -ErrorAction SilentlyContinue
-    if ($existing) {
-        Write-Host "Migrations/ bevat nog .cs-bestanden - eerst opruimen (git rm Migrations/*.cs)." -ForegroundColor Red
-        exit 1
-    }
+$existing = Get-ChildItem (Join-Path $repoRoot "Migrations") -Filter "*.cs" -ErrorAction SilentlyContinue
+if ($existing) {
+    Write-Host "Migrations/ bevat nog .cs-bestanden - eerst opruimen (git rm Migrations/*.cs)." -ForegroundColor Red
+    exit 1
 }
 
 Write-Host "Baseline-migratie genereren..." -ForegroundColor Cyan
-dotnet ef migrations add Baseline --project QuadroApp.csproj
+dotnet ef migrations add Baseline --project (Join-Path $repoRoot "QuadroApp.csproj") --verbose
 if ($LASTEXITCODE -ne 0) { Write-Host "MISLUKT" -ForegroundColor Red; exit 1 }
 
 Write-Host "Klaar. Nu: .\verify.ps1" -ForegroundColor Green
