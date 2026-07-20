@@ -1,68 +1,73 @@
-# Solution Structure Analysis
-https://we.tl/t-jGnosv3yne
+# QuadroApp
 
-This repository contains a single desktop application solution built with **.NET 9**, **Avalonia UI**, and **Entity Framework Core**.
+Desktop-applicatie voor inlijstwerkplaats **Quadro**: klantbeheer, offertes, werkbonnen, planning, facturatie/bestelbonnen en voorraadbeheer. Draait op Windows en macOS (Apple Silicon), met automatische updates via Velopack.
 
-## 1) Solution and project layout
+## Tech stack
 
-- `Quadro.sln`: single-project solution containing `QuadroApp.csproj`.
-- `QuadroApp.csproj`: executable Avalonia app targeting `net9.0` with EF Core, MVVM Toolkit, Excel/import dependencies, and Avalonia packages.
+| Laag | Technologie |
+|---|---|
+| UI | Avalonia 11.3 (Fluent, CompiledBindings) + CommunityToolkit.Mvvm |
+| Data | EF Core 9 + SQLite (PostgreSQL-ondersteuning aanwezig voor gedeeld gebruik) |
+| PDF / Excel | QuestPDF · ClosedXML + EPPlus |
+| Logging | Serilog (roterend bestand, 14 dagen) |
+| Auth | Eigen login met PBKDF2-wachtwoorden en rollen (Admin/Medewerker) |
+| Updates | Velopack (GitHub Releases, tag-triggered) |
+| Tests / CI | xUnit (119 tests) · GitHub Actions: build + test + CVE-scan op elke push/PR |
 
-## 2) Top-level architectural areas
+## Snel starten (ontwikkelaar)
 
-### Application bootstrap
-- `Program.cs`: app entry point and Avalonia host builder.
-- `App.axaml` / `App.axaml.cs`: application resources and startup wiring.
-- `MainWindow.axaml` / `MainWindow.axaml.cs`: shell window.
+```powershell
+git clone https://github.com/anthonymohamedap/Quadro.git
+cd Quadro
+.\verify.ps1          # restore + build + alle tests
+```
 
-### Data access and persistence
-- `Data/AppDbContext.cs.cs`: EF Core DbContext model configuration, precision/index/relationship rules, and save hooks.
-- `Data/AppDbContextFactory.cs`: design-time context creation support.
-- `Data/DatabaseSeeder.cs`: data seeding utilities.
-- `Data/Migrations/*`: EF migrations and model snapshot.
-- `AppDbContext.sql`, `AppDbContext.dgml`: schema/support artifacts.
+Openen in Rider of Visual Studio kan via `Quadro.sln`. De app maakt bij de eerste start zelf een SQLite-database aan in `%LOCALAPPDATA%\QuadroApp\` en seed een standaard admin-account — zie [docs/AUTH.md](docs/AUTH.md).
 
-### Domain model
-- `Model/DB/*`: core entities (e.g., `Offerte`, `OfferteRegel`, `WerkBon`, `WerkTaak`, `Klant`, `TypeLijst`, etc.).
-- `Model/Import/*`: import-preview and import-result models.
+## Dagelijkse workflow
 
-### Presentation layer (MVVM)
-- `Views/*`: Avalonia views/windows (`.axaml` + code-behind).
-- `ViewModels/*`: screen/workflow logic for login, offers, planning, clients, lists, import previews, etc.
-- `Converters/*`: UI value converters.
-- `Styles/QuadroTheme.axaml`: custom theme resources.
+1. Feature-branch vanaf `main`
+2. Wijzigingen + tests → `.\verify.ps1` moet groen zijn
+3. Schemawijziging? → `.\Scripts\add-migration.ps1 <Naam>` (nooit handmatige SQL-patches)
+4. Push → CI draait build/test/security-scan → PR → merge
 
-### Services and business workflows
-- `Service/Interfaces/*`: service contracts.
-- `Service/*`: concrete implementations for dialogs, navigation, pricing, workflows, imports, and app DI wiring.
-- `Service/Import/*`: excel import pipeline abstractions and mappers.
-- `Service/Toast/*`: toast message models/service/converters.
-- `Security/AppSecurity.cs`: application security support.
+## Mappenstructuur
 
-### Validation
-- `Validation/*`: validators and validation result models for core entities.
+```
+Data/           EF Core: AppDbContext, migratie-runner (SqliteSchemaPatcher), audit-writer, seeder
+Migrations/     EF-migraties (Baseline-squash van juli 2026 + vervolg)
+Model/DB/       Entiteiten (Klant, Offerte, WerkBon, Factuur, Gebruiker, AuditLog, ...)
+Model/Import/   Import-preview- en resultaatmodellen
+Service/        Businesslogica: workflows, pricing, export, backup, GDPR, security (auth)
+Validation/     ICrudValidator<T> per entiteit
+ViewModels/     MVVM-schermlogica (per domein gegroepeerd)
+Views/          Avalonia views en dialoogvensters
+Styles/         QuadroTheme (huisstijl: geel #F5C242 / donkergrijs #444A50)
+Scripts/        Hulpscripts: add-migration, set-db-secret, backups, Velopack-test
+WorkflowService.Tests/  xUnit-testsuite
+docs/           Documentatie (zie hieronder)
+```
 
-### Assets and deployment
-- `Assets/*`: logos, images, print assets.
-- `app.manifest`: Windows application manifest.
+## Documentatie
 
-## 3) Dependency flow (high level)
+| Document | Inhoud |
+|---|---|
+| [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Connection strings, secrets (DPAPI), logging-configuratie |
+| [docs/AUTH.md](docs/AUTH.md) | Login, rollen & rechten, auto-lock, standaard admin |
+| [docs/BACKUP_RESTORE.md](docs/BACKUP_RESTORE.md) | Automatische backups + geteste herstelprocedure |
+| [docs/AUDIT.md](docs/AUDIT.md) | Audit trail: wie wijzigde wat, wanneer |
+| [docs/GDPR.md](docs/GDPR.md) | Inzage-export, anonimisering, retentiebeleid |
+| [docs/backlog/](docs/backlog/) | User stories + status (enterprise-hardening: 9/10 afgerond) |
+| [docs/specs/](docs/specs/) | Functionele specificaties |
+| [docs/archief/](docs/archief/) | Historische analyses (niet meer actueel) |
+| [docs/voorbeelden/](docs/voorbeelden/) | Voorbeeld-importbestanden (o.a. lijsten.xlsx) |
 
-- `Views` bind to `ViewModels`.
-- `ViewModels` orchestrate `Service` interfaces.
-- `Service` layer uses `Data/AppDbContext` and domain `Model` classes.
-- `Validation` supports service/viewmodel-level input checks.
-- `Converters` and `Styles` support view rendering concerns.
+## Releases
 
-## 4) Notable technical characteristics
+Merge naar `main` → auto-tag workflow bumpt de patch-versie → tag-push triggert de release-workflow die Windows- en macOS-builds maakt (incl. Apple-notarisatie) en publiceert via Velopack. Versie bumpen voor major/minor: `<Version>` in `QuadroApp.csproj`.
 
-- Single executable desktop app (not multi-project yet).
-- EF Core configured for SQLite at runtime (with migrations present).
-- Rich workflow around offers/work orders/planning/imports.
-- Clear folder-based layering despite single-project packaging.
+## Belangrijk om te weten
 
-## 5) Potential maintenance observations
-
-- `Data/AppDbContext.cs.cs` has a duplicated extension in its filename; functionally valid but easy to misread.
-- A few filenames include stray spaces before `.cs` (e.g., `RegelPlanItem .cs`, `BoolToDoubleConverter .cs`), which can impact tooling ergonomics.
-- Both runtime initialization/seeding and migrations exist; worth keeping startup DB lifecycle strategy explicit in future changes.
+- **Nooit** wachtwoorden of connection strings in git — `appsettings.json` is gitignored, gebruik `appsettings.example.json` als sjabloon en `Scripts\set-db-secret.ps1` voor het DB-wachtwoord.
+- Schemabeheer gaat uitsluitend via EF-migraties; een test faalt automatisch bij model-drift.
+- De backup van vandaag staat in `%LOCALAPPDATA%\QuadroApp\Backups`; logs in `%LOCALAPPDATA%\QuadroApp\logs`.
