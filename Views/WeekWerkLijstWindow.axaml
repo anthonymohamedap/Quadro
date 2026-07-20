@@ -4,61 +4,64 @@
         x:Class="QuadroApp.Views.WeekWerkLijstWindow"
         x:DataType="vm:WeekWerkLijstViewModel"
         Width="1100"
-        Height="850"
+        Height="720"
         MinWidth="900"
-        MinHeight="700"
+        MinHeight="600"
+        CanResize="True"
         WindowStartupLocation="CenterOwner"
         Title="Weeklijst"
-        Background="#F5F5F5">
+        Background="{DynamicResource SurfaceMuted}">
 
 	<Panel>
 	<Grid RowDefinitions="Auto,*">
 
 		<!-- HEADER -->
-		<Border Grid.Row="0" Background="#444A50" Height="70">
+		<Border Grid.Row="0" Background="{DynamicResource BrandDark}" MinHeight="70">
 			<DockPanel LastChildFill="False" Margin="20,0">
 				<StackPanel DockPanel.Dock="Left"
 							Orientation="Horizontal"
 							VerticalAlignment="Center"
 							Spacing="10">
-					<Ellipse Width="35" Height="35" Fill="#F5C242"/>
+					<Ellipse Width="35" Height="35" Fill="{DynamicResource BrandYellow}"/>
 					<TextBlock Text="QUADRO"
-							   FontSize="20"
-							   FontWeight="Bold"
-							   Foreground="White"/>
-					<TextBlock Text="{Binding Title}"
-							   FontSize="13"
-							   Foreground="#CCC"
-							   Margin="5,0,0,0"
+							   Classes="h2"
+							   Foreground="{DynamicResource TextOnDark}"
 							   VerticalAlignment="Center"/>
+					<TextBlock Text="{Binding Title}"
+							   Classes="body"
+							   Foreground="{DynamicResource TextMutedOnDark}"
+							   Margin="5,0,0,0"
+							   VerticalAlignment="Center"
+							   TextTrimming="CharacterEllipsis"
+							   ToolTip.Tip="{Binding Title}"/>
 				</StackPanel>
 
 				<StackPanel DockPanel.Dock="Right"
 							Orientation="Horizontal"
 							Spacing="10"
 							VerticalAlignment="Center">
-					<TextBlock Text="{Binding Year}" Foreground="White" VerticalAlignment="Center"/>
-					<TextBlock Text="{Binding WeekNr, StringFormat='Week {0}'}" Foreground="White" VerticalAlignment="Center"/>
+					<TextBlock Text="{Binding Year}" Classes="body" Foreground="{DynamicResource TextOnDark}" VerticalAlignment="Center"/>
+					<TextBlock Text="{Binding WeekNr, StringFormat='Week {0}'}" Classes="body" Foreground="{DynamicResource TextOnDark}" VerticalAlignment="Center"/>
 
 					<Button Content="🔄 Vernieuwen"
 							Command="{Binding VerversCommand}"
 							VerticalAlignment="Center"
-							Background="#3B82F6"
-							Foreground="White"
+							Background="{DynamicResource IconBlue}"
+							Foreground="{DynamicResource TextOnDark}"
 							FontWeight="Bold"
 							CornerRadius="8"
 							Padding="10,5"
-							Height="32"/>
+							MinHeight="32"/>
 
 					<Button Content="🖨 PDF afdrukken"
 							Command="{Binding PrintPdfCommand}"
 							VerticalAlignment="Center"
-							Background="#27AE60"
-							Foreground="White"
+							Background="{DynamicResource Success}"
+							Foreground="{DynamicResource TextOnDark}"
 							FontWeight="Bold"
 							CornerRadius="8"
 							Padding="10,5"
-							Height="32"/>
+							MinHeight="32"/>
 
 				</StackPanel>
 			</DockPanel>
@@ -70,9 +73,7 @@
 				<StackPanel Spacing="14">
 
 					<TextBlock Text="🖨 Weeklijst (print overzicht)"
-							   FontSize="22"
-							   FontWeight="Bold"
-							   Foreground="Black"/>
+							   Classes="h1"/>
 
 					<!-- Blocks per klant -->
 					<ItemsControl ItemsSource="{Binding Blocks}">
@@ -81,11 +82,11 @@
 								<StackPanel Spacing="8">
 
 									<!-- Klantnaam -->
-									<Border BorderBrush="#F5C242" BorderThickness="0 0 3 0" Margin="0,10,0,0">
+									<Border BorderBrush="{DynamicResource BrandYellow}" BorderThickness="0 0 3 0" Margin="0,10,0,0">
 										<TextBlock Text="{Binding KlantNaam}"
-												   FontSize="18"
-												   FontWeight="Bold"
-												   Foreground="Black"/>
+												   Classes="h2"
+												   TextTrimming="CharacterEllipsis"
+												   ToolTip.Tip="{Binding KlantNaam}"/>
 									</Border>
 
 									<!-- Items -->
@@ -93,7 +94,7 @@
 										<ItemsControl.ItemTemplate>
 											<DataTemplate>
 												<Border Background="White"
-														BorderBrush="#DDD"
+														BorderBrush="{DynamicResource BorderSubtle}"
 														BorderThickness="1"
 														CornerRadius="8"
 														Padding="12"
@@ -108,7 +109,7 @@
 																	   FontWeight="Bold"
 																	   Foreground="Black"/>
 															<TextBlock Text="{Binding Omschrijving}" Foreground="Black"/>
-															<TextBlock Text="{Binding RegelOpmerking, StringFormat='opmerking: {0}'}" FontStyle="Italic" Foreground="#374151" TextWrapping="Wrap" IsVisible="{Binding RegelOpmerking, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+															<TextBlock Text="{Binding RegelOpmerking, StringFormat='opmerking: {0}'}" FontStyle="Italic" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" IsVisible="{Binding RegelOpmerking, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
 															<Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="16" Margin="0,6,0,0">
 																<TextBlock Text="{Binding Breedte, StringFormat='breedte : {0} cm'}" />
@@ -128,7 +129,7 @@
 														<StackPanel Grid.Column="1" Spacing="4">
 															<TextBlock Text="{Binding Inleg1, StringFormat='inleg 1 : {0}'}" Foreground="Black"/>
 															<TextBlock Text="{Binding Inleg2, StringFormat='inleg 2 : {0}'}" Foreground="Black"/>
-															<TextBlock Text="Afwerkingen:" FontWeight="SemiBold" Foreground="#444" Margin="0,4,0,0"/>
+															<TextBlock Text="Afwerkingen:" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Margin="0,4,0,0"/>
 															<TextBlock Text="{Binding GlasBeschrijving, StringFormat='Glas: {0}'}" Foreground="Black" IsVisible="{Binding GlasBeschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 															<TextBlock Text="{Binding Passe1Beschrijving, StringFormat='PP1: {0}'}" Foreground="Black" IsVisible="{Binding Passe1Beschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 															<TextBlock Text="{Binding Passe2Beschrijving, StringFormat='PP2: {0}'}" Foreground="Black" IsVisible="{Binding Passe2Beschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
@@ -143,8 +144,8 @@
 															  ColumnSpacing="12"
 															  Margin="0,12,0,0">
 															<Border Grid.Column="0"
-																	Background="#F9FAFB"
-																	BorderBrush="#E5E7EB"
+																	Background="{DynamicResource SurfaceMutedAlt}"
+																	BorderBrush="{DynamicResource BorderSubtle}"
 																	BorderThickness="1"
 																	CornerRadius="6"
 																	Padding="10">
@@ -152,8 +153,8 @@
 																	<TextBlock Text="Bestellen"
 																			   FontWeight="Bold"
 																			   Foreground="Black"/>
-																	<Border IsVisible="{Binding IsBesteld}" Background="#16A34A" CornerRadius="10" Padding="8,2" HorizontalAlignment="Left" Margin="0,0,0,2">
-																		<TextBlock Text="✓ Reeds besteld" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+																	<Border IsVisible="{Binding IsBesteld}" Background="{DynamicResource Success}" CornerRadius="10" Padding="8,2" HorizontalAlignment="Left" Margin="0,0,0,2">
+																		<TextBlock Text="✓ Reeds besteld" Classes="caption" Foreground="{DynamicResource TextOnDark}" FontWeight="SemiBold"/>
 																	</Border>
 																	<TextBlock Text="{Binding VoorraadStatusText}"
 																			   Foreground="Black"
@@ -171,35 +172,39 @@
 																			   Foreground="Black"
 																			   IsVisible="{Binding HasOrder}"/>
 																	<StackPanel Spacing="4" IsVisible="{Binding CanPlaceOrder}">
-																		<StackPanel Orientation="Horizontal" Spacing="12">
-																			<TextBlock Text="Bestelwijze:" VerticalAlignment="Center" FontSize="11" Foreground="#555"/>
-																			<RadioButton Content="In verstek" FontSize="11"
-																						 GroupName="{Binding TaakId, StringFormat='BVW{0}'}"
-																						 IsChecked="{Binding BestelVormIsVerstek, Mode=TwoWay}"/>
-																			<RadioButton Content="In lengte" FontSize="11"
-																						 GroupName="{Binding TaakId, StringFormat='BVW{0}'}"
-																						 IsChecked="{Binding BestelVormIsInLengte, Mode=TwoWay}"/>
-																			<RadioButton Content="Gemonteerd" FontSize="11"
-																						 GroupName="{Binding TaakId, StringFormat='BVW{0}'}"
-																						 IsChecked="{Binding BestelVormIsGemonteerd, Mode=TwoWay}"/>
-																		</StackPanel>
-																		<TextBlock Text="{Binding BestelEenheid, StringFormat='Eenheid: {0}'}" FontSize="11" Foreground="#555" Margin="0,2,0,0"/>
+																		<WrapPanel ItemSpacing="12" LineSpacing="4">
+																			<TextBlock Text="Bestelwijze:" VerticalAlignment="Center" Classes="caption"/>
+																			<RadioButton GroupName="{Binding TaakId, StringFormat='BVW{0}'}"
+																						 IsChecked="{Binding BestelVormIsVerstek, Mode=TwoWay}">
+																				<TextBlock Text="In verstek" Classes="label"/>
+																			</RadioButton>
+																			<RadioButton GroupName="{Binding TaakId, StringFormat='BVW{0}'}"
+																						 IsChecked="{Binding BestelVormIsInLengte, Mode=TwoWay}">
+																				<TextBlock Text="In lengte" Classes="label"/>
+																			</RadioButton>
+																			<RadioButton GroupName="{Binding TaakId, StringFormat='BVW{0}'}"
+																						 IsChecked="{Binding BestelVormIsGemonteerd, Mode=TwoWay}">
+																				<TextBlock Text="Gemonteerd" Classes="label"/>
+																			</RadioButton>
+																		</WrapPanel>
+																		<TextBlock Text="{Binding BestelEenheid, StringFormat='Eenheid: {0}'}" Classes="caption" Margin="0,2,0,0"/>
 																		<Button Content="Maak bestelling"
-																				Background="#F5C242" Foreground="Black" FontWeight="Bold"
+																				Classes="AccentBtn"
 																				Command="{Binding $parent[Window].((vm:WeekWerkLijstViewModel)DataContext).MarkeerBesteldCommand}"
 																				CommandParameter="{Binding}"/>
 																	</StackPanel>
 																	<TextBlock Text="{Binding BestelDatum, StringFormat='Besteld op: {0:dd/MM/yyyy}'}"
 																				   VerticalAlignment="Center"
-																				   Foreground="#065F46"
+																				   Classes="body"
+																				   Foreground="{DynamicResource Success}"
 																				   FontWeight="SemiBold"
 																				   IsVisible="{Binding IsBesteld}"/>
 																</StackPanel>
 															</Border>
 
 															<Border Grid.Column="1"
-																	Background="#F9FAFB"
-																	BorderBrush="#E5E7EB"
+																	Background="{DynamicResource SurfaceMutedAlt}"
+																	BorderBrush="{DynamicResource BorderSubtle}"
 																	BorderThickness="1"
 																	CornerRadius="6"
 																	Padding="10">
@@ -251,8 +256,8 @@
 			</ItemsControl.ItemsPanel>
 			<ItemsControl.ItemTemplate>
 				<DataTemplate>
-					<Border Padding="14,10" CornerRadius="8" Background="{Binding BackgroundBrush}" BorderBrush="#383C4A" BorderThickness="1" MinWidth="220" MaxWidth="380">
-						<TextBlock Text="{Binding Message}" Foreground="White" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap"/>
+					<Border Padding="14,10" CornerRadius="8" Background="{Binding BackgroundBrush}" BorderBrush="{DynamicResource BrandDark}" BorderThickness="1" MinWidth="220" MaxWidth="380">
+						<TextBlock Text="{Binding Message}" Classes="body" Foreground="{DynamicResource TextOnDark}" FontWeight="SemiBold" TextWrapping="Wrap"/>
 					</Border>
 				</DataTemplate>
 			</ItemsControl.ItemTemplate>
