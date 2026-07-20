@@ -43,8 +43,10 @@
 		<!-- Info -->
 		<Color x:Key="InfoBgColor">#F0F6FF</Color>
 		<Color x:Key="InfoBorderColor">#BFDBFE</Color>
+		<Color x:Key="InfoTextColor">#1E40AF</Color>
 		<SolidColorBrush x:Key="InfoBg" Color="{StaticResource InfoBgColor}"/>
 		<SolidColorBrush x:Key="InfoBorder" Color="{StaticResource InfoBorderColor}"/>
+		<SolidColorBrush x:Key="InfoText" Color="{StaticResource InfoTextColor}"/>
 
 		<!-- Semantisch -->
 		<Color x:Key="DangerColor">#DC2626</Color>
@@ -211,6 +213,17 @@
 	<Style Selector="Button.MainBtn:pointerover">
 		<Setter Property="Background" Value="#F5C242"/>
 		<Setter Property="Foreground" Value="#222"/>
+	</Style>
+
+	<!-- Button.AccentBtn: gele brand-actieknop (fase 1) -->
+	<Style Selector="Button.AccentBtn">
+		<Setter Property="Background" Value="{DynamicResource BrandYellow}"/>
+		<Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+		<Setter Property="FontWeight" Value="Bold"/>
+		<Setter Property="CornerRadius" Value="6"/>
+	</Style>
+	<Style Selector="Button.AccentBtn:pointerover /template/ ContentPresenter">
+		<Setter Property="Background" Value="{DynamicResource BrandYellowHover}"/>
 	</Style>
 
 	<!-- Button.GhostBtn (herbruikbaar, donkere achtergrond) -->
