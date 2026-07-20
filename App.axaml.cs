@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -146,6 +146,7 @@ public partial class App : Application
         services.AddScoped<IFactuurExportService, FactuurExportService>();
         services.AddScoped<ICentralExcelExportService, CentralExcelExportService>();
         services.AddScoped<IFactuurExporter, PdfFactuurExporter>();
+        services.AddScoped<IGdprService, GdprService>(); // US-37
 
         // US-32: authenticatie & autorisatie (singleton — CurrentUser is app-breed)
         services.AddSingleton<IAuthService, AuthService>();
