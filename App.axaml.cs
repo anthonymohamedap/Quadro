@@ -13,6 +13,7 @@ using QuadroApp.Service;
 using QuadroApp.Service.Import;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Service.Pricing;
+using QuadroApp.Service.Security;
 using QuadroApp.Service.Toast;
 using QuadroApp.Validation;
 using QuadroApp.ViewModels;
@@ -283,6 +284,12 @@ public partial class App : Application
     /// </summary>
     private static string GetConnectionString()
     {
+        // US-33: full connection string may come from an environment variable
+        // (highest priority, useful for testing and server deployments).
+        var fromEnv = Environment.GetEnvironmentVariable("QUADRO_CONNECTION_STRING");
+        if (!string.IsNullOrWhiteSpace(fromEnv))
+            return SecretStore.InjectPassword(fromEnv, GetDataDirectory());
+
         try
         {
             var config = new ConfigurationBuilder()
@@ -292,7 +299,18 @@ public partial class App : Application
 
             var cs = config.GetConnectionString("Default");
             if (!string.IsNullOrWhiteSpace(cs))
+            {
+                // US-33: replace Password=__SECRET__ with the real password from
+                // env var / DPAPI secret file. SQLite strings pass through untouched.
+                cs = SecretStore.InjectPassword(cs, GetDataDirectory());
+
+                if (SecretStore.HasUnresolvedPlaceholder(cs))
+                    File.AppendAllText(_crashLogPath,
+                        $"[Config] DB-wachtwoord niet gevonden. Zet omgevingsvariabele {SecretStore.PasswordEnvVar} " +
+                        $"of maak het secret-bestand aan met Scripts/set-db-secret.ps1.\n");
+
                 return cs;
+            }
         }
         catch (Exception ex)
         {
@@ -302,6 +320,30 @@ public partial class App : Application
         }
 
         return GetDefaultSqliteConnectionString();
+    }
+
+    /// <summary>
+    /// Platform-appropriate user-writable data directory (also holds db.secret):
+    ///   Windows → %LOCALAPPDATA%\QuadroApp
+    ///   macOS   → ~/Library/Application Support/QuadroApp
+    /// </summary>
+    private static string GetDataDirectory()
+    {
+        string dataDir;
+        if (OperatingSystem.IsMacOS())
+        {
+            dataDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.Personal),
+                "Library", "Application Support", "QuadroApp");
+        }
+        else
+        {
+            dataDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "QuadroApp");
+        }
+        Directory.CreateDirectory(dataDir);
+        return dataDir;
     }
 
     /// <summary>
@@ -325,24 +367,7 @@ public partial class App : Application
 
     private static string GetDefaultSqliteConnectionString()
     {
-        // Platform-appropriate data directory
-        string dataDir;
-        if (OperatingSystem.IsMacOS())
-        {
-            // macOS convention: ~/Library/Application Support/QuadroApp
-            dataDir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.Personal),
-                "Library", "Application Support", "QuadroApp");
-        }
-        else
-        {
-            // Windows: C:\Users\<user>\AppData\Local\QuadroApp
-            dataDir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "QuadroApp");
-        }
-
-        Directory.CreateDirectory(dataDir);
+        var dataDir = GetDataDirectory();
         var newDbPath = Path.Combine(dataDir, "quadro.db");
 
         // One-time migration from the old location (next to the exe).
