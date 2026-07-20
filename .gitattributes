@@ -1,0 +1,32 @@
+# Normalize line endings — prevents the CRLF/LF churn that showed 77 phantom-modified files
+* text=auto
+
+# C# / config: always LF in repo, native on checkout
+*.cs text
+*.csproj text
+*.sln text
+*.axaml text
+*.json text
+*.md text
+*.yml text
+*.yaml text
+*.xml text
+*.props text
+*.targets text
+*.editorconfig text
+
+# Windows scripts: CRLF
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.db binary
+*.sqlite binary
+*.xlsx binary
+*.docx binary
+*.dgml binary
