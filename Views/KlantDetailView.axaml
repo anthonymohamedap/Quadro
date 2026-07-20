@@ -6,21 +6,32 @@
     xmlns:m="using:QuadroApp.Model.DB"
     x:Class="QuadroApp.Views.KlantDetailView"
     x:DataType="vm:KlantDetailViewModel"
-    Background="#F5F5F5">
+    Background="{DynamicResource SurfaceMuted}">
 
-	<Grid RowDefinitions="Auto,*,Auto">
-		<controls:QuadroHeader Grid.ColumnSpan="2" Title="KLANTDETAIL" BackCommand="{Binding TerugCommand}"/>
+	<Grid RowDefinitions="Auto,*">
+		<controls:QuadroHeader Title="KLANTDETAIL" BackCommand="{Binding TerugCommand}"/>
 
-		<StackPanel Grid.Row="1" Margin="20" Spacing="12">
-			<TextBlock Text="👤 Klantdetail" FontSize="24" FontWeight="Bold" Foreground="#222"/>
+		<!-- Star-rij zodat de lijstenkaarten de resthoogte vullen en zelf scrollen -->
+		<Grid Grid.Row="1" Margin="24" RowDefinitions="Auto,Auto,*" RowSpacing="12">
+			<TextBlock Text="👤 Klantdetail" Classes="h1" TextTrimming="CharacterEllipsis"/>
 
-			<Border Background="White" CornerRadius="8" Padding="12" BorderBrush="#DDD" BorderThickness="1">
+			<Border Grid.Row="1" Background="{DynamicResource Surface}" CornerRadius="8" Padding="12" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1">
 				<Grid ColumnDefinitions="1.6*,1.6*,2*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="6">
-					<TextBlock Grid.Row="0" Grid.Column="0" Text="Naam" FontWeight="Bold"/>
-					<TextBlock Grid.Row="0" Grid.Column="1" Text="E-mail" FontWeight="Bold"/>
-					<TextBlock Grid.Row="0" Grid.Column="2" Text="Adres" FontWeight="Bold"/>
+					<TextBlock Grid.Row="0" Grid.Column="0" Text="Naam" Classes="label" TextTrimming="CharacterEllipsis"/>
+					<TextBlock Grid.Row="0" Grid.Column="1" Text="E-mail" Classes="label" TextTrimming="CharacterEllipsis"/>
+					<TextBlock Grid.Row="0" Grid.Column="2" Text="Adres" Classes="label" TextTrimming="CharacterEllipsis"/>
 
-					<TextBlock Grid.Row="1" Grid.Column="0">
+					<TextBlock Grid.Row="1" Grid.Column="0" TextTrimming="CharacterEllipsis">
+						<ToolTip.Tip>
+							<TextBlock>
+								<TextBlock.Text>
+									<MultiBinding StringFormat="{}{0} {1}">
+										<Binding Path="Klant.Voornaam" TargetNullValue=""/>
+										<Binding Path="Klant.Achternaam" TargetNullValue=""/>
+									</MultiBinding>
+								</TextBlock.Text>
+							</TextBlock>
+						</ToolTip.Tip>
 						<TextBlock.Text>
 							<MultiBinding StringFormat="{}{0} {1}">
 								<Binding Path="Klant.Voornaam" TargetNullValue=""/>
@@ -28,8 +39,8 @@
 							</MultiBinding>
 						</TextBlock.Text>
 					</TextBlock>
-					<TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Klant.Email, TargetNullValue='-'}"/>
-					<TextBlock Grid.Row="1" Grid.Column="2">
+					<TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Klant.Email, TargetNullValue='-'}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Klant.Email}"/>
+					<TextBlock Grid.Row="1" Grid.Column="2" TextTrimming="CharacterEllipsis">
 						<TextBlock.Text>
 							<MultiBinding StringFormat="{}{0} {1}, {2} {3}">
 								<Binding Path="Klant.Straat" TargetNullValue=""/>
@@ -40,41 +51,41 @@
 						</TextBlock.Text>
 					</TextBlock>
 
-					<TextBlock Grid.Row="2" Grid.ColumnSpan="3" Foreground="#AA3333" Text="{Binding Foutmelding}"/>
+					<TextBlock Grid.Row="2" Grid.ColumnSpan="3" Foreground="{DynamicResource Danger}" Text="{Binding Foutmelding}" TextWrapping="Wrap"/>
 				</Grid>
 			</Border>
 
-			<Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-				<Border Grid.Column="0" Background="White" CornerRadius="8" Padding="10" BorderBrush="#DDD" BorderThickness="1">
-					<StackPanel Spacing="8">
+			<Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="12">
+				<Border Grid.Column="0" Background="{DynamicResource Surface}" CornerRadius="8" Padding="10" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1">
+					<Grid RowDefinitions="Auto,*" RowSpacing="8">
 						<DockPanel LastChildFill="False">
-							<TextBlock Text="📄 Offertes" FontSize="18" FontWeight="Bold" DockPanel.Dock="Left"/>
+							<TextBlock Text="📄 Offertes" Classes="h2" DockPanel.Dock="Left" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
 							<StackPanel Orientation="Horizontal" Spacing="6" DockPanel.Dock="Right">
 								<Button Content="Openen" Command="{Binding OpenOfferteCommand}" CommandParameter="{Binding SelectedOfferte}" Classes="MainBtn"/>
 								<Button Content="➕ Nieuw" Command="{Binding NieuweOfferteCommand}" Classes="MainBtn"/>
 							</StackPanel>
 						</DockPanel>
 
-						<ListBox
-		ItemsSource="{Binding Offertes}"
-		SelectedItem="{Binding SelectedOfferte, Mode=TwoWay}"
-		DoubleTapped="OffertesGrid_DoubleTapped"
-		Height="260">
-
+						<ListBox Grid.Row="1"
+						         ItemsSource="{Binding Offertes}"
+						         SelectedItem="{Binding SelectedOfferte, Mode=TwoWay}"
+						         DoubleTapped="OffertesGrid_DoubleTapped"
+						         MinHeight="120"
+						         ScrollViewer.VerticalScrollBarVisibility="Auto">
 							<ListBox.ItemTemplate>
 								<DataTemplate>
 									<Border
-										Background="White"
-										BorderBrush="#E0E0E0"
+										Background="{DynamicResource Surface}"
+										BorderBrush="{DynamicResource BorderSubtle}"
 										BorderThickness="1"
 										CornerRadius="6"
 										Padding="10"
 										Margin="0,0,0,6">
 
-										<Grid ColumnDefinitions="70,120,120,*">
-
+										<Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="12">
 											<TextBlock
 												Grid.Column="0"
+												MinWidth="48"
 												Text="{Binding Id}"
 												FontWeight="Bold"/>
 
@@ -84,73 +95,73 @@
 
 											<TextBlock
 												Grid.Column="2"
-												Text="{Binding Status}"/>
+												Text="{Binding Status}"
+												TextTrimming="CharacterEllipsis"
+												ToolTip.Tip="{Binding Status}"/>
 
 											<TextBlock
 												Grid.Column="3"
 												Text="{Binding TotaalInclBtw, StringFormat=€ {0:0.00}}"
 												HorizontalAlignment="Right"
 												FontWeight="Bold"/>
-
 										</Grid>
 									</Border>
 								</DataTemplate>
 							</ListBox.ItemTemplate>
 						</ListBox>
-					</StackPanel>
+					</Grid>
 				</Border>
 
-				<Border Grid.Column="1" Background="White" CornerRadius="8" Padding="10" BorderBrush="#DDD" BorderThickness="1">
-					<StackPanel Spacing="8">
-						<TextBlock Text="🧾 Werkbonnen"
-			   FontSize="18"
-			   FontWeight="Bold"/>
+				<Border Grid.Column="1" Background="{DynamicResource Surface}" CornerRadius="8" Padding="10" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1">
+					<Grid RowDefinitions="Auto,*" RowSpacing="8">
+						<TextBlock Text="🧾 Werkbonnen" Classes="h2" TextTrimming="CharacterEllipsis"/>
 
-						<ListBox
-							ItemsSource="{Binding WerkBonnen}"
-							SelectedItem="{Binding SelectedWerkBon, Mode=TwoWay}"
-							Height="260">
-
+						<ListBox Grid.Row="1"
+						         ItemsSource="{Binding WerkBonnen}"
+						         SelectedItem="{Binding SelectedWerkBon, Mode=TwoWay}"
+						         MinHeight="120"
+						         ScrollViewer.VerticalScrollBarVisibility="Auto">
 							<ListBox.ItemTemplate>
 								<DataTemplate>
 									<Border
-										Background="White"
-										BorderBrush="#E0E0E0"
+										Background="{DynamicResource Surface}"
+										BorderBrush="{DynamicResource BorderSubtle}"
 										BorderThickness="1"
 										CornerRadius="6"
 										Padding="10"
 										Margin="0,0,0,6">
 
-										<Grid ColumnDefinitions="70,90,130,*">
-
+										<Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="12">
 											<TextBlock
 												Grid.Column="0"
+												MinWidth="48"
 												Text="{Binding Id}"
 												FontWeight="Bold"/>
 
 											<TextBlock
 												Grid.Column="1"
+												MinWidth="60"
 												Text="{Binding OfferteId}"/>
 
 											<TextBlock
 												Grid.Column="2"
-												Text="{Binding Status}"/>
+												Text="{Binding Status}"
+												TextTrimming="CharacterEllipsis"
+												ToolTip.Tip="{Binding Status}"/>
 
 											<TextBlock
 												Grid.Column="3"
 												Text="{Binding AfhaalDatum, StringFormat={}{0:dd/MM/yyyy}}"
 												HorizontalAlignment="Right"/>
-
 										</Grid>
-
 									</Border>
 								</DataTemplate>
 							</ListBox.ItemTemplate>
 						</ListBox>
-					</StackPanel>
+					</Grid>
 				</Border>
 			</Grid>
-		</StackPanel>
+		</Grid>
 	</Grid>
 
 </UserControl>
