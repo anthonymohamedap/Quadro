@@ -329,6 +329,50 @@ namespace QuadroApp.Migrations
                     b.ToTable("GeblokkeerDagen");
                 });
 
+            modelBuilder.Entity("QuadroApp.Model.DB.Gebruiker", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AangemaaktOp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GebruikersNaam")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActief")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LaatsteLogin")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("MoetWachtwoordWijzigen")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Rol")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("VolledigeNaam")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WachtwoordHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GebruikersNaam")
+                        .IsUnique();
+
+                    b.ToTable("Gebruikers");
+                });
+
             modelBuilder.Entity("QuadroApp.Model.DB.ImportRowLog", b =>
                 {
                     b.Property<int>("Id")
