@@ -13,6 +13,7 @@ using QuadroApp.Service;
 using QuadroApp.Service.Import;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Service.Pricing;
+using QuadroApp.Service.Backup;
 using QuadroApp.Service.Security;
 using QuadroApp.Service.Toast;
 using QuadroApp.Validation;
@@ -147,6 +148,13 @@ public partial class App : Application
         services.AddScoped<IFactuurExportService, FactuurExportService>();
         services.AddScoped<ICentralExcelExportService, CentralExcelExportService>();
         services.AddScoped<IFactuurExporter, PdfFactuurExporter>();
+
+        // US-34: daily automatic backups (SQLite online-backup API)
+        services.AddSingleton<IBackupService>(sp => new BackupService(
+            connectionString,
+            GetDataDirectory(),
+            GetBackupOptions(),
+            sp.GetRequiredService<ILogger<BackupService>>()));
 
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         services.AddSingleton<PricingEngine>();
@@ -511,6 +519,33 @@ public partial class App : Application
 
         _logger.LogInformation("[Startup] Refreshing voorraad alerts...");
         await stockService.RefreshAlertsAsync();
+
+        // US-34: daily backup — runs after DB init, never blocks or crashes startup.
+        var backupService = scope.ServiceProvider.GetRequiredService<IBackupService>();
+        await backupService.RunDailyBackupAsync();
+    }
+
+    /// <summary>US-34: reads the optional Backup section from appsettings.json.</summary>
+    private static Service.Backup.BackupOptions GetBackupOptions()
+    {
+        try
+        {
+            var config = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+                .Build();
+
+            var section = config.GetSection("Backup");
+            return new Service.Backup.BackupOptions
+            {
+                Directory = section["Directory"],
+                RetentionDays = int.TryParse(section["RetentionDays"], out var days) ? days : 30
+            };
+        }
+        catch
+        {
+            return new Service.Backup.BackupOptions();
+        }
     }
 
 
