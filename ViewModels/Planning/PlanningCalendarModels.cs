@@ -1,23 +1,34 @@
-using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 
 namespace QuadroApp.ViewModels;
 
 // ───────── SUPPORT CLASSES voor PlanningCalendarViewModel ─────────
+// Geen IBrush/kleuren in de ViewModel-laag: tegels leveren alleen status
+// (booleans); de AXAML-styles in PlanningCalendarWindow mappen status → kleur
+// via theme-tokens (Classes.*-bindingen).
 
 public partial class DayTile : ObservableObject
 {
     public DateTime Date { get; set; }
     public string DayNumber { get; set; } = "";
     public string BusyLabel { get; set; } = "";
+
+    /// <summary>Bezetting 0..1 t.o.v. dagcapaciteit (geblokkeerd = 1).</summary>
     public double Busy { get; set; }
-    public IBrush BusyColor { get; set; } = Brushes.LimeGreen;
-    public double BusyBarWidth => Busy * 120;
+
+    public bool IsToday { get; set; }
+    public bool IsWeekend { get; set; }
+    public bool IsOtherMonth { get; set; }
     public bool IsGeblokkeerd { get; set; }
 
-    [ObservableProperty] private IBrush background = Brushes.Transparent;
-    [ObservableProperty] private IBrush border = Brushes.Gray;
+    // Capaciteitsniveau als booleans voor Classes.*-bindingen (zelfde
+    // drempels als voorheen: ≤50% laag, ≤75% midden, ≤90% hoog, anders vol).
+    public bool CapLow => !IsGeblokkeerd && Busy <= 0.5;
+    public bool CapMid => !IsGeblokkeerd && Busy > 0.5 && Busy <= 0.75;
+    public bool CapHigh => !IsGeblokkeerd && Busy > 0.75 && Busy <= 0.9;
+    public bool CapFull => IsGeblokkeerd || Busy > 0.9;
+
     [ObservableProperty] private bool isSelected;
 }
 
@@ -26,7 +37,6 @@ public class WeekSummary
     public string Title { get; set; } = "";
     public string Range { get; set; } = "";
     public string TotalLabel { get; set; } = "";
-    public IBrush Color { get; set; } = Brushes.Gray;
 }
 
 public class DayRow
@@ -36,7 +46,6 @@ public class DayRow
     public DateTime Datum { get; set; }
     public int Uren { get; set; }
     public int Minuten { get; set; }
-    public IBrush Kleur { get; set; } = Brushes.Gray;
     public bool IsGeblokkeerd { get; set; }
     public string UurMinText => IsGeblokkeerd ? "🚫" : $"{Uren:00}:{Minuten:00}";
 }
