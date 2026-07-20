@@ -70,7 +70,7 @@ Focus: resizable + min-maten, `SizeToContent` waar passend, knoppenrijen die nie
 |---|---|
 | 0 — Fundament | ✅ 20-07-2026 (branch `feature/ui-fase-0`, verify groen) |
 | 1 — Kernschermen | ✅ 20-07-2026 (branch `feature/ui-fase-1`, verify groen) |
-| 2 — Beheerschermen | ⬜ |
+| 2 — Beheerschermen | 🟡 20/21-07-2026 (branch `feature/ui-fase-2`, alle 8 schermen gecommit; verify.ps1 + visuele QA + merge nog uit te voeren op Windows) |
 | 3 — Dialogen & import | ⬜ |
 | 4 — Consistentie & QA | ⬜ |
 
