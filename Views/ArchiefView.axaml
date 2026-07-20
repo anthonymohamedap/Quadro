@@ -9,7 +9,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     x:Class="QuadroApp.Views.ArchiefView"
     x:DataType="vm:ArchiefViewModel"
-    Background="#F5F5F5">
+    Background="{DynamicResource SurfaceMuted}">
 
     <UserControl.Resources>
         <conv:JaarConverter x:Key="JaarConv"/>
@@ -25,16 +25,18 @@
             <controls:QuadroHeader Grid.Row="0" Title="ARCHIEF" BackCommand="{Binding GaTerugCommand}"/>
 
             <!-- FILTER-BALK -->
-            <Border Grid.Row="1" Background="White" Padding="16,10"
+            <Border Grid.Row="1" Background="{DynamicResource Surface}" Padding="16,10"
                     BoxShadow="0 1 4 0 #14000000">
-                <StackPanel Orientation="Horizontal" Spacing="12">
+                <WrapPanel>
                     <TextBox Watermark="Zoek op klant, offerte-nr, reden…"
-                             Width="280"
+                             MinWidth="220"
+                             Margin="0,0,12,4"
                              Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
                     <ComboBox ItemsSource="{Binding BeschikbareJaren}"
                               SelectedItem="{Binding GeselecteerdJaar, Mode=TwoWay}"
-                              Width="120"
+                              MinWidth="110"
+                              Margin="0,0,12,4"
                               VerticalAlignment="Center">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
@@ -45,9 +47,8 @@
 
                     <TextBlock Text="{Binding ArchiefItems.Count, StringFormat='{}{0} entries'}"
                                VerticalAlignment="Center"
-                               Foreground="#888"
-                               FontSize="12"/>
-                </StackPanel>
+                               Classes="caption"/>
+                </WrapPanel>
             </Border>
 
             <!-- LIJST -->
@@ -59,7 +60,7 @@
                     <TextBlock Text="Laden…"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"
-                               FontSize="18" Foreground="#555"/>
+                               Classes="h2" Foreground="{DynamicResource TextSecondary}"/>
                 </Border>
 
                 <!-- Leeg -->
@@ -67,7 +68,7 @@
                            Text="Geen gearchiveerde offertes gevonden."
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"
-                           Foreground="#AAA" FontSize="15"/>
+                           Classes="h3" Foreground="{DynamicResource TextSecondary}"/>
 
                 <ListBox ItemsSource="{Binding ArchiefItems}"
                          SelectedItem="{Binding GeselecteerdItem, Mode=TwoWay}"
@@ -76,55 +77,60 @@
                          Padding="12,8">
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="m:OfferteArchief">
-                            <Border Background="White"
+                            <Border Background="{DynamicResource Surface}"
                                     CornerRadius="8"
                                     Margin="0,4"
                                     Padding="16,12"
                                     BoxShadow="0 1 4 0 #18000000">
-                                <Grid ColumnDefinitions="*,Auto">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                     <StackPanel Grid.Column="0" Spacing="4">
 
                                         <!-- Klant + datum -->
-                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <WrapPanel>
                                             <TextBlock Text="{Binding KlantNaam}"
-                                                       FontWeight="Bold" FontSize="15"/>
-                                            <TextBlock Text="—" Foreground="#AAA"/>
+                                                       Classes="h3"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip.Tip="{Binding KlantNaam}"
+                                                       Margin="0,0,10,0"/>
+                                            <TextBlock Text="—" Foreground="{DynamicResource TextSecondary}" Margin="0,0,10,0"/>
                                             <TextBlock Text="{Binding OfferteDatum, StringFormat='{}{0:dd/MM/yyyy}'}"
-                                                       Foreground="#666" FontSize="13"/>
+                                                       Classes="body" Foreground="{DynamicResource TextSecondary}"
+                                                       Margin="0,0,10,0"/>
                                             <!-- Hersteld badge -->
                                             <Border IsVisible="{Binding IsHersteld}"
-                                                    Background="#E8F5E9"
+                                                    Background="{DynamicResource SuccessBg}"
                                                     CornerRadius="4"
                                                     Padding="6,2">
                                                 <TextBlock Text="✓ Hersteld"
-                                                           Foreground="#2E7D32"
-                                                           FontSize="11"
+                                                           Classes="caption"
+                                                           Foreground="{DynamicResource Success}"
                                                            FontWeight="SemiBold"/>
                                             </Border>
-                                        </StackPanel>
+                                        </WrapPanel>
 
                                         <!-- IDs + status -->
-                                        <StackPanel Orientation="Horizontal" Spacing="14">
-                                            <TextBlock FontSize="12" Foreground="#888">
+                                        <WrapPanel>
+                                            <TextBlock Classes="caption" Margin="0,0,14,0">
                                                 <Run Text="Offerte #"/>
                                                 <Run Text="{Binding OrigineleOfferteId}"/>
                                             </TextBlock>
-                                            <TextBlock FontSize="12" Foreground="#888"
+                                            <TextBlock Classes="caption" Margin="0,0,14,0"
                                                        IsVisible="{Binding HadWerkBon}">
                                                 <Run Text="+ Werkbon"/>
                                             </TextBlock>
-                                            <TextBlock FontSize="12" Foreground="#666"
-                                                       Text="{Binding StatusOpMoment}"/>
-                                        </StackPanel>
+                                            <TextBlock Classes="caption"
+                                                       Text="{Binding StatusOpMoment}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </WrapPanel>
 
                                         <!-- Reden (indien aanwezig) -->
                                         <TextBlock Text="{Binding Reden}"
                                                    IsVisible="{Binding Reden, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                   Foreground="#B84040"
-                                                   FontSize="12"
+                                                   Classes="caption"
+                                                   Foreground="{DynamicResource Danger}"
                                                    TextWrapping="Wrap"/>
 
-                                        <TextBlock FontSize="11" Foreground="#CCC">
+                                        <TextBlock Classes="caption">
                                             <Run Text="Gearchiveerd: "/>
                                             <Run Text="{Binding GearchiveerdOp, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"/>
                                         </TextBlock>
@@ -133,8 +139,7 @@
                                     <!-- Prijs rechts -->
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding TotaalInclBtw, StringFormat='€ {0:N2}'}"
-                                               FontWeight="Bold"
-                                               FontSize="15"
+                                               Classes="h3"
                                                VerticalAlignment="Center"
                                                HorizontalAlignment="Right"/>
                                 </Grid>
@@ -145,8 +150,8 @@
             </Grid>
 
             <!-- STATUS-BALK -->
-            <Border Grid.Row="3" Background="#EEEEEE" Padding="16,6">
-                <TextBlock FontSize="12" Foreground="#666">
+            <Border Grid.Row="3" Background="{DynamicResource SurfaceHeader}" Padding="16,6">
+                <TextBlock Classes="caption">
                     <Run Text="{Binding ArchiefItems.Count}"/>
                     <Run Text=" gearchiveerde offertes"/>
                 </TextBlock>
@@ -164,28 +169,28 @@
                 ZIndex="51"
                 HorizontalAlignment="Right"
                 Width="480"
-                Background="White"
+                Background="{DynamicResource Surface}"
                 BoxShadow="-4 0 16 0 #30000000">
 
             <Grid RowDefinitions="Auto,*,Auto">
 
                 <!-- Detail header -->
-                <Border Grid.Row="0" Background="#37474F" Padding="20,14">
+                <Border Grid.Row="0" Background="{DynamicResource BrandDark}" Padding="20,14">
                     <DockPanel>
                         <Button Content="✕ Sluiten"
                                 Command="{Binding SluitDetailCommand}"
                                 DockPanel.Dock="Right"
                                 Background="Transparent"
-                                Foreground="White"
+                                Foreground="{DynamicResource TextOnDark}"
                                 BorderThickness="1"
-                                BorderBrush="#888"
+                                BorderBrush="{DynamicResource TextMutedOnDark}"
                                 CornerRadius="4"
                                 Padding="10,4"/>
                         <TextBlock Text="Archief detail"
-                                   Foreground="White"
-                                   FontSize="16"
-                                   FontWeight="Bold"
-                                   VerticalAlignment="Center"/>
+                                   Classes="h3"
+                                   Foreground="{DynamicResource TextOnDark}"
+                                   VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"/>
                     </DockPanel>
                 </Border>
 
@@ -194,20 +199,24 @@
                     <StackPanel Spacing="16">
 
                         <!-- Klant blok -->
-                        <Border Background="#F9F9F9" CornerRadius="6" Padding="14">
+                        <Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="6" Padding="14">
                             <StackPanel Spacing="4">
-                                <TextBlock Text="KLANT" FontSize="10" Foreground="#999" FontWeight="Bold"/>
+                                <TextBlock Text="KLANT" Classes="caption" FontWeight="Bold"/>
                                 <TextBlock Text="{Binding GeselecteerdItem.KlantNaam}"
-                                           FontWeight="Bold" FontSize="15"/>
+                                           Classes="h3"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip.Tip="{Binding GeselecteerdItem.KlantNaam}"/>
                                 <TextBlock Text="{Binding GeselecteerdSnapshot.Klant.Email}"
-                                           Foreground="#666" FontSize="12"
+                                           Classes="caption"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip.Tip="{Binding GeselecteerdSnapshot.Klant.Email}"
                                            IsVisible="{Binding GeselecteerdSnapshot.Klant.Email,
                                                Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                                 <TextBlock Text="{Binding GeselecteerdSnapshot.Klant.Telefoon}"
-                                           Foreground="#666" FontSize="12"
+                                           Classes="caption"
                                            IsVisible="{Binding GeselecteerdSnapshot.Klant.Telefoon,
                                                Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                                <TextBlock FontSize="12" Foreground="#888">
+                                <TextBlock Classes="caption" TextWrapping="Wrap">
                                     <Run Text="{Binding GeselecteerdSnapshot.Klant.Straat}"/>
                                     <Run Text=" "/>
                                     <Run Text="{Binding GeselecteerdSnapshot.Klant.Nummer}"/>
@@ -220,35 +229,35 @@
                         </Border>
 
                         <!-- Offerte info -->
-                        <Border Background="#F9F9F9" CornerRadius="6" Padding="14">
+                        <Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="6" Padding="14">
                             <StackPanel Spacing="6">
-                                <TextBlock Text="OFFERTE" FontSize="10" Foreground="#999" FontWeight="Bold"/>
-                                <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Offerte #" Foreground="#777" FontSize="12"/>
-                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding GeselecteerdItem.OrigineleOfferteId}" FontSize="12" FontWeight="SemiBold"/>
+                                <TextBlock Text="OFFERTE" Classes="caption" FontWeight="Bold"/>
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="2">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" MinWidth="100" Text="Offerte #" Classes="caption"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding GeselecteerdItem.OrigineleOfferteId}" Classes="caption" Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold"/>
 
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Status:" Foreground="#777" FontSize="12"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GeselecteerdItem.StatusOpMoment}" FontSize="12"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Status:" Classes="caption"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GeselecteerdItem.StatusOpMoment}" Classes="caption" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis"/>
 
-                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Datum:" Foreground="#777" FontSize="12"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Datum:" Classes="caption"/>
                                     <TextBlock Grid.Row="2" Grid.Column="1"
                                                Text="{Binding GeselecteerdItem.OfferteDatum, StringFormat='{}{0:dd/MM/yyyy}'}"
-                                               FontSize="12"/>
+                                               Classes="caption" Foreground="{DynamicResource TextPrimary}"/>
 
-                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Totaal incl:" Foreground="#777" FontSize="12"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Totaal incl:" Classes="caption"/>
                                     <TextBlock Grid.Row="3" Grid.Column="1"
                                                Text="{Binding GeselecteerdItem.TotaalInclBtw, StringFormat='€ {0:N2}'}"
-                                               FontSize="12" FontWeight="Bold"/>
+                                               Classes="caption" Foreground="{DynamicResource TextPrimary}" FontWeight="Bold"/>
 
-                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Had werkbon:" Foreground="#777" FontSize="12"/>
+                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Had werkbon:" Classes="caption"/>
                                     <TextBlock Grid.Row="4" Grid.Column="1"
                                                Text="{Binding GeselecteerdItem.HadWerkBon}"
-                                               FontSize="12"/>
+                                               Classes="caption" Foreground="{DynamicResource TextPrimary}"/>
                                 </Grid>
                                 <TextBlock Text="{Binding GeselecteerdSnapshot.Offerte.Opmerking}"
                                            IsVisible="{Binding GeselecteerdSnapshot.Offerte.Opmerking,
                                                Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                           Foreground="#555" FontSize="12"
+                                           Classes="caption"
                                            TextWrapping="Wrap" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Border>
@@ -257,20 +266,20 @@
                         <StackPanel Spacing="6"
                                     IsVisible="{Binding GeselecteerdSnapshot,
                                         Converter={x:Static ObjectConverters.IsNotNull}}">
-                            <TextBlock Text="OFFERTEREGELS" FontSize="10" Foreground="#999" FontWeight="Bold"/>
+                            <TextBlock Text="OFFERTEREGELS" Classes="caption" FontWeight="Bold"/>
                             <ItemsControl ItemsSource="{Binding GeselecteerdSnapshot.Regels}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="snap:SnapshotOfferteRegel">
-                                        <Border Background="#F5F5F5" CornerRadius="5"
+                                        <Border Background="{DynamicResource SurfaceMuted}" CornerRadius="5"
                                                 Padding="12,8" Margin="0,2">
-                                            <Grid ColumnDefinitions="*,Auto">
+                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                                                 <StackPanel Grid.Column="0" Spacing="2">
-                                                    <TextBlock FontWeight="SemiBold" FontSize="13">
+                                                    <TextBlock Classes="body" FontWeight="SemiBold" TextWrapping="Wrap">
                                                         <Run Text="{Binding AantalStuks}"/>
                                                         <Run Text="×  "/>
                                                         <Run Text="{Binding Titel}"/>
                                                     </TextBlock>
-                                                    <TextBlock FontSize="11" Foreground="#888">
+                                                    <TextBlock Classes="caption" TextWrapping="Wrap">
                                                         <Run Text="{Binding BreedteCm, StringFormat='{}{0:N1}'}"/>
                                                         <Run Text=" × "/>
                                                         <Run Text="{Binding HoogteCm, StringFormat='{}{0:N1}'}"/>
@@ -281,26 +290,26 @@
                                                     <!-- Afwerkingen -->
                                                     <WrapPanel>
                                                         <TextBlock IsVisible="{Binding GlasNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                                   FontSize="10" Foreground="#7B5EA7" Margin="0,0,8,0">
+                                                                   Classes="caption" Foreground="{DynamicResource StatPurpleText}" Margin="0,0,8,0">
                                                             <Run Text="Glas: "/><Run Text="{Binding GlasNaam}"/>
                                                         </TextBlock>
                                                         <TextBlock IsVisible="{Binding PassePartout1Naam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                                   FontSize="10" Foreground="#7B5EA7" Margin="0,0,8,0">
+                                                                   Classes="caption" Foreground="{DynamicResource StatPurpleText}" Margin="0,0,8,0">
                                                             <Run Text="PP1: "/><Run Text="{Binding PassePartout1Naam}"/>
                                                         </TextBlock>
                                                         <TextBlock IsVisible="{Binding PassePartout2Naam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                                   FontSize="10" Foreground="#7B5EA7" Margin="0,0,8,0">
+                                                                   Classes="caption" Foreground="{DynamicResource StatPurpleText}" Margin="0,0,8,0">
                                                             <Run Text="PP2: "/><Run Text="{Binding PassePartout2Naam}"/>
                                                         </TextBlock>
                                                         <TextBlock IsVisible="{Binding RugNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                                   FontSize="10" Foreground="#7B5EA7">
+                                                                   Classes="caption" Foreground="{DynamicResource StatPurpleText}">
                                                             <Run Text="Rug: "/><Run Text="{Binding RugNaam}"/>
                                                         </TextBlock>
                                                     </WrapPanel>
                                                 </StackPanel>
                                                 <TextBlock Grid.Column="1"
                                                            Text="{Binding TotaalInclBtw, StringFormat='€ {0:N2}'}"
-                                                           FontWeight="Bold" FontSize="13"
+                                                           Classes="body" FontWeight="Bold"
                                                            VerticalAlignment="Center"/>
                                             </Grid>
                                         </Border>
@@ -312,16 +321,17 @@
                         <!-- Werkbon taken -->
                         <StackPanel Spacing="6"
                                     IsVisible="{Binding GeselecteerdSnapshot.Taken.Count}">
-                            <TextBlock Text="WERKTAKEN" FontSize="10" Foreground="#999" FontWeight="Bold"/>
+                            <TextBlock Text="WERKTAKEN" Classes="caption" FontWeight="Bold"/>
                             <ItemsControl ItemsSource="{Binding GeselecteerdSnapshot.Taken}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="snap:SnapshotWerkTaak">
-                                        <Border Background="#F5F5F5" CornerRadius="5"
+                                        <Border Background="{DynamicResource SurfaceMuted}" CornerRadius="5"
                                                 Padding="12,8" Margin="0,2">
                                             <StackPanel Spacing="2">
                                                 <TextBlock Text="{Binding Omschrijving}"
-                                                           FontWeight="SemiBold" FontSize="13"/>
-                                                <TextBlock FontSize="11" Foreground="#888">
+                                                           Classes="body" FontWeight="SemiBold"
+                                                           TextWrapping="Wrap"/>
+                                                <TextBlock Classes="caption">
                                                     <Run Text="{Binding GeplandVan, StringFormat='{}{0:dd/MM HH:mm}'}"/>
                                                     <Run Text=" – "/>
                                                     <Run Text="{Binding GeplandTot, StringFormat='{}{0:HH:mm}'}"/>
@@ -331,7 +341,8 @@
                                                 </TextBlock>
                                                 <TextBlock Text="{Binding Resource}"
                                                            IsVisible="{Binding Resource, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                           Foreground="#888" FontSize="11"/>
+                                                           Classes="caption"
+                                                           TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>
@@ -343,7 +354,7 @@
                 </ScrollViewer>
 
                 <!-- Actie-knoppen onderaan -->
-                <Border Grid.Row="2" Padding="20,14" Background="#FAFAFA"
+                <Border Grid.Row="2" Padding="20,14" Background="{DynamicResource SurfaceMutedAlt}"
                         BoxShadow="0 -1 4 0 #10000000">
                     <StackPanel Spacing="8">
                         <!-- Niet hersteld: herstel-knop tonen -->
@@ -351,19 +362,18 @@
                                 Command="{Binding HerstellenCommand}"
                                 CommandParameter="{Binding GeselecteerdItem}"
                                 IsVisible="{Binding !GeselecteerdItem.IsHersteld}"
-                                Background="#1565C0"
-                                Foreground="White"
+                                Background="{DynamicResource StatBlueText}"
+                                Foreground="{DynamicResource TextOnDark}"
                                 CornerRadius="6"
                                 Padding="16,10"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Center"
-                                FontWeight="SemiBold"
-                                FontSize="14"/>
+                                FontWeight="SemiBold"/>
 
                         <!-- Al hersteld: info tonen -->
                         <Border IsVisible="{Binding GeselecteerdItem.IsHersteld}"
-                                Background="#E8F5E9" CornerRadius="6" Padding="12,8">
-                            <TextBlock Foreground="#2E7D32" FontWeight="SemiBold">
+                                Background="{DynamicResource SuccessBg}" CornerRadius="6" Padding="12,8">
+                            <TextBlock Foreground="{DynamicResource Success}" FontWeight="SemiBold" TextWrapping="Wrap">
                                 <Run Text="Hersteld naar offerte #"/>
                                 <Run Text="{Binding GeselecteerdItem.HersteldNaarOfferteId}"/>
                             </TextBlock>
@@ -373,14 +383,13 @@
                         <Button Content="Permanent verwijderen"
                                 Command="{Binding VerwijderenCommand}"
                                 CommandParameter="{Binding GeselecteerdItem}"
-                                Background="#B71C1C"
-                                Foreground="White"
+                                Background="{DynamicResource Danger}"
+                                Foreground="{DynamicResource TextOnDark}"
                                 CornerRadius="6"
                                 Padding="16,8"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Center"
-                                FontWeight="SemiBold"
-                                FontSize="13"/>
+                                FontWeight="SemiBold"/>
                     </StackPanel>
                 </Border>
             </Grid>
