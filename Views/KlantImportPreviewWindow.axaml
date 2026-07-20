@@ -5,20 +5,27 @@
         x:DataType="vm:KlantExcelPreviewViewModel"
         Width="900"
         Height="600"
-        Title="Excel-import">
+        MinWidth="700"
+        MinHeight="440"
+        CanResize="True"
+        Title="Excel-import"
+        Background="{DynamicResource SurfaceMuted}">
 
 
-	<DockPanel Margin="10"   Background="#F5F5F5">
+	<DockPanel Margin="12">
 
 		<!-- Buttons -->
 		<StackPanel DockPanel.Dock="Bottom"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Spacing="8">
+                    Spacing="8"
+                    Margin="0,12,0,0">
 			<Button Content="Annuleren"
+                    MinWidth="100"
                     Command="{Binding CancelCommand}" />
 
 			<Button Content="Importeren"
+                    MinWidth="110"
                     IsEnabled="{Binding CanImport}"
                     Command="{Binding ConfirmCommand}" />
 		</StackPanel>
@@ -29,15 +36,23 @@
                   GridLinesVisibility="All">
 			<DataGrid.Columns>
 				<DataGridTextColumn Header="Voornaam"
+                                    Width="*"
+                                    MinWidth="100"
                                     Binding="{Binding Voornaam}" />
 
 				<DataGridTextColumn Header="Achternaam"
+                                    Width="*"
+                                    MinWidth="120"
                                     Binding="{Binding Achternaam}" />
 
-        <DataGridTextColumn Header="E-mail"
+				<DataGridTextColumn Header="E-mail"
+                                    Width="1.5*"
+                                    MinWidth="140"
                                     Binding="{Binding Email}" />
 
 				<DataGridTextColumn Header="Status"
+                                    Width="1.5*"
+                                    MinWidth="120"
                                     Binding="{Binding ValidationMessage}" />
 			</DataGrid.Columns>
 		</DataGrid>
