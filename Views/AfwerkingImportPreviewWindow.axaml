@@ -5,12 +5,14 @@
         x:DataType="vm:AfwerkingExcelPreviewViewModel"
         Width="900"
         Height="600"
+        MinWidth="760"
+        MinHeight="440"
+        CanResize="True"
         Title="Excel import – Afwerkingen"
-        Background="White"
-        Foreground="Black">
+        Background="{DynamicResource Surface}"
+        Foreground="{DynamicResource TextPrimary}">
 
-	<DockPanel Margin="10"
-               Background="White"
+	<DockPanel Margin="12"
                LastChildFill="True">
 
 		<!-- Buttons -->
@@ -18,16 +20,14 @@
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Spacing="8"
-                    Background="White">
+                    Margin="0,12,0,0">
 
 			<Button Content="Annuleren"
-                    Background="White"
-                    Foreground="Black"
+                    MinWidth="100"
                     Command="{Binding CancelCommand}" />
 
 			<Button Content="Importeren"
-                    Background="White"
-                    Foreground="Black"
+                    MinWidth="110"
                     IsEnabled="{Binding CanImport}"
                     Command="{Binding ConfirmCommand}" />
 		</StackPanel>
@@ -36,49 +36,67 @@
 		<DataGrid ItemsSource="{Binding Rows}"
           AutoGenerateColumns="False"
           GridLinesVisibility="All"
-          Background="White"
-          Foreground="Black">
+          Background="{DynamicResource Surface}"
+          Foreground="{DynamicResource TextPrimary}">
 
 			<!-- Rij styling -->
 			<DataGrid.Styles>
 				<!-- Normale rij -->
 				<Style Selector="DataGridRow">
-					<Setter Property="Background" Value="White"/>
-					<Setter Property="Foreground" Value="Black"/>
+					<Setter Property="Background" Value="{DynamicResource Surface}"/>
+					<Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
 				</Style>
 
 				<!-- Alternating row -->
 				<Style Selector="DataGridRow:nth-child(2n)">
-					<Setter Property="Background" Value="#F2F2F2"/>
+					<Setter Property="Background" Value="{DynamicResource SurfaceMuted}"/>
 				</Style>
 			</DataGrid.Styles>
 
 			<DataGrid.Columns>
 				<DataGridTextColumn Header="Groep"
+									Width="*"
+									MinWidth="90"
 									Binding="{Binding AfwerkingsGroep}" />
 
 				<DataGridTextColumn Header="Naam"
+									Width="1.5*"
+									MinWidth="120"
 									Binding="{Binding Naam}" />
 
 				<DataGridTextColumn Header="Volgnummer"
+									Width="Auto"
+									MinWidth="80"
 									Binding="{Binding Volgnummer}" />
 
 				<DataGridTextColumn Header="Kost €/m²"
+									Width="Auto"
+									MinWidth="80"
 									Binding="{Binding KostprijsPerM2}" />
 
 				<DataGridTextColumn Header="Marge"
+									Width="Auto"
+									MinWidth="60"
 									Binding="{Binding WinstMarge}" />
 
 				<DataGridTextColumn Header="Afval %"
+									Width="Auto"
+									MinWidth="60"
 									Binding="{Binding AfvalPercentage}" />
 
 				<DataGridTextColumn Header="Vaste kost"
+									Width="Auto"
+									MinWidth="70"
 									Binding="{Binding VasteKost}" />
 
 				<DataGridTextColumn Header="Werk (min)"
+									Width="Auto"
+									MinWidth="70"
 									Binding="{Binding WerkMinuten}" />
 
 				<DataGridTextColumn Header="Status"
+									Width="1.5*"
+									MinWidth="110"
 									Binding="{Binding ValidationMessage}" />
 			</DataGrid.Columns>
 
