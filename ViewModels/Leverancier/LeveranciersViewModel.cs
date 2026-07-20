@@ -91,9 +91,11 @@ public partial class LeveranciersViewModel : AsyncViewModelBase, IAsyncInitializ
         INavigationService nav,
         IDialogService dialogs,
         IToastService toast,
-        IStockService stock)
+        IStockService stock,
+        IAuthService auth)
         : base(toast)
     {
+        _auth = auth;
         _dbFactory = dbFactory;
         _nav = nav;
         _dialogs = dialogs;
@@ -373,11 +375,20 @@ public partial class LeveranciersViewModel : AsyncViewModelBase, IAsyncInitializ
         }
     }
 
+    private readonly IAuthService _auth;
+
     [RelayCommand]
     private async Task VerwijderAsync()
     {
         if (SelectedLeverancier is null || SelectedLeverancier.Id == 0)
             return;
+
+        // US-32: rol-afhankelijke actie
+        if (!_auth.HeeftPermissie(QuadroApp.Service.Security.Permissie.LeverancierVerwijderen))
+        {
+            _toast.Warning("Onvoldoende rechten om leveranciers te verwijderen.");
+            return;
+        }
 
         try
         {

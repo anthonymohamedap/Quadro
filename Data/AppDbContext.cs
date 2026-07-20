@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using QuadroApp.Model.DB;
 using System;
 using System.Threading;
@@ -17,6 +18,8 @@ namespace QuadroApp.Data
         public DbSet<WerkTaak> WerkTaken => Set<WerkTaak>();
         public DbSet<OfferteRegel> OfferteRegels { get; set; } = default!;
         public DbSet<Instelling> Instellingen => Set<Instelling>();
+        public DbSet<Gebruiker> Gebruikers => Set<Gebruiker>();
+        public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
         public DbSet<Leverancier> Leveranciers => Set<Leverancier>();
         public DbSet<LeverancierBestelling> LeverancierBestellingen => Set<LeverancierBestelling>();
         public DbSet<LeverancierBestelLijn> LeverancierBestelLijnen => Set<LeverancierBestelLijn>();
@@ -38,6 +41,13 @@ namespace QuadroApp.Data
         protected override void OnModelCreating(ModelBuilder b)
         {
             base.OnModelCreating(b);
+
+            // ── US-32: Gebruikers ────────────────────────────────────────────
+            b.Entity<Gebruiker>().HasIndex(g => g.GebruikersNaam).IsUnique();
+
+            // ── US-36: AuditLog (alleen-schrijven) ───────────────────────────
+            b.Entity<AuditLog>().HasIndex(a => a.Tijdstip);
+            b.Entity<AuditLog>().HasIndex(a => new { a.EntiteitType, a.EntiteitId });
 
             // ── Globale soft-delete query filters ────────────────────────────
             // Gebruik .IgnoreQueryFilters() als je gearchiveerde records wél nodig hebt.
@@ -388,7 +398,7 @@ namespace QuadroApp.Data
 
 
         }
-        public override Task<int> SaveChangesAsync(CancellationToken ct = default)
+        public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
         {
             foreach (var e in ChangeTracker.Entries<WerkTaak>())
             {
@@ -406,7 +416,31 @@ namespace QuadroApp.Data
                     e.Entity.BijgewerktOp = DateTime.UtcNow;
             }
 
-            return base.SaveChangesAsync(ct);
+            // US-36: audit-records opbouwen vóór de save (old→new is dan bekend).
+            var audit = AuditTrailWriter.BuildEntries(ChangeTracker);
+
+            var result = await base.SaveChangesAsync(ct);
+
+            if (audit.Count > 0)
+            {
+                try
+                {
+                    // Added-entiteiten hebben nu pas hun echte Id.
+                    foreach (var p in audit)
+                        if (p.WasAdded)
+                            p.Log.EntiteitId = AuditTrailWriter.DescribeKey(p.Entry);
+
+                    AuditLogs.AddRange(audit.Select(p => p.Log));
+                    await base.SaveChangesAsync(ct);
+                }
+                catch
+                {
+                    // Audit mag een geslaagde hoofd-save nooit laten falen;
+                    // in het slechtste geval ontbreekt één auditrij.
+                }
+            }
+
+            return result;
         }
 
 

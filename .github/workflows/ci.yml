@@ -1,0 +1,56 @@
+name: CI
+
+# Build + test on every push and PR — the safety net for all enterprise-hardening work.
+on:
+  push:
+    branches: [main, 'feature/**', 'fix/**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore Quadro.sln
+
+      - name: Build (Release, warnings visible)
+        run: dotnet build Quadro.sln --no-restore -c Release
+
+      - name: Test
+        run: dotnet test Quadro.sln --no-build -c Release --logger "trx;LogFileName=results.trx" --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/*.trx
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore Quadro.sln
+
+      - name: Scan for vulnerable packages (US-35)
+        shell: bash
+        run: |
+          dotnet list Quadro.sln package --vulnerable --include-transitive > vuln.txt 2>&1 || true
+          cat vuln.txt
+          if grep -qi "has the following vulnerable packages" vuln.txt; then
+            echo "::error::Vulnerable NuGet packages found — see log above"
+            exit 1
+          fi

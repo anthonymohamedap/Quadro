@@ -9,8 +9,8 @@
     x:DataType="vm:OfferteViewModel">
 
 	<Grid RowDefinitions="Auto,*,Auto"
-          Background="#F7F8FA"
-          TextElement.Foreground="Black">
+          Background="{DynamicResource SurfaceMutedAlt}"
+          TextElement.Foreground="{DynamicResource TextPrimary}">
 
 		<!-- ================= HEADER ================= -->
 		<controls:QuadroHeader Grid.Row="0" Title="OFFERTEBEHEER" BackCommand="{Binding GaTerugCommand}"/>
@@ -36,12 +36,14 @@
 							<StackPanel Spacing="6">
 
 								<!-- Huidige klant -->
-								<Border Background="#EEF2FF"
+								<Border Background="{DynamicResource InfoBg}"
 										CornerRadius="6"
 										Padding="6">
 
 									<TextBlock FontWeight="SemiBold"
-											   Foreground="#1E40AF"
+											   Foreground="{DynamicResource InfoText}"
+											   TextTrimming="CharacterEllipsis"
+											   ToolTip.Tip="{Binding SelectedKlant.Achternaam}"
 											   Text="{Binding SelectedKlant.Achternaam,
                                   TargetNullValue='Geen klant geselecteerd'}"/>
 								</Border>
@@ -56,7 +58,7 @@
 
 									<ComboBox.ItemTemplate>
 										<DataTemplate x:DataType="m:Klant">
-											<TextBlock>
+											<TextBlock TextTrimming="CharacterEllipsis">
 												<Run Text="{Binding Voornaam}" />
 												<Run Text=" " />
 												<Run Text="{Binding Achternaam}" />
@@ -71,11 +73,8 @@
 							<Button Grid.Row="1"
                                     Grid.Column="1"
                                     Content="+ Nieuwe klant"
-                                    
                                     Command="{Binding NieuweKlantCommand}"
-									Background="#F5C242"
-                            Foreground="Black"
-                            FontWeight="Bold"/>
+                                    Classes="AccentBtn"/>
 						</Grid>
 					</Border>
 
@@ -87,43 +86,37 @@
                                   ColumnSpacing="8">
 
 								<TextBlock Text="Regels"
-                                           FontSize="16"
-                                           FontWeight="SemiBold"/>
+                                           Classes="h2"
+                                           TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Center"/>
 
 								<Button Grid.Column="1"
                                         Content="+ Toevoegen"
                                         Command="{Binding RegelToevoegenCommand}"
-										Background="#F5C242"
-                            Foreground="Black"
-                            FontWeight="Bold"/>
+                                        Classes="AccentBtn"/>
 
 								<Button Grid.Column="2"
                                         Content="Dupliceren"
-                                        
                                         Command="{Binding RegelDuplicerenCommand}"
-										Background="#F5C242"
-                            Foreground="Black"
-                            FontWeight="Bold"/>
+                                        Classes="AccentBtn"/>
 
 								<Button Grid.Column="3"
                                         Content="– Verwijderen"
-                                        
                                         Command="{Binding RegelVerwijderenCommand}"
                                         CommandParameter="{Binding SelectedRegel}"
-										Background="#F5C242"
-                            Foreground="Black"
-                            FontWeight="Bold"/>
+                                        Classes="AccentBtn"/>
 							</Grid>
 
 							<!-- TABEL HEADERS -->
-							<Grid ColumnDefinitions="60,60,60,90,*,110"
+							<Grid ColumnDefinitions="Auto,60,60,60,90,*,110"
                                   Opacity="0.6">
-								<TextBlock Grid.Column="1" Text="Aantal"/>
-								<TextBlock Grid.Column="2" Text="Breedte"/>
-								<TextBlock Grid.Column="3" Text="Hoogte"/>
-								<TextBlock Grid.Column="4" Text="Type lijst"/>
-								<TextBlock Grid.Column="5"
+								<TextBlock Grid.Column="1" Text="Aantal" Classes="label" TextTrimming="CharacterEllipsis"/>
+								<TextBlock Grid.Column="2" Text="Breedte" Classes="label" TextTrimming="CharacterEllipsis"/>
+								<TextBlock Grid.Column="3" Text="Hoogte" Classes="label" TextTrimming="CharacterEllipsis"/>
+								<TextBlock Grid.Column="4" Text="Type lijst" Classes="label" TextTrimming="CharacterEllipsis"/>
+								<TextBlock Grid.Column="6"
                                            Text="Totaal"
+                                           Classes="label"
                                            HorizontalAlignment="Right"/>
 							</Grid>
 
@@ -137,16 +130,19 @@
 								<ListBox.ItemTemplate>
 									<DataTemplate x:DataType="m:OfferteRegel">
 										<Border Padding="6">
-											<Grid ColumnDefinitions="60,60,60,90,*,110">
+											<Grid ColumnDefinitions="Auto,60,60,60,90,*,110">
 												<TextBlock Grid.Column="1" Text="{Binding AantalStuks}"/>
 												<TextBlock Grid.Column="2"
-                                                           Text="{Binding BreedteCm, StringFormat={}{0} cm}"/>
+                                                           Text="{Binding BreedteCm, StringFormat={}{0} cm}"
+                                                           TextTrimming="CharacterEllipsis"/>
 												<TextBlock Grid.Column="3"
-                                                           Text="{Binding HoogteCm, StringFormat={}{0} cm}"/>
+                                                           Text="{Binding HoogteCm, StringFormat={}{0} cm}"
+                                                           TextTrimming="CharacterEllipsis"/>
 												<TextBlock Grid.Column="4"
                                                            Text="{Binding TypeLijst.Artikelnummer}"
+                                                           ToolTip.Tip="{Binding TypeLijst.Artikelnummer}"
                                                            TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="5"
+												<TextBlock Grid.Column="6"
                                                            Text="{Binding TotaalInclBtw, StringFormat=€ {0:N2}}"
                                                            HorizontalAlignment="Right"
                                                            FontWeight="SemiBold"/>
@@ -166,32 +162,32 @@
 
 					<!-- REGEL DETAILS -->
 					<Border Classes="quadro-card">
-						<Grid ColumnDefinitions="220,*"
-                             RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
-                              RowSpacing="10">
+						<Grid ColumnDefinitions="Auto,*"
+                              RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                              RowSpacing="10"
+                              ColumnSpacing="12">
 
 							<TextBlock Text="Regel details"
                                        Grid.ColumnSpan="2"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"/>
+                                       Classes="h2"
+                                       TextTrimming="CharacterEllipsis"/>
 
 							<!-- ══ TITEL — eerste invoerveld ══ -->
-							<TextBlock Grid.Row="1" Grid.Column="0" Text="Titel (verschijnt op bon)"/>
+							<TextBlock Grid.Row="1" Grid.Column="0" Text="Titel (verschijnt op bon)" VerticalAlignment="Center" MaxWidth="220" TextWrapping="Wrap"/>
 							<TextBox Grid.Row="1"
                                      Grid.Column="1"
                                      Watermark="bv. Poster A3, Trouwfoto, Canvas..."
                                      Text="{Binding SelectedRegel.Titel, Mode=TwoWay}"/>
 
-							<TextBlock Grid.Row="2" Grid.Column="0" Text="Aantal stuks"/>
+							<TextBlock Grid.Row="2" Grid.Column="0" Text="Aantal stuks" VerticalAlignment="Center"/>
 							<NumericUpDown Grid.Row="2"
                                            Grid.Column="1"
-										   			
-                            Foreground="Black"
+                                           Foreground="{DynamicResource TextPrimary}"
                                            Minimum="1"
                                            Maximum="999"
                                            Value="{Binding SelectedRegel.AantalStuks, Mode=TwoWay}"/>
 
-							<TextBlock Grid.Row="3" Grid.Column="0" Text="Type lijst"/>
+							<TextBlock Grid.Row="3" Grid.Column="0" Text="Type lijst" VerticalAlignment="Top"/>
 
 							<StackPanel Grid.Row="3"
                                         Grid.Column="1"
@@ -200,11 +196,13 @@
 								<!-- Geselecteerde lijst — zelfde stijl als klant display -->
 								<Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
 									<Border Grid.Column="0"
-                                            Background="#EEF2FF"
+                                            Background="{DynamicResource InfoBg}"
                                             CornerRadius="6"
                                             Padding="6">
 										<TextBlock FontWeight="SemiBold"
-                                                   Foreground="#1E40AF"
+                                                   Foreground="{DynamicResource InfoText}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip.Tip="{Binding SelectedRegelTypeLijst.Artikelnummer}"
                                                    Text="{Binding SelectedRegelTypeLijst.Artikelnummer,
                                                           TargetNullValue='Geen lijst geselecteerd'}"/>
 									</Border>
@@ -215,9 +213,9 @@
                                                 Width="28"
                                                 Height="24"
                                                 Padding="0"
-                                                FontSize="13"
-                                                Background="#E5E7EB"
-                                                Foreground="#374151"/>
+                                                HorizontalContentAlignment="Center"
+                                                Background="{DynamicResource BorderSubtle}"
+                                                Foreground="{DynamicResource TextPrimary}"/>
 									<Button Grid.Column="2"
                                                 Content="&#x1F4CB;"
                                                 ToolTip.Tip="Open lijstenbeheer"
@@ -225,9 +223,9 @@
                                                 Width="28"
                                                 Height="24"
                                                 Padding="0"
-                                                FontSize="13"
-                                                Background="#E5E7EB"
-                                                Foreground="#374151"/>
+                                                HorizontalContentAlignment="Center"
+                                                Background="{DynamicResource BorderSubtle}"
+                                                Foreground="{DynamicResource TextPrimary}"/>
 								</Grid>
 
 								<!-- Zoek + kies -->
@@ -239,54 +237,52 @@
                                           MaxDropDownHeight="300">
 									<ComboBox.ItemTemplate>
 										<DataTemplate x:DataType="m:TypeLijst">
-											<TextBlock Text="{Binding Artikelnummer}"/>
+											<TextBlock Text="{Binding Artikelnummer}" TextTrimming="CharacterEllipsis"/>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 
 							</StackPanel>
 
-							<TextBlock Grid.Row="4" Grid.Column="0" Text="Breedte (cm)"/>
+							<TextBlock Grid.Row="4" Grid.Column="0" Text="Breedte (cm)" VerticalAlignment="Center"/>
 							<NumericUpDown Grid.Row="4"
-										   			
-                            Foreground="Black"
+                                           Foreground="{DynamicResource TextPrimary}"
                                            Grid.Column="1"
                                            Value="{Binding SelectedRegel.BreedteCm, Mode=TwoWay}"/>
 
-							<TextBlock Grid.Row="5" Grid.Column="0" Text="Hoogte (cm)"/>
+							<TextBlock Grid.Row="5" Grid.Column="0" Text="Hoogte (cm)" VerticalAlignment="Center"/>
 							<NumericUpDown Grid.Row="5"
-										   			
-                            Foreground="Black"
+                                           Foreground="{DynamicResource TextPrimary}"
                                            Grid.Column="1"
                                            Value="{Binding SelectedRegel.HoogteCm, Mode=TwoWay}"/>
 
-							<TextBlock Grid.Row="6" Grid.Column="0" Text="Afgesproken prijs (incl. BTW)"/>
+							<TextBlock Grid.Row="6" Grid.Column="0" Text="Afgesproken prijs (incl. BTW)" VerticalAlignment="Center" MaxWidth="220" TextWrapping="Wrap"/>
 							<TextBox Grid.Row="6"
                                      Grid.Column="1"
                                      Text="{Binding SelectedRegelAfgesprokenPrijs, Mode=TwoWay}"/>
 
-							<TextBlock Grid.Row="7" Grid.Column="0" Text="Inleg (B × H) cm"/>
+							<TextBlock Grid.Row="7" Grid.Column="0" Text="Inleg (B × H) cm" VerticalAlignment="Center"/>
 							<Grid Grid.Row="7"
                                   Grid.Column="1"
                                   ColumnDefinitions="*,8,*">
-								<NumericUpDown Value="{Binding SelectedRegel.InlegBreedteCm, Mode=TwoWay}"			
-                            Foreground="Black"/>
+								<NumericUpDown Value="{Binding SelectedRegel.InlegBreedteCm, Mode=TwoWay}"
+                                               Foreground="{DynamicResource TextPrimary}"/>
 								<TextBlock Grid.Column="1"
                                            Text="×"
                                            HorizontalAlignment="Center"/>
-								<NumericUpDown Grid.Column="2" 			
-                            Foreground="Black"
+								<NumericUpDown Grid.Column="2"
+                                               Foreground="{DynamicResource TextPrimary}"
                                                Value="{Binding SelectedRegel.InlegHoogteCm, Mode=TwoWay}"/>
 							</Grid>
 							<TextBlock Grid.Row="8"
-           Grid.Column="0"
-           VerticalAlignment="Top"
-           Text="Opmerking"/>
+                                       Grid.Column="0"
+                                       VerticalAlignment="Top"
+                                       Text="Opmerking"/>
 
 							<TextBox Grid.Row="8"
 									 Grid.Column="1"
 									 AcceptsReturn="True"
-									 Height="70"
+									 MinHeight="70"
 									 TextWrapping="Wrap"
 									 Text="{Binding SelectedRegel.Opmerking, Mode=TwoWay}"/>
 
@@ -300,29 +296,21 @@
 								<TextBlock Text="{Binding SelectedRegel.AfhaalDatum, StringFormat='{}{0:dd/MM/yyyy}', TargetNullValue='— nog niet gepland'}"
 										   VerticalAlignment="Center"
 										   FontWeight="SemiBold"
-										   Foreground="Black"/>
+										   Foreground="{DynamicResource TextPrimary}"/>
 								<TextBlock Text="(via planning)"
-										   FontSize="11"
-										   Foreground="#9CA3AF"
+										   Classes="caption"
 										   VerticalAlignment="Center"/>
 							</StackPanel>
 						</Grid>
 					</Border>
 
 					<!-- AFWERKINGEN -->
-					<Border Classes="quadro-card"
-        Padding="16"
-        Background="White"
-        BorderBrush="#E5E7EB"
-        BorderThickness="1"
-        CornerRadius="10">
+					<Border Classes="quadro-card">
 
 						<Grid ColumnDefinitions="Auto,*,Auto,*"
 							  RowDefinitions="Auto,Auto,Auto,Auto"
 							  ColumnSpacing="16"
-							  RowSpacing="12" 
-							  
-							  >
+							  RowSpacing="12">
 
 							<!-- Titel -->
 							<StackPanel Grid.Row="0"
@@ -331,12 +319,13 @@
 										Margin="0,0,0,6">
 
 								<TextBlock Text="Afwerkingen"
-										   FontSize="16"
-										   FontWeight="SemiBold" Foreground="Black"/>
+										   Classes="h2"
+										   TextTrimming="CharacterEllipsis"/>
 
 								<TextBlock Text="Glas – Passe-partout – Diepte – Opkleven – Rug"
-										   FontSize="12"
-										   Opacity="0.6"/>
+										   Classes="caption"
+										   TextTrimming="CharacterEllipsis"
+										   ToolTip.Tip="Glas – Passe-partout – Diepte – Opkleven – Rug"/>
 							</StackPanel>
 
 							<!-- ================= RIJ 1 ================= -->
@@ -346,23 +335,23 @@
 									   VerticalAlignment="Center"
 									   FontWeight="SemiBold"
 									   Opacity="0.8"
-									    Foreground="Black"/>
+									   Foreground="{DynamicResource TextPrimary}"/>
 
 							<StackPanel Grid.Row="1" Grid.Column="1" Spacing="4">
 								<ComboBox ItemsSource="{Binding GlasNamen}"
 										  SelectedItem="{Binding SelectedGlasNaam, Mode=TwoWay}"
-										  MinWidth="200"
+										  HorizontalAlignment="Stretch"
 										  PlaceholderText="Glas type...">
 									<ComboBox.ItemTemplate>
 										<DataTemplate>
-											<TextBlock Text="{Binding}" />
+											<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 								<ComboBox x:Name="GlasBox"
 										  ItemsSource="{Binding GlasVarianten}"
 										  SelectedItem="{Binding SelectedRegelGlasVariant, Mode=TwoWay}"
-										  MinWidth="200"
+										  HorizontalAlignment="Stretch"
 										  PlaceholderText="Variant..."
 										  IsVisible="{Binding SelectedGlasNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
 									<ComboBox.ItemTemplate>
@@ -370,9 +359,9 @@
 											<StackPanel Orientation="Horizontal" Spacing="8">
 												<Border Width="14" Height="14" CornerRadius="3"
 												        VerticalAlignment="Center"
-												        BorderBrush="#999" BorderThickness="1"
+												        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
 												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
-											<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center"/>
+												<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
 											</StackPanel>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
@@ -385,34 +374,34 @@
 									   VerticalAlignment="Center"
 									   FontWeight="SemiBold"
 									   Opacity="0.8"
-									    Foreground="Black"/>
+									   Foreground="{DynamicResource TextPrimary}"/>
 
 							<StackPanel Grid.Row="1" Grid.Column="3" Spacing="4">
 								<ComboBox ItemsSource="{Binding Passe1Namen}"
 										  SelectedItem="{Binding SelectedPasse1Naam, Mode=TwoWay}"
-										  MinWidth="200"
+										  HorizontalAlignment="Stretch"
 										  PlaceholderText="Passe-partout type...">
 									<ComboBox.ItemTemplate>
 										<DataTemplate>
-											<TextBlock Text="{Binding}" />
+											<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 								<ComboBox x:Name="Passe1Box"
 										  ItemsSource="{Binding Passe1VariantLijst}"
 										  SelectedItem="{Binding SelectedRegelPasse1Variant, Mode=TwoWay}"
-										  MinWidth="200"
+										  HorizontalAlignment="Stretch"
 										  PlaceholderText="Variant..."
-										  Foreground="Black"
+										  Foreground="{DynamicResource TextPrimary}"
 										  IsVisible="{Binding SelectedPasse1Naam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
 									<ComboBox.ItemTemplate>
 										<DataTemplate x:DataType="m:AfwerkingsVariant">
 											<StackPanel Orientation="Horizontal" Spacing="8">
 												<Border Width="14" Height="14" CornerRadius="3"
 												        VerticalAlignment="Center"
-												        BorderBrush="#999" BorderThickness="1"
+												        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
 												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
-											<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center"/>
+												<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
 											</StackPanel>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
@@ -426,23 +415,23 @@
 									   VerticalAlignment="Center"
 									   FontWeight="SemiBold"
 									   Opacity="0.8"
-									    Foreground="Black"/>
+									   Foreground="{DynamicResource TextPrimary}"/>
 
 							<StackPanel Grid.Row="2" Grid.Column="1" Spacing="4">
 								<ComboBox ItemsSource="{Binding Passe2Namen}"
 										  SelectedItem="{Binding SelectedPasse2Naam, Mode=TwoWay}"
-										  MinWidth="200"
+										  HorizontalAlignment="Stretch"
 										  PlaceholderText="Passe-partout type...">
 									<ComboBox.ItemTemplate>
 										<DataTemplate>
-											<TextBlock Text="{Binding}" />
+											<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 								<ComboBox x:Name="Passe2Box"
 										  ItemsSource="{Binding Passe2VariantLijst}"
 										  SelectedItem="{Binding SelectedRegelPasse2Variant, Mode=TwoWay}"
-										  MinWidth="200"
+										  HorizontalAlignment="Stretch"
 										  PlaceholderText="Variant..."
 										  IsVisible="{Binding SelectedPasse2Naam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
 									<ComboBox.ItemTemplate>
@@ -450,9 +439,9 @@
 											<StackPanel Orientation="Horizontal" Spacing="8">
 												<Border Width="14" Height="14" CornerRadius="3"
 												        VerticalAlignment="Center"
-												        BorderBrush="#999" BorderThickness="1"
+												        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
 												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
-											<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center"/>
+												<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
 											</StackPanel>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
@@ -465,23 +454,23 @@
 									   VerticalAlignment="Center"
 									   FontWeight="SemiBold"
 									   Opacity="0.8"
-									    Foreground="Black"/>
+									   Foreground="{DynamicResource TextPrimary}"/>
 
 							<StackPanel Grid.Row="2" Grid.Column="3" Spacing="4">
 								<ComboBox ItemsSource="{Binding DiepteNamen}"
 										  SelectedItem="{Binding SelectedDiepteNaam, Mode=TwoWay}"
-										  MinWidth="200"
+										  HorizontalAlignment="Stretch"
 										  PlaceholderText="Diepte type...">
 									<ComboBox.ItemTemplate>
 										<DataTemplate>
-											<TextBlock Text="{Binding}" />
+											<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 								<ComboBox x:Name="DiepteBox"
 										  ItemsSource="{Binding DiepteVariantLijst}"
 										  SelectedItem="{Binding SelectedRegelDiepteVariant, Mode=TwoWay}"
-										  MinWidth="200"
+										  HorizontalAlignment="Stretch"
 										  PlaceholderText="Variant..."
 										  IsVisible="{Binding SelectedDiepteNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
 									<ComboBox.ItemTemplate>
@@ -489,9 +478,9 @@
 											<StackPanel Orientation="Horizontal" Spacing="8">
 												<Border Width="14" Height="14" CornerRadius="3"
 												        VerticalAlignment="Center"
-												        BorderBrush="#999" BorderThickness="1"
+												        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
 												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
-											<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center"/>
+												<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
 											</StackPanel>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
@@ -505,23 +494,23 @@
 									   VerticalAlignment="Center"
 									   FontWeight="SemiBold"
 									   Opacity="0.8"
-									    Foreground="Black"/>
+									   Foreground="{DynamicResource TextPrimary}"/>
 
 							<StackPanel Grid.Row="3" Grid.Column="1" Spacing="4">
 								<ComboBox ItemsSource="{Binding OpklevenNamen}"
 										  SelectedItem="{Binding SelectedOpklevenNaam, Mode=TwoWay}"
-										  MinWidth="200"
+										  HorizontalAlignment="Stretch"
 										  PlaceholderText="Opkleven type...">
 									<ComboBox.ItemTemplate>
 										<DataTemplate>
-											<TextBlock Text="{Binding}" />
+											<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 								<ComboBox x:Name="OpklevenBox"
 										  ItemsSource="{Binding OpklevenVariantLijst}"
 										  SelectedItem="{Binding SelectedRegelOpklevenVariant, Mode=TwoWay}"
-										  MinWidth="200"
+										  HorizontalAlignment="Stretch"
 										  PlaceholderText="Variant..."
 										  IsVisible="{Binding SelectedOpklevenNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
 									<ComboBox.ItemTemplate>
@@ -529,9 +518,9 @@
 											<StackPanel Orientation="Horizontal" Spacing="8">
 												<Border Width="14" Height="14" CornerRadius="3"
 												        VerticalAlignment="Center"
-												        BorderBrush="#999" BorderThickness="1"
+												        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
 												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
-											<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center"/>
+												<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
 											</StackPanel>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
@@ -548,18 +537,18 @@
 							<StackPanel Grid.Row="3" Grid.Column="3" Spacing="4">
 								<ComboBox ItemsSource="{Binding RugNamen}"
 										  SelectedItem="{Binding SelectedRugNaam, Mode=TwoWay}"
-										  MinWidth="200"
+										  HorizontalAlignment="Stretch"
 										  PlaceholderText="Rug type...">
 									<ComboBox.ItemTemplate>
 										<DataTemplate>
-											<TextBlock Text="{Binding}" />
+											<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 								<ComboBox x:Name="RugBox"
 										  ItemsSource="{Binding RugVariantLijst}"
 										  SelectedItem="{Binding SelectedRegelRugVariant, Mode=TwoWay}"
-										  MinWidth="200"
+										  HorizontalAlignment="Stretch"
 										  PlaceholderText="Variant..."
 										  IsVisible="{Binding SelectedRugNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
 									<ComboBox.ItemTemplate>
@@ -567,9 +556,9 @@
 											<StackPanel Orientation="Horizontal" Spacing="8">
 												<Border Width="14" Height="14" CornerRadius="3"
 												        VerticalAlignment="Center"
-												        BorderBrush="#999" BorderThickness="1"
+												        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
 												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
-											<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center"/>
+												<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
 											</StackPanel>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
@@ -585,19 +574,19 @@
                               ColumnSpacing="8">
 
 							<TextBlock Text="Afwerking (G P P D O R)"
-                                       FontWeight="SemiBold"/>
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"/>
 
 							<TextBox Grid.Column="1"
                                      Text="{Binding LegacyCode, Mode=TwoWay}"/>
 
 							<Button Grid.Column="2"
                                     Content="Toepassen"
-                                    
                                     Command="{Binding ApplyLegacyCodeCommand}"/>
 
 							<Button Grid.Column="3"
                                     Content="Genereren"
-                                    
                                     Command="{Binding GenerateLegacyCodeCommand}"/>
 						</Grid>
 					</Border>
@@ -606,30 +595,31 @@
 						<StackPanel Spacing="14">
 
 							<TextBlock Text="Prijsaanpassingen"
-									   FontSize="16"
-									   FontWeight="SemiBold"/>
+									   Classes="h2"
+									   TextTrimming="CharacterEllipsis"/>
 
-							<Grid ColumnDefinitions="220,*"
+							<Grid ColumnDefinitions="Auto,*"
 								  RowDefinitions="Auto,Auto,Auto"
-								  RowSpacing="10">
+								  RowSpacing="10"
+								  ColumnSpacing="12">
 
 								<!-- KORTING -->
-								<TextBlock Text="Korting (%)"/>
+								<TextBlock Text="Korting (%)" VerticalAlignment="Center"/>
 								<NumericUpDown Grid.Row="0"
-									   Grid.Column="1"
+											   Grid.Column="1"
 											   Minimum="0"
-                            Foreground="Black"
+											   Foreground="{DynamicResource TextPrimary}"
 											   Maximum="100"
 											   Value="{Binding Offerte.KortingPct, Mode=TwoWay}"/>
 
 								<!-- MEERPRIJS -->
-								<TextBlock Grid.Row="1" Grid.Column="0" Text="Meerprijs (incl. BTW)"/>
+								<TextBlock Grid.Row="1" Grid.Column="0" Text="Meerprijs (incl. BTW)" VerticalAlignment="Center"/>
 								<TextBox Grid.Row="1"
 										 Grid.Column="1"
 										 Text="{Binding Offerte.MeerPrijsIncl, Mode=TwoWay}"/>
 
 								<!-- VOORSCHOT -->
-								<TextBlock Grid.Row="2" Grid.Column="0" Text="Voorschot betaald"/>
+								<TextBlock Grid.Row="2" Grid.Column="0" Text="Voorschot betaald" VerticalAlignment="Center"/>
 								<NumericUpDown Grid.Row="2"
 										 Grid.Column="1"
 										 Minimum="0"
@@ -646,72 +636,74 @@
 				</StackPanel>
 			</Grid>
 		</ScrollViewer>
-		<!-- PRIJS AANPASSINGEN -->
-		
+
 		<!-- ================= STICKY FOOTER ================= -->
 		<Border Grid.Row="2"
-                Background="White"
-                BorderBrush="#DDD"
-                BorderThickness="1"
+                Background="{DynamicResource Surface}"
+                BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="0,1,0,0"
                 Padding="16">
-			<Grid ColumnDefinitions="Auto,*"
+			<Grid ColumnDefinitions="*,Auto"
 				  ColumnSpacing="30">
 
 				<!-- LINKS ACTIES -->
 				<StackPanel Spacing="6">
-					<StackPanel Orientation="Horizontal"
-								Spacing="12">
+					<WrapPanel>
 
 						<Button Content="Berekenen"
 								Command="{Binding BerekenCommand}"
-								Background="#F5C242"
-								Foreground="Black"
-								FontWeight="Bold"/>
+								Classes="AccentBtn"
+								Margin="0,0,12,6"/>
 
 						<Button Content="Opslaan"
 								Command="{Binding SaveCommand}"
-								Background="#F5C242"
-								Foreground="Black"
-								FontWeight="Bold"/>
+								Classes="AccentBtn"
+								Margin="0,0,12,6"/>
 
 						<Button Content="{Binding FactuurButtonText}"
 								Command="{Binding FactuurCommand}"
-								Background="#D9EAFE"
-								Foreground="#123B68"
-								FontWeight="Bold"/>
+								Background="{DynamicResource InfoBorder}"
+								Foreground="{DynamicResource InfoText}"
+								FontWeight="Bold"
+								Margin="0,0,12,6"/>
 
 						<!-- Bevestigen: alleen zichtbaar als er nog GEEN werkbon is -->
 						<Button Content="Bevestigen → Bestelling"
 								Command="{Binding BevestigenCommand}"
 								IsVisible="{Binding IsBevestigenZichtbaar}"
-								Background="#F5C242"
-								Foreground="Black"
-								FontWeight="Bold"/>
+								Classes="AccentBtn"
+								Margin="0,0,12,6"/>
 
 						<!-- Planning: zichtbaar zodra de werkbon bestaat -->
 						<Button Content="📅 Planning bekijken"
 								Command="{Binding OpenPlanningCommand}"
 								IsVisible="{Binding IsPlanningZichtbaar}"
-								Background="#D6F5D6"
-								Foreground="#1A5C1A"
-								FontWeight="Bold"/>
-					</StackPanel>
+								Background="{DynamicResource SuccessBg}"
+								Foreground="{DynamicResource Success}"
+								FontWeight="Bold"
+								Margin="0,0,12,6"/>
+					</WrapPanel>
 
 					<TextBlock Text="{Binding FactuurStatusText}"
-							   FontSize="12"
-							   Foreground="#5F6B7A"/>
+							   Classes="label"
+							   Foreground="{DynamicResource TextSecondary}"
+							   TextTrimming="CharacterEllipsis"
+							   ToolTip.Tip="{Binding FactuurStatusText}"/>
 				</StackPanel>
 
 				<!-- RECHTS PRIJZEN -->
 				<Grid Grid.Column="1"
 					  HorizontalAlignment="Right"
 					  RowDefinitions="Auto,Auto,Auto,Auto,Auto"
-					  ColumnDefinitions="Auto,140"
 					  RowSpacing="6">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto"/>
+						<ColumnDefinition Width="Auto" MinWidth="120"/>
+					</Grid.ColumnDefinitions>
 
 					<TextBlock Text="Subtotaal"/>
 					<TextBlock Grid.Row="0"
-					   Grid.Column="1"
+							   Grid.Column="1"
 							   Text="{Binding OfferteEx, StringFormat=€ {0:N2}}"
 							   HorizontalAlignment="Right"/>
 
@@ -722,14 +714,14 @@
 							   HorizontalAlignment="Right"/>
 
 					<TextBlock Grid.Row="2"
-					   Grid.Column="0"
+							   Grid.Column="0"
 							   Text="Totaal incl. BTW"
 							   FontWeight="Bold"/>
 
 					<TextBlock Grid.Row="2"
 							   Grid.Column="1"
 							   Text="{Binding OfferteIncl, StringFormat=€ {0:N2}}"
-							   FontSize="18"
+							   Classes="h2"
 							   FontWeight="Bold"
 							   HorizontalAlignment="Right"/>
 
@@ -737,27 +729,27 @@
 					<TextBlock Grid.Row="3"
 							   Grid.Column="0"
 							   Text="Voorschot betaald"
-							   Foreground="#27AE60"
+							   Foreground="{DynamicResource Success}"
 							   FontWeight="SemiBold"
 							   IsVisible="{Binding HeeftVoorschot}"/>
 					<TextBlock Grid.Row="3"
 							   Grid.Column="1"
 							   Text="{Binding OfferteVoorschot, StringFormat=- € {0:N2}}"
-							   Foreground="#27AE60"
+							   Foreground="{DynamicResource Success}"
 							   FontWeight="Bold"
-										   HorizontalAlignment="Right"
+							   HorizontalAlignment="Right"
 							   IsVisible="{Binding HeeftVoorschot}"/>
 
 					<TextBlock Grid.Row="4"
-					   Grid.Column="0"
+							   Grid.Column="0"
 							   Text="Rest te betalen"
-							   Foreground="#C0392B"
+							   Foreground="{DynamicResource Danger}"
 							   FontWeight="SemiBold"/>
 
 					<TextBlock Grid.Row="4"
 							   Grid.Column="1"
 							   Text="{Binding OfferteRest, StringFormat=€ {0:N2}}"
-							   Foreground="#C0392B"
+							   Foreground="{DynamicResource Danger}"
 							   FontWeight="Bold"
 							   HorizontalAlignment="Right"/>
 

@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -13,9 +13,12 @@ using QuadroApp.Service;
 using QuadroApp.Service.Import;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Service.Pricing;
+using QuadroApp.Service.Backup;
+using QuadroApp.Service.Security;
 using QuadroApp.Service.Toast;
 using QuadroApp.Validation;
 using QuadroApp.ViewModels;
+using Serilog;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -74,12 +77,14 @@ public partial class App : Application
 
         var services = new ServiceCollection();
 
-        // 🔹 Logging
+        // 🔹 Logging (US-31): Serilog roterend bestand + console/debug voor dev.
+        var serilog = Service.LoggingSetup.CreateLogger(GetDataDirectory(), GetConfigValue("Logging:MinimumLevel"));
         services.AddLogging(builder =>
         {
             builder.AddDebug();
             builder.AddConsole();
-            builder.SetMinimumLevel(LogLevel.Information);
+            builder.AddSerilog(serilog, dispose: true);
+            builder.SetMinimumLevel(LogLevel.Debug); // Serilog filtert zelf op niveau
         });
 
         // 🔹 Database — connection string comes from appsettings.json when present,
@@ -105,14 +110,9 @@ public partial class App : Application
             else
                 options.UseSqlite(connectionString);
 
-            // Schema wordt in dit project bewust beheerd via raw SQL-patches +
-            // voor-gemarkeerde migraties (zie ApplyPendingMigrationsAsync), waardoor het
-            // EF-model opzettelijk afwijkt van de migration-snapshot. EF 9/10 gooit hierop
-            // standaard een PendingModelChangesWarning als FOUT tijdens MigrateAsync, wat de
-            // openstaande migraties (o.a. soft-delete: IsGearchiveerd) zou blokkeren.
-            // Onderdruk die specifieke warning zodat MigrateAsync de migraties tóch toepast.
-            options.ConfigureWarnings(w =>
-                w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+            // US-30: schema wordt beheerd via echte EF-migraties (Baseline-squash).
+            // De vroegere PendingModelChangesWarning-onderdrukking is verwijderd:
+            // model-drift moet nu een fout geven i.p.v. stil genegeerd te worden.
         });
 
         // ==============================
@@ -146,6 +146,17 @@ public partial class App : Application
         services.AddScoped<IFactuurExportService, FactuurExportService>();
         services.AddScoped<ICentralExcelExportService, CentralExcelExportService>();
         services.AddScoped<IFactuurExporter, PdfFactuurExporter>();
+        services.AddScoped<IGdprService, GdprService>(); // US-37
+
+        // US-32: authenticatie & autorisatie (singleton — CurrentUser is app-breed)
+        services.AddSingleton<IAuthService, AuthService>();
+
+        // US-34: daily automatic backups (SQLite online-backup API)
+        services.AddSingleton<IBackupService>(sp => new BackupService(
+            connectionString,
+            GetDataDirectory(),
+            GetBackupOptions(),
+            sp.GetRequiredService<ILogger<BackupService>>()));
 
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         services.AddSingleton<PricingEngine>();
@@ -283,6 +294,12 @@ public partial class App : Application
     /// </summary>
     private static string GetConnectionString()
     {
+        // US-33: full connection string may come from an environment variable
+        // (highest priority, useful for testing and server deployments).
+        var fromEnv = Environment.GetEnvironmentVariable("QUADRO_CONNECTION_STRING");
+        if (!string.IsNullOrWhiteSpace(fromEnv))
+            return SecretStore.InjectPassword(fromEnv, GetDataDirectory());
+
         try
         {
             var config = new ConfigurationBuilder()
@@ -292,7 +309,18 @@ public partial class App : Application
 
             var cs = config.GetConnectionString("Default");
             if (!string.IsNullOrWhiteSpace(cs))
+            {
+                // US-33: replace Password=__SECRET__ with the real password from
+                // env var / DPAPI secret file. SQLite strings pass through untouched.
+                cs = SecretStore.InjectPassword(cs, GetDataDirectory());
+
+                if (SecretStore.HasUnresolvedPlaceholder(cs))
+                    File.AppendAllText(_crashLogPath,
+                        $"[Config] DB-wachtwoord niet gevonden. Zet omgevingsvariabele {SecretStore.PasswordEnvVar} " +
+                        $"of maak het secret-bestand aan met Scripts/set-db-secret.ps1.\n");
+
                 return cs;
+            }
         }
         catch (Exception ex)
         {
@@ -302,6 +330,30 @@ public partial class App : Application
         }
 
         return GetDefaultSqliteConnectionString();
+    }
+
+    /// <summary>
+    /// Platform-appropriate user-writable data directory (also holds db.secret):
+    ///   Windows → %LOCALAPPDATA%\QuadroApp
+    ///   macOS   → ~/Library/Application Support/QuadroApp
+    /// </summary>
+    private static string GetDataDirectory()
+    {
+        string dataDir;
+        if (OperatingSystem.IsMacOS())
+        {
+            dataDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.Personal),
+                "Library", "Application Support", "QuadroApp");
+        }
+        else
+        {
+            dataDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "QuadroApp");
+        }
+        Directory.CreateDirectory(dataDir);
+        return dataDir;
     }
 
     /// <summary>
@@ -325,24 +377,7 @@ public partial class App : Application
 
     private static string GetDefaultSqliteConnectionString()
     {
-        // Platform-appropriate data directory
-        string dataDir;
-        if (OperatingSystem.IsMacOS())
-        {
-            // macOS convention: ~/Library/Application Support/QuadroApp
-            dataDir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.Personal),
-                "Library", "Application Support", "QuadroApp");
-        }
-        else
-        {
-            // Windows: C:\Users\<user>\AppData\Local\QuadroApp
-            dataDir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "QuadroApp");
-        }
-
-        Directory.CreateDirectory(dataDir);
+        var dataDir = GetDataDirectory();
         var newDbPath = Path.Combine(dataDir, "quadro.db");
 
         // One-time migration from the old location (next to the exe).
@@ -395,6 +430,10 @@ public partial class App : Application
         if (ex == null) return;
 
         LogToFile(ex);
+
+        // US-31: ook naar het gestructureerde log (wanneer DI al opgestart is).
+        try { _logger?.LogError(ex, "Onafgevangen exceptie: {Message}", ex.Message); }
+        catch { /* logging mag nooit zelf crashen */ }
 
         if (Application.Current?.ApplicationLifetime
             is IClassicDesktopStyleApplicationLifetime desktop)
@@ -466,15 +505,12 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// SQLite initialisation — existing path with preExistingMigrations hack and
-    /// defensive ALTER TABLE patches. Unchanged so existing installs keep working.
+    /// US-30: SQLite initialisation via echte EF-migraties.
+    /// Fresh DB → MigrateAsync (Baseline). Bestaande DB → healer-patches +
+    /// Baseline-markering + MigrateAsync. Zie SqliteSchemaPatcher.
     /// </summary>
     private static async Task InitializeSqliteDatabaseAsync(AppDbContext db)
     {
-        // Ensure DB file exists (new installs)
-        await db.Database.EnsureCreatedAsync();
-
-        // Apply pending migrations safely.
         await SqliteSchemaPatcher.PatchAsync(db, _logger);
     }
 
@@ -486,6 +522,54 @@ public partial class App : Application
 
         _logger.LogInformation("[Startup] Refreshing voorraad alerts...");
         await stockService.RefreshAlertsAsync();
+
+        // US-32: standaard admin aanmaken wanneer er nog geen gebruikers zijn.
+        var auth = provider.GetRequiredService<IAuthService>();
+        await auth.SeedDefaultAdminAsync();
+
+        // US-34: daily backup — runs after DB init, never blocks or crashes startup.
+        var backupService = scope.ServiceProvider.GetRequiredService<IBackupService>();
+        await backupService.RunDailyBackupAsync();
+    }
+
+    /// <summary>US-31: leest één configuratiewaarde uit appsettings.json (null bij afwezigheid/fout).</summary>
+    private static string? GetConfigValue(string key)
+    {
+        try
+        {
+            var config = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+                .Build();
+            return config[key];
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>US-34: reads the optional Backup section from appsettings.json.</summary>
+    private static Service.Backup.BackupOptions GetBackupOptions()
+    {
+        try
+        {
+            var config = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+                .Build();
+
+            var section = config.GetSection("Backup");
+            return new Service.Backup.BackupOptions
+            {
+                Directory = section["Directory"],
+                RetentionDays = int.TryParse(section["RetentionDays"], out var days) ? days : 30
+            };
+        }
+        catch
+        {
+            return new Service.Backup.BackupOptions();
+        }
     }
 
 

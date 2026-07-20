@@ -1,30 +1,64 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace QuadroApp.Data;
 
 /// <summary>
-/// Applies idempotent SQLite schema patches and EF Core migration history seeding
-/// for databases that were originally created via EnsureCreatedAsync.
-/// Called once at startup from App.axaml.cs → InitializeSqliteDatabaseAsync.
+/// US-30 — database initialisation for SQLite.
+///
+/// Two paths:
+///   1. FRESH database (no tables): a clean <c>MigrateAsync()</c> creates the
+///      entire schema from the Baseline migration, including migration history.
+///   2. EXISTING database (created via EnsureCreated + years of raw patches):
+///      idempotent "healer" patches bring the schema to Baseline shape, the
+///      Baseline migration is then marked as applied, and stale (pre-squash)
+///      history entries are removed. Future migrations run normally via
+///      <c>MigrateAsync()</c>.
+///
+/// The healer patch list is FROZEN: it describes the diff between the oldest
+/// database in the field and the Baseline. New schema changes must be added as
+/// regular EF migrations, never here.
 /// </summary>
-internal static class SqliteSchemaPatcher
+public static class SqliteSchemaPatcher
 {
-    /// <summary>
-    /// Applies EF Core migrations safely, even on a DB that was originally
-    /// created via EnsureCreatedAsync (which has no __EFMigrationsHistory table).
-    /// Marks all pre-existing migrations as applied, then runs only new ones.
-    /// </summary>
     public static async Task PatchAsync(AppDbContext db, ILogger logger)
     {
-        const string historyTable = "__EFMigrationsHistory";
+        var conn = (Microsoft.Data.Sqlite.SqliteConnection)db.Database.GetDbConnection();
+        if (conn.State != System.Data.ConnectionState.Open)
+            await conn.OpenAsync();
 
-        // ── Stap 1: archief-tabellen ALTIJD aanmaken via raw SQL ─────────────
-        // Dit staat los van het migratie-systeem zodat een vroeg-falende catch
-        // de tabelcreatie niet kan overslaan.
+        // ── Fresh database? → clean migrate, done. ───────────────────────────
+        if (!await TableExistsAsync(conn, "Klanten"))
+        {
+            await db.Database.MigrateAsync();
+            logger.LogInformation("[DB] Verse database aangemaakt via migraties (Baseline).");
+            return;
+        }
+
+        // ── Existing database → heal to Baseline shape (idempotent) ─────────
+        await ApplyLegacyHealerPatchesAsync(db, conn, logger);
+
+        // ── Mark Baseline (and any defined migration whose schema-changes the
+        //    healer already guarantees) as applied; drop stale pre-squash rows. ─
+        await SyncMigrationHistoryAsync(db, logger);
+
+        // ── Run any genuinely new migrations ─────────────────────────────────
+        await db.Database.MigrateAsync();
+    }
+
+    /// <summary>
+    /// FROZEN legacy patch set — heals any pre-Baseline database (originally
+    /// created via EnsureCreated) to the exact Baseline schema shape.
+    /// Do not add new patches here; write EF migrations instead.
+    /// </summary>
+    private static async Task ApplyLegacyHealerPatchesAsync(
+        AppDbContext db, Microsoft.Data.Sqlite.SqliteConnection conn, ILogger logger)
+    {
 #pragma warning disable EF1002  // Raw SQL with no user input — safe
+        // Archief-tabellen
         try
         {
             await db.Database.ExecuteSqlRawAsync(
@@ -76,47 +110,32 @@ internal static class SqliteSchemaPatcher
             logger.LogError(ex, "[DB] FOUT bij aanmaken archief-tabellen: {Message}", ex.Message);
         }
 
-        // ── Stap 1b: Schema-patches voor kolommen die mogelijk ontbreken op oudere DBs ─
-        // PRAGMA table_info check first: no ALTER TABLE attempted when column already exists,
-        // so EF Core never logs a scary "fail:" line for a harmless duplicate-column error.
-
-        var conn = (Microsoft.Data.Sqlite.SqliteConnection)db.Database.GetDbConnection();
-        if (conn.State != System.Data.ConnectionState.Open)
-            await conn.OpenAsync();
-
-        // AddAfwerkingsKleur (20260323120500) — Kleur op AfwerkingsOpties
+        // Kolom-patches voor oudere databases
         if (!await ColumnExistsAsync(conn, "AfwerkingsOpties", "Kleur"))
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"AfwerkingsOpties\" ADD COLUMN \"Kleur\" TEXT NOT NULL DEFAULT 'Standaard'");
 
-        // AddAfwerkingsKleur (20260323120500) — uniek index updaten naar versie mét Kleur
-        // SQLite error 1 = SQLITE_ERROR; "no such index" is the only expected failure for DROP.
         try { await db.Database.ExecuteSqlRawAsync(
             "DROP INDEX IF EXISTS \"IX_AfwerkingsOpties_AfwerkingsGroepId_Volgnummer\""); }
         catch (Microsoft.Data.Sqlite.SqliteException ex)
             when (ex.Message.Contains("no such index", StringComparison.OrdinalIgnoreCase))
         { /* index bestond al niet — prima */ }
-        // IF NOT EXISTS makes the CREATE idempotent; no catch needed.
         await db.Database.ExecuteSqlRawAsync(
             "CREATE UNIQUE INDEX IF NOT EXISTS \"IX_AfwerkingsOpties_AfwerkingsGroepId_Volgnummer_Kleur\" " +
             "ON \"AfwerkingsOpties\" (\"AfwerkingsGroepId\", \"Volgnummer\", \"Kleur\")");
 
-        // AddTitelToOfferteRegel (20260321121423) — Titel op OfferteRegels
         if (!await ColumnExistsAsync(conn, "OfferteRegels", "Titel"))
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"OfferteRegels\" ADD COLUMN \"Titel\" TEXT NULL");
 
-        // AddRowVersionToOfferte (20260506000000) — optimistic concurrency token
         if (!await ColumnExistsAsync(conn, "Offertes", "RowVersion"))
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Offertes\" ADD COLUMN \"RowVersion\" BLOB NULL");
 
-        // AddGeplandeDatumToFactuur (20260506130000)
         if (!await ColumnExistsAsync(conn, "Facturen", "GeplandeDatum"))
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Facturen\" ADD COLUMN \"GeplandeDatum\" TEXT NULL");
 
-        // AddKortingToFactuur (US-23) — korting expliciet op de bestelbon
         if (!await ColumnExistsAsync(conn, "Facturen", "KortingPct"))
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Facturen\" ADD COLUMN \"KortingPct\" TEXT NOT NULL DEFAULT '0'");
@@ -124,7 +143,7 @@ internal static class SqliteSchemaPatcher
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Facturen\" ADD COLUMN \"KortingBedragExcl\" TEXT NOT NULL DEFAULT '0'");
 
-        // AddAfwerkingsVariant (20260507110000)
+        // AfwerkingsVarianten
         await db.Database.ExecuteSqlRawAsync(@"
 CREATE TABLE IF NOT EXISTS ""AfwerkingsVarianten"" (
     ""Id""                  INTEGER NOT NULL CONSTRAINT ""PK_AfwerkingsVarianten"" PRIMARY KEY AUTOINCREMENT,
@@ -140,7 +159,6 @@ CREATE TABLE IF NOT EXISTS ""AfwerkingsVarianten"" (
         await db.Database.ExecuteSqlRawAsync(@"
 CREATE UNIQUE INDEX IF NOT EXISTS ""IX_AfwerkingsVarianten_OptieId_Beschrijving""
     ON ""AfwerkingsVarianten"" (""AfwerkingsOptieId"", ""Beschrijving"");");
-        // Auto-migrate: maak 1 variant per bestaande optie als nog niet aangemaakt
         await db.Database.ExecuteSqlRawAsync(@"
 INSERT OR IGNORE INTO ""AfwerkingsVarianten"" (""AfwerkingsOptieId"", ""Beschrijving"", ""IsStandaard"", ""IsActief"")
 SELECT ""Id"", COALESCE(NULLIF(TRIM(""Kleur""), ''), 'Standaard'), 1, 1
@@ -149,20 +167,16 @@ WHERE NOT EXISTS (
     SELECT 1 FROM ""AfwerkingsVarianten"" v WHERE v.""AfwerkingsOptieId"" = ""AfwerkingsOpties"".""Id""
 );");
 
-        // AddAfhaalDatum (20260507100000)
         if (!await ColumnExistsAsync(conn, "Offertes", "AfhaalDatum"))
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Offertes\" ADD COLUMN \"AfhaalDatum\" TEXT NULL");
         if (!await ColumnExistsAsync(conn, "Facturen", "AfhaalDatum"))
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Facturen\" ADD COLUMN \"AfhaalDatum\" TEXT NULL");
-
-        // AddAfhaalDatumToOfferteRegel (20260507130000)
         if (!await ColumnExistsAsync(conn, "OfferteRegels", "AfhaalDatum"))
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"OfferteRegels\" ADD COLUMN \"AfhaalDatum\" TEXT NULL");
 
-        // AddAfwerkingVariantenToOfferteRegel — gekozen variant per afwerking-slot (nullable FK)
         foreach (var kol in new[]
                  {
                      "GlasVariantId", "PassePartout1VariantId", "PassePartout2VariantId",
@@ -174,16 +188,11 @@ WHERE NOT EXISTS (
                     $"ALTER TABLE \"OfferteRegels\" ADD COLUMN \"{kol}\" INTEGER NULL");
         }
 
-        // AddBestelVormToBestellijn (20260507093626)
         if (!await ColumnExistsAsync(conn, "LeverancierBestelLijnen", "BestelVorm"))
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"LeverancierBestelLijnen\" ADD COLUMN \"BestelVorm\" INTEGER NOT NULL DEFAULT 0");
 
-        // Soft-delete (20260520000001..4) — IsGearchiveerd/GearchiveerdOp.
-        // De bijbehorende migraties missen hun [Migration]/Designer-bestanden en worden
-        // daardoor NIET door MigrateAsync herkend; de globale query-filters
-        // (!IsGearchiveerd) op Klant/TypeLijst/Leverancier/AfwerkingsOptie crashen
-        // zonder deze kolommen. Daarom hier als idempotente raw-patch.
+        // Soft-delete kolommen
         if (!await ColumnExistsAsync(conn, "Klanten", "IsGearchiveerd"))
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Klanten\" ADD COLUMN \"IsGearchiveerd\" INTEGER NOT NULL DEFAULT 0");
@@ -207,8 +216,7 @@ WHERE NOT EXISTS (
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"AfwerkingsVarianten\" ADD COLUMN \"IsGearchiveerd\" INTEGER NOT NULL DEFAULT 0");
 
-        // LeverancierBestellingen — never in an EF-recognised migration; always created by
-        // EnsureCreatedAsync for new DBs, but older DBs may be missing it.
+        // LeverancierBestellingen
         await db.Database.ExecuteSqlRawAsync(@"
 CREATE TABLE IF NOT EXISTS ""LeverancierBestellingen"" (
     ""Id""               INTEGER NOT NULL CONSTRAINT ""PK_LeverancierBestellingen"" PRIMARY KEY AUTOINCREMENT,
@@ -226,7 +234,7 @@ CREATE TABLE IF NOT EXISTS ""LeverancierBestellingen"" (
         await db.Database.ExecuteSqlRawAsync(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_LeverancierBestellingen_BestelNummer"" ON ""LeverancierBestellingen"" (""BestelNummer"")");
         await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_LeverancierBestellingen_LeverancierId"" ON ""LeverancierBestellingen"" (""LeverancierId"")");
 
-        // AddVoorraadAlerts (20260506120000) — ensure table exists before HomeViewModel loads
+        // VoorraadAlerts
         await db.Database.ExecuteSqlRawAsync(@"
 CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
     ""Id""                    INTEGER NOT NULL CONSTRAINT ""PK_VoorraadAlerts"" PRIMARY KEY AUTOINCREMENT,
@@ -244,69 +252,65 @@ CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
         await db.Database.ExecuteSqlRawAsync(
             @"CREATE INDEX IF NOT EXISTS ""IX_VoorraadAlerts_TypeLijstId"" ON ""VoorraadAlerts"" (""TypeLijstId"")");
 
-        // ── Stap 2: EF migratie-historietabel + pre-existing migrations ──────
-        var preExistingMigrations = new[]
-        {
-            "20260228232856_InitialClean",
-            "20260303090000_AddStaaflijstSettingsAndFlag",
-            "20260303091000_RemoveTypeLijstMarginColumns",
-            "20260303141137_fixes",
-            "20260318000000_AddTypeLijstPerLijstPricingDropStaaflijst",
-            "20260321121423_AddTitelToOfferteRegel",
-            "20260323120500_AddAfwerkingsKleur",
-            "20260407000000_NullableLeverancierIdOnTypeLijst",
-            // "20260408161449_home" — removed: no matching .cs migration file exists,
-            // would crash MigrateAsync on an existing DB that doesn't have it applied.
-            "20260408120000_AddWerkBonArchief",
-            "20260408140000_AddOfferteArchief",
-            "20260506000000_AddRowVersionToOfferte",
-            "20260506120000_AddVoorraadAlerts",
-            "20260506130000_AddGeplandeDatumToFactuur",
-            "20260507100000_AddAfhaalDatum",
-            "20260507110000_AddAfwerkingsVariant",
-            "20260507011133_tag10",
-            "20260507023057_date",
-            "20260507130000_AddAfhaalDatumToOfferteRegel",
-            "20260507093626_AddBestelVormToBestellijn",
-            // Soft-delete: kolommen worden via raw-patch hierboven aangemaakt; markeer
-            // de (Designer-loze) migraties als toegepast zodat MigrateAsync ze niet probeert.
-            "20260520000001_AddSoftDeleteKlant",
-            "20260520000002_AddSoftDeleteTypeLijst",
-            "20260520000003_AddSoftDeleteAfwerkingen",
-            "20260520000004_AddSoftDeleteLeverancier",
-            // SyncPendingModelChanges adds columns already applied by raw patches above and
-            // rebuilds LeverancierBestellingen (also handled above).  Mark as applied so
-            // MigrateAsync does not try to run it against a DB with existing columns.
-            "20260617233009_SyncPendingModelChanges",
-        };
-
-        try
-        {
-            await db.Database.ExecuteSqlRawAsync(
-                $"CREATE TABLE IF NOT EXISTS \"{historyTable}\" " +
-                "(\"MigrationId\" TEXT NOT NULL CONSTRAINT \"PK___EFMigrationsHistory\" PRIMARY KEY, " +
-                "\"ProductVersion\" TEXT NOT NULL)");
-
-            foreach (var m in preExistingMigrations)
-            {
-                await db.Database.ExecuteSqlRawAsync(
-                    $"INSERT OR IGNORE INTO \"{historyTable}\" VALUES ('{m}', '9.0.0')");
-            }
-
-            await db.Database.MigrateAsync();
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "[Migration] Warning: {Message}", ex.Message);
-        }
+        // Factuur-schema patches (voorheen FactuurSchemaUpgrade)
+        await FactuurSchemaUpgrade.EnsureAsync(db);
 #pragma warning restore EF1002
+    }
+
+    /// <summary>
+    /// Aligns __EFMigrationsHistory with the migrations defined in the assembly:
+    /// removes stale pre-squash entries and marks ONLY the Baseline migration
+    /// as applied (the healer just guaranteed exactly that schema shape).
+    /// Migrations ná Baseline worden bewust NIET gemarkeerd — die moeten
+    /// gewoon uitgevoerd worden door MigrateAsync.
+    /// </summary>
+    private static async Task SyncMigrationHistoryAsync(AppDbContext db, ILogger logger)
+    {
+        const string historyTable = "__EFMigrationsHistory";
+        var defined = db.Database.GetMigrations().ToList();
+        var baseline = defined.FirstOrDefault(m => m.EndsWith("_Baseline", StringComparison.Ordinal));
+        if (baseline is null)
+        {
+            logger.LogWarning("[Migration] Baseline-migratie niet gevonden in de assembly.");
+            return;
+        }
+
+#pragma warning disable EF1002 // migration ids come from compiled code, not user input
+        await db.Database.ExecuteSqlRawAsync(
+            $"CREATE TABLE IF NOT EXISTS \"{historyTable}\" " +
+            "(\"MigrationId\" TEXT NOT NULL CONSTRAINT \"PK___EFMigrationsHistory\" PRIMARY KEY, " +
+            "\"ProductVersion\" TEXT NOT NULL)");
+
+        var inList = string.Join(", ", defined.Select(m => $"'{m}'"));
+        var removed = await db.Database.ExecuteSqlRawAsync(
+            $"DELETE FROM \"{historyTable}\" WHERE \"MigrationId\" NOT IN ({inList})");
+        if (removed > 0)
+            logger.LogInformation("[Migration] {Count} verouderde (pre-squash) history-rijen verwijderd.", removed);
+
+        await db.Database.ExecuteSqlRawAsync(
+            $"INSERT OR IGNORE INTO \"{historyTable}\" VALUES ('{baseline}', '10.0.0')");
+#pragma warning restore EF1002
+    }
+
+    private static async Task<bool> TableExistsAsync(
+        Microsoft.Data.Sqlite.SqliteConnection conn, string table)
+    {
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT 1 FROM sqlite_master WHERE type='table' AND name=$name LIMIT 1";
+        var p = cmd.CreateParameter();
+        p.ParameterName = "$name";
+        p.Value = table;
+        cmd.Parameters.Add(p);
+        return await cmd.ExecuteScalarAsync() is not null and not System.DBNull;
     }
 
     private static async Task<bool> ColumnExistsAsync(
         Microsoft.Data.Sqlite.SqliteConnection conn, string table, string column)
     {
         await using var cmd = conn.CreateCommand();
-        cmd.CommandText = $"SELECT COUNT(*) FROM pragma_table_info('{table}') WHERE name='{column}'";
+        cmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info($table) WHERE name=$column";
+        var pt = cmd.CreateParameter(); pt.ParameterName = "$table"; pt.Value = table; cmd.Parameters.Add(pt);
+        var pc = cmd.CreateParameter(); pc.ParameterName = "$column"; pc.Value = column; cmd.Parameters.Add(pc);
         var result = await cmd.ExecuteScalarAsync();
         return Convert.ToInt64(result) > 0;
     }

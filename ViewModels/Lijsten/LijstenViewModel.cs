@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -87,8 +87,10 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
         ILijstDialogService lijstDialog,
         TypeLijstImportDefinition typeLijstImportDefinition,
         ICrudValidator<TypeLijst> validator,
-        IToastService toast)
+        IToastService toast,
+        IAuthService auth)
     {
+        _auth = auth;
         _dbFactory = dbFactory;
         _nav = nav;
         _dialogs = dialogs;
@@ -405,11 +407,20 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
         }
     }
 
+    private readonly IAuthService _auth;
+
     [RelayCommand(CanExecute = nameof(CanDelete))]
     private async Task DeleteAsync()
     {
         if (GeselecteerdeLijst is null)
             return;
+
+        // US-32: rol-afhankelijke actie
+        if (!_auth.HeeftPermissie(QuadroApp.Service.Security.Permissie.LijstVerwijderen))
+        {
+            _toast.Warning("Onvoldoende rechten om lijsten te archiveren.");
+            return;
+        }
 
         var ok = await _dialogs.ConfirmAsync(
             "Lijst archiveren",
