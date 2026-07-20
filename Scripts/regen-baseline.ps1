@@ -1,4 +1,4 @@
-# regen-baseline.ps1 — US-30: generates the Baseline migration from the current model.
+﻿# regen-baseline.ps1 - US-30: generates the Baseline migration from the current model.
 # Run from the repo root AFTER the old Migrations/ files have been deleted:
 #   .\Scripts\regen-baseline.ps1
 param()
@@ -16,7 +16,7 @@ if (-not $ef) {
 if (Test-Path "Migrations") {
     $existing = Get-ChildItem "Migrations" -Filter "*.cs" -ErrorAction SilentlyContinue
     if ($existing) {
-        Write-Host "Migrations/ bevat nog .cs-bestanden — eerst opruimen (git rm Migrations/*.cs)." -ForegroundColor Red
+        Write-Host "Migrations/ bevat nog .cs-bestanden - eerst opruimen (git rm Migrations/*.cs)." -ForegroundColor Red
         exit 1
     }
 }
