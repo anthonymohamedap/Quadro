@@ -4,6 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using QuadroApp.Data;
 using Xunit;
@@ -11,9 +14,10 @@ using Xunit;
 namespace WorkflowService.Tests;
 
 /// <summary>
-/// US-30 — the Baseline squash. These tests exercise the two real-world paths:
-/// a fresh install (clean MigrateAsync) and an upgrade of an old EnsureCreated
-/// database (healer patches + Baseline marking). Plus the drift guard that
+/// US-30 — the Baseline squash. Exercises the two real-world paths:
+/// a fresh install (clean MigrateAsync) and an upgrade of a legacy database
+/// (Baseline-shaped, no usable history → healer + Baseline marking, after
+/// which post-Baseline migrations run normally). Plus the drift guard that
 /// replaces the old PendingModelChangesWarning suppression.
 /// </summary>
 public class MigrationSafetyTests : IDisposable
@@ -42,6 +46,19 @@ public class MigrationSafetyTests : IDisposable
         return new AppDbContext(options);
     }
 
+    /// <summary>
+    /// Simulates a legacy production database: schema exactly at Baseline shape
+    /// (via targeted migrate) but without usable migration history (old installs
+    /// were created via EnsureCreated + raw patches).
+    /// </summary>
+    private static async Task MakeLegacyBaselineDbAsync(AppDbContext db)
+    {
+        var baseline = db.Database.GetMigrations().First(m => m.EndsWith("_Baseline", StringComparison.Ordinal));
+        var migrator = db.GetInfrastructure().GetRequiredService<IMigrator>();
+        await migrator.MigrateAsync(baseline);
+        await db.Database.ExecuteSqlRawAsync("DELETE FROM \"__EFMigrationsHistory\"");
+    }
+
     private static async Task AssertAllTablesQueryableAsync(AppDbContext db)
     {
         // A SELECT against every core DbSet catches missing tables/columns.
@@ -56,49 +73,49 @@ public class MigrationSafetyTests : IDisposable
         _ = await db.Facturen.CountAsync();
         _ = await db.VoorraadAlerts.CountAsync();
         _ = await db.LeverancierBestellingen.CountAsync();
+        _ = await db.Gebruikers.CountAsync();
     }
 
     [Fact]
-    public void Assembly_DefinesExactlyOneMigration_TheBaseline()
+    public void Assembly_FirstMigrationIsBaseline()
     {
         using var db = CreateContext("defined.db");
         var migrations = db.Database.GetMigrations().ToList();
 
-        Assert.Single(migrations);
-        Assert.EndsWith("Baseline", migrations[0]);
+        Assert.NotEmpty(migrations);
+        Assert.EndsWith("_Baseline", migrations[0]);
     }
 
     [Fact]
     public void Model_HasNoPendingChanges_SnapshotInSync()
     {
         // Replaces the old PendingModelChangesWarning suppression: if this
-        // fails, run Scripts/regen-baseline.ps1 or add a proper migration.
+        // fails, add a proper migration (Scripts/add-migration.ps1 <Naam>).
         using var db = CreateContext("drift.db");
         Assert.False(db.Database.HasPendingModelChanges(),
             "EF-model wijkt af van de migration-snapshot — voeg een migratie toe.");
     }
 
     [Fact]
-    public async Task FreshDatabase_PatchAsync_CreatesSchemaViaBaseline()
+    public async Task FreshDatabase_PatchAsync_CreatesSchemaViaMigrations()
     {
         await using var db = CreateContext("fresh.db");
         await SqliteSchemaPatcher.PatchAsync(db, NullLogger.Instance);
 
-        var applied = (await db.Database.GetAppliedMigrationsAsync()).ToList();
-        Assert.Single(applied);
-        Assert.EndsWith("Baseline", applied[0]);
+        var defined = db.Database.GetMigrations().OrderBy(m => m).ToList();
+        var applied = (await db.Database.GetAppliedMigrationsAsync()).OrderBy(m => m).ToList();
+        Assert.Equal(defined, applied);
 
         await AssertAllTablesQueryableAsync(db);
         Assert.Empty(await db.Database.GetPendingMigrationsAsync());
     }
 
     [Fact]
-    public async Task ExistingEnsureCreatedDatabase_PatchAsync_MarksBaselineWithoutDataLoss()
+    public async Task LegacyDatabase_PatchAsync_MarksBaselineAndRunsNewerMigrations_NoDataLoss()
     {
-        // Simulate an old install: schema via EnsureCreated (no migration history) + data.
         await using (var old = CreateContext("upgrade.db"))
         {
-            await old.Database.EnsureCreatedAsync();
+            await MakeLegacyBaselineDbAsync(old);
             old.Klanten.Add(new QuadroApp.Model.DB.Klant { Voornaam = "Bestaande", Achternaam = "Klant" });
             await old.SaveChangesAsync();
         }
@@ -106,25 +123,20 @@ public class MigrationSafetyTests : IDisposable
         await using var db = CreateContext("upgrade.db");
         await SqliteSchemaPatcher.PatchAsync(db, NullLogger.Instance);
 
-        // Baseline marked as applied, no pending migrations, data intact.
-        var applied = (await db.Database.GetAppliedMigrationsAsync()).ToList();
-        Assert.Contains(applied, m => m.EndsWith("Baseline"));
-        Assert.Empty(await db.Database.GetPendingMigrationsAsync());
+        // All defined migrations applied (Baseline marked, newer ones executed), data intact.
+        var defined = db.Database.GetMigrations().OrderBy(m => m).ToList();
+        var applied = (await db.Database.GetAppliedMigrationsAsync()).OrderBy(m => m).ToList();
+        Assert.Equal(defined, applied);
         Assert.Equal(1, await db.Klanten.CountAsync(k => k.Achternaam == "Klant" && k.Voornaam == "Bestaande"));
         await AssertAllTablesQueryableAsync(db);
     }
 
     [Fact]
-    public async Task ExistingDatabase_WithStalePreSquashHistory_IsCleaned()
+    public async Task LegacyDatabase_WithStalePreSquashHistory_IsCleaned()
     {
-        // Old installs have fake pre-marked history rows — they must be pruned.
         await using (var old = CreateContext("stale.db"))
         {
-            await old.Database.EnsureCreatedAsync();
-            await old.Database.ExecuteSqlRawAsync(
-                "CREATE TABLE IF NOT EXISTS \"__EFMigrationsHistory\" " +
-                "(\"MigrationId\" TEXT NOT NULL CONSTRAINT \"PK___EFMigrationsHistory\" PRIMARY KEY, " +
-                "\"ProductVersion\" TEXT NOT NULL)");
+            await MakeLegacyBaselineDbAsync(old);
             await old.Database.ExecuteSqlRawAsync(
                 "INSERT INTO \"__EFMigrationsHistory\" VALUES ('20260228232856_InitialClean', '9.0.0')");
         }
@@ -134,7 +146,7 @@ public class MigrationSafetyTests : IDisposable
 
         var applied = (await db.Database.GetAppliedMigrationsAsync()).ToList();
         Assert.DoesNotContain(applied, m => m.Contains("InitialClean"));
-        Assert.Contains(applied, m => m.EndsWith("Baseline"));
+        Assert.Contains(applied, m => m.EndsWith("_Baseline"));
     }
 
     [Fact]
@@ -144,7 +156,9 @@ public class MigrationSafetyTests : IDisposable
         await SqliteSchemaPatcher.PatchAsync(db, NullLogger.Instance);
         await SqliteSchemaPatcher.PatchAsync(db, NullLogger.Instance);
 
-        Assert.Single(await db.Database.GetAppliedMigrationsAsync());
+        var defined = db.Database.GetMigrations().OrderBy(m => m).ToList();
+        var applied = (await db.Database.GetAppliedMigrationsAsync()).OrderBy(m => m).ToList();
+        Assert.Equal(defined, applied);
         await AssertAllTablesQueryableAsync(db);
     }
 }
