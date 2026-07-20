@@ -1,3 +1,5 @@
+> ⚠️ **ARCHIEF** — dit document is een momentopname en niet meer actueel. Zie de README en docs/ voor de huidige stand.
+
 # Projectoverzicht — QuadroApp
 
 **Project:** Quadro Inlijstatelier — desktop-app (.NET 10 / Avalonia / EF Core / PostgreSQL-ready)
