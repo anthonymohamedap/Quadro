@@ -1,5 +1,9 @@
 # User Stories — QuadroApp Enterprise-Ready
-## Versie 1.0 · Technische hardening (exclusief design/UI-wijzigingen)
+## Versie 1.1 · Technische hardening (exclusief design/UI-wijzigingen)
+
+> **Status (20 juli 2026):** 9 van 10 stories afgerond. Alleen US-38
+> (concurrency/multi-user) staat nog open — bewust gepland samen met de
+> PostgreSQL-migratie. Zie de statustabel onderaan.
 
 Deze user stories beschrijven wat er technisch nodig is om QuadroApp van een werkende single-/dual-PC desktop-app naar een **enterprise-waardige** applicatie te brengen: betrouwbaar, veilig, onderhoudbaar en schaalbaar. Design-/UI-wijzigingen vallen **buiten** scope (die zijn elders belegd). Doorgenummerd vanaf de bestaande stories.
 
@@ -150,19 +154,17 @@ Deze user stories beschrijven wat er technisch nodig is om QuadroApp van een wer
 
 ## Overzicht & prioriteit
 
-| Story | Onderwerp | Prioriteit | Schatting |
+| Story | Onderwerp | Prioriteit | Status |
 |---|---|---|---|
-| US-33 | Secrets/configuratiebeheer | Hoog | 0,5–1 d |
-| US-34 | Back-ups & herstel | Hoog | 1 d |
-| US-29 | Tests + CI | Hoog | 1–2 d |
-| US-30 | EF-migraties saneren | Hoog | 2–3 d |
-| US-32 | Auth, accounts & rollen | Hoog | 2–3 d |
-| US-38 | Concurrency/multi-user | Hoog | 1–2 d |
-| US-31 | Logging & crashrapportage | Medium | 1 d |
-| US-35 | Security hardening | Medium | 1 d |
-| US-36 | Audit trail | Medium | 1–2 d |
-| US-37 | GDPR/dataretentie | Medium | 1–2 d |
+| US-33 | Secrets/configuratiebeheer | Hoog | ✅ Afgerond — zie `docs/CONFIGURATION.md` |
+| US-34 | Back-ups & herstel | Hoog | ✅ Afgerond — zie `docs/BACKUP_RESTORE.md` |
+| US-29 | Tests + CI | Hoog | ✅ Afgerond — CI op elke push/PR, 119 tests |
+| US-30 | EF-migraties saneren | Hoog | ✅ Afgerond — Baseline-squash, drift-guard |
+| US-32 | Auth, accounts & rollen | Hoog | ✅ Afgerond — zie `docs/AUTH.md` |
+| US-38 | Concurrency/multi-user | Hoog | ⏳ Open — gepland samen met PostgreSQL-migratie |
+| US-31 | Logging & crashrapportage | Medium | ✅ Afgerond — Serilog, zie `docs/CONFIGURATION.md` |
+| US-35 | Security hardening | Medium | ✅ Afgerond — CVE-scan in CI, deps opgeschoond |
+| US-36 | Audit trail | Medium | ✅ Afgerond — zie `docs/AUDIT.md` |
+| US-37 | GDPR/dataretentie | Medium | ✅ Afgerond — zie `docs/GDPR.md` |
 
-**Indicatieve totaalinspanning:** ± 12–18 werkdagen.
-
-Aanbevolen eerste blok (laag risico, hoge waarde): US-33 → US-34 → US-29 → US-30.
+**Vervolgwerk buiten deze backlog:** gebruikersbeheer-UI + wachtwoord wijzigen in de app, GDPR/audit-beheerscherm, PostgreSQL-migratie (met US-38).
