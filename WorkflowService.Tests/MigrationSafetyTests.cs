@@ -29,7 +29,9 @@ public class MigrationSafetyTests : IDisposable
     public void Dispose()
     {
         SqliteConnection.ClearAllPools();
-        try { Directory.Delete(_dir, recursive: true); } catch { }
+        try { Directory.Delete(_dir, recursive: true); }
+        catch (IOException) { /* temp dir cleanup is best-effort */ }
+        catch (UnauthorizedAccessException) { /* idem */ }
     }
 
     private AppDbContext CreateContext(string dbFile)
@@ -97,7 +99,7 @@ public class MigrationSafetyTests : IDisposable
         await using (var old = CreateContext("upgrade.db"))
         {
             await old.Database.EnsureCreatedAsync();
-            old.Klanten.Add(new QuadroApp.Model.DB.Klant { Naam = "Bestaande Klant" });
+            old.Klanten.Add(new QuadroApp.Model.DB.Klant { Voornaam = "Bestaande", Achternaam = "Klant" });
             await old.SaveChangesAsync();
         }
 
@@ -108,7 +110,7 @@ public class MigrationSafetyTests : IDisposable
         var applied = (await db.Database.GetAppliedMigrationsAsync()).ToList();
         Assert.Contains(applied, m => m.EndsWith("Baseline"));
         Assert.Empty(await db.Database.GetPendingMigrationsAsync());
-        Assert.Equal(1, await db.Klanten.CountAsync(k => k.Naam == "Bestaande Klant"));
+        Assert.Equal(1, await db.Klanten.CountAsync(k => k.Achternaam == "Klant" && k.Voornaam == "Bestaande"));
         await AssertAllTablesQueryableAsync(db);
     }
 
