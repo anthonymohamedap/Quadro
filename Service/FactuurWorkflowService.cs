@@ -24,7 +24,6 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
     public async Task<Factuur> MaakFactuurVanOfferteAsync(int offerteId)
     {
         await using var db = await _factory.CreateDbContextAsync();
-        await FactuurSchemaUpgrade.EnsureAsync(db);
 
         var offerte = await LoadOfferteAsync(db, offerteId);
         return await GetOrCreateFactuurAsync(db, offerte, werkBonId: null);
@@ -33,7 +32,6 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
     public async Task<Factuur> MaakFactuurVanWerkBonAsync(int werkBonId)
     {
         await using var db = await _factory.CreateDbContextAsync();
-        await FactuurSchemaUpgrade.EnsureAsync(db);
 
         var werkbon = await db.WerkBonnen
             .Include(w => w.Offerte).ThenInclude(o => o!.Klant)
@@ -62,14 +60,12 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
     public async Task<Factuur?> GetFactuurAsync(int factuurId)
     {
         await using var db = await _factory.CreateDbContextAsync();
-        await FactuurSchemaUpgrade.EnsureAsync(db);
         return await db.Facturen.Include(x => x.Lijnen.OrderBy(l => l.Sortering)).FirstOrDefaultAsync(x => x.Id == factuurId);
     }
 
     public async Task<Factuur?> GetFactuurVoorOfferteAsync(int offerteId)
     {
         await using var db = await _factory.CreateDbContextAsync();
-        await FactuurSchemaUpgrade.EnsureAsync(db);
 
         var factuur = await db.Facturen
             .Include(x => x.Lijnen.OrderBy(l => l.Sortering))
@@ -87,7 +83,6 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
     public async Task MarkeerKlaarVoorExportAsync(int factuurId)
     {
         await using var db = await _factory.CreateDbContextAsync();
-        await FactuurSchemaUpgrade.EnsureAsync(db);
         var factuur = await db.Facturen.FindAsync(factuurId) ?? throw new InvalidOperationException("Factuur niet gevonden.");
         if (factuur.Status != FactuurStatus.Draft)
             throw new InvalidOperationException("Alleen draft facturen kunnen klaar gezet worden voor export.");
@@ -99,7 +94,6 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
     public async Task MarkeerBetaaldAsync(int factuurId)
     {
         await using var db = await _factory.CreateDbContextAsync();
-        await FactuurSchemaUpgrade.EnsureAsync(db);
         var factuur = await db.Facturen.FindAsync(factuurId) ?? throw new InvalidOperationException("Factuur niet gevonden.");
         if (factuur.Status is FactuurStatus.Geannuleerd)
             throw new InvalidOperationException("Geannuleerde factuur kan niet betaald worden.");
@@ -111,7 +105,6 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
     public async Task SaveDraftAsync(Factuur updated)
     {
         await using var db = await _factory.CreateDbContextAsync();
-        await FactuurSchemaUpgrade.EnsureAsync(db);
         var factuur = await db.Facturen.Include(x => x.Lijnen).FirstOrDefaultAsync(x => x.Id == updated.Id)
             ?? throw new InvalidOperationException("Factuur niet gevonden.");
 
@@ -143,7 +136,6 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
     public async Task HerberekenTotalenAsync(int factuurId)
     {
         await using var db = await _factory.CreateDbContextAsync();
-        await FactuurSchemaUpgrade.EnsureAsync(db);
         var factuur = await db.Facturen.Include(x => x.Lijnen).FirstOrDefaultAsync(x => x.Id == factuurId)
             ?? throw new InvalidOperationException("Factuur niet gevonden.");
         HerberekenTotalen(factuur);
