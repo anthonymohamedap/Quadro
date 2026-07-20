@@ -244,6 +244,10 @@ CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
         await db.Database.ExecuteSqlRawAsync(
             @"CREATE INDEX IF NOT EXISTS ""IX_VoorraadAlerts_TypeLijstId"" ON ""VoorraadAlerts"" (""TypeLijstId"")");
 
+        // ── Stap 1c: Factuur-schema patches (voorheen FactuurSchemaUpgrade, ──
+        //    aangeroepen op 11 plekken per factuur-operatie; nu eenmalig hier).
+        await FactuurSchemaUpgrade.EnsureAsync(db);
+
         // ── Stap 2: EF migratie-historietabel + pre-existing migrations ──────
         var preExistingMigrations = new[]
         {
