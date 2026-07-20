@@ -6,35 +6,30 @@
         x:Class="QuadroApp.Views.BulkLijstenWindow"
         x:DataType="vm:BulkLijstenViewModel"
         Width="1100"
-        Height="760"
-        MinWidth="980"
-        MinHeight="680"
+        Height="720"
+        MinWidth="900"
+        MinHeight="600"
+        CanResize="True"
         WindowStartupLocation="CenterOwner"
         Title="Bulklijsten"
-        Background="#F5F5F5">
+        Background="{DynamicResource SurfaceMuted}">
 
     <Grid RowDefinitions="Auto,*">
-        <Border Background="#444A50" Height="70">
+        <Border Background="{DynamicResource BrandDark}" MinHeight="70">
             <DockPanel Margin="20,0">
-                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
-                    <Ellipse Width="35" Height="35" Fill="#F5C242"/>
-                    <TextBlock Text="QUADRO" Foreground="Black" FontWeight="Bold" FontSize="20"/>
-                    <TextBlock Text="BULK LIJSTEN" Foreground="Black" FontSize="13" Margin="20,0,0,0" VerticalAlignment="Center"/>
-                </StackPanel>
-
                 <Button Content="Sluiten"
                         Command="{Binding SluitenCommand}"
                         DockPanel.Dock="Right"
-                        VerticalAlignment="Top"
-                        HorizontalAlignment="Right"
-                        Margin="0,10,10,0"
-                        Background="#F5C242"
-                        Foreground="Black"
-                        FontWeight="Bold"
-                        CornerRadius="8"
-                        Padding="10,5"
-                        Width="100"
-                        Height="32"/>
+                        VerticalAlignment="Center"
+                        MinWidth="100"
+                        Classes="AccentBtn"
+                        Padding="10,5"/>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
+                    <Ellipse Width="35" Height="35" Fill="{DynamicResource BrandYellow}"/>
+                    <TextBlock Text="QUADRO" Classes="h2" Foreground="{DynamicResource TextOnDark}" VerticalAlignment="Center"/>
+                    <TextBlock Text="BULK LIJSTEN" Classes="body" Foreground="{DynamicResource TextMutedOnDark}" Margin="20,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
             </DockPanel>
         </Border>
 
@@ -45,16 +40,14 @@
                   ColumnDefinitions="1.25*,1*"
                   ColumnSpacing="14">
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
-                              HorizontalScrollBarVisibility="Disabled"
-                              Height="640">
+                              HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Spacing="10">
                         <TextBlock Text="Kies welke velden je in bulk wilt bijwerken"
-                                   Foreground="Black"
-                                   FontWeight="SemiBold"
-                                   FontSize="14"/>
+                                   Classes="h3"
+                                   TextWrapping="Wrap"/>
 
-                        <Border Background="#F0F6FF"
-                                BorderBrush="#BFDBFE"
+                        <Border Background="{DynamicResource InfoBg}"
+                                BorderBrush="{DynamicResource InfoBorder}"
                                 BorderThickness="1"
                                 CornerRadius="6"
                                 Padding="10">
@@ -67,8 +60,8 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Background="#F0F6FF"
-                                BorderBrush="#BFDBFE"
+                        <Border Background="{DynamicResource InfoBg}"
+                                BorderBrush="{DynamicResource InfoBorder}"
                                 BorderThickness="1"
                                 CornerRadius="6"
                                 Padding="10">
@@ -83,8 +76,8 @@
 
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                             <Border Grid.Column="0"
-                                    Background="#F0F6FF"
-                                    BorderBrush="#BFDBFE"
+                                    Background="{DynamicResource InfoBg}"
+                                    BorderBrush="{DynamicResource InfoBorder}"
                                     BorderThickness="1"
                                     CornerRadius="6"
                                     Padding="10">
@@ -104,8 +97,8 @@
                             </Border>
 
                             <Border Grid.Column="1"
-                                    Background="#F0F6FF"
-                                    BorderBrush="#BFDBFE"
+                                    Background="{DynamicResource InfoBg}"
+                                    BorderBrush="{DynamicResource InfoBorder}"
                                     BorderThickness="1"
                                     CornerRadius="6"
                                     Padding="10">
@@ -122,8 +115,8 @@
                             </Border>
                         </Grid>
 
-                        <Border Background="#F0F6FF"
-                                BorderBrush="#BFDBFE"
+                        <Border Background="{DynamicResource InfoBg}"
+                                BorderBrush="{DynamicResource InfoBorder}"
                                 BorderThickness="1"
                                 CornerRadius="6"
                                 Padding="10">
@@ -139,8 +132,8 @@
 
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                             <Border Grid.Column="0"
-                                    Background="#F0F6FF"
-                                    BorderBrush="#BFDBFE"
+                                    Background="{DynamicResource InfoBg}"
+                                    BorderBrush="{DynamicResource InfoBorder}"
                                     BorderThickness="1"
                                     CornerRadius="6"
                                     Padding="10">
@@ -155,8 +148,8 @@
                             </Border>
 
                             <Border Grid.Column="1"
-                                    Background="#F0F6FF"
-                                    BorderBrush="#BFDBFE"
+                                    Background="{DynamicResource InfoBg}"
+                                    BorderBrush="{DynamicResource InfoBorder}"
                                     BorderThickness="1"
                                     CornerRadius="6"
                                     Padding="10">
@@ -171,8 +164,8 @@
                             </Border>
                         </Grid>
 
-                        <Border Background="#ECFDF5"
-                                BorderBrush="#A7F3D0"
+                        <Border Background="{DynamicResource SuccessBg}"
+                                BorderBrush="{DynamicResource SuccessBorder}"
                                 BorderThickness="1"
                                 CornerRadius="6"
                                 Padding="10">
@@ -187,7 +180,7 @@
                                     <StackPanel Grid.Column="0"
                                                 IsVisible="{Binding IsAbsolutePrijs}"
                                                 Spacing="4">
-                                        <TextBlock Text="Nieuwe prijs per meter (€)" FontSize="12" Foreground="Black"/>
+                                        <TextBlock Text="Nieuwe prijs per meter (€)" Classes="label" TextWrapping="Wrap"/>
                                         <NumericUpDown Value="{Binding NieuwePrijsPerMeter, Mode=TwoWay}"
                                                        Foreground="Black"
                                                        Minimum="0"
@@ -197,7 +190,7 @@
                                     <StackPanel Grid.Column="1"
                                                 IsVisible="{Binding GebruikPercentage}"
                                                 Spacing="4">
-                                        <TextBlock Text="Prijswijziging (%)" FontSize="12" Foreground="Black"/>
+                                        <TextBlock Text="Prijswijziging (%)" Classes="label" TextWrapping="Wrap"/>
                                         <NumericUpDown Value="{Binding PrijsWijzigingPct, Mode=TwoWay}"
                                                        Foreground="Black"
                                                        Increment="1"
@@ -209,8 +202,8 @@
 
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                             <Border Grid.Column="0"
-                                    Background="#F0F6FF"
-                                    BorderBrush="#BFDBFE"
+                                    Background="{DynamicResource InfoBg}"
+                                    BorderBrush="{DynamicResource InfoBorder}"
                                     BorderThickness="1"
                                     CornerRadius="6"
                                     Padding="10">
@@ -230,8 +223,8 @@
                             </Border>
 
                             <Border Grid.Column="1"
-                                    Background="#F0F6FF"
-                                    BorderBrush="#BFDBFE"
+                                    Background="{DynamicResource InfoBg}"
+                                    BorderBrush="{DynamicResource InfoBorder}"
                                     BorderThickness="1"
                                     CornerRadius="6"
                                     Padding="10">
@@ -253,8 +246,8 @@
 
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                             <Border Grid.Column="0"
-                                    Background="#F0F6FF"
-                                    BorderBrush="#BFDBFE"
+                                    Background="{DynamicResource InfoBg}"
+                                    BorderBrush="{DynamicResource InfoBorder}"
                                     BorderThickness="1"
                                     CornerRadius="6"
                                     Padding="10">
@@ -270,8 +263,8 @@
                             </Border>
 
                             <Border Grid.Column="1"
-                                    Background="#F0F6FF"
-                                    BorderBrush="#BFDBFE"
+                                    Background="{DynamicResource InfoBg}"
+                                    BorderBrush="{DynamicResource InfoBorder}"
                                     BorderThickness="1"
                                     CornerRadius="6"
                                     Padding="10">
@@ -290,8 +283,8 @@
 
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                             <Border Grid.Column="0"
-                                    Background="#F0F6FF"
-                                    BorderBrush="#BFDBFE"
+                                    Background="{DynamicResource InfoBg}"
+                                    BorderBrush="{DynamicResource InfoBorder}"
                                     BorderThickness="1"
                                     CornerRadius="6"
                                     Padding="10">
@@ -307,8 +300,8 @@
                             </Border>
 
                             <Border Grid.Column="1"
-                                    Background="#F0F6FF"
-                                    BorderBrush="#BFDBFE"
+                                    Background="{DynamicResource InfoBg}"
+                                    BorderBrush="{DynamicResource InfoBorder}"
                                     BorderThickness="1"
                                     CornerRadius="6"
                                     Padding="10">
@@ -324,8 +317,8 @@
                             </Border>
                         </Grid>
 
-                        <Border Background="#F0F6FF"
-                                BorderBrush="#BFDBFE"
+                        <Border Background="{DynamicResource InfoBg}"
+                                BorderBrush="{DynamicResource InfoBorder}"
                                 BorderThickness="1"
                                 CornerRadius="6"
                                 Padding="10">
@@ -344,15 +337,14 @@
 
                 <Border Grid.Column="1"
                         Background="White"
-                        BorderBrush="#DDD"
+                        BorderBrush="{DynamicResource BorderSubtle}"
                         BorderThickness="1"
                         CornerRadius="8"
                         Padding="10">
                     <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
                         <TextBlock Text="Selecteer doel-lijsten"
-                                   Foreground="Black"
-                                   FontWeight="SemiBold"
-                                   FontSize="14"/>
+                                   Classes="h3"
+                                   TextTrimming="CharacterEllipsis"/>
 
                         <StackPanel Grid.Row="1" Spacing="8">
                             <TextBox Watermark="Zoek op artikelnummer of leverancier"
@@ -362,25 +354,25 @@
                                       Foreground="Black"
                                       SelectedItem="{Binding SoortFilter, Mode=TwoWay}"/>
                             <TextBlock Text="{Binding SelectedCount, StringFormat='Geselecteerd: {0}'}"
-                                       Foreground="Black"/>
+                                       Classes="body"/>
                         </StackPanel>
 
                         <Border Grid.Row="2"
-                                Background="#F9FAFB"
-                                BorderBrush="#E5E7EB"
+                                Background="{DynamicResource SurfaceMutedAlt}"
+                                BorderBrush="{DynamicResource BorderSubtle}"
                                 BorderThickness="1"
                                 CornerRadius="6"
                                 Padding="0">
                             <Grid RowDefinitions="Auto,*">
-                                <Border Background="#F3F4F6"
+                                <Border Background="{DynamicResource SurfaceHeader}"
                                         Padding="10,6"
-                                        BorderBrush="#E5E7EB"
+                                        BorderBrush="{DynamicResource BorderSubtle}"
                                         BorderThickness="0,0,0,1">
                                     <Grid ColumnDefinitions="1.3*,1.2*,0.9*,0.8*" ColumnSpacing="10">
-                                        <TextBlock Text="Artikelnummer" Foreground="Black" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Leverancier" Foreground="Black" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="2" Text="Soort" Foreground="Black" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="3" Text="Prijs/m" Foreground="Black" FontWeight="SemiBold"/>
+                                        <TextBlock Text="Artikelnummer" Classes="label" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Grid.Column="1" Text="Leverancier" Classes="label" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Grid.Column="2" Text="Soort" Classes="label" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Grid.Column="3" Text="Prijs/m" Classes="label" TextTrimming="CharacterEllipsis"/>
                                     </Grid>
                                 </Border>
 
@@ -395,10 +387,10 @@
                                         <DataTemplate x:DataType="m:TypeLijst">
                                             <Border Padding="10,6">
                                                 <Grid ColumnDefinitions="1.3*,1.2*,0.9*,0.8*" ColumnSpacing="10">
-                                                    <TextBlock Text="{Binding Artikelnummer}" Foreground="Black" FontWeight="Bold"/>
-                                                    <TextBlock Grid.Column="1" Text="{Binding Leverancier.Naam}" Foreground="Black"/>
-                                                    <TextBlock Grid.Column="2" Text="{Binding Soort}" Foreground="Black"/>
-                                                    <TextBlock Grid.Column="3" Text="{Binding PrijsPerMeter, StringFormat='{}{0:0.00}'}" Foreground="Black"/>
+                                                    <TextBlock Text="{Binding Artikelnummer}" Classes="body" FontWeight="Bold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Artikelnummer}"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Leverancier.Naam}" Classes="body" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Leverancier.Naam}"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding Soort}" Classes="body" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Soort}"/>
+                                                    <TextBlock Grid.Column="3" Text="{Binding PrijsPerMeter, StringFormat='{}{0:0.00}'}" Classes="body" TextTrimming="CharacterEllipsis"/>
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
