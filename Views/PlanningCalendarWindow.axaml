@@ -8,7 +8,7 @@
     WindowState="Maximized"
     WindowStartupLocation="CenterOwner"
     Title="WerkBon Planning"
-    Background="#0F1117">
+    Background="{DynamicResource BgBase}">
 
 	<Window.Resources>
 		<SolidColorBrush x:Key="BgBase"        Color="#0F1117"/>
@@ -23,6 +23,7 @@
 		<SolidColorBrush x:Key="BorderStrong"  Color="#4A4F61"/>
 
 		<SolidColorBrush x:Key="AccentGold"    Color="#F5C242"/>
+		<SolidColorBrush x:Key="AccentGoldHover" Color="#FFCE55"/>
 		<SolidColorBrush x:Key="AccentBlue"    Color="#3B82F6"/>
 		<SolidColorBrush x:Key="AccentBlueDim" Color="#1E3A5F"/>
 		<SolidColorBrush x:Key="AccentGreen"   Color="#22C55E"/>
@@ -71,7 +72,7 @@
 			<Setter Property="Cursor"          Value="Hand"/>
 		</Style>
 		<Style Selector="Button.MainBtn:pointerover /template/ ContentPresenter">
-			<Setter Property="Background" Value="#FFCE55"/>
+			<Setter Property="Background" Value="{StaticResource AccentGoldHover}"/>
 		</Style>
 
 		<Style Selector="Button.GhostBtn">
@@ -203,7 +204,7 @@
 			</Border>
 
 			<!-- ══════════════ BODY: 2-column ══════════════ -->
-			<Grid Grid.Row="1" ColumnDefinitions="*,460">
+			<Grid Grid.Row="1" ColumnDefinitions="*,Auto">
 
 				<!-- LEFT — Calendar grid -->
 				<Grid Grid.Column="0"
@@ -286,6 +287,8 @@
 
 				<!-- RIGHT PANEL -->
 				<Border Grid.Column="1"
+						MinWidth="380"
+						MaxWidth="460"
 						Background="{StaticResource BgSurface}"
 						BorderBrush="{StaticResource BorderSubtle}"
 						BorderThickness="1,0,0,0"
@@ -300,14 +303,16 @@
 										 Text="{Binding BlokkeerReden, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
 										 IsVisible="{Binding !IsGeselecteerdeDagGeblokkeerd}"
 										 FontSize="12"/>
-								<StackPanel Orientation="Horizontal" Spacing="8">
+								<WrapPanel>
 									<Button Content="{Binding BlokkeerDagButtonText}"
 											Command="{Binding ToggleBlokkeerDagCommand}"
-											Classes="DangerBtn"/>
+											Classes="DangerBtn"
+											Margin="0,0,8,6"/>
 									<Button Content="🔒 Blokkeer/deblokkeer week"
 											Command="{Binding ToggleBlokkeerWeekCommand}"
-											Classes="DangerBtn"/>
-								</StackPanel>
+											Classes="DangerBtn"
+											Margin="0,0,0,6"/>
+								</WrapPanel>
 							</StackPanel>
 
 							<!-- Geblokkeerd indicator -->
@@ -440,10 +445,14 @@
 															   FontSize="13"/>
 													<TextBlock Text="{Binding WerkBon.Offerte.Klant.Achternaam}"
 															   FontSize="12"
-															   Foreground="{StaticResource TextSecondary}"/>
+															   Foreground="{StaticResource TextSecondary}"
+															   TextTrimming="CharacterEllipsis"
+															   ToolTip.Tip="{Binding WerkBon.Offerte.Klant.Achternaam}"/>
 													<TextBlock Text="{Binding Omschrijving}"
 															   FontSize="12"
-															   Foreground="{StaticResource TextSecondary}"/>
+															   Foreground="{StaticResource TextSecondary}"
+															   TextTrimming="CharacterEllipsis"
+															   ToolTip.Tip="{Binding Omschrijving}"/>
 												</StackPanel>
 												<Border Grid.Column="1" Classes="Chip" VerticalAlignment="Top">
 													<TextBlock Text="{Binding DuurMinuten, StringFormat='{}{0} min'}"
@@ -515,13 +524,13 @@
 										<StackPanel IsVisible="{Binding WeekRows.Count}" Spacing="4">
 
 											<!-- Column headers -->
-											<Grid ColumnDefinitions="44,90,100,80,80,55" Margin="0,0,0,4">
-												<TextBlock Text="Bon"      Classes="SectionLabel"/>
-												<TextBlock Grid.Column="1" Text="Klant"    Classes="SectionLabel"/>
-												<TextBlock Grid.Column="2" Text="Afmeting" Classes="SectionLabel"/>
-												<TextBlock Grid.Column="3" Text="Lijst"    Classes="SectionLabel"/>
-												<TextBlock Grid.Column="4" Text="Dag"      Classes="SectionLabel"/>
-												<TextBlock Grid.Column="5" Text="Duur"     Classes="SectionLabel"/>
+											<Grid ColumnDefinitions="40,1.2*,1.2*,*,*,44" ColumnSpacing="4" Margin="0,0,0,4">
+												<TextBlock Text="Bon"      Classes="SectionLabel" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="1" Text="Klant"    Classes="SectionLabel" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="2" Text="Afmeting" Classes="SectionLabel" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="3" Text="Lijst"    Classes="SectionLabel" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="4" Text="Dag"      Classes="SectionLabel" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="5" Text="Duur"     Classes="SectionLabel" TextTrimming="CharacterEllipsis"/>
 											</Grid>
 
 											<Rectangle Classes="Divider"/>
@@ -534,13 +543,13 @@
 																CornerRadius="{StaticResource RadiusSm}"
 																Padding="0,7"
 																Margin="0,2">
-															<Grid ColumnDefinitions="44,90,100,80,80,55">
-																<TextBlock Text="{Binding BonNr}"     FontSize="12"/>
-																<TextBlock Grid.Column="1" Text="{Binding KlantNaam}" FontSize="12" TextTrimming="CharacterEllipsis"/>
-																<TextBlock Grid.Column="2" Text="{Binding Afmeting}"  FontSize="12"/>
-																<TextBlock Grid.Column="3" Text="{Binding Lijst}"     FontSize="12" Foreground="{StaticResource TextSecondary}"/>
-																<TextBlock Grid.Column="4" Text="{Binding Dag}"       FontSize="11" Foreground="{StaticResource TextMuted}"/>
-																<TextBlock Grid.Column="5" Text="{Binding DuurMin, StringFormat='{}{0}m'}" FontSize="12"/>
+															<Grid ColumnDefinitions="40,1.2*,1.2*,*,*,44" ColumnSpacing="4">
+																<TextBlock Text="{Binding BonNr}"     FontSize="12" TextTrimming="CharacterEllipsis"/>
+																<TextBlock Grid.Column="1" Text="{Binding KlantNaam}" FontSize="12" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding KlantNaam}"/>
+																<TextBlock Grid.Column="2" Text="{Binding Afmeting}"  FontSize="12" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Afmeting}"/>
+																<TextBlock Grid.Column="3" Text="{Binding Lijst}"     FontSize="12" Foreground="{StaticResource TextSecondary}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Lijst}"/>
+																<TextBlock Grid.Column="4" Text="{Binding Dag}"       FontSize="11" Foreground="{StaticResource TextMuted}" TextTrimming="CharacterEllipsis"/>
+																<TextBlock Grid.Column="5" Text="{Binding DuurMin, StringFormat='{}{0}m'}" FontSize="12" TextTrimming="CharacterEllipsis"/>
 															</Grid>
 														</Border>
 													</DataTemplate>
