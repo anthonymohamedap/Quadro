@@ -154,7 +154,10 @@
 						</TabItem>
 
 						<TabItem Header="Bestellingen">
-							<Grid Margin="0,12,0,0" RowDefinitions="Auto,Auto,*" RowSpacing="10">
+							<!-- Hele tab scrolt als één geheel: het invoerblok is hoog,
+							     anders bleef er geen ruimte over om bestellingen te zien. -->
+							<ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,12,0,0">
+							<Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
 								<TextBlock Text="Open bestellingen" Classes="h3" TextTrimming="CharacterEllipsis"/>
 
 								<Border Grid.Row="1" Background="{DynamicResource SurfaceMutedAlt}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="8" Padding="14">
@@ -222,15 +225,14 @@
 										</StackPanel>
 								</Border>
 
-								<Grid Grid.Row="2" RowDefinitions="Auto,*" RowSpacing="12">
-									<TextBlock Margin="0,0,0,12"
+								<StackPanel Grid.Row="2" Spacing="12">
+									<TextBlock
                                                 Text="Geen open bestellingen voor deze leverancier."
                                                 Foreground="{DynamicResource TextSecondary}"
                                                 TextWrapping="Wrap"
                                                 IsVisible="{Binding OpenBestellingen.Count, Converter={StaticResource EmptyCountToBool}}"/>
 
-									<Border Grid.Row="1" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="8" Padding="10" Background="{DynamicResource SurfaceMutedAlt}">
-										<ScrollViewer VerticalScrollBarVisibility="Auto">
+									<Border BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="8" Padding="10" Background="{DynamicResource SurfaceMutedAlt}">
 											<ItemsControl ItemsSource="{Binding OpenBestellingen}">
 												<ItemsControl.ItemTemplate>
 													<DataTemplate x:DataType="m:LeverancierBestelling">
@@ -294,10 +296,10 @@
 													</DataTemplate>
 												</ItemsControl.ItemTemplate>
 											</ItemsControl>
-										</ScrollViewer>
 									</Border>
-								</Grid>
+								</StackPanel>
 							</Grid>
+							</ScrollViewer>
 						</TabItem>
 
 						<TabItem Header="Waarschuwingen">
