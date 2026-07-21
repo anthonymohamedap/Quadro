@@ -122,6 +122,16 @@
 		<SolidColorBrush x:Key="CapacityHigh" Color="{StaticResource IconOrangeColor}"/>
 		<SolidColorBrush x:Key="CapacityFull" Color="{StaticResource DangerColor}"/>
 
+		<!-- Fase 4 — schaduwen & overlays (laatste hex-restanten uit views) -->
+		<BoxShadows x:Key="ShadowBar">0 1 4 0 #14000000</BoxShadows>
+		<BoxShadows x:Key="ShadowCard">0 1 4 0 #18000000</BoxShadows>
+		<BoxShadows x:Key="ShadowPanel">-4 0 16 0 #30000000</BoxShadows>
+		<BoxShadows x:Key="ShadowTopEdge">0 -1 4 0 #10000000</BoxShadows>
+		<Color x:Key="OverlayDimColor">#80000000</Color>
+		<Color x:Key="OverlayLightColor">#80FFFFFF</Color>
+		<SolidColorBrush x:Key="OverlayDim" Color="{StaticResource OverlayDimColor}"/>
+		<SolidColorBrush x:Key="OverlayLight" Color="{StaticResource OverlayLightColor}"/>
+
 		<!-- Spacing-schaal 4/8/12/16/24/32 -->
 		<Thickness x:Key="SpaceXs">4</Thickness>
 		<Thickness x:Key="SpaceSm">8</Thickness>
