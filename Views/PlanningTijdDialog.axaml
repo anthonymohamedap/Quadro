@@ -9,43 +9,31 @@
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         CanResize="True"
-        Background="{DynamicResource PlanningBg}">
+        Background="{DynamicResource Surface}">
 
-    <Window.Styles>
-        <Style Selector="TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource PlanningText}"/>
-            <Setter Property="FontFamily" Value="Segoe UI, sans-serif"/>
-        </Style>
-        <Style Selector="DatePicker">
-            <Setter Property="Background"   Value="{DynamicResource PlanningSurfaceAlt}"/>
-            <Setter Property="Foreground"   Value="{DynamicResource PlanningText}"/>
-            <Setter Property="BorderBrush"  Value="{DynamicResource PlanningBorder}"/>
-        </Style>
-    </Window.Styles>
+    <!-- Lichte dialoog in huisstijl (zoals KlantDialog); uitsluitend theme-tokens. -->
 
-    <Border Padding="24" Background="{DynamicResource PlanningSurface}">
+    <Border Padding="24" Background="{DynamicResource Surface}">
         <StackPanel Spacing="16">
 
             <!-- Titel -->
             <StackPanel Spacing="2">
                 <TextBlock Text="Taak plannen"
-                           Classes="h2"
-                           Foreground="{DynamicResource BrandYellow}"/>
+                           Classes="h2"/>
                 <TextBlock Text="Kies startdatum — taken worden automatisch verdeeld als de dag vol is."
-                           Classes="label"
-                           Foreground="{DynamicResource PlanningTextFaint}"
+                           Classes="caption"
                            TextWrapping="Wrap"/>
             </StackPanel>
 
             <!-- Context info -->
-            <Border Background="{DynamicResource PlanningSurfaceAlt}"
-                    BorderBrush="{DynamicResource PlanningBorder}"
+            <Border Background="{DynamicResource SurfaceMutedAlt}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
                     BorderThickness="1"
                     CornerRadius="8"
                     Padding="12,10">
                 <TextBlock Text="{Binding ContextLabel}"
                            Classes="label"
-                           Foreground="{DynamicResource PlanningTextMuted}"
+                           Foreground="{DynamicResource TextSecondary}"
                            TextWrapping="Wrap"/>
             </Border>
 
@@ -53,16 +41,14 @@
             <StackPanel Spacing="6">
                 <TextBlock Text="STARTDATUM"
                            Classes="caption"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource PlanningTextFaint}"
-                           LetterSpacing="1.5"/>
+                           FontWeight="SemiBold"/>
                 <DatePicker SelectedDate="{Binding GeplandeDatum}"
                             HorizontalAlignment="Stretch"/>
             </StackPanel>
 
             <!-- Geschat werk (read-only) -->
-            <Border Background="{DynamicResource PlanningSurfaceAlt}"
-                    BorderBrush="{DynamicResource PlanningBorder}"
+            <Border Background="{DynamicResource SurfaceMutedAlt}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
                     BorderThickness="1"
                     CornerRadius="8"
                     Padding="14,10">
@@ -70,16 +56,15 @@
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <TextBlock Text="Totaal geschat werk:"
                                    Classes="label"
-                                   Foreground="{DynamicResource PlanningTextMuted}"
+                                   Foreground="{DynamicResource TextSecondary}"
                                    VerticalAlignment="Center"/>
                         <TextBlock Text="{Binding DuurLabel}"
                                    Classes="h3"
-                                   Foreground="{DynamicResource BrandYellow}"
                                    VerticalAlignment="Center"/>
                     </StackPanel>
                     <TextBlock Text="{Binding SpreadLabel}"
                                Classes="label"
-                               Foreground="{DynamicResource PlanningTextMuted}"
+                               Foreground="{DynamicResource TextSecondary}"
                                TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
@@ -92,22 +77,15 @@
                 <Button Content="Annuleer"
                         MinWidth="100"
                         Command="{Binding AnnuleerCommand}"
-                        Background="Transparent"
-                        Foreground="{DynamicResource PlanningTextMuted}"
-                        BorderBrush="{DynamicResource PlanningBorder}"
-                        BorderThickness="1"
-                        CornerRadius="8"
+                        Classes="GhostBtn"
                         Padding="16,8"
-                        Cursor="Hand"/>
+                        HorizontalContentAlignment="Center"/>
                 <Button Content="Bevestig"
                         MinWidth="100"
                         Command="{Binding BevestigCommand}"
-                        Background="{DynamicResource BrandYellow}"
-                        Foreground="{DynamicResource PlanningBg}"
-                        FontWeight="SemiBold"
-                        CornerRadius="8"
+                        Classes="AccentBtn"
                         Padding="16,8"
-                        Cursor="Hand"/>
+                        HorizontalContentAlignment="Center"/>
             </StackPanel>
 
         </StackPanel>

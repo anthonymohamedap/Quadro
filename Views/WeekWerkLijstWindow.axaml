@@ -45,22 +45,16 @@
 
 					<Button Content="🔄 Vernieuwen"
 							Command="{Binding VerversCommand}"
+							Classes="AccentBtn"
 							VerticalAlignment="Center"
-							Background="{DynamicResource IconBlue}"
-							Foreground="{DynamicResource TextOnDark}"
-							FontWeight="Bold"
-							CornerRadius="8"
-							Padding="10,5"
+							Padding="12,6"
 							MinHeight="32"/>
 
 					<Button Content="🖨 PDF afdrukken"
 							Command="{Binding PrintPdfCommand}"
+							Classes="AccentBtn"
 							VerticalAlignment="Center"
-							Background="{DynamicResource Success}"
-							Foreground="{DynamicResource TextOnDark}"
-							FontWeight="Bold"
-							CornerRadius="8"
-							Padding="10,5"
+							Padding="12,6"
 							MinHeight="32"/>
 
 				</StackPanel>
@@ -93,22 +87,25 @@
 									<ItemsControl ItemsSource="{Binding Items}">
 										<ItemsControl.ItemTemplate>
 											<DataTemplate>
-												<Border Background="White"
+												<Border Background="{DynamicResource Surface}"
 														BorderBrush="{DynamicResource BorderSubtle}"
 														BorderThickness="1"
 														CornerRadius="8"
 														Padding="12"
 														Margin="0,0,0,10">
 
-													<Grid ColumnDefinitions="*,220"
-														  RowDefinitions="Auto,Auto">
+													<Grid RowDefinitions="Auto,Auto">
+														<Grid.ColumnDefinitions>
+															<ColumnDefinition Width="1.6*" MinWidth="240"/>
+															<ColumnDefinition Width="*" MinWidth="200"/>
+														</Grid.ColumnDefinitions>
 
 														<!-- Linker info: zoveel mogelijk zoals je foto (plain text) -->
 														<StackPanel Grid.Column="0" Spacing="2">
 															<TextBlock Text="{Binding Stuks, StringFormat='{}{0} stuks in te lijsten:'}"
 																	   FontWeight="Bold"
-																	   Foreground="Black"/>
-															<TextBlock Text="{Binding Omschrijving}" Foreground="Black"/>
+																	   Foreground="{DynamicResource TextPrimary}"/>
+															<TextBlock Text="{Binding Omschrijving}" Foreground="{DynamicResource TextPrimary}"/>
 															<TextBlock Text="{Binding RegelOpmerking, StringFormat='opmerking: {0}'}" FontStyle="Italic" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" IsVisible="{Binding RegelOpmerking, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
 															<Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="16" Margin="0,6,0,0">
@@ -120,29 +117,32 @@
 
 															<TextBlock Text="{Binding ProductieDatum, StringFormat='productie op {0:dd/MM/yy}'}"
 																	   Margin="0,6,0,0"
-																	   Foreground="Black"/>
+																	   Foreground="{DynamicResource TextPrimary}"/>
 															<TextBlock Text="{Binding BonNr, StringFormat='bonnr. {0}'}"
-																	   Foreground="Black"/>
+																	   Foreground="{DynamicResource TextPrimary}"/>
 														</StackPanel>
 
 														<!-- Rechter kolom: inleg/artikel -->
 														<StackPanel Grid.Column="1" Spacing="4">
-															<TextBlock Text="{Binding Inleg1, StringFormat='inleg 1 : {0}'}" Foreground="Black"/>
-															<TextBlock Text="{Binding Inleg2, StringFormat='inleg 2 : {0}'}" Foreground="Black"/>
+															<TextBlock Text="{Binding Inleg1, StringFormat='inleg 1 : {0}'}" Foreground="{DynamicResource TextPrimary}"/>
+															<TextBlock Text="{Binding Inleg2, StringFormat='inleg 2 : {0}'}" Foreground="{DynamicResource TextPrimary}"/>
 															<TextBlock Text="Afwerkingen:" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Margin="0,4,0,0"/>
-															<TextBlock Text="{Binding GlasBeschrijving, StringFormat='Glas: {0}'}" Foreground="Black" IsVisible="{Binding GlasBeschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-															<TextBlock Text="{Binding Passe1Beschrijving, StringFormat='PP1: {0}'}" Foreground="Black" IsVisible="{Binding Passe1Beschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-															<TextBlock Text="{Binding Passe2Beschrijving, StringFormat='PP2: {0}'}" Foreground="Black" IsVisible="{Binding Passe2Beschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-															<TextBlock Text="{Binding DieptyeBeschrijving, StringFormat='Diepte: {0}'}" Foreground="Black" IsVisible="{Binding DieptyeBeschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-															<TextBlock Text="{Binding OpklevenBeschrijving, StringFormat='Opkleven: {0}'}" Foreground="Black" IsVisible="{Binding OpklevenBeschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-															<TextBlock Text="{Binding RugBeschrijving, StringFormat='Rug: {0}'}" Foreground="Black" IsVisible="{Binding RugBeschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+															<TextBlock Text="{Binding GlasBeschrijving, StringFormat='Glas: {0}'}" Foreground="{DynamicResource TextPrimary}" IsVisible="{Binding GlasBeschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+															<TextBlock Text="{Binding Passe1Beschrijving, StringFormat='PP1: {0}'}" Foreground="{DynamicResource TextPrimary}" IsVisible="{Binding Passe1Beschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+															<TextBlock Text="{Binding Passe2Beschrijving, StringFormat='PP2: {0}'}" Foreground="{DynamicResource TextPrimary}" IsVisible="{Binding Passe2Beschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+															<TextBlock Text="{Binding DieptyeBeschrijving, StringFormat='Diepte: {0}'}" Foreground="{DynamicResource TextPrimary}" IsVisible="{Binding DieptyeBeschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+															<TextBlock Text="{Binding OpklevenBeschrijving, StringFormat='Opkleven: {0}'}" Foreground="{DynamicResource TextPrimary}" IsVisible="{Binding OpklevenBeschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+															<TextBlock Text="{Binding RugBeschrijving, StringFormat='Rug: {0}'}" Foreground="{DynamicResource TextPrimary}" IsVisible="{Binding RugBeschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 														</StackPanel>
 
 														<Grid Grid.Row="1"
 															  Grid.ColumnSpan="2"
-															  ColumnDefinitions="300,*"
 															  ColumnSpacing="12"
 															  Margin="0,12,0,0">
+															<Grid.ColumnDefinitions>
+																<ColumnDefinition Width="1.2*" MinWidth="260"/>
+																<ColumnDefinition Width="*" MinWidth="220"/>
+															</Grid.ColumnDefinitions>
 															<Border Grid.Column="0"
 																	Background="{DynamicResource SurfaceMutedAlt}"
 																	BorderBrush="{DynamicResource BorderSubtle}"
@@ -152,24 +152,24 @@
 																<StackPanel Spacing="6">
 																	<TextBlock Text="Bestellen"
 																			   FontWeight="Bold"
-																			   Foreground="Black"/>
+																			   Foreground="{DynamicResource TextPrimary}"/>
 																	<Border IsVisible="{Binding IsBesteld}" Background="{DynamicResource Success}" CornerRadius="10" Padding="8,2" HorizontalAlignment="Left" Margin="0,0,0,2">
 																		<TextBlock Text="✓ Reeds besteld" Classes="caption" Foreground="{DynamicResource TextOnDark}" FontWeight="SemiBold"/>
 																	</Border>
 																	<TextBlock Text="{Binding VoorraadStatusText}"
-																			   Foreground="Black"
+																			   Foreground="{DynamicResource TextPrimary}"
 																			   FontWeight="SemiBold"/>
 																	<TextBlock Text="{Binding BestelDatum, StringFormat='Besteld op: {0:dd/MM/yyyy}'}"
-																			   Foreground="Black"
+																			   Foreground="{DynamicResource TextPrimary}"
 																			   IsVisible="{Binding IsBesteld}"/>
 																	<TextBlock Text="{Binding BestellingNummer, StringFormat='Bestelnummer: {0}'}"
-																			   Foreground="Black"
+																			   Foreground="{DynamicResource TextPrimary}"
 																			   IsVisible="{Binding HasOrder}"/>
 																	<TextBlock Text="{Binding LeverancierNaam, StringFormat='Leverancier: {0}'}"
-																			   Foreground="Black"
+																			   Foreground="{DynamicResource TextPrimary}"
 																			   IsVisible="{Binding HasOrder}"/>
 																	<TextBlock Text="{Binding VerwachteLeverdatum, StringFormat='Verwacht: {0:dd/MM/yyyy}'}"
-																			   Foreground="Black"
+																			   Foreground="{DynamicResource TextPrimary}"
 																			   IsVisible="{Binding HasOrder}"/>
 																	<StackPanel Spacing="4" IsVisible="{Binding CanPlaceOrder}">
 																		<WrapPanel ItemSpacing="12" LineSpacing="4">
@@ -211,14 +211,14 @@
 																<StackPanel Spacing="6">
 																	<TextBlock Text="Notitie (blijft bewaard)"
 																			   FontWeight="Bold"
-																			   Foreground="Black"/>
+																			   Foreground="{DynamicResource TextPrimary}"/>
 																	<TextBox Text="{Binding Notitie, Mode=TwoWay}"
 																			 AcceptsReturn="True"
 																			 TextWrapping="Wrap"
 																			 MinHeight="70"
 																			 MaxHeight="160"
 																			 Padding="8"
-																			 Foreground="Black"/>
+																			 Foreground="{DynamicResource TextPrimary}"/>
 
 																	<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
 																		<Button Content="💾 Bewaar"

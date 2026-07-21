@@ -8,106 +8,78 @@
     WindowState="Maximized"
     WindowStartupLocation="CenterOwner"
     Title="WerkBon Planning"
-    Background="{DynamicResource BgBase}">
+    Background="{DynamicResource SurfaceMuted}">
 
-	<Window.Resources>
-		<SolidColorBrush x:Key="BgBase"        Color="#0F1117"/>
-		<SolidColorBrush x:Key="BgSurface"     Color="#16181F"/>
-		<SolidColorBrush x:Key="BgElevated"    Color="#1E2029"/>
-		<SolidColorBrush x:Key="BgCard"        Color="#252830"/>
-		<SolidColorBrush x:Key="BgCardHover"   Color="#2E3240"/>
-		<SolidColorBrush x:Key="BgHeader"      Color="#13151C"/>
-
-		<SolidColorBrush x:Key="BorderSubtle"  Color="#2A2D38"/>
-		<SolidColorBrush x:Key="BorderMed"     Color="#383C4A"/>
-		<SolidColorBrush x:Key="BorderStrong"  Color="#4A4F61"/>
-
-		<SolidColorBrush x:Key="AccentGold"    Color="#F5C242"/>
-		<SolidColorBrush x:Key="AccentGoldHover" Color="#FFCE55"/>
-		<SolidColorBrush x:Key="AccentBlue"    Color="#3B82F6"/>
-		<SolidColorBrush x:Key="AccentBlueDim" Color="#1E3A5F"/>
-		<SolidColorBrush x:Key="AccentGreen"   Color="#22C55E"/>
-		<SolidColorBrush x:Key="AccentRed"     Color="#DC2626"/>
-		<SolidColorBrush x:Key="AccentRedDim"  Color="#3C0A0A"/>
-
-		<SolidColorBrush x:Key="TextPrimary"   Color="#F0F2F8"/>
-		<SolidColorBrush x:Key="TextSecondary" Color="#9299AE"/>
-		<SolidColorBrush x:Key="TextMuted"     Color="#5A6075"/>
-		<SolidColorBrush x:Key="TextOnAccent"  Color="#0F1117"/>
-
-		<CornerRadius x:Key="RadiusSm">8</CornerRadius>
-		<CornerRadius x:Key="RadiusMd">8</CornerRadius>
-		<CornerRadius x:Key="RadiusLg">12</CornerRadius>
-	</Window.Resources>
-
+	<!-- Huisstijl: uitsluitend theme-tokens (QuadroTheme.axaml); geen hex,
+	     geen lokale brushes. Dagtegel-status → kleur gebeurt hier via
+	     Classes.*-bindingen op booleans uit DayTile (geen IBrush in de VM). -->
 	<Window.Styles>
-		<Style Selector="TextBlock">
-			<Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
-			<Setter Property="FontFamily" Value="Segoe UI, SF Pro Display, sans-serif"/>
-		</Style>
 
-		<Style Selector="Button.IconBtn">
-			<Setter Property="Background"      Value="Transparent"/>
-			<Setter Property="Foreground"      Value="{StaticResource TextSecondary}"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="BorderBrush"     Value="{StaticResource BorderSubtle}"/>
-			<Setter Property="CornerRadius"    Value="{StaticResource RadiusSm}"/>
-			<Setter Property="Padding"         Value="8,4"/>
-			<Setter Property="FontSize"        Value="13"/>
-			<Setter Property="Cursor"          Value="Hand"/>
+		<!-- Dagtegels -->
+		<Style Selector="Border.DayTile">
+			<Setter Property="Background"  Value="{DynamicResource Surface}"/>
+			<Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+			<Setter Property="BorderThickness" Value="2"/>
+			<Setter Property="CornerRadius" Value="8"/>
 		</Style>
-		<Style Selector="Button.IconBtn:pointerover /template/ ContentPresenter">
-			<Setter Property="Background" Value="{StaticResource BgCard}"/>
-			<Setter Property="TextElement.Foreground" Value="{StaticResource TextPrimary}"/>
+		<Style Selector="Border.DayTile.weekend">
+			<Setter Property="Background" Value="{DynamicResource SurfaceMutedAlt}"/>
 		</Style>
-
-		<Style Selector="Button.MainBtn">
-			<Setter Property="Background"      Value="{StaticResource AccentGold}"/>
-			<Setter Property="Foreground"      Value="{StaticResource TextOnAccent}"/>
-			<Setter Property="BorderThickness" Value="0"/>
-			<Setter Property="CornerRadius"    Value="{StaticResource RadiusSm}"/>
-			<Setter Property="Padding"         Value="14,7"/>
-			<Setter Property="FontWeight"      Value="SemiBold"/>
-			<Setter Property="FontSize"        Value="13"/>
-			<Setter Property="Cursor"          Value="Hand"/>
+		<Style Selector="Border.DayTile.otherMonth">
+			<Setter Property="Opacity" Value="0.55"/>
 		</Style>
-		<Style Selector="Button.MainBtn:pointerover /template/ ContentPresenter">
-			<Setter Property="Background" Value="{StaticResource AccentGoldHover}"/>
+		<Style Selector="Border.DayTile.today">
+			<Setter Property="Background"  Value="{DynamicResource InfoBg}"/>
+			<Setter Property="BorderBrush" Value="{DynamicResource InfoBorder}"/>
 		</Style>
-
-		<Style Selector="Button.GhostBtn">
-			<Setter Property="Background"      Value="Transparent"/>
-			<Setter Property="Foreground"      Value="{StaticResource TextSecondary}"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="BorderBrush"     Value="{StaticResource BorderSubtle}"/>
-			<Setter Property="CornerRadius"    Value="{StaticResource RadiusSm}"/>
-			<Setter Property="Padding"         Value="12,6"/>
-			<Setter Property="FontSize"        Value="12"/>
-			<Setter Property="Cursor"          Value="Hand"/>
+		<Style Selector="Border.DayTile.blocked">
+			<Setter Property="Background"  Value="{DynamicResource DangerBg}"/>
+			<Setter Property="BorderBrush" Value="{DynamicResource Danger}"/>
 		</Style>
-		<Style Selector="Button.GhostBtn:pointerover /template/ ContentPresenter">
-			<Setter Property="Background" Value="{StaticResource BgCard}"/>
+		<Style Selector="Border.DayTile.selected">
+			<Setter Property="BorderBrush" Value="{DynamicResource BrandYellow}"/>
 		</Style>
-
-		<Style Selector="Button.DangerBtn">
-			<Setter Property="Background"      Value="Transparent"/>
-			<Setter Property="Foreground"      Value="{StaticResource AccentRed}"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="BorderBrush"     Value="{StaticResource AccentRed}"/>
-			<Setter Property="CornerRadius"    Value="{StaticResource RadiusSm}"/>
-			<Setter Property="Padding"         Value="12,6"/>
-			<Setter Property="FontSize"        Value="12"/>
-			<Setter Property="Cursor"          Value="Hand"/>
-		</Style>
-		<Style Selector="Button.DangerBtn:pointerover /template/ ContentPresenter">
-			<Setter Property="Background" Value="{StaticResource AccentRedDim}"/>
-		</Style>
-
 		<Style Selector="Border.DayTile:pointerover">
-			<Setter Property="Background"  Value="{StaticResource BgCardHover}"/>
-			<Setter Property="BorderBrush" Value="{StaticResource BorderStrong}"/>
+			<Setter Property="BorderBrush" Value="{DynamicResource BrandYellow}"/>
 		</Style>
 
+		<!-- Capaciteitsbalk: proportioneel (0..1), kleur per niveau.
+		     Eigen template zodat de vulling altijd de Foreground volgt,
+		     onafhankelijk van het (Huskui-)theme-template. -->
+		<Style Selector="ProgressBar.Capacity">
+			<Setter Property="Minimum"  Value="0"/>
+			<Setter Property="Maximum"  Value="1"/>
+			<Setter Property="Height"   Value="4"/>
+			<Setter Property="MinWidth" Value="0"/>
+			<Setter Property="Foreground" Value="{DynamicResource CapacityLow}"/>
+			<Setter Property="Background" Value="{DynamicResource BorderSubtle}"/>
+			<Setter Property="Template">
+				<ControlTemplate>
+					<Border Background="{TemplateBinding Background}"
+							CornerRadius="2"
+							ClipToBounds="True">
+						<Border Name="PART_Indicator"
+								Background="{TemplateBinding Foreground}"
+								CornerRadius="2"
+								HorizontalAlignment="Left"/>
+					</Border>
+				</ControlTemplate>
+			</Setter>
+		</Style>
+		<Style Selector="ProgressBar.capLow">
+			<Setter Property="Foreground" Value="{DynamicResource CapacityLow}"/>
+		</Style>
+		<Style Selector="ProgressBar.capMid">
+			<Setter Property="Foreground" Value="{DynamicResource CapacityMid}"/>
+		</Style>
+		<Style Selector="ProgressBar.capHigh">
+			<Setter Property="Foreground" Value="{DynamicResource CapacityHigh}"/>
+		</Style>
+		<Style Selector="ProgressBar.capFull">
+			<Setter Property="Foreground" Value="{DynamicResource CapacityFull}"/>
+		</Style>
+
+		<!-- Vlakke lijsten (maandgrid, weektabel, regels): geen item-chrome -->
 		<Style Selector="ListBox">
 			<Setter Property="Background"      Value="Transparent"/>
 			<Setter Property="BorderThickness" Value="0"/>
@@ -116,6 +88,7 @@
 		<Style Selector="ListBoxItem">
 			<Setter Property="Background" Value="Transparent"/>
 			<Setter Property="Padding"    Value="0"/>
+			<Setter Property="Margin"     Value="0"/>
 		</Style>
 		<Style Selector="ListBoxItem:selected /template/ ContentPresenter">
 			<Setter Property="Background" Value="Transparent"/>
@@ -124,92 +97,74 @@
 			<Setter Property="Background" Value="Transparent"/>
 		</Style>
 
-		<Style Selector="ScrollBar">
-			<Setter Property="Width"   Value="4"/>
-			<Setter Property="Opacity" Value="0.4"/>
-		</Style>
-
-		<Style Selector="TextBlock.SectionLabel">
-			<Setter Property="FontSize"      Value="11"/>
-			<Setter Property="FontWeight"    Value="SemiBold"/>
-			<Setter Property="Foreground"    Value="{StaticResource TextMuted}"/>
-			<Setter Property="LetterSpacing" Value="1.5"/>
-		</Style>
-
 		<Style Selector="Rectangle.Divider">
 			<Setter Property="Height" Value="1"/>
-			<Setter Property="Fill"   Value="{StaticResource BorderSubtle}"/>
+			<Setter Property="Fill"   Value="{DynamicResource BorderSubtle}"/>
 			<Setter Property="Margin" Value="0,4"/>
-		</Style>
-
-		<Style Selector="Border.Chip">
-			<Setter Property="CornerRadius" Value="20"/>
-			<Setter Property="Padding"      Value="8,3"/>
-			<Setter Property="Background"   Value="{StaticResource BgCard}"/>
 		</Style>
 	</Window.Styles>
 
 	<!-- ROOT: Panel wraps Grid + Toast overlay -->
 	<Panel>
-		<Grid RowDefinitions="64,*">
+		<Grid RowDefinitions="70,Auto,*">
 
-			<!-- ══════════════ HEADER BAR ══════════════ -->
-			<Border Grid.Row="0"
-					Background="{StaticResource BgHeader}"
-					BorderBrush="{StaticResource BorderSubtle}"
-					BorderThickness="0,0,0,1">
-				<DockPanel Margin="20,0">
-
-					<!-- Brand -->
+			<!-- ══════════════ HEADER (zelfde taal als QuadroHeader) ══════════════ -->
+			<Border Grid.Row="0" Background="{DynamicResource BrandDark}">
+				<DockPanel Margin="20,0" LastChildFill="False">
 					<StackPanel DockPanel.Dock="Left"
 								Orientation="Horizontal"
 								VerticalAlignment="Center"
 								Spacing="12">
-						<Ellipse Width="32" Height="32" Fill="{StaticResource AccentGold}"/>
-						<StackPanel Spacing="1" VerticalAlignment="Center">
-							<TextBlock Text="QUADRO"
-									   FontWeight="Bold"
-									   FontSize="16"
-									   LetterSpacing="2"/>
-							<TextBlock Text="PLANNING"
-									   FontSize="10"
-									   Foreground="{StaticResource TextMuted}"
-									   LetterSpacing="1.5"/>
-						</StackPanel>
+						<Ellipse Width="35" Height="35" Fill="{DynamicResource BrandYellow}"/>
+						<TextBlock Text="QUADRO"
+								   Classes="h2"
+								   Foreground="{DynamicResource TextOnDark}"
+								   VerticalAlignment="Center"/>
+						<TextBlock Text="PLANNING"
+								   Classes="body"
+								   Foreground="{DynamicResource TextMutedOnDark}"
+								   VerticalAlignment="Center"/>
 					</StackPanel>
 
-					<!-- Month navigation + close -->
-					<StackPanel DockPanel.Dock="Right"
-								Orientation="Horizontal"
-								Spacing="8"
-								VerticalAlignment="Center">
-						<Button Content="←" Command="{Binding PrevMonthCommand}" Classes="IconBtn"/>
-						<Border Classes="Chip" VerticalAlignment="Center">
-							<TextBlock Text="{Binding MonthTitle}"
-									   FontSize="14"
-									   FontWeight="SemiBold"
-									   Margin="4,0"/>
-						</Border>
-						<Button Content="→" Command="{Binding NextMonthCommand}" Classes="IconBtn"/>
-						<Button Content="Vandaag"
-								Command="{Binding TodayCommand}"
-								Classes="GhostBtn"
-								Margin="8,0,0,0"/>
-						<Button Content="← Sluiten"
-								Classes="MainBtn"
-								Margin="16,0,0,0"
-								Click="SluitButton_Click"/>
-					</StackPanel>
+					<Button DockPanel.Dock="Right"
+							Content="⬅ Sluiten"
+							Classes="AccentBtn"
+							VerticalAlignment="Center"
+							Padding="12,6"
+							Click="SluitButton_Click"/>
 				</DockPanel>
 			</Border>
 
+			<!-- ══════════════ TOOLBAR: maandnavigatie ══════════════ -->
+			<Border Grid.Row="1"
+					Background="{DynamicResource Surface}"
+					BorderBrush="{DynamicResource BorderSubtle}"
+					BorderThickness="0,0,0,1">
+				<StackPanel Orientation="Horizontal"
+							Spacing="8"
+							Margin="20,10"
+							VerticalAlignment="Center">
+					<Button Content="←" Command="{Binding PrevMonthCommand}" Classes="MainBtn"/>
+					<TextBlock Text="{Binding MonthTitle}"
+							   Classes="h3"
+							   MinWidth="150"
+							   TextAlignment="Center"
+							   VerticalAlignment="Center"/>
+					<Button Content="→" Command="{Binding NextMonthCommand}" Classes="MainBtn"/>
+					<Button Content="Vandaag"
+							Command="{Binding TodayCommand}"
+							Classes="GhostBtn"
+							Margin="8,0,0,0"/>
+				</StackPanel>
+			</Border>
+
 			<!-- ══════════════ BODY: 2-column ══════════════ -->
-			<Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+			<Grid Grid.Row="2" ColumnDefinitions="*,Auto">
 
 				<!-- LEFT — Calendar grid -->
 				<Grid Grid.Column="0"
 					  RowDefinitions="Auto,*"
-					  Margin="16,16,16,0">
+					  Margin="16,16,16,8">
 
 					<!-- Weekday headers -->
 					<ItemsControl Grid.Row="0" ItemsSource="{Binding WeekHeaders}">
@@ -222,11 +177,10 @@
 							<DataTemplate>
 								<TextBlock Text="{Binding}"
 										   HorizontalAlignment="Center"
-										   FontSize="13"
+										   Classes="caption"
 										   FontWeight="SemiBold"
-										   Foreground="{StaticResource TextMuted}"
 										   Margin="0,0,0,8"
-										   LetterSpacing="1"/>
+										   TextTrimming="CharacterEllipsis"/>
 							</DataTemplate>
 						</ItemsControl.ItemTemplate>
 					</ItemsControl>
@@ -241,43 +195,42 @@
 						<ListBox.ItemTemplate>
 							<DataTemplate>
 								<Border Classes="DayTile"
+										Classes.weekend="{Binding IsWeekend}"
+										Classes.otherMonth="{Binding IsOtherMonth}"
+										Classes.today="{Binding IsToday}"
+										Classes.blocked="{Binding IsGeblokkeerd}"
+										Classes.selected="{Binding IsSelected}"
 										Margin="3"
 										Padding="10,8"
-										MinHeight="100"
-										Background="{Binding Background}"
-										BorderBrush="{Binding Border}"
-										BorderThickness="2"
-										CornerRadius="{StaticResource RadiusMd}"
+										MinHeight="80"
 										Cursor="Hand"
 										PointerPressed="DayTile_PointerPressed">
 
-									<StackPanel Spacing="5">
-										<!-- Day number -->
-										<TextBlock Text="{Binding DayNumber}"
-												   FontWeight="Bold"
-												   FontSize="15"
-												   Foreground="{StaticResource TextPrimary}"/>
+									<StackPanel Spacing="4">
+										<!-- Day number (+ blok-indicator) -->
+										<StackPanel Orientation="Horizontal" Spacing="4">
+											<TextBlock Text="🚫"
+													   Classes="caption"
+													   IsVisible="{Binding IsGeblokkeerd}"
+													   VerticalAlignment="Center"/>
+											<TextBlock Text="{Binding DayNumber}"
+													   Classes="body"
+													   FontWeight="Bold"/>
+										</StackPanel>
 
-										<!-- Capacity bar -->
-										<Grid ColumnDefinitions="*">
-											<Rectangle Height="3"
-													   HorizontalAlignment="Left"
-													   Width="{Binding BusyBarWidth}"
-													   Fill="{Binding BusyColor}"
-													   RadiusX="2"
-													   RadiusY="2"
-													   Opacity="0.85"/>
-											<Rectangle Height="3"
-													   Fill="{StaticResource BorderSubtle}"
-													   RadiusX="2"
-													   RadiusY="2"
-													   ZIndex="-1"/>
-										</Grid>
+										<!-- Capacity bar (proportioneel — schaalt mee met de tegel) -->
+										<ProgressBar Classes="Capacity"
+													 Classes.capLow="{Binding CapLow}"
+													 Classes.capMid="{Binding CapMid}"
+													 Classes.capHigh="{Binding CapHigh}"
+													 Classes.capFull="{Binding CapFull}"
+													 Value="{Binding Busy}"/>
 
-										<!-- Hours label -->
+										<!-- Hours / blocked label -->
 										<TextBlock Text="{Binding BusyLabel}"
-												   FontSize="10"
-												   Foreground="{StaticResource TextMuted}"/>
+												   Classes="caption"
+												   TextTrimming="CharacterEllipsis"
+												   ToolTip.Tip="{Binding BusyLabel}"/>
 									</StackPanel>
 								</Border>
 							</DataTemplate>
@@ -289,144 +242,62 @@
 				<Border Grid.Column="1"
 						MinWidth="380"
 						MaxWidth="460"
-						Background="{StaticResource BgSurface}"
-						BorderBrush="{StaticResource BorderSubtle}"
+						Background="{DynamicResource Surface}"
+						BorderBrush="{DynamicResource BorderSubtle}"
 						BorderThickness="1,0,0,0"
 						Padding="20,16">
 					<ScrollViewer HorizontalScrollBarVisibility="Disabled"
 								  VerticalScrollBarVisibility="Auto">
 						<StackPanel Spacing="0">
 
-							<!-- ══ BLOKKEER KNOPPEN ══ -->
-							<StackPanel Spacing="6" Margin="0,0,0,12">
-								<TextBox Watermark="Reden (optioneel)..."
-										 Text="{Binding BlokkeerReden, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-										 IsVisible="{Binding !IsGeselecteerdeDagGeblokkeerd}"
-										 FontSize="12"/>
-								<WrapPanel>
-									<Button Content="{Binding BlokkeerDagButtonText}"
-											Command="{Binding ToggleBlokkeerDagCommand}"
-											Classes="DangerBtn"
-											Margin="0,0,8,6"/>
-									<Button Content="🔒 Blokkeer/deblokkeer week"
-											Command="{Binding ToggleBlokkeerWeekCommand}"
-											Classes="DangerBtn"
-											Margin="0,0,0,6"/>
-								</WrapPanel>
+							<!-- ══ DAG DETAILS ══ -->
+							<StackPanel Spacing="2" Margin="0,0,0,12">
+								<TextBlock Text="DAG DETAILS" Classes="caption" FontWeight="SemiBold"/>
+								<TextBlock Text="{Binding SelectedDateLang}"
+										   Classes="h3"
+										   Margin="0,4,0,0"
+										   TextTrimming="CharacterEllipsis"
+										   ToolTip.Tip="{Binding SelectedDateLang}"/>
 							</StackPanel>
 
 							<!-- Geblokkeerd indicator -->
 							<Border IsVisible="{Binding IsGeselecteerdeDagGeblokkeerd}"
-									Background="{StaticResource AccentRedDim}"
-									BorderBrush="{StaticResource AccentRed}"
+									Background="{DynamicResource DangerBg}"
+									BorderBrush="{DynamicResource Danger}"
 									BorderThickness="1"
-									CornerRadius="{StaticResource RadiusMd}"
+									CornerRadius="8"
 									Padding="14,10"
 									Margin="0,0,0,12">
 								<StackPanel Spacing="4">
 									<StackPanel Orientation="Horizontal" Spacing="10">
-										<TextBlock Text="🚫" FontSize="20" VerticalAlignment="Center"/>
+										<TextBlock Text="🚫" Classes="h3" VerticalAlignment="Center"/>
 										<TextBlock Text="Deze dag is geblokkeerd — er kunnen geen taken worden ingepland."
-												   FontSize="12"
-												   Foreground="{StaticResource AccentRed}"
+												   Classes="label"
+												   Foreground="{DynamicResource Danger}"
 												   TextWrapping="Wrap"
 												   VerticalAlignment="Center"/>
 									</StackPanel>
 									<TextBlock Text="{Binding GeselecteerdeDagRedenTekst}"
 											   IsVisible="{Binding GeselecteerdeDagRedenTekst, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-											   FontSize="11"
-											   Foreground="{StaticResource AccentRed}"
+											   Classes="caption"
+											   Foreground="{DynamicResource Danger}"
 											   FontStyle="Italic"
-											   Margin="30,0,0,0"/>
+											   Margin="30,0,0,0"
+											   TextWrapping="Wrap"/>
 								</StackPanel>
 							</Border>
-
-							<!-- ══ PLAN REGELS (top — contextual) ══ -->
-
-							<!-- No-werkbon hint -->
-							<Border IsVisible="{Binding GeenWerkBon}"
-									Background="{StaticResource BgElevated}"
-									BorderBrush="{StaticResource BorderSubtle}"
-									BorderThickness="1"
-									CornerRadius="{StaticResource RadiusMd}"
-									Padding="14,12"
-									Margin="0,0,0,16">
-								<StackPanel Orientation="Horizontal" Spacing="10">
-									<TextBlock Text="📋" FontSize="18" VerticalAlignment="Center"/>
-									<TextBlock Text="Open planning vanuit een werkbon om regels te kunnen plannen."
-											   FontSize="12"
-											   Foreground="{StaticResource TextSecondary}"
-											   TextWrapping="Wrap"
-											   VerticalAlignment="Center"/>
-								</StackPanel>
-							</Border>
-
-							<!-- Werkbon regels panel -->
-							<StackPanel IsVisible="{Binding HeeftWerkBon}"
-										Spacing="10"
-										Margin="0,0,0,16">
-								<TextBlock Text="WERKBON REGELS" Classes="SectionLabel"/>
-
-								<ListBox ItemsSource="{Binding RegelsVanWerkBon}"
-										 Background="{StaticResource BgElevated}"
-										 CornerRadius="{StaticResource RadiusMd}"
-										 Padding="8">
-									<ListBox.ItemTemplate>
-										<DataTemplate>
-											<Border Padding="6,5"
-													Margin="0,2"
-													CornerRadius="{StaticResource RadiusSm}"
-													Cursor="Hand">
-												<StackPanel Orientation="Horizontal" Spacing="10">
-													<CheckBox IsChecked="{Binding IsSelected}"
-															  VerticalAlignment="Center"/>
-													<TextBlock Text="{Binding Label}"
-															   FontSize="12"
-															   Foreground="{StaticResource TextSecondary}"
-															   TextWrapping="Wrap"
-															   VerticalAlignment="Center"/>
-												</StackPanel>
-											</Border>
-										</DataTemplate>
-									</ListBox.ItemTemplate>
-								</ListBox>
-
-								<Button Content="Plan geselecteerde regels"
-										Command="{Binding PlanGeselecteerdeRegelsCommand}"
-										Classes="MainBtn"
-										HorizontalAlignment="Stretch"
-										HorizontalContentAlignment="Center"/>
-
-								<!-- US-21: aparte datum per inlijsting -->
-								<Button Content="Plan per regel (aparte datums)"
-										Command="{Binding PlanPerRegelCommand}"
-										Classes="GhostBtn"
-										HorizontalAlignment="Stretch"
-										HorizontalContentAlignment="Center"/>
-							</StackPanel>
-
-							<Rectangle Classes="Divider" Margin="0,0,0,14"/>
-
-							<!-- ══ DAG DETAILS ══ -->
-							<StackPanel Spacing="2" Margin="0,0,0,12">
-								<TextBlock Text="DAG DETAILS" Classes="SectionLabel"/>
-								<TextBlock Text="{Binding SelectedDateLang}"
-										   FontSize="18"
-										   FontWeight="Bold"
-										   Margin="0,4,0,0"/>
-							</StackPanel>
 
 							<!-- Tasks for selected day -->
 							<ItemsControl ItemsSource="{Binding TakenVanDag}"
 										  Margin="0,0,0,4">
 								<ItemsControl.ItemTemplate>
 									<DataTemplate>
-										<Border Background="{StaticResource BgElevated}"
-												BorderBrush="{StaticResource BorderSubtle}"
+										<Border Background="{DynamicResource SurfaceMutedAlt}"
+												BorderBrush="{DynamicResource BorderSubtle}"
 												BorderThickness="1"
 												Padding="12,10"
 												Margin="0,0,0,8"
-												CornerRadius="{StaticResource RadiusMd}"
+												CornerRadius="8"
 												Cursor="Hand">
 
 											<Border.ContextMenu>
@@ -441,23 +312,26 @@
 											<Grid ColumnDefinitions="*,Auto">
 												<StackPanel Spacing="3">
 													<TextBlock Text="{Binding WerkBon.Id, StringFormat='WerkBon #{0}'}"
-															   FontWeight="Bold"
-															   FontSize="13"/>
+															   Classes="body"
+															   FontWeight="Bold"/>
 													<TextBlock Text="{Binding WerkBon.Offerte.Klant.Achternaam}"
-															   FontSize="12"
-															   Foreground="{StaticResource TextSecondary}"
+															   Classes="label"
+															   Foreground="{DynamicResource TextSecondary}"
 															   TextTrimming="CharacterEllipsis"
 															   ToolTip.Tip="{Binding WerkBon.Offerte.Klant.Achternaam}"/>
 													<TextBlock Text="{Binding Omschrijving}"
-															   FontSize="12"
-															   Foreground="{StaticResource TextSecondary}"
+															   Classes="label"
+															   Foreground="{DynamicResource TextSecondary}"
 															   TextTrimming="CharacterEllipsis"
 															   ToolTip.Tip="{Binding Omschrijving}"/>
 												</StackPanel>
-												<Border Grid.Column="1" Classes="Chip" VerticalAlignment="Top">
+												<Border Grid.Column="1"
+														Background="{DynamicResource SurfaceHeader}"
+														CornerRadius="20"
+														Padding="8,3"
+														VerticalAlignment="Top">
 													<TextBlock Text="{Binding DuurMinuten, StringFormat='{}{0} min'}"
-															   FontSize="11"
-															   Foreground="{StaticResource TextSecondary}"/>
+															   Classes="caption"/>
 												</Border>
 											</Grid>
 										</Border>
@@ -469,39 +343,106 @@
 							<Border IsVisible="{Binding !TakenVanDag.Count}"
 									Padding="0,8,0,8">
 								<TextBlock Text="Geen taken gepland voor deze dag."
-										   FontSize="12"
-										   Foreground="{StaticResource TextMuted}"
+										   Classes="caption"
 										   HorizontalAlignment="Center"/>
 							</Border>
 
 							<Rectangle Classes="Divider" Margin="0,4,0,14"/>
 
+							<!-- ══ PLAN REGELS (contextueel) ══ -->
+
+							<!-- No-werkbon hint -->
+							<Border IsVisible="{Binding GeenWerkBon}"
+									Background="{DynamicResource InfoBg}"
+									BorderBrush="{DynamicResource InfoBorder}"
+									BorderThickness="1"
+									CornerRadius="8"
+									Padding="14,12"
+									Margin="0,0,0,16">
+								<StackPanel Orientation="Horizontal" Spacing="10">
+									<TextBlock Text="📋" Classes="h3" VerticalAlignment="Center"/>
+									<TextBlock Text="Open planning vanuit een werkbon om regels te kunnen plannen."
+											   Classes="label"
+											   Foreground="{DynamicResource InfoText}"
+											   TextWrapping="Wrap"
+											   VerticalAlignment="Center"/>
+								</StackPanel>
+							</Border>
+
+							<!-- Werkbon regels panel -->
+							<StackPanel IsVisible="{Binding HeeftWerkBon}"
+										Spacing="10"
+										Margin="0,0,0,16">
+								<TextBlock Text="WERKBON REGELS" Classes="caption" FontWeight="SemiBold"/>
+
+								<ListBox ItemsSource="{Binding RegelsVanWerkBon}"
+										 Background="{DynamicResource SurfaceMutedAlt}"
+										 CornerRadius="8"
+										 Padding="8">
+									<ListBox.ItemTemplate>
+										<DataTemplate>
+											<Border Padding="6,5"
+													Margin="0,2"
+													CornerRadius="6"
+													Cursor="Hand">
+												<StackPanel Orientation="Horizontal" Spacing="10">
+													<CheckBox IsChecked="{Binding IsSelected}"
+															  VerticalAlignment="Center"/>
+													<TextBlock Text="{Binding Label}"
+															   Classes="label"
+															   TextWrapping="Wrap"
+															   VerticalAlignment="Center"/>
+												</StackPanel>
+											</Border>
+										</DataTemplate>
+									</ListBox.ItemTemplate>
+								</ListBox>
+
+								<Button Content="Plan geselecteerde regels"
+										Command="{Binding PlanGeselecteerdeRegelsCommand}"
+										Classes="AccentBtn"
+										Padding="12,8"
+										HorizontalAlignment="Stretch"
+										HorizontalContentAlignment="Center"/>
+
+								<!-- US-21: aparte datum per inlijsting -->
+								<Button Content="Plan per regel (aparte datums)"
+										Command="{Binding PlanPerRegelCommand}"
+										Classes="GhostBtn"
+										HorizontalAlignment="Stretch"
+										HorizontalContentAlignment="Center"/>
+							</StackPanel>
+
+							<Rectangle Classes="Divider" Margin="0,0,0,14"/>
+
 							<!-- ══ WEEKDETAIL ══ -->
 							<StackPanel Spacing="10">
 								<DockPanel>
-									<TextBlock Text="WEEKDETAIL" Classes="SectionLabel" VerticalAlignment="Center"/>
+									<TextBlock Text="WEEKDETAIL" Classes="caption" FontWeight="SemiBold" VerticalAlignment="Center"/>
 									<Button DockPanel.Dock="Right"
 											Content="🖨 Weeklijst"
 											Command="{Binding OpenWeekWerkLijstCommand}"
 											Classes="GhostBtn"/>
 								</DockPanel>
 
-								<Border Background="{StaticResource BgElevated}"
-										BorderBrush="{StaticResource BorderSubtle}"
+								<Border Background="{DynamicResource SurfaceMutedAlt}"
+										BorderBrush="{DynamicResource BorderSubtle}"
 										BorderThickness="1"
-										CornerRadius="{StaticResource RadiusMd}"
+										CornerRadius="8"
 										Padding="12,10">
 									<StackPanel Spacing="8">
 
 										<!-- Row count badge -->
 										<StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,4">
-											<Border Background="{StaticResource AccentBlueDim}"
+											<Border Background="{DynamicResource InfoBg}"
+													BorderBrush="{DynamicResource InfoBorder}"
+													BorderThickness="1"
 													CornerRadius="20"
 													Padding="10,3">
 												<TextBlock Text="{Binding WeekRows.Count, StringFormat='{}{0} regels'}"
-														   FontSize="11"
+														   Classes="caption"
 														   FontWeight="SemiBold"
-														   Foreground="{StaticResource AccentBlue}"/>
+														   Foreground="{DynamicResource InfoText}"/>
 											</Border>
 										</StackPanel>
 
@@ -511,11 +452,10 @@
 												HorizontalAlignment="Center">
 											<StackPanel Spacing="6" HorizontalAlignment="Center">
 												<TextBlock Text="📋"
-														   FontSize="24"
+														   Classes="h2"
 														   HorizontalAlignment="Center"/>
 												<TextBlock Text="Geen regels voor deze week"
-														   FontSize="12"
-														   Foreground="{StaticResource TextMuted}"
+														   Classes="caption"
 														   HorizontalAlignment="Center"/>
 											</StackPanel>
 										</Border>
@@ -524,13 +464,13 @@
 										<StackPanel IsVisible="{Binding WeekRows.Count}" Spacing="4">
 
 											<!-- Column headers -->
-											<Grid ColumnDefinitions="40,1.2*,1.2*,*,*,44" ColumnSpacing="4" Margin="0,0,0,4">
-												<TextBlock Text="Bon"      Classes="SectionLabel" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="1" Text="Klant"    Classes="SectionLabel" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="2" Text="Afmeting" Classes="SectionLabel" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="3" Text="Lijst"    Classes="SectionLabel" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="4" Text="Dag"      Classes="SectionLabel" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="5" Text="Duur"     Classes="SectionLabel" TextTrimming="CharacterEllipsis"/>
+											<Grid ColumnDefinitions="48,1.2*,1.2*,*,*,48" ColumnSpacing="4" Margin="0,0,0,4">
+												<TextBlock Text="Bon"      Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="1" Text="Klant"    Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="2" Text="Afmeting" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="3" Text="Lijst"    Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="4" Text="Dag"      Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="5" Text="Duur"     Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
 											</Grid>
 
 											<Rectangle Classes="Divider"/>
@@ -539,17 +479,19 @@
 											<ListBox ItemsSource="{Binding WeekRows}" MaxHeight="300">
 												<ListBox.ItemTemplate>
 													<DataTemplate>
-														<Border Background="{StaticResource BgCard}"
-																CornerRadius="{StaticResource RadiusSm}"
-																Padding="0,7"
+														<Border Background="{DynamicResource Surface}"
+																BorderBrush="{DynamicResource BorderSubtle}"
+																BorderThickness="1"
+																CornerRadius="6"
+																Padding="6,7"
 																Margin="0,2">
-															<Grid ColumnDefinitions="40,1.2*,1.2*,*,*,44" ColumnSpacing="4">
-																<TextBlock Text="{Binding BonNr}"     FontSize="12" TextTrimming="CharacterEllipsis"/>
-																<TextBlock Grid.Column="1" Text="{Binding KlantNaam}" FontSize="12" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding KlantNaam}"/>
-																<TextBlock Grid.Column="2" Text="{Binding Afmeting}"  FontSize="12" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Afmeting}"/>
-																<TextBlock Grid.Column="3" Text="{Binding Lijst}"     FontSize="12" Foreground="{StaticResource TextSecondary}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Lijst}"/>
-																<TextBlock Grid.Column="4" Text="{Binding Dag}"       FontSize="11" Foreground="{StaticResource TextMuted}" TextTrimming="CharacterEllipsis"/>
-																<TextBlock Grid.Column="5" Text="{Binding DuurMin, StringFormat='{}{0}m'}" FontSize="12" TextTrimming="CharacterEllipsis"/>
+															<Grid ColumnDefinitions="48,1.2*,1.2*,*,*,48" ColumnSpacing="4">
+																<TextBlock Text="{Binding BonNr}"     Classes="label" TextTrimming="CharacterEllipsis"/>
+																<TextBlock Grid.Column="1" Text="{Binding KlantNaam}" Classes="label" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding KlantNaam}"/>
+																<TextBlock Grid.Column="2" Text="{Binding Afmeting}"  Classes="label" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Afmeting}"/>
+																<TextBlock Grid.Column="3" Text="{Binding Lijst}"     Classes="label" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Lijst}"/>
+																<TextBlock Grid.Column="4" Text="{Binding Dag}"       Classes="caption" TextTrimming="CharacterEllipsis"/>
+																<TextBlock Grid.Column="5" Text="{Binding DuurMin, StringFormat='{}{0}m'}" Classes="label" TextTrimming="CharacterEllipsis"/>
 															</Grid>
 														</Border>
 													</DataTemplate>
@@ -561,15 +503,25 @@
 								</Border>
 							</StackPanel>
 
-							<Rectangle Classes="Divider" Margin="0,14,0,8"/>
+							<Rectangle Classes="Divider" Margin="0,14,0,14"/>
 
-							<!-- ══ SLUITEN KNOP (onderaan panel) ══ -->
-							<Button Content="← Sluiten"
-									Classes="MainBtn"
-									HorizontalAlignment="Stretch"
-									HorizontalContentAlignment="Center"
-									Margin="0,0,0,4"
-									Click="SluitButton_Click"/>
+							<!-- ══ DAG/WEEK BLOKKEREN (uitzonderingsactie, onderaan) ══ -->
+							<StackPanel Spacing="6" Margin="0,0,0,8">
+								<TextBlock Text="BLOKKEREN" Classes="caption" FontWeight="SemiBold"/>
+								<TextBox Watermark="Reden (optioneel)..."
+										 Text="{Binding BlokkeerReden, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+										 IsVisible="{Binding !IsGeselecteerdeDagGeblokkeerd}"/>
+								<WrapPanel>
+									<Button Content="{Binding BlokkeerDagButtonText}"
+											Command="{Binding ToggleBlokkeerDagCommand}"
+											Classes="DangerBtn"
+											Margin="0,0,8,6"/>
+									<Button Content="🔒 Blokkeer/deblokkeer week"
+											Command="{Binding ToggleBlokkeerWeekCommand}"
+											Classes="DangerBtn"
+											Margin="0,0,0,6"/>
+								</WrapPanel>
+							</StackPanel>
 
 						</StackPanel>
 					</ScrollViewer>
@@ -578,11 +530,11 @@
 
 		</Grid>
 
-		<!-- ══════════════ TOAST OVERLAY ══════════════ -->
+		<!-- ══════════════ TOAST OVERLAY (bovenaan, zoals WeekWerkLijst) ══════════════ -->
 		<ItemsControl ItemsSource="{Binding ToastMessages}"
 					  HorizontalAlignment="Center"
-					  VerticalAlignment="Center"
-					  Margin="0"
+					  VerticalAlignment="Top"
+					  Margin="0,84,0,0"
 					  IsHitTestVisible="False">
 			<ItemsControl.ItemsPanel>
 				<ItemsPanelTemplate>
@@ -592,16 +544,16 @@
 			<ItemsControl.ItemTemplate>
 				<DataTemplate>
 					<Border Padding="14,10"
-							CornerRadius="{StaticResource RadiusMd}"
+							CornerRadius="8"
 							Background="{Binding BackgroundBrush}"
-							BorderBrush="{StaticResource BorderMed}"
+							BorderBrush="{DynamicResource BrandDark}"
 							BorderThickness="1"
 							MinWidth="220"
 							MaxWidth="340">
 						<TextBlock Text="{Binding Message}"
-								   Foreground="White"
+								   Classes="body"
+								   Foreground="{DynamicResource TextOnDark}"
 								   FontWeight="SemiBold"
-								   FontSize="13"
 								   TextWrapping="Wrap"/>
 					</Border>
 				</DataTemplate>
