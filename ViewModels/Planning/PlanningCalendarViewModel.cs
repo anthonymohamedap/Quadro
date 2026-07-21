@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
@@ -208,21 +207,12 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
     }
 
     // ───────── TILE SELECTION ─────────
-
-    private static IBrush ComputeTileBorder(DateTime date, bool isSelected)
-    {
-        if (isSelected) return new SolidColorBrush(Color.Parse("#F5C242"));
-        if (date.Date == DateTime.Today) return Brushes.DeepSkyBlue;
-        return new SolidColorBrush(Color.FromRgb(70, 70, 70));
-    }
+    // Alleen status; de selectie-styling (gele rand) zit in AXAML.
 
     private void UpdateTileSelection(DateTime selectedDate)
     {
         foreach (var tile in MonthDays)
-        {
             tile.IsSelected = tile.Date.Date == selectedDate.Date;
-            tile.Border = ComputeTileBorder(tile.Date, tile.IsSelected);
-        }
     }
 
     // ───────── REGELS VAN WERKBON ─────────
@@ -414,7 +404,12 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
         var firstOfMonth = new DateTime(Year, Month, 1);
         int offset = ((int)firstOfMonth.DayOfWeek + 6) % 7;
         var start = firstOfMonth.AddDays(-offset);
-        var end = start.AddDays(35);
+
+        // Aantal cellen dynamisch (5 óf 6 weken): een maand die laat in de week
+        // start en 30/31 dagen telt, beslaat 6 kalenderweken — bij vaste 35
+        // cellen vielen de laatste dagen weg.
+        int totalCells = (int)Math.Ceiling((offset + DateTime.DaysInMonth(Year, Month)) / 7.0) * 7;
+        var end = start.AddDays(totalCells);
 
         var taken = await db.WerkTaken
             .Where(t => t.GeplandVan >= start && t.GeplandVan < end)
@@ -432,7 +427,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
         WeekSummaries.Clear();
         DayRows.Clear();
 
-        for (int i = 0; i < 35; i++)
+        for (int i = 0; i < totalCells; i++)
         {
             var date = start.AddDays(i);
             var dagTaken = taken.Where(t => t.GeplandVan.Date == date.Date).ToList();
@@ -440,37 +435,15 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             var isGeblokkeerd = _geblokkeerd.Contains(date.Date);
             var util = isGeblokkeerd ? 1.0 : Math.Clamp((double)used / CapaciteitMinuten, 0, 1);
 
-            var kleur = isGeblokkeerd
-                ? new SolidColorBrush(Color.Parse("#DC2626"))
-                : util switch
-                {
-                    <= 0.5 => Brushes.LimeGreen,
-                    <= 0.75 => Brushes.Goldenrod,
-                    <= 0.9 => Brushes.OrangeRed,
-                    _ => (IBrush)Brushes.Red
-                };
-
             bool isVandaag = date.Date == DateTime.Today;
             bool isAndereMaand = date.Month != Month;
             bool isWeekend = date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
-
-            IBrush bg =
-                isGeblokkeerd
-                    ? new SolidColorBrush(Color.FromArgb(180, 60, 10, 10))
-                    : isVandaag
-                        ? new SolidColorBrush(Color.FromRgb(35, 45, 70))
-                        : isAndereMaand
-                            ? new SolidColorBrush(Color.FromRgb(30, 30, 30))
-                            : isWeekend
-                                ? new SolidColorBrush(Color.FromRgb(40, 40, 40))
-                                : Brushes.Transparent;
-
             bool isSelected = date.Date == SelectedDate.Date;
 
             string busyLabel;
             if (isGeblokkeerd)
             {
-                busyLabel = _geblokkeerdMetReden.TryGetValue(date.Date, out var reden) && !string.IsNullOrWhiteSpace(reden) ? $"🚫 {reden}" : "🚫 Geblokkeerd";
+                busyLabel = _geblokkeerdMetReden.TryGetValue(date.Date, out var reden) && !string.IsNullOrWhiteSpace(reden) ? reden : "Geblokkeerd";
             }
             else
             {
@@ -482,12 +455,12 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             MonthDays.Add(new DayTile
             {
                 Date = date,
-                DayNumber = isGeblokkeerd ? $"🚫 {date.Day}" : date.Day.ToString(),
+                DayNumber = date.Day.ToString(),
                 BusyLabel = busyLabel,
                 Busy = util,
-                BusyColor = kleur,
-                Background = bg,
-                Border = ComputeTileBorder(date, isSelected),
+                IsToday = isVandaag,
+                IsWeekend = isWeekend,
+                IsOtherMonth = isAndereMaand,
                 IsSelected = isSelected,
                 IsGeblokkeerd = isGeblokkeerd
             });
@@ -499,7 +472,6 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
                 Datum = date.Date,
                 Uren = used / 60,
                 Minuten = used % 60,
-                Kleur = kleur,
                 IsGeblokkeerd = isGeblokkeerd
             });
         }
@@ -524,8 +496,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             {
                 Title = $"Week {ISOWeek.GetWeekOfYear(weekStart)}",
                 Range = $"{weekStart:dd/MM} - {weekEnd.AddDays(-1):dd/MM}",
-                TotalLabel = label,
-                Color = Brushes.LightGray
+                TotalLabel = label
             });
             weekStart = weekEnd;
         }
