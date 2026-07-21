@@ -26,7 +26,7 @@
 
             <!-- FILTER-BALK -->
             <Border Grid.Row="1" Background="{DynamicResource Surface}" Padding="16,10"
-                    BoxShadow="0 1 4 0 #14000000">
+                    BoxShadow="{StaticResource ShadowBar}">
                 <WrapPanel>
                     <TextBox Watermark="Zoek op klant, offerte-nr, reden…"
                              MinWidth="220"
@@ -55,7 +55,7 @@
             <Grid Grid.Row="2">
                 <!-- Spinner -->
                 <Border IsVisible="{Binding IsBezig}"
-                        Background="#80FFFFFF"
+                        Background="{DynamicResource OverlayLight}"
                         ZIndex="10">
                     <TextBlock Text="Laden…"
                                HorizontalAlignment="Center"
@@ -81,7 +81,7 @@
                                     CornerRadius="8"
                                     Margin="0,4"
                                     Padding="16,12"
-                                    BoxShadow="0 1 4 0 #18000000">
+                                    BoxShadow="{StaticResource ShadowCard}">
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                     <StackPanel Grid.Column="0" Spacing="4">
 
@@ -161,7 +161,7 @@
         <!-- ══════════════════ DETAIL OVERLAY ══════════════════ -->
         <!-- Donkere achtergrond -->
         <Border IsVisible="{Binding IsDetailOpen}"
-                Background="#80000000"
+                Background="{DynamicResource OverlayDim}"
                 ZIndex="50"/>
 
         <!-- Detail-paneel (schuift in van rechts) -->
@@ -170,7 +170,7 @@
                 HorizontalAlignment="Right"
                 Width="480"
                 Background="{DynamicResource Surface}"
-                BoxShadow="-4 0 16 0 #30000000">
+                BoxShadow="{StaticResource ShadowPanel}">
 
             <Grid RowDefinitions="Auto,*,Auto">
 
@@ -355,7 +355,7 @@
 
                 <!-- Actie-knoppen onderaan -->
                 <Border Grid.Row="2" Padding="20,14" Background="{DynamicResource SurfaceMutedAlt}"
-                        BoxShadow="0 -1 4 0 #10000000">
+                        BoxShadow="{StaticResource ShadowTopEdge}">
                     <StackPanel Spacing="8">
                         <!-- Niet hersteld: herstel-knop tonen -->
                         <Button Content="Herstel als nieuwe offerte (Concept)"
