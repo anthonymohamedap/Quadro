@@ -91,6 +91,7 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
         IAuthService auth)
     {
         _auth = auth;
+        MagPrijzenWijzigen = _auth.HeeftPermissie(QuadroApp.Service.Security.Permissie.PrijzenWijzigen);
         _dbFactory = dbFactory;
         _nav = nav;
         _dialogs = dialogs;
@@ -310,6 +311,13 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
     {
         if (GeselecteerdeLijst is null) return;
 
+        // US-32: lijst bewerken omvat prijsvelden -> rol-afhankelijk
+        if (!_auth.HeeftPermissie(QuadroApp.Service.Security.Permissie.PrijzenWijzigen))
+        {
+            _toast.Warning("Onvoldoende rechten om lijsten (incl. prijzen) te wijzigen.");
+            return;
+        }
+
         try
         {
             IsBusy = true;
@@ -408,6 +416,9 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
     }
 
     private readonly IAuthService _auth;
+
+    /// <summary>UI-hint: verberg prijs-/bewerkacties voor wie geen rechten heeft (guard blijft in SaveAsync).</summary>
+    public bool MagPrijzenWijzigen { get; }
 
     [RelayCommand(CanExecute = nameof(CanDelete))]
     private async Task DeleteAsync()
@@ -520,7 +531,7 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
     [RelayCommand]
     private async Task BulkPrijsUpdateAsync()
     {
-        var vm = new BulkLijstenViewModel(_dbFactory, _validator, _toast)
+        var vm = new BulkLijstenViewModel(_dbFactory, _validator, _toast, _auth)
         {
             RefreshRequested = async () => await LoadAsync()
         };

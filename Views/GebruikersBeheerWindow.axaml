@@ -1,0 +1,126 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:QuadroApp.ViewModels.Gebruikers"
+        xmlns:db="clr-namespace:QuadroApp.Model.DB"
+        x:Class="QuadroApp.Views.GebruikersBeheerWindow"
+        x:DataType="vm:GebruikersBeheerViewModel"
+        Title="Gebruikersbeheer"
+        Width="720" Height="560"
+        MinWidth="620" MinHeight="480"
+        CanResize="True"
+        WindowStartupLocation="CenterOwner">
+
+	<Grid RowDefinitions="Auto,*,Auto,Auto" Margin="16">
+
+		<TextBlock Grid.Row="0" Classes="h2" Text="Gebruikers" Margin="0,0,0,12"/>
+
+		<!-- Gebruikerslijst -->
+		<Border Grid.Row="1" Classes="Card">
+			<ScrollViewer>
+				<ItemsControl ItemsSource="{Binding Gebruikers}">
+					<ItemsControl.ItemTemplate>
+						<DataTemplate x:DataType="db:Gebruiker">
+							<Grid ColumnDefinitions="*,*,Auto,Auto,Auto" Margin="8,6">
+								<StackPanel Grid.Column="0" Spacing="2">
+									<TextBlock Classes="body" Text="{Binding GebruikersNaam}"
+											   FontWeight="SemiBold"
+											   TextTrimming="CharacterEllipsis"
+											   ToolTip.Tip="{Binding GebruikersNaam}"/>
+									<TextBlock Classes="caption" Text="{Binding VolledigeNaam}"
+											   TextTrimming="CharacterEllipsis"
+											   ToolTip.Tip="{Binding VolledigeNaam}"/>
+								</StackPanel>
+								<TextBlock Grid.Column="1" Classes="caption"
+										   VerticalAlignment="Center"
+										   Text="{Binding LaatsteLogin, StringFormat='Laatste login: {0:dd-MM-yyyy HH:mm}'}"
+										   TextTrimming="CharacterEllipsis"/>
+								<TextBlock Grid.Column="2" Classes="label"
+										   VerticalAlignment="Center" Margin="8,0"
+										   Text="{Binding Rol}"/>
+								<TextBlock Grid.Column="3" Classes="label"
+										   VerticalAlignment="Center" Margin="8,0"
+										   Text="Inactief"
+										   Foreground="{DynamicResource Danger}"
+										   IsVisible="{Binding !IsActief}"/>
+								<Button Grid.Column="4" Classes="GhostBtn"
+										VerticalAlignment="Center"
+										Content="Activeer/Deactiveer"
+										Command="{Binding $parent[Window].((vm:GebruikersBeheerViewModel)DataContext).ToggleActiefCommand}"
+										CommandParameter="{Binding}"/>
+							</Grid>
+						</DataTemplate>
+					</ItemsControl.ItemTemplate>
+				</ItemsControl>
+			</ScrollViewer>
+		</Border>
+
+		<!-- Rechten-overzicht: wat mag welke rol -->
+		<Expander Grid.Row="2" Margin="0,12,0,0"
+				  Header="Wat mag welke rol?">
+			<Border Classes="Card" Margin="0,8,0,0">
+				<StackPanel Spacing="4">
+					<Grid ColumnDefinitions="*,80,100" Margin="8,0,8,4">
+						<TextBlock Grid.Column="0" Classes="label" Text="Actie"/>
+						<TextBlock Grid.Column="1" Classes="label" Text="Admin" HorizontalAlignment="Center"/>
+						<TextBlock Grid.Column="2" Classes="label" Text="Medewerker" HorizontalAlignment="Center"/>
+					</Grid>
+					<ItemsControl ItemsSource="{Binding RechtenOverzicht}">
+						<ItemsControl.ItemTemplate>
+							<DataTemplate x:DataType="vm:RechtRij">
+								<Grid ColumnDefinitions="*,80,100" Margin="8,3">
+									<TextBlock Grid.Column="0" Classes="body"
+											   Text="{Binding Actie}"
+											   TextTrimming="CharacterEllipsis"
+											   ToolTip.Tip="{Binding Actie}"/>
+									<TextBlock Grid.Column="1" Classes="body"
+											   HorizontalAlignment="Center" FontWeight="SemiBold"
+											   Text="{Binding AdminTeken}"
+											   Foreground="{DynamicResource Success}"/>
+									<TextBlock Grid.Column="2" Classes="body"
+											   HorizontalAlignment="Center" FontWeight="SemiBold"
+											   Text="{Binding MedewerkerTeken}"
+											   Foreground="{DynamicResource Success}"
+											   IsVisible="{Binding Medewerker}"/>
+									<TextBlock Grid.Column="2" Classes="body"
+											   HorizontalAlignment="Center" FontWeight="SemiBold"
+											   Text="{Binding MedewerkerTeken}"
+											   Foreground="{DynamicResource Danger}"
+											   IsVisible="{Binding !Medewerker}"/>
+								</Grid>
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+					</ItemsControl>
+					<TextBlock Classes="caption" Margin="8,4,8,0" TextWrapping="Wrap"
+							   Text="Dit overzicht wordt rechtstreeks uit de autorisatieregels van de app opgebouwd en is dus altijd actueel."/>
+				</StackPanel>
+			</Border>
+		</Expander>
+
+		<!-- Nieuwe gebruiker -->
+		<Border Grid.Row="3" Classes="Card" Margin="0,12,0,0">
+			<StackPanel Spacing="8">
+				<TextBlock Classes="label" Text="Nieuwe gebruiker"/>
+				<Grid ColumnDefinitions="*,*,*,Auto,Auto" ColumnSpacing="8">
+					<TextBox Grid.Column="0" Watermark="Gebruikersnaam"
+							 Text="{Binding NieuweGebruikersnaam}"/>
+					<TextBox Grid.Column="1" Watermark="Volledige naam"
+							 Text="{Binding NieuweVolledigeNaam}"/>
+					<TextBox Grid.Column="2" Watermark="Initieel wachtwoord (min. 8)"
+							 PasswordChar="●"
+							 Text="{Binding InitieelWachtwoord}"/>
+					<CheckBox Grid.Column="3" Content="Admin"
+							  VerticalAlignment="Center"
+							  IsChecked="{Binding NieuweIsAdmin}"/>
+					<Button Grid.Column="4" Classes="AccentBtn" Content="Aanmaken"
+							Command="{Binding MaakGebruikerCommand}"/>
+				</Grid>
+				<TextBlock Classes="caption" Foreground="{DynamicResource Danger}"
+						   Text="{Binding Foutmelding}" TextWrapping="Wrap"
+						   IsVisible="{Binding Foutmelding, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+				<TextBlock Classes="caption" Foreground="{DynamicResource Success}"
+						   Text="{Binding Succesmelding}" TextWrapping="Wrap"
+						   IsVisible="{Binding Succesmelding, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+			</StackPanel>
+		</Border>
+	</Grid>
+</Window>

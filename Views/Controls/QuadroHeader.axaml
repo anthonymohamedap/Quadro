@@ -5,8 +5,21 @@
              x:CompileBindings="False">
 
     <!-- Herbruikbare Quadro-header: donkere balk met links het logo + QUADRO +
-         de view-titel, en rechts (verticaal gecentreerd) een optionele Terug-knop. -->
-    <Border Background="#444A50" Height="70">
+         de view-titel, en rechts (verticaal gecentreerd) een optionele Terug-knop.
+         Typografie hier lokaal als style-classes (wordmark heeft geen theme-equivalent). -->
+    <UserControl.Styles>
+        <Style Selector="TextBlock.brandTitle">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextOnDark}"/>
+        </Style>
+        <Style Selector="TextBlock.brandSub">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedOnDark}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Border Background="{DynamicResource BrandDark}" Height="70">
         <DockPanel Margin="20,0" LastChildFill="True">
 
             <Button DockPanel.Dock="Right"
@@ -14,9 +27,7 @@
                     Command="{Binding BackCommand, ElementName=Root}"
                     IsVisible="{Binding ShowBackButton, ElementName=Root}"
                     VerticalAlignment="Center"
-                    Background="#F5C242"
-                    Foreground="#222"
-                    FontWeight="Bold"
+                    Classes="AccentBtn"
                     CornerRadius="8"
                     Padding="12,6"/>
 
@@ -25,17 +36,16 @@
                         HorizontalAlignment="Left"
                         Spacing="12">
 
-                <Ellipse Width="35" Height="35" Fill="#F5C242"/>
+                <Ellipse Width="35" Height="35" Fill="{DynamicResource BrandYellow}"/>
 
                 <TextBlock Text="QUADRO"
-                           Foreground="White"
-                           FontWeight="Bold"
-                           FontSize="20"
+                           Classes="brandTitle"
                            VerticalAlignment="Center"/>
 
                 <TextBlock Text="{Binding Title, ElementName=Root}"
-                           Foreground="#CCC"
-                           FontSize="13"
+                           Classes="brandSub"
+                           TextTrimming="CharacterEllipsis"
+                           ToolTip.Tip="{Binding Title, ElementName=Root}"
                            VerticalAlignment="Center"/>
             </StackPanel>
         </DockPanel>

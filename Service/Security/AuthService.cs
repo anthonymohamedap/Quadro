@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -100,6 +101,66 @@ public sealed class AuthService : IAuthService
 
         CurrentUser = user;
         _logger.LogInformation("[Auth] Wachtwoord gewijzigd voor '{User}'.", user.GebruikersNaam);
+        return null;
+    }
+
+    public async Task<System.Collections.Generic.List<Gebruiker>> GetGebruikersAsync()
+    {
+        VereisPermissie(Permissie.GebruikersBeheren);
+        await using var db = await _factory.CreateDbContextAsync();
+        return await db.Gebruikers.OrderBy(g => g.GebruikersNaam).ToListAsync();
+    }
+
+    public async Task<string?> MaakGebruikerAsync(string gebruikersNaam, string volledigeNaam, GebruikersRol rol, string initieelWachtwoord)
+    {
+        VereisPermissie(Permissie.GebruikersBeheren);
+
+        gebruikersNaam = gebruikersNaam?.Trim() ?? "";
+        if (gebruikersNaam.Length < 2) return "Gebruikersnaam moet minstens 2 tekens lang zijn.";
+        if (string.IsNullOrWhiteSpace(volledigeNaam)) return "Volledige naam is verplicht.";
+        if (string.IsNullOrWhiteSpace(initieelWachtwoord) || initieelWachtwoord.Length < 8)
+            return "Initieel wachtwoord moet minstens 8 tekens lang zijn.";
+
+        await using var db = await _factory.CreateDbContextAsync();
+        if (await db.Gebruikers.AnyAsync(g => g.GebruikersNaam == gebruikersNaam))
+            return "Deze gebruikersnaam bestaat al.";
+
+        db.Gebruikers.Add(new Gebruiker
+        {
+            GebruikersNaam = gebruikersNaam,
+            VolledigeNaam = volledigeNaam.Trim(),
+            WachtwoordHash = PasswordHasher.Hash(initieelWachtwoord),
+            Rol = rol,
+            IsActief = true,
+            MoetWachtwoordWijzigen = true
+        });
+        await db.SaveChangesAsync();
+        _logger.LogInformation("[Auth] Gebruiker '{User}' aangemaakt (rol: {Rol}) door '{Door}'.",
+            gebruikersNaam, rol, CurrentUser?.GebruikersNaam);
+        return null;
+    }
+
+    public async Task<string?> ZetActiefAsync(int gebruikerId, bool actief)
+    {
+        VereisPermissie(Permissie.GebruikersBeheren);
+
+        if (!actief && CurrentUser?.Id == gebruikerId)
+            return "Je kan je eigen account niet deactiveren.";
+
+        await using var db = await _factory.CreateDbContextAsync();
+        var user = await db.Gebruikers.FindAsync(gebruikerId);
+        if (user is null) return "Gebruiker niet gevonden.";
+
+        if (!actief && user.Rol == GebruikersRol.Admin)
+        {
+            var actieveAdmins = await db.Gebruikers.CountAsync(g => g.Rol == GebruikersRol.Admin && g.IsActief);
+            if (actieveAdmins <= 1) return "De laatste actieve admin kan niet gedeactiveerd worden.";
+        }
+
+        user.IsActief = actief;
+        await db.SaveChangesAsync();
+        _logger.LogInformation("[Auth] Gebruiker '{User}' {Actie} door '{Door}'.",
+            user.GebruikersNaam, actief ? "geactiveerd" : "gedeactiveerd", CurrentUser?.GebruikersNaam);
         return null;
     }
 
