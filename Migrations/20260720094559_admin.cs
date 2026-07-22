@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace QuadroApp.Migrations
 {
     /// <inheritdoc />
-    public partial class admin : Migration
+    public partial class AddGebruikers : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
