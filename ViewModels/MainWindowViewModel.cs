@@ -93,6 +93,9 @@ namespace QuadroApp.ViewModels
         /// <summary>Auto-lock drempel in minuten.</summary>
         public int LockNaMinuten { get; set; } = 15;
 
+        /// <summary>Gefired na login wanneer het wachtwoord verplicht gewijzigd moet worden (MainWindow opent de dialoog).</summary>
+        public event EventHandler? WachtwoordWijzigenVereist;
+
         public IAsyncRelayCommand LoginCommand { get; }
         public IRelayCommand VergrendelCommand { get; }
 
@@ -148,7 +151,10 @@ namespace QuadroApp.ViewModels
             IsLocked = false;
 
             if (_auth.CurrentUser?.MoetWachtwoordWijzigen == true)
-                _toast.Warning("Wijzig het standaardwachtwoord via Instellingen (verplicht bij eerste gebruik).");
+            {
+                _toast.Warning("Wijzig het standaardwachtwoord (verplicht bij eerste gebruik).");
+                WachtwoordWijzigenVereist?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         private void Vergrendel()

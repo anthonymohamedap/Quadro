@@ -1,0 +1,84 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:QuadroApp.ViewModels.Gebruikers"
+        xmlns:db="clr-namespace:QuadroApp.Model.DB"
+        x:Class="QuadroApp.Views.GebruikersBeheerWindow"
+        x:DataType="vm:GebruikersBeheerViewModel"
+        Title="Gebruikersbeheer"
+        Width="720" Height="560"
+        MinWidth="620" MinHeight="480"
+        CanResize="True"
+        WindowStartupLocation="CenterOwner">
+
+	<Grid RowDefinitions="Auto,*,Auto" Margin="16">
+
+		<TextBlock Grid.Row="0" Classes="h2" Text="Gebruikers" Margin="0,0,0,12"/>
+
+		<!-- Gebruikerslijst -->
+		<Border Grid.Row="1" Classes="Card">
+			<ScrollViewer>
+				<ItemsControl ItemsSource="{Binding Gebruikers}">
+					<ItemsControl.ItemTemplate>
+						<DataTemplate x:DataType="db:Gebruiker">
+							<Grid ColumnDefinitions="*,*,Auto,Auto,Auto" Margin="8,6">
+								<StackPanel Grid.Column="0" Spacing="2">
+									<TextBlock Classes="body" Text="{Binding GebruikersNaam}"
+											   FontWeight="SemiBold"
+											   TextTrimming="CharacterEllipsis"
+											   ToolTip.Tip="{Binding GebruikersNaam}"/>
+									<TextBlock Classes="caption" Text="{Binding VolledigeNaam}"
+											   TextTrimming="CharacterEllipsis"
+											   ToolTip.Tip="{Binding VolledigeNaam}"/>
+								</StackPanel>
+								<TextBlock Grid.Column="1" Classes="caption"
+										   VerticalAlignment="Center"
+										   Text="{Binding LaatsteLogin, StringFormat='Laatste login: {0:dd-MM-yyyy HH:mm}'}"
+										   TextTrimming="CharacterEllipsis"/>
+								<TextBlock Grid.Column="2" Classes="label"
+										   VerticalAlignment="Center" Margin="8,0"
+										   Text="{Binding Rol}"/>
+								<TextBlock Grid.Column="3" Classes="label"
+										   VerticalAlignment="Center" Margin="8,0"
+										   Text="Inactief"
+										   Foreground="{DynamicResource Danger}"
+										   IsVisible="{Binding !IsActief}"/>
+								<Button Grid.Column="4" Classes="GhostBtn"
+										VerticalAlignment="Center"
+										Content="Activeer/Deactiveer"
+										Command="{Binding $parent[Window].((vm:GebruikersBeheerViewModel)DataContext).ToggleActiefCommand}"
+										CommandParameter="{Binding}"/>
+							</Grid>
+						</DataTemplate>
+					</ItemsControl.ItemTemplate>
+				</ItemsControl>
+			</ScrollViewer>
+		</Border>
+
+		<!-- Nieuwe gebruiker -->
+		<Border Grid.Row="2" Classes="Card" Margin="0,12,0,0">
+			<StackPanel Spacing="8">
+				<TextBlock Classes="label" Text="Nieuwe gebruiker"/>
+				<Grid ColumnDefinitions="*,*,*,Auto,Auto" ColumnSpacing="8">
+					<TextBox Grid.Column="0" Watermark="Gebruikersnaam"
+							 Text="{Binding NieuweGebruikersnaam}"/>
+					<TextBox Grid.Column="1" Watermark="Volledige naam"
+							 Text="{Binding NieuweVolledigeNaam}"/>
+					<TextBox Grid.Column="2" Watermark="Initieel wachtwoord (min. 8)"
+							 PasswordChar="●"
+							 Text="{Binding InitieelWachtwoord}"/>
+					<CheckBox Grid.Column="3" Content="Admin"
+							  VerticalAlignment="Center"
+							  IsChecked="{Binding NieuweIsAdmin}"/>
+					<Button Grid.Column="4" Classes="AccentBtn" Content="Aanmaken"
+							Command="{Binding MaakGebruikerCommand}"/>
+				</Grid>
+				<TextBlock Classes="caption" Foreground="{DynamicResource Danger}"
+						   Text="{Binding Foutmelding}" TextWrapping="Wrap"
+						   IsVisible="{Binding Foutmelding, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+				<TextBlock Classes="caption" Foreground="{DynamicResource Success}"
+						   Text="{Binding Succesmelding}" TextWrapping="Wrap"
+						   IsVisible="{Binding Succesmelding, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+			</StackPanel>
+		</Border>
+	</Grid>
+</Window>
