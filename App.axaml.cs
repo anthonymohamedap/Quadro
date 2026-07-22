@@ -206,6 +206,8 @@ public partial class App : Application
         services.AddTransient<FacturenViewModel>();
         services.AddTransient<ExportCenterViewModel>();
         services.AddTransient<InstellingenViewModel>();
+        services.AddTransient<ViewModels.Gebruikers.WachtwoordWijzigViewModel>();
+        services.AddTransient<ViewModels.Gebruikers.GebruikersBeheerViewModel>();
 
         Services = services.BuildServiceProvider();
         _logger = Services.GetRequiredService<ILogger<App>>();
