@@ -57,12 +57,12 @@
                              Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
                     <WrapPanel Grid.Column="1" VerticalAlignment="Center">
-                        <Button Content="➕ Nieuw" Command="{Binding NieuwCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
-                        <Button Content="🗑️ Verwijderen" Command="{Binding DeleteCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
-                        <Button Content="💾 Opslaan" Command="{Binding SaveCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
+                        <Button Content="➕ Nieuw" Command="{Binding NieuwCommand}" Classes="MainBtn" Margin="0,0,6,6" IsVisible="{Binding MagPrijzenWijzigen}"/>
+                        <Button Content="🗑️ Verwijderen" Command="{Binding DeleteCommand}" Classes="MainBtn" Margin="0,0,6,6" IsVisible="{Binding MagPrijzenWijzigen}"/>
+                        <Button Content="💾 Opslaan" Command="{Binding SaveCommand}" Classes="MainBtn" Margin="0,0,6,6" IsVisible="{Binding MagPrijzenWijzigen}"/>
                         <Button Content="🔄 Ververs" Command="{Binding RefreshCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
-                        <Button Content="📥 Excel-import" Command="{Binding ImportExcelCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
-                        <Button Content="🧩 Bulk bijwerken" Command="{Binding BulkPrijsUpdateCommand}" Classes="MainBtn" Margin="0,0,0,6"/>
+                        <Button Content="📥 Excel-import" Command="{Binding ImportExcelCommand}" Classes="MainBtn" Margin="0,0,6,6" IsVisible="{Binding MagPrijzenWijzigen}"/>
+                        <Button Content="🧩 Bulk bijwerken" Command="{Binding BulkPrijsUpdateCommand}" Classes="MainBtn" Margin="0,0,0,6" IsVisible="{Binding MagPrijzenWijzigen}"/>
                     </WrapPanel>
                 </Grid>
 
@@ -288,12 +288,16 @@
 
                             </Grid>
 
-                            <Button Content="Opslaan wijzigingen"
-                                    Command="{Binding SaveCommand}"
-                                    Classes="MainBtn"
-                                    HorizontalAlignment="Right"
-                                    Padding="16,6"
-                                    Margin="0,10,0,0"/>
+                            <StackPanel HorizontalAlignment="Right" Margin="0,10,0,0" Spacing="4">
+                                <Button Content="Opslaan wijzigingen"
+                                        Command="{Binding SaveCommand}"
+                                        Classes="MainBtn"
+                                        Padding="16,6"
+                                        IsVisible="{Binding MagPrijzenWijzigen}"/>
+                                <TextBlock Classes="caption"
+                                           Text="Alleen een beheerder kan lijsten/prijzen wijzigen."
+                                           IsVisible="{Binding !MagPrijzenWijzigen}"/>
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>

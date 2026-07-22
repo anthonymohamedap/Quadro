@@ -75,10 +75,14 @@
                 </Border>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                    <TextBlock Classes="caption" VerticalAlignment="Center"
+                               Text="Prijsinstellingen wijzigen kan alleen een beheerder."
+                               IsVisible="{Binding !MagPrijzenWijzigen}"/>
                     <Button Content="Opslaan"
                             MinWidth="110"
                             Command="{Binding SaveCommand}"
-                            Classes="MainBtn"/>
+                            Classes="MainBtn"
+                            IsVisible="{Binding MagPrijzenWijzigen}"/>
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>

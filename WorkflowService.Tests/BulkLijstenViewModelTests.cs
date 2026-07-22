@@ -22,7 +22,8 @@ public sealed class BulkLijstenViewModelTests
         var lijst1 = await SeedData.AddTypeLijstAsync(factory, "ART-001", leverancierA.Naam);
         var lijst2 = await SeedData.AddTypeLijstAsync(factory, "ART-002", leverancierA.Naam);
 
-        var vm = new BulkLijstenViewModel(factory, validator, toast);
+        var auth = new WorkflowService.Tests.TestInfrastructure.TestAuthService();
+        var vm = new BulkLijstenViewModel(factory, validator, toast, auth);
         await vm.InitializeAsync();
         vm.UpdateSelectedLijsten(vm.FilteredLijsten.Where(x => x.Id == lijst1.Id || x.Id == lijst2.Id));
 
@@ -56,6 +57,30 @@ public sealed class BulkLijstenViewModelTests
     }
 
     [Fact]
+    public async Task ExecuteActionAsync_zonder_prijsrechten_wijzigt_niets()
+    {
+        var factory = DbFactoryBuilder.CreateInMemoryFactory();
+        var validator = new TypeLijstValidator(factory);
+        var toast = new TestToastService();
+
+        var lev = await SeedData.AddLeverancierAsync(factory, "Lev A");
+        var lijst = await SeedData.AddTypeLijstAsync(factory, "ART-001", lev.Naam);
+
+        var auth = new WorkflowService.Tests.TestInfrastructure.TestAuthService { AlleRechten = false };
+        var vm = new BulkLijstenViewModel(factory, validator, toast, auth);
+        await vm.InitializeAsync();
+        vm.UpdateSelectedLijsten(vm.FilteredLijsten.Where(x => x.Id == lijst.Id));
+        vm.SoortVeld.Bijwerken = true;
+        vm.SoortVeld.Waarde = "GEWIJZIGD";
+
+        await vm.ExecuteActionCommand.ExecuteAsync(null);
+
+        await using var db = await factory.CreateDbContextAsync();
+        var na = db.TypeLijsten.Single(x => x.Id == lijst.Id);
+        Assert.NotEqual("GEWIJZIGD", na.Soort); // geweigerd, ongewijzigd
+    }
+
+    [Fact]
     public async Task ExecuteActionAsync_blokkeert_dubbele_artikelnummers_in_batch()
     {
         var factory = DbFactoryBuilder.CreateInMemoryFactory();
@@ -65,7 +90,7 @@ public sealed class BulkLijstenViewModelTests
         var lijst1 = await SeedData.AddTypeLijstAsync(factory, "ART-100");
         var lijst2 = await SeedData.AddTypeLijstAsync(factory, "ART-200");
 
-        var vm = new BulkLijstenViewModel(factory, validator, toast);
+        var vm = new BulkLijstenViewModel(factory, validator, toast, new WorkflowService.Tests.TestInfrastructure.TestAuthService());
         await vm.InitializeAsync();
         vm.UpdateSelectedLijsten(vm.FilteredLijsten.Where(x => x.Id == lijst1.Id || x.Id == lijst2.Id));
 
@@ -99,7 +124,7 @@ public sealed class BulkLijstenViewModelTests
             await db.SaveChangesAsync();
         }
 
-        var vm = new BulkLijstenViewModel(factory, validator, toast);
+        var vm = new BulkLijstenViewModel(factory, validator, toast, new WorkflowService.Tests.TestInfrastructure.TestAuthService());
         await vm.InitializeAsync();
         vm.UpdateSelectedLijsten(vm.FilteredLijsten.Where(x => x.Id == lijst.Id));
 

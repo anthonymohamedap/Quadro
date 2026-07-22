@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
@@ -82,11 +82,15 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
         VasteKostVeld, WerkMinutenVeld, VoorraadMeterVeld, InventarisKostVeld, MinimumVoorraadVeld
     };
 
+    private readonly QuadroApp.Service.Interfaces.IAuthService _auth;
+
     public BulkLijstenViewModel(
         IDbContextFactory<AppDbContext> dbFactory,
         ICrudValidator<TypeLijst> validator,
-        IToastService toast)
+        IToastService toast,
+        QuadroApp.Service.Interfaces.IAuthService auth)
     {
+        _auth = auth;
         _dbFactory = dbFactory;
         _validator = validator;
         _toast = toast;
@@ -198,6 +202,8 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
     [RelayCommand(CanExecute = nameof(CanExecuteBulkAction))]
     private async Task ExecuteActionAsync()
     {
+        if (!HeeftPrijsRechten()) return;
+
         if (SelectedLijsten.Count == 0)
         {
             return;
@@ -232,6 +238,14 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
         {
             IsBusy = false;
         }
+    }
+
+    private bool HeeftPrijsRechten()
+    {
+        if (_auth.HeeftPermissie(QuadroApp.Service.Security.Permissie.PrijzenWijzigen))
+            return true;
+        _toast.Warning("Onvoldoende rechten voor bulk-wijzigingen (prijzen).");
+        return false;
     }
 
     private async Task<bool> VoerBulkUpdateUitAsync()
