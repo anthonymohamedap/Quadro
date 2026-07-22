@@ -1,4 +1,4 @@
-﻿# QuadroApp — Gebruikers, rollen & vergrendeling (US-32)
+# QuadroApp — Gebruikers, rollen & vergrendeling (US-32)
 
 ## Hoe het werkt
 
@@ -32,3 +32,13 @@ Bij de allereerste start (of een lege database) wordt automatisch één beheerde
 - Auto-lock: timer in `MainWindowViewModel`, activiteit gereset via MainWindow events.
 - Wachtwoord wijzigen: verplichte dialoog na eerste login + altijd bereikbaar via Instellingen → Account & beveiliging.
 - Gebruikersbeheer (accounts aanmaken/deactiveren, admin-only): Instellingen → Gebruikersbeheer. Zelf-deactivatie en het deactiveren van de laatste actieve admin zijn geblokkeerd.
+
+## Afdwinging op alle prijs-schrijfpaden (US-32, aangevuld)
+
+Prijzen wijzigen wordt niet alleen op de afwerkingen afgedwongen, maar op **elk** schrijfpad:
+- Lijst bewerken/opslaan (incl. prijsvelden) — `LijstenViewModel.SaveAsync`
+- Bulk-prijsbijwerking — `BulkLijstenViewModel`
+- Globale prijsinstellingen — `InstellingenViewModel.SaveAsync`
+- Afwerkingsopties opslaan — `AfwerkingenViewModel`
+
+De service-/VM-guard (`HeeftPermissie`) is de beveiliging; daarnaast worden de knoppen in de UI verborgen voor wie geen rechten heeft, met een korte uitleg in de plaats.
