@@ -30,4 +30,15 @@ public interface IAuthService
 
     /// <summary>Maakt de standaard admin aan wanneer er nog geen gebruikers bestaan (idempotent).</summary>
     Task SeedDefaultAdminAsync();
+
+    // ── Gebruikersbeheer (vereist Permissie.GebruikersBeheren) ──
+
+    /// <summary>Alle gebruikers (incl. inactieve), voor het beheerscherm.</summary>
+    Task<System.Collections.Generic.List<Gebruiker>> GetGebruikersAsync();
+
+    /// <summary>Maakt een nieuwe gebruiker met initieel wachtwoord (moet gewijzigd worden bij eerste login). Null = ok.</summary>
+    Task<string?> MaakGebruikerAsync(string gebruikersNaam, string volledigeNaam, GebruikersRol rol, string initieelWachtwoord);
+
+    /// <summary>(De)activeert een account. Zelf-deactivatie en het deactiveren van de laatste actieve admin zijn geblokkeerd. Null = ok.</summary>
+    Task<string?> ZetActiefAsync(int gebruikerId, bool actief);
 }

@@ -12,7 +12,7 @@ namespace QuadroApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20260720094559_admin")]
-    partial class admin
+    partial class AddGebruikers
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

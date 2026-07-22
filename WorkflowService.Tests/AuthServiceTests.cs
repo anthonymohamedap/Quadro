@@ -174,6 +174,58 @@ public class AuthServiceTests
     }
 
     [Fact]
+    public async Task MaakGebruiker_ValidatiesEnUniekheid()
+    {
+        await using var db = await DbFactoryBuilder.CreateSqliteAsync();
+        await AddUserAsync(db, "admin", "wachtwoord1", GebruikersRol.Admin);
+        var sut = CreateSut(db);
+        await sut.LoginAsync("admin", "wachtwoord1");
+
+        Assert.NotNull(await sut.MaakGebruikerAsync("x", "Te Kort", GebruikersRol.Medewerker, "wachtwoord9"));  // naam te kort
+        Assert.NotNull(await sut.MaakGebruikerAsync("veerle", "", GebruikersRol.Medewerker, "wachtwoord9"));    // naam verplicht
+        Assert.NotNull(await sut.MaakGebruikerAsync("veerle", "Veerle", GebruikersRol.Medewerker, "kort"));     // ww te kort
+        Assert.Null(await sut.MaakGebruikerAsync("veerle", "Veerle", GebruikersRol.Medewerker, "wachtwoord9"));
+        Assert.NotNull(await sut.MaakGebruikerAsync("veerle", "Dubbel", GebruikersRol.Medewerker, "wachtwoord9")); // uniek
+
+        // Nieuwe gebruiker moet wachtwoord wijzigen bij eerste login
+        var gebruikers = await sut.GetGebruikersAsync();
+        var veerle = Assert.Single(gebruikers, g => g.GebruikersNaam == "veerle");
+        Assert.True(veerle.MoetWachtwoordWijzigen);
+    }
+
+    [Fact]
+    public async Task MaakGebruiker_ZonderPermissie_Weigert()
+    {
+        await using var db = await DbFactoryBuilder.CreateSqliteAsync();
+        await AddUserAsync(db, "mede", "wachtwoord1", GebruikersRol.Medewerker);
+        var sut = CreateSut(db);
+        await sut.LoginAsync("mede", "wachtwoord1");
+
+        await Assert.ThrowsAsync<OnvoldoendeRechtenException>(
+            () => sut.MaakGebruikerAsync("nieuw", "Nieuw", GebruikersRol.Medewerker, "wachtwoord9"));
+        await Assert.ThrowsAsync<OnvoldoendeRechtenException>(() => sut.GetGebruikersAsync());
+    }
+
+    [Fact]
+    public async Task ZetActief_BeschermtZelfEnLaatsteAdmin()
+    {
+        await using var db = await DbFactoryBuilder.CreateSqliteAsync();
+        var admin = await AddUserAsync(db, "admin", "wachtwoord1", GebruikersRol.Admin);
+        var mede = await AddUserAsync(db, "mede", "wachtwoord2", GebruikersRol.Medewerker);
+        var sut = CreateSut(db);
+        await sut.LoginAsync("admin", "wachtwoord1");
+
+        Assert.NotNull(await sut.ZetActiefAsync(admin.Id, false)); // zelf-deactivatie geblokkeerd (tevens laatste admin)
+        Assert.Null(await sut.ZetActiefAsync(mede.Id, false));     // medewerker deactiveren ok
+        Assert.Null(await sut.ZetActiefAsync(mede.Id, true));      // en weer activeren
+
+        // mede kan niet meer inloggen wanneer inactief
+        await sut.ZetActiefAsync(mede.Id, false);
+        var sut2 = CreateSut(db);
+        Assert.NotNull(await sut2.LoginAsync("mede", "wachtwoord2"));
+    }
+
+    [Fact]
     public async Task WijzigWachtwoord_HappyPath_AndWrongCurrent()
     {
         await using var db = await DbFactoryBuilder.CreateSqliteAsync();

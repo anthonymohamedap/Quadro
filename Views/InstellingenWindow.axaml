@@ -56,11 +56,33 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Account & beveiliging -->
+                <Border Classes="Card">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Account &amp; beveiliging" Classes="h2"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Content="Wachtwoord wijzigen"
+                                    Classes="GhostBtn"
+                                    Click="WachtwoordWijzigen_Click"/>
+                            <Button x:Name="GebruikersBeheerKnop"
+                                    Content="Gebruikersbeheer"
+                                    Classes="GhostBtn"
+                                    Click="GebruikersBeheer_Click"/>
+                        </StackPanel>
+                        <TextBlock Text="Gebruikersbeheer is alleen beschikbaar voor beheerders."
+                                   Classes="caption" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                    <TextBlock Classes="caption" VerticalAlignment="Center"
+                               Text="Prijsinstellingen wijzigen kan alleen een beheerder."
+                               IsVisible="{Binding !MagPrijzenWijzigen}"/>
                     <Button Content="Opslaan"
                             MinWidth="110"
                             Command="{Binding SaveCommand}"
-                            Classes="MainBtn"/>
+                            Classes="MainBtn"
+                            IsVisible="{Binding MagPrijzenWijzigen}"/>
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>

@@ -1,0 +1,53 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:QuadroApp.ViewModels.Gebruikers"
+        x:Class="QuadroApp.Views.WachtwoordWijzigDialog"
+        x:DataType="vm:WachtwoordWijzigViewModel"
+        Title="Wachtwoord wijzigen"
+        Width="420" MinWidth="380" MinHeight="360"
+        SizeToContent="Height"
+        CanResize="True"
+        WindowStartupLocation="CenterOwner">
+
+	<Border Classes="Card" Margin="16">
+		<StackPanel Spacing="12">
+			<TextBlock Classes="h2" Text="Wachtwoord wijzigen"/>
+			<TextBlock Classes="caption"
+					   Text="Verplicht bij eerste gebruik van een nieuw account."
+					   IsVisible="{Binding MoetVerplichtWijzigen}"
+					   TextWrapping="Wrap"/>
+
+			<StackPanel Spacing="4">
+				<TextBlock Classes="label" Text="Huidig wachtwoord"/>
+				<TextBox PasswordChar="●" Text="{Binding HuidigWachtwoord}"/>
+			</StackPanel>
+
+			<StackPanel Spacing="4">
+				<TextBlock Classes="label" Text="Nieuw wachtwoord (min. 8 tekens)"/>
+				<TextBox PasswordChar="●" Text="{Binding NieuwWachtwoord}"/>
+			</StackPanel>
+
+			<StackPanel Spacing="4">
+				<TextBlock Classes="label" Text="Bevestig nieuw wachtwoord"/>
+				<TextBox PasswordChar="●" Text="{Binding BevestigWachtwoord}">
+					<TextBox.KeyBindings>
+						<KeyBinding Gesture="Enter" Command="{Binding OpslaanCommand}"/>
+					</TextBox.KeyBindings>
+				</TextBox>
+			</StackPanel>
+
+			<TextBlock Foreground="{DynamicResource Danger}"
+					   Classes="caption"
+					   Text="{Binding Foutmelding}"
+					   TextWrapping="Wrap"
+					   IsVisible="{Binding Foutmelding, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+				<Button Classes="GhostBtn" Content="Annuleren" Click="OnAnnuleren"/>
+				<Button Classes="AccentBtn" Content="Opslaan"
+						Command="{Binding OpslaanCommand}"
+						IsEnabled="{Binding !IsBezig}"/>
+			</StackPanel>
+		</StackPanel>
+	</Border>
+</Window>

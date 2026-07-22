@@ -17,19 +17,6 @@ namespace WorkflowService.Tests;
 [Collection("StaticAuthState")]
 public class GdprServiceTests
 {
-    private sealed class FakeAuth : IAuthService
-    {
-        public bool Toegestaan { get; set; } = true;
-        public Gebruiker? CurrentUser => null;
-        public event EventHandler? CurrentUserChanged { add { } remove { } }
-        public Task<string?> LoginAsync(string g, string w) => Task.FromResult<string?>(null);
-        public void Logout() { }
-        public bool HeeftPermissie(Permissie p) => Toegestaan;
-        public void VereisPermissie(Permissie p) { if (!Toegestaan) throw new OnvoldoendeRechtenException(p); }
-        public Task<string?> WijzigWachtwoordAsync(string h, string n) => Task.FromResult<string?>(null);
-        public Task SeedDefaultAdminAsync() => Task.CompletedTask;
-    }
-
     private static async Task<int> SeedKlantMetDocumentenAsync(SqliteTestDatabase db)
     {
         await using var ctx = await db.Factory.CreateDbContextAsync();
@@ -54,8 +41,8 @@ public class GdprServiceTests
         return klant.Id;
     }
 
-    private static GdprService CreateSut(SqliteTestDatabase db, FakeAuth? auth = null) =>
-        new(db.Factory, auth ?? new FakeAuth(), NullLogger<GdprService>.Instance);
+    private static GdprService CreateSut(SqliteTestDatabase db, TestAuthService? auth = null) =>
+        new(db.Factory, auth ?? new TestAuthService(), NullLogger<GdprService>.Instance);
 
     [Fact]
     public async Task Export_BevatKlantOffertesEnFacturen()
@@ -129,7 +116,7 @@ public class GdprServiceTests
     {
         await using var db = await DbFactoryBuilder.CreateSqliteAsync();
         var id = await SeedKlantMetDocumentenAsync(db);
-        var sut = CreateSut(db, new FakeAuth { Toegestaan = false });
+        var sut = CreateSut(db, new TestAuthService { AlleRechten = false });
 
         await Assert.ThrowsAsync<OnvoldoendeRechtenException>(() => sut.ExporteerKlantAsync(id));
         await Assert.ThrowsAsync<OnvoldoendeRechtenException>(() => sut.AnonimiseerKlantAsync(id));
