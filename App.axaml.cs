@@ -476,8 +476,17 @@ public partial class App : Application
         else
             await InitializeSqliteDatabaseAsync(db);
 
-        // Seed static reference data (idempotent — safe to run on every launch)
-        DbSeeder.SeedDemoData(db);
+        // Referentiedata (afwerkingsgroepen, instellingen) — idempotent, elke start.
+        DbSeeder.SeedReferenceData(db);
+
+        // Demo-/testdata (klanten, leveranciers, demo-lijsten en -prijzen) NOOIT in
+        // productie: een verse installatie moet leeg starten. Alleen in DEBUG-builds of
+        // expliciet via omgevingsvariabele QUADRO_SEED_DEMO=1.
+        if (ShouldSeedDemoData())
+        {
+            DbSeeder.SeedDemoData(db);
+            _logger.LogWarning("[DB] Demo-data geseed (QUADRO_SEED_DEMO / DEBUG). Niet gebruiken in productie.");
+        }
 
         _logger.LogInformation("[DB] Klanten={K}, TypeLijsten={L}, Offertes={O}",
             await db.Klanten.CountAsync(),
@@ -549,6 +558,23 @@ public partial class App : Application
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// Bepaalt of demo-/testdata geseed mag worden. Standaard UIT (productie).
+    /// Aan wanneer omgevingsvariabele QUADRO_SEED_DEMO = 1/true, of in een DEBUG-build.
+    /// </summary>
+    private static bool ShouldSeedDemoData()
+    {
+        var flag = Environment.GetEnvironmentVariable("QUADRO_SEED_DEMO");
+        if (!string.IsNullOrWhiteSpace(flag))
+            return flag.Trim() == "1" || flag.Trim().Equals("true", StringComparison.OrdinalIgnoreCase);
+
+#if DEBUG
+        return true;
+#else
+        return false;
+#endif
     }
 
     /// <summary>US-34: reads the optional Backup section from appsettings.json.</summary>

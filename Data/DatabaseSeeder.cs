@@ -1,4 +1,4 @@
-﻿using QuadroApp.Model.DB;
+using QuadroApp.Model.DB;
 using System;
 using System.Linq;
 
@@ -6,6 +6,52 @@ namespace QuadroApp.Data
 {
     public static class DbSeeder
     {
+        /// <summary>
+        /// Referentiedata die de app nodig heeft om te functioneren — wordt op ELKE
+        /// start (ook in productie) idempotent geseed: afwerkingsgroepen, basis-
+        /// instellingen en een data-heal voor volgnummers. Bevat GEEN demo-/testdata.
+        /// </summary>
+        public static void SeedReferenceData(AppDbContext db)
+        {
+            // AfwerkingsGroepen (G / P / D / O / R) — structurele referentiedata.
+            if (!db.AfwerkingsGroepen.Any())
+            {
+                db.AfwerkingsGroepen.AddRange(
+                    new AfwerkingsGroep { Code = 'G', Naam = "Glas" },
+                    new AfwerkingsGroep { Code = 'P', Naam = "Passe-partout" },
+                    new AfwerkingsGroep { Code = 'D', Naam = "Diepte kern" },
+                    new AfwerkingsGroep { Code = 'O', Naam = "Opkleven" },
+                    new AfwerkingsGroep { Code = 'R', Naam = "Rug" }
+                );
+                db.SaveChanges();
+            }
+
+            // Basis instellingen (nodig voor PricingService).
+            if (!db.Instellingen.Any(i => i.Sleutel == "Uurloon"))
+                db.Instellingen.Add(new Instelling { Sleutel = "Uurloon", Waarde = "45" });
+
+            if (!db.Instellingen.Any(i => i.Sleutel == "BtwPercent"))
+                db.Instellingen.Add(new Instelling { Sleutel = "BtwPercent", Waarde = "21" });
+
+            EnsureInstelling(db, "DefaultWinstFactor", "0");
+            EnsureInstelling(db, "DefaultAfvalPercentage", "0");
+
+            // Fix-up: corrigeer AfwerkingsOpties met binaire control-character volgnummers
+            // ((char)1/2/3 i.p.v. de cijfers '1'/'2'/'3'). Draait idempotent op elke start
+            // zodat bestaande databases geheeld worden.
+            FixVolgnummers(db);
+
+            if (db.ChangeTracker.HasChanges())
+                db.SaveChanges();
+        }
+
+        /// <summary>
+        /// Demo-/testdata: fictieve leveranciers, klanten, lijsten en afwerkingsprijzen.
+        /// NOOIT in productie draaien — een verse productie-installatie moet leeg starten
+        /// zodat Veerle haar echte gegevens invoert/importeert. Wordt door App alleen
+        /// aangeroepen in DEBUG-builds of via de omgevingsvariabele QUADRO_SEED_DEMO=1.
+        /// Vereist dat <see cref="SeedReferenceData"/> al gelopen heeft (afwerkingsgroepen).
+        /// </summary>
         public static void SeedDemoData(AppDbContext db)
         {
             // 1) Leveranciers
@@ -25,7 +71,6 @@ namespace QuadroApp.Data
             int hofId = db.Leveranciers.Single(l => l.Naam == "HOF").Id;
             int fraId = db.Leveranciers.Single(l => l.Naam == "FRA").Id;
             int bolId = db.Leveranciers.Single(l => l.Naam == "BOL").Id;
-
 
             // ==============================
             // 1B) Klanten
@@ -74,26 +119,6 @@ namespace QuadroApp.Data
                 db.SaveChanges();
             }
 
-            // 2) AfwerkingsGroepen (G / P / D / O / R)
-            if (!db.AfwerkingsGroepen.Any())
-            {
-                db.AfwerkingsGroepen.AddRange(
-                    new AfwerkingsGroep { Code = 'G', Naam = "Glas" },
-                    new AfwerkingsGroep { Code = 'P', Naam = "Passe-partout" },
-                    new AfwerkingsGroep { Code = 'D', Naam = "Diepte kern" },
-                    new AfwerkingsGroep { Code = 'O', Naam = "Opkleven" },
-                    new AfwerkingsGroep { Code = 'R', Naam = "Rug" }
-                );
-                db.SaveChanges();
-            }
-
-            int gId = db.AfwerkingsGroepen.Single(g => g.Code == 'G').Id;
-            int pId = db.AfwerkingsGroepen.Single(g => g.Code == 'P').Id;
-            int dId = db.AfwerkingsGroepen.Single(g => g.Code == 'D').Id;
-            int oId = db.AfwerkingsGroepen.Single(g => g.Code == 'O').Id;
-            int rId = db.AfwerkingsGroepen.Single(g => g.Code == 'R').Id;
-
-            // 3) TypeLijsten (jouw 10 records)
             // 3) TypeLijsten
             if (!db.TypeLijsten.Any())
             {
@@ -282,11 +307,19 @@ namespace QuadroApp.Data
 
                 db.SaveChanges();
             }
-            // 4) AfwerkingsOpties (G, P, D, O, R – alle rijen die je stuurde)
+
+            // AfwerkingsGroep-IDs ophalen (referentiedata; door SeedReferenceData geseed).
+            int gId = db.AfwerkingsGroepen.Single(g => g.Code == 'G').Id;
+            int pId = db.AfwerkingsGroepen.Single(g => g.Code == 'P').Id;
+            int dId = db.AfwerkingsGroepen.Single(g => g.Code == 'D').Id;
+            int oId = db.AfwerkingsGroepen.Single(g => g.Code == 'O').Id;
+            int rId = db.AfwerkingsGroepen.Single(g => g.Code == 'R').Id;
+
+            // 4) AfwerkingsOpties (G, P, D, O, R)
             if (!db.AfwerkingsOpties.Any())
             {
                 db.AfwerkingsOpties.AddRange(
-                    // 🪟 GLAS (G) – HOF
+                    // GLAS (G) - HOF
                     new AfwerkingsOptie
                     {
                         AfwerkingsGroepId = gId,
@@ -324,7 +357,7 @@ namespace QuadroApp.Data
                         LeverancierId = hofId
                     },
 
-                    // 🎨 PASSE-PARTOUT (P) – FRA
+                    // PASSE-PARTOUT (P) - FRA
                     new AfwerkingsOptie
                     {
                         AfwerkingsGroepId = pId,
@@ -362,7 +395,7 @@ namespace QuadroApp.Data
                         LeverancierId = fraId
                     },
 
-                    // 🧱 DIEPTE / KERN (D) – BOL
+                    // DIEPTE / KERN (D) - BOL
                     new AfwerkingsOptie
                     {
                         AfwerkingsGroepId = dId,
@@ -400,7 +433,7 @@ namespace QuadroApp.Data
                         LeverancierId = bolId
                     },
 
-                    // 🧷 OPKLEVEN (O) – ICO
+                    // OPKLEVEN (O) - ICO
                     new AfwerkingsOptie
                     {
                         AfwerkingsGroepId = oId,
@@ -438,7 +471,7 @@ namespace QuadroApp.Data
                         LeverancierId = icoId
                     },
 
-                    // 🪵 RUG (R) – FRA
+                    // RUG (R) - FRA
                     new AfwerkingsOptie
                     {
                         AfwerkingsGroepId = rId,
@@ -477,38 +510,6 @@ namespace QuadroApp.Data
                     }
                 );
 
-                db.SaveChanges();
-            }
-
-            // 5) Basis instellingen (optioneel, maar handig voor PricingService)
-            if (!db.Instellingen.Any(i => i.Sleutel == "Uurloon"))
-            {
-                db.Instellingen.Add(new Instelling
-                {
-                    Sleutel = "Uurloon",
-                    Waarde = "45"
-                });
-            }
-
-            if (!db.Instellingen.Any(i => i.Sleutel == "BtwPercent"))
-            {
-                db.Instellingen.Add(new Instelling
-                {
-                    Sleutel = "BtwPercent",
-                    Waarde = "21"
-                });
-            }
-
-            EnsureInstelling(db, "DefaultWinstFactor", "0");
-            EnsureInstelling(db, "DefaultAfvalPercentage", "0");
-
-            // Fix-up: Correct any AfwerkingsOpties that still have binary control-character
-            // volgnummers (char)1/(char)2/(char)3 instead of the digit chars '1'/'2'/'3'.
-            // This patch runs idempotently on every startup so existing databases are healed.
-            FixVolgnummers(db);
-
-            if (db.ChangeTracker.HasChanges())
-            {
                 db.SaveChanges();
             }
         }
