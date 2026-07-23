@@ -99,5 +99,15 @@ namespace QuadroApp.Model.DB
         /// <summary>True = gearchiveerd. Wordt door de globale query filter uitgesloten.</summary>
         public bool IsGearchiveerd { get; set; } = false;
 
+        // ── US-38: optimistic concurrency ───────────────────────────────────────
+        /// <summary>
+        /// Concurrency-token voor voorraadmutaties. Voorraadvelden
+        /// (VoorraadMeter/GereserveerdeVoorraadMeter/InBestellingMeter) worden via
+        /// read-modify-write bijgewerkt; dit token laat EF Core een gelijktijdige
+        /// wijziging detecteren (DbUpdateConcurrencyException) i.p.v. een lost update.
+        /// Op PostgreSQL is dit xmin; op SQLite een BLOB dat door de patcher wordt beheerd.
+        /// </summary>
+        [Timestamp] public byte[]? RowVersion { get; set; }
+
     }
 }

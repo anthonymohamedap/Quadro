@@ -285,6 +285,9 @@ namespace QuadroApp.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("FactuurNummer")
+                        .IsUnique();
+
                     b.HasIndex("OfferteId")
                         .IsUnique();
 
@@ -1016,6 +1019,11 @@ namespace QuadroApp.Migrations
                     b.Property<decimal>("PrijsPerMeter")
                         .HasPrecision(10, 2)
                         .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
 
                     b.Property<string>("Soort")
                         .IsRequired()
