@@ -8,6 +8,7 @@ using QuadroApp.Validation;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using WorkflowService.Tests.TestInfrastructure;
 using Xunit;
 
 namespace WorkflowService.Tests;
@@ -57,7 +58,7 @@ public class AfwerkingenServiceTests
         var eersteId = await SeedAfwerkingAsync(factory, '1', "Blauw");
         var tweedeId = await SeedAfwerkingAsync(factory, '1', "Rood");
 
-        var service = new AfwerkingenService(factory);
+        var service = new AfwerkingenService(factory, new TestAuthService());
 
         await service.SaveOptieAsync(new AfwerkingsOptie
         {

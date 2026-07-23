@@ -11,7 +11,9 @@ public enum Permissie
     PrijzenWijzigen,
     Factureren,
     GebruikersBeheren,
-    GdprBeheer
+    GdprBeheer,
+    ArchiefVerwijderen,
+    KlantVerwijderen
 }
 
 /// <summary>Statische rol → permissie mapping. Admin mag alles.</summary>
