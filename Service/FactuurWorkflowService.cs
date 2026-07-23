@@ -412,7 +412,6 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
 
         var now = DateTime.Today;
         var jaar = now.Year;
-        var volgNr = (await db.Facturen.Where(f => f.Jaar == jaar).MaxAsync(f => (int?)f.VolgNr) ?? 0) + 1;
 
         var btwPct = await LeesBtwPctAsync(db);
         var vrijgesteld = await IsBtwVrijgesteldAsync(db);
@@ -423,8 +422,6 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             OfferteId = offerte.Id,
             WerkBonId = werkBonId,
             Jaar = jaar,
-            VolgNr = volgNr,
-            FactuurNummer = $"{jaar}-{volgNr}",
             DocumentType = "Factuur",
             KlantNaam = BuildKlantNaam(klant),
             KlantAdres = BuildAdres(klant),
@@ -442,8 +439,29 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
 
         HerberekenTotalen(factuur);
 
+        // US-38: nummer-toekenning met retry. De unieke index op (Jaar, VolgNr) /
+        // FactuurNummer laat een gelijktijdige insert falen (DbUpdateException);
+        // in dat geval herberekenen we het volgnummer en proberen opnieuw i.p.v.
+        // stil een duplicaat nummer weg te schrijven.
         db.Facturen.Add(factuur);
-        await db.SaveChangesAsync();
+
+        const int maxPogingen = 5;
+        for (var poging = 1; ; poging++)
+        {
+            factuur.VolgNr = (await db.Facturen.Where(f => f.Jaar == jaar)
+                                               .MaxAsync(f => (int?)f.VolgNr) ?? 0) + 1;
+            factuur.FactuurNummer = $"{jaar}-{factuur.VolgNr}";
+
+            try
+            {
+                await db.SaveChangesAsync();
+                break;
+            }
+            catch (DbUpdateException) when (poging < maxPogingen)
+            {
+                // Nummer is intussen door een andere sessie ingenomen — opnieuw proberen.
+            }
+        }
 
         return factuur;
     }
