@@ -40,10 +40,24 @@ namespace QuadroApp.ViewModels
         /// but can't interact until the DB is ready.
         /// </summary>
         private bool _isInitializing = true;
+        private bool _hasNavigatedHome;
         public bool IsInitializing
         {
             get => _isInitializing;
-            internal set { _isInitializing = value; OnPropertyChanged(); }
+            internal set
+            {
+                _isInitializing = value;
+                OnPropertyChanged();
+
+                // Pas ná DB-initialisatie (migraties + startup-taken) naar Home navigeren.
+                // Anders bevraagt het dashboard de database terwijl migraties nog lopen —
+                // wat crasht met "no such column" op een nog niet-gemigreerde kolom.
+                if (!value && !_hasNavigatedHome)
+                {
+                    _hasNavigatedHome = true;
+                    _ = _nav.NavigateToAsync<HomeViewModel>();
+                }
+            }
         }
 
         /// <summary>
@@ -81,7 +95,7 @@ namespace QuadroApp.ViewModels
             };
             _idleTimer.Start();
 
-            _ = _nav.NavigateToAsync<HomeViewModel>();
+            // Home wordt geopend zodra IsInitializing → false (na DB-init), zie hierboven.
         }
 
         // ══════════════ US-32: login / vergrendeling ══════════════
