@@ -40,7 +40,9 @@ public partial class GebruikersBeheerViewModel : ObservableObject
             [Permissie.LijstVerwijderen] = "Lijsten archiveren/verwijderen",
             [Permissie.LeverancierVerwijderen] = "Leveranciers verwijderen",
             [Permissie.GebruikersBeheren] = "Gebruikers beheren",
-            [Permissie.GdprBeheer] = "GDPR: klantexport & anonimisering"
+            [Permissie.GdprBeheer] = "GDPR: klantexport & anonimisering",
+            [Permissie.ArchiefVerwijderen] = "Archief: offertes permanent verwijderen",
+            [Permissie.KlantVerwijderen] = "Klanten archiveren"
         };
 
         var rijen = new List<RechtRij>
