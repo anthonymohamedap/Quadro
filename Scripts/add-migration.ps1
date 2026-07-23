@@ -22,11 +22,19 @@ if (Test-Path "$env:USERPROFILE\.dotnet\tools") {
     $env:PATH = "$env:USERPROFILE\.dotnet\tools;" + $env:PATH
 }
 
-# dotnet-ef versie moet matchen met EF Core packages (9.0.9)
+# dotnet-ef versie moet exact matchen met de EF Core packages (9.0.9).
+# 'dotnet tool update' weigert een downgrade ("requested version is lower than
+# existing version") wanneer er al een nieuwere dotnet-ef (bv. 10.x) globaal staat.
+# Daarom bij een mismatch verwijderen en op de juiste versie herinstalleren.
 $efVersion = "9.0.9"
 $ef = dotnet tool list --global | Select-String "dotnet-ef"
-if (-not $ef -or ($ef -notmatch [regex]::Escape($efVersion))) {
-    dotnet tool update --global dotnet-ef --version $efVersion
+if (-not $ef) {
+    dotnet tool install --global dotnet-ef --version $efVersion
+    if ($LASTEXITCODE -ne 0) { exit 1 }
+}
+elseif ($ef -notmatch [regex]::Escape($efVersion)) {
+    dotnet tool uninstall --global dotnet-ef | Out-Null
+    dotnet tool install --global dotnet-ef --version $efVersion
     if ($LASTEXITCODE -ne 0) { exit 1 }
 }
 

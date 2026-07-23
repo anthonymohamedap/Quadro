@@ -245,6 +245,10 @@ namespace QuadroApp.Data
 
             b.Entity<Factuur>(entity =>
             {
+                // US-38: FactuurNummer expliciet uniek maken. (Jaar, VolgNr) is al uniek
+                // via het [Index]-attribuut op de klasse; FactuurNummer zelf was dat nog niet.
+                entity.HasIndex(x => x.FactuurNummer).IsUnique();
+
                 entity.Property(x => x.FactuurNummer).HasMaxLength(20).IsRequired();
                 entity.Property(x => x.DocumentType).HasMaxLength(30).IsRequired();
                 entity.Property(x => x.KlantNaam).HasMaxLength(200).IsRequired();
