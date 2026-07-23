@@ -14,10 +14,12 @@ namespace QuadroApp.Service
     public sealed class AfwerkingenService : IAfwerkingenService
     {
         private readonly IDbContextFactory<AppDbContext> _dbFactory;
+        private readonly IAuthService _auth;
 
-        public AfwerkingenService(IDbContextFactory<AppDbContext> dbFactory)
+        public AfwerkingenService(IDbContextFactory<AppDbContext> dbFactory, IAuthService auth)
         {
             _dbFactory = dbFactory;
+            _auth = auth;
         }
 
         public async Task<List<AfwerkingsGroep>> GetGroepenAsync()
@@ -152,6 +154,9 @@ namespace QuadroApp.Service
         /// <inheritdoc/>
         public async Task DeleteOptieAsync(AfwerkingsOptie optie)
         {
+            // P3: afwerkingsopties zijn prijs-masterdata → zelfde recht als prijzen wijzigen.
+            _auth.VereisPermissie(Security.Permissie.PrijzenWijzigen);
+
             await using var db = await _dbFactory.CreateDbContextAsync();
 
             var dbOptie = await db.AfwerkingsOpties.FindAsync(optie.Id);
@@ -210,6 +215,8 @@ namespace QuadroApp.Service
 
         public async Task DeleteVariantAsync(int variantId)
         {
+            _auth.VereisPermissie(Security.Permissie.PrijzenWijzigen);
+
             await using var db = await _dbFactory.CreateDbContextAsync();
             var v = await db.AfwerkingsVarianten.FindAsync(variantId);
             if (v is not null)
