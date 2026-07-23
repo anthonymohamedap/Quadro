@@ -30,6 +30,7 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
     private readonly ICrudValidator<Klant> _validator;
     private readonly IKlantDialogService _klantDialog;
     private readonly IToastService _toast;
+    private readonly IAuthService _auth;
 
     [ObservableProperty] private ObservableCollection<Klant> klanten = new();
     [ObservableProperty] private ObservableCollection<Klant> filteredKlanten = new();
@@ -52,7 +53,8 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
         IDialogService dialogs,
         IKlantDialogService klantDialog,
         KlantImportDefinition klantImportDefinition,
-        IToastService toast)
+        IToastService toast,
+        IAuthService auth)
     {
         _dbFactory = dbFactory ?? throw new ArgumentNullException(nameof(dbFactory));
         _nav = nav ?? throw new ArgumentNullException(nameof(nav));
@@ -61,6 +63,7 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
         _klantImportDefinition = klantImportDefinition ?? throw new ArgumentNullException(nameof(klantImportDefinition));
         _toast = toast;
         _validator = validator;
+        _auth = auth ?? throw new ArgumentNullException(nameof(auth));
     }
     protected async Task<bool> GuardAsync(
     Func<Task<ValidationResult>> validate,
@@ -330,6 +333,13 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
 
         var target = klant ?? SelectedKlant;
         if (target is null) return;
+
+        // P3: klanten archiveren is een beheeractie → alleen met recht.
+        if (!_auth.HeeftPermissie(QuadroApp.Service.Security.Permissie.KlantVerwijderen))
+        {
+            _toast.Warning("Onvoldoende rechten om klanten te archiveren.");
+            return;
+        }
 
         var displayNaam = $"{target.Voornaam} {target.Achternaam}".Trim();
 

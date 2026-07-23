@@ -15,6 +15,7 @@ namespace QuadroApp.Service
     public class OfferteArchiefService : IOfferteArchiefService
     {
         private readonly IDbContextFactory<AppDbContext> _factory;
+        private readonly IAuthService _auth;
         private readonly ILogger<OfferteArchiefService> _logger;
 
         private static readonly JsonSerializerOptions _json = new()
@@ -25,9 +26,11 @@ namespace QuadroApp.Service
 
         public OfferteArchiefService(
             IDbContextFactory<AppDbContext> factory,
+            IAuthService auth,
             ILogger<OfferteArchiefService> logger)
         {
             _factory = factory ?? throw new ArgumentNullException(nameof(factory));
+            _auth    = auth    ?? throw new ArgumentNullException(nameof(auth));
             _logger  = logger  ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -260,6 +263,9 @@ namespace QuadroApp.Service
 
         public async Task VerwijderenAsync(int archiefId)
         {
+            // US-32 / P3: permanent verwijderen uit het archief is onomkeerbaar → alleen met recht.
+            _auth.VereisPermissie(Security.Permissie.ArchiefVerwijderen);
+
             await using var db = await _factory.CreateDbContextAsync();
 
             var archief = await db.OfferteArchieven.FirstOrDefaultAsync(a => a.Id == archiefId)

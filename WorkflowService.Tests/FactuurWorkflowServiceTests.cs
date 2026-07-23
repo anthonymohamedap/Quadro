@@ -92,7 +92,7 @@ public class FactuurWorkflowServiceTests
             new PricingEngine(),
             NullLogger<PricingService>.Instance);
 
-        return new FactuurWorkflowService(factory, pricing);
+        return new FactuurWorkflowService(factory, pricing, new TestAuthService());
     }
 
     private static async Task<int> SeedOfferteAsync(IDbContextFactory<AppDbContext> factory, bool createWerkBon = false, bool zeroOutTotals = false)
