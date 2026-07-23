@@ -14,15 +14,18 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
 {
     private readonly IDbContextFactory<AppDbContext> _factory;
     private readonly IPricingService _pricing;
+    private readonly IAuthService _auth;
 
-    public FactuurWorkflowService(IDbContextFactory<AppDbContext> factory, IPricingService pricing)
+    public FactuurWorkflowService(IDbContextFactory<AppDbContext> factory, IPricingService pricing, IAuthService auth)
     {
         _factory = factory;
         _pricing = pricing;
+        _auth = auth;
     }
 
     public async Task<Factuur> MaakFactuurVanOfferteAsync(int offerteId)
     {
+        _auth.VereisPermissie(Security.Permissie.Factureren);
         await using var db = await _factory.CreateDbContextAsync();
 
         var offerte = await LoadOfferteAsync(db, offerteId);
@@ -31,6 +34,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
 
     public async Task<Factuur> MaakFactuurVanWerkBonAsync(int werkBonId)
     {
+        _auth.VereisPermissie(Security.Permissie.Factureren);
         await using var db = await _factory.CreateDbContextAsync();
 
         var werkbon = await db.WerkBonnen
@@ -82,6 +86,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
 
     public async Task MarkeerKlaarVoorExportAsync(int factuurId)
     {
+        _auth.VereisPermissie(Security.Permissie.Factureren);
         await using var db = await _factory.CreateDbContextAsync();
         var factuur = await db.Facturen.FindAsync(factuurId) ?? throw new InvalidOperationException("Factuur niet gevonden.");
         if (factuur.Status != FactuurStatus.Draft)
@@ -93,6 +98,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
 
     public async Task MarkeerBetaaldAsync(int factuurId)
     {
+        _auth.VereisPermissie(Security.Permissie.Factureren);
         await using var db = await _factory.CreateDbContextAsync();
         var factuur = await db.Facturen.FindAsync(factuurId) ?? throw new InvalidOperationException("Factuur niet gevonden.");
         if (factuur.Status is FactuurStatus.Geannuleerd)
@@ -104,6 +110,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
 
     public async Task SaveDraftAsync(Factuur updated)
     {
+        _auth.VereisPermissie(Security.Permissie.Factureren);
         await using var db = await _factory.CreateDbContextAsync();
         var factuur = await db.Facturen.Include(x => x.Lijnen).FirstOrDefaultAsync(x => x.Id == updated.Id)
             ?? throw new InvalidOperationException("Factuur niet gevonden.");
