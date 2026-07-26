@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
@@ -34,7 +34,7 @@ namespace QuadroApp.Service
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                throw new InvalidOperationException("Voorraad werd intussen gewijzigd. Vernieuw het scherm en probeer opnieuw.", ex);
+                throw new QuadroApp.Service.Concurrency.GelijktijdigeWijzigingException("De voorraad werd intussen door iemand anders gewijzigd. Vernieuw het scherm en probeer opnieuw.", ex);
             }
         }
 
@@ -88,7 +88,7 @@ namespace QuadroApp.Service
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                throw new InvalidOperationException("Voorraad werd intussen gewijzigd. Vernieuw het scherm en probeer opnieuw.", ex);
+                throw new QuadroApp.Service.Concurrency.GelijktijdigeWijzigingException("De voorraad werd intussen door iemand anders gewijzigd. Vernieuw het scherm en probeer opnieuw.", ex);
             }
         }
 
@@ -157,7 +157,7 @@ namespace QuadroApp.Service
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                throw new InvalidOperationException("Voorraad werd intussen gewijzigd. Vernieuw het scherm en probeer opnieuw.", ex);
+                throw new QuadroApp.Service.Concurrency.GelijktijdigeWijzigingException("De voorraad werd intussen door iemand anders gewijzigd. Vernieuw het scherm en probeer opnieuw.", ex);
             }
         }
 
@@ -254,7 +254,7 @@ namespace QuadroApp.Service
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                throw new InvalidOperationException("Bestelling kon niet geplaatst worden omdat de voorraad of bestelling intussen gewijzigd is.", ex);
+                throw new QuadroApp.Service.Concurrency.GelijktijdigeWijzigingException("Bestelling kon niet geplaatst worden: de voorraad of bestelling werd intussen door iemand anders gewijzigd. Vernieuw en probeer opnieuw.", ex);
             }
         }
 
@@ -315,7 +315,7 @@ namespace QuadroApp.Service
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                throw new InvalidOperationException("Bestelling kon niet geplaatst worden omdat de voorraad of bestelling intussen gewijzigd is.", ex);
+                throw new QuadroApp.Service.Concurrency.GelijktijdigeWijzigingException("Bestelling kon niet geplaatst worden: de voorraad of bestelling werd intussen door iemand anders gewijzigd. Vernieuw en probeer opnieuw.", ex);
             }
         }
 
@@ -415,7 +415,7 @@ namespace QuadroApp.Service
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                throw new InvalidOperationException("Ontvangst kon niet verwerkt worden omdat de bestelling intussen gewijzigd is.", ex);
+                throw new QuadroApp.Service.Concurrency.GelijktijdigeWijzigingException("Ontvangst kon niet verwerkt worden: de bestelling werd intussen door iemand anders gewijzigd. Vernieuw en probeer opnieuw.", ex);
             }
         }
 
@@ -433,7 +433,7 @@ namespace QuadroApp.Service
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                throw new InvalidOperationException("Bestelling kon niet geannuleerd worden omdat ze intussen gewijzigd is.", ex);
+                throw new QuadroApp.Service.Concurrency.GelijktijdigeWijzigingException("Bestelling kon niet geannuleerd worden: ze werd intussen door iemand anders gewijzigd. Vernieuw en probeer opnieuw.", ex);
             }
         }
 
