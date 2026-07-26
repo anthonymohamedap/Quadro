@@ -54,7 +54,43 @@ Tests: service (filter/paginering/permissie) + JSON-parser. Branch feature/us40-
 .\verify.ps1 groen.
 ```
 
+---
+
+## US-41 · Volledige EF-migraties voor PostgreSQL (Optie C)
+
+**Als** ontwikkelaar **wil ik** dat PostgreSQL hetzelfde EF-migratiesysteem gebruikt als SQLite
+**zodat** schemawijzigingen beheerd en driftvrij zijn, zonder `EnsureCreatedAsync`.
+
+**Achtergrond:** in de 2-PC-release (REL-02, Optie A) draait PostgreSQL op `EnsureCreatedAsync` zonder
+migratiehistorie; optimistic concurrency werkt via `xmin` (zie `AppDbContext.OnModelCreating` en
+`docs/archief/REL02_PG_SCHEMA_ANALYSE.md`). Dat deblokkeert de release maar laat drift-risico op
+toekomstige schemawijzigingen bestaan.
+
+### Acceptatiecriteria
+- PostgreSQL initialiseert via `MigrateAsync` met een provider-passende migratieset.
+- `EnsureCreatedAsync` is uitgefaseerd voor PostgreSQL.
+- Verse PG- en verse SQLite-database leveren een gelijkwaardig eindschema op.
+- Een test/CI-check bewaakt "geen pending model changes" op beide providers.
+- De xmin-concurrency (REL-02) blijft werken; byte[] RowVersion blijft SQLite-only.
+
+### Technische uitwerking
+- Tweede design-time configuratie / migratie-assembly voor Npgsql (de huidige migraties zijn
+  SQLite-smaak met `Sqlite:Autoincrement`-annotaties). Overweeg gescheiden migratiemappen per provider.
+- Vereist een draaiende PostgreSQL om volledig te valideren → plan dit met de PG-server erbij.
+
+⏱ Schatting: L. **Post-release.**
+
+**PROMPT:**
+```
+Voer US-41 uit volgens docs/backlog/UserStories_VervolgFuncties.md en de analyse in
+docs/archief/REL02_PG_SCHEMA_ANALYSE.md. Begin met analyse: hoe zetten we PostgreSQL op echte
+EF-migraties (provider-specifieke migratie-assembly, MigrateAsync, EnsureCreated uitfaseren) met
+behoud van de xmin-concurrency? Lever een voorstel en wacht op akkoord. Vereist een draaiende
+PostgreSQL voor validatie. Branch feature/us41-pg-ef-migrations.
+```
+
 ### Status
 | Story | Onderwerp | Prioriteit | Status |
 |---|---|---|---|
 | US-40 | Audit-leesscherm in de app | Medium (na release) | ⬜ |
+| US-41 | Volledige EF-migraties voor PostgreSQL | Medium (na release) | ⬜ |
