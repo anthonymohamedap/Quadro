@@ -275,7 +275,7 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
     [RelayCommand]
     private void Nieuw()
     {
-        var nieuwe = new TypeLijst { LaatsteUpdate = DateTime.Now };
+        var nieuwe = new TypeLijst { LaatsteUpdate = DateTime.UtcNow };
         GeselecteerdeLijst = nieuwe;
         SelectedLeverancier = null;
         IsDetailOpen = true;
@@ -326,7 +326,7 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
             GeselecteerdeLijst.LeverancierId = SelectedLeverancier?.Id ?? GeselecteerdeLijst.LeverancierId;
             GeselecteerdeLijst.Artikelnummer = (GeselecteerdeLijst.Artikelnummer ?? string.Empty).Trim();
             GeselecteerdeLijst.Soort = (GeselecteerdeLijst.Soort ?? string.Empty).Trim();
-            GeselecteerdeLijst.LaatsteUpdate = DateTime.Now;
+            GeselecteerdeLijst.LaatsteUpdate = DateTime.UtcNow;
 
             bool isNieuw = GeselecteerdeLijst.Id == 0;
 
