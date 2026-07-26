@@ -84,6 +84,29 @@ public class FactuurWorkflowServiceTests
         Assert.Equal(25m, lijn.TotaalIncl);
     }
 
+    [Fact]
+    public async Task Meerprijs_zit_in_totaal_maar_niet_als_zichtbare_regel()
+    {
+        await using var dbScope = await DbFactoryBuilder.CreateSqliteAsync();
+        var factory = dbScope.Factory;
+        var offerteId = await SeedOfferteAsync(factory, meerPrijsIncl: 50m);
+        var sut = CreateSut(factory);
+
+        var factuur = await sut.MaakFactuurVanOfferteAsync(offerteId);
+
+        // De meerprijs-regel bestaat wél in de data (zodat het totaal klopt),
+        // maar wordt op de bestelbon-PDF én in de preview niet getoond (US-26).
+        var meerprijsLijn = factuur.Lijnen.SingleOrDefault(
+            l => l.Omschrijving.Equals("Meerprijs", StringComparison.OrdinalIgnoreCase));
+        Assert.NotNull(meerprijsLijn);
+
+        // Het bedrag zit verrekend in het eindtotaal: totaal incl. bevat de 50 meerprijs.
+        var totaalVanZichtbareLijnen = factuur.Lijnen
+            .Where(l => !l.Omschrijving.Equals("Meerprijs", StringComparison.OrdinalIgnoreCase))
+            .Sum(l => l.TotaalIncl);
+        Assert.Equal(totaalVanZichtbareLijnen + meerprijsLijn!.TotaalIncl, factuur.TotaalInclBtw);
+    }
+
     private static FactuurWorkflowService CreateSut(IDbContextFactory<AppDbContext> factory)
     {
         var pricing = new PricingService(
@@ -95,7 +118,7 @@ public class FactuurWorkflowServiceTests
         return new FactuurWorkflowService(factory, pricing, new TestAuthService());
     }
 
-    private static async Task<int> SeedOfferteAsync(IDbContextFactory<AppDbContext> factory, bool createWerkBon = false, bool zeroOutTotals = false)
+    private static async Task<int> SeedOfferteAsync(IDbContextFactory<AppDbContext> factory, bool createWerkBon = false, bool zeroOutTotals = false, decimal meerPrijsIncl = 0m)
     {
         await using var db = await factory.CreateDbContextAsync();
 
@@ -118,6 +141,7 @@ public class FactuurWorkflowServiceTests
             TotaalInclBtw = 121m,
             SubtotaalExBtw = 100m,
             BtwBedrag = 21m,
+            MeerPrijsIncl = meerPrijsIncl,
             Regels =
             {
                 new OfferteRegel
