@@ -74,6 +74,17 @@ Voor een correcte werking op een gedeelde (mogelijk UTC-)PostgreSQL-server geldt
 Vuistregel bij nieuwe code: een *moment in de tijd* → `DateTime.UtcNow`; een *dag op de kalender*
 die een mens invoert/leest → `DateTime.Today` (lokaal).
 
+**Npgsql timestamp-gedrag (belangrijk):** in `Program.Main` staat
+`AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true)`. Daardoor koppelt Npgsql
+`DateTime` aan `timestamp without time zone` (wall-clock, géén tijdzone-conversie) i.p.v. het moderne
+`timestamp with time zone` dat `Kind=Utc` afdwingt. Dit is nodig omdat de app lokale kalenderdatums
+(`Kind=Local/Unspecified`) én UTC-gebeurtenistijdstippen door elkaar opslaat — dat kan niet op een
+`timestamptz`-kolom. Met de switch gedraagt Postgres zich net als SQLite. **Gevolg voor het schema:**
+DateTime-kolommen worden `timestamp without time zone`. Een database die vóór deze fix met
+`EnsureCreated` is aangemaakt heeft nog `timestamptz`-kolommen; die moet je één keer opnieuw laten
+aanmaken (leeg schema droppen → app herstart → EnsureCreated). Bij een verse installatie klopt het
+meteen.
+
 ## Probleemoplossing
 
 - App valt terug op SQLite terwijl je Postgres verwacht → controleer of `appsettings.json` naast de exe staat en geldige JSON is.

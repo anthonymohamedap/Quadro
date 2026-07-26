@@ -156,9 +156,55 @@ InUitvoering → Afgewerkt → bestelbon betaald) en behoud van de bestaande voo
 neveneffecten en de optimistic concurrency. Branch feature/us42-statussync. .\verify.ps1 groen.
 ```
 
+## US-43 · Retry-on-failure terugbrengen via execution strategy (PostgreSQL)
+
+**Als** ontwikkelaar **wil ik** dat PostgreSQL weer automatisch herstelt van een korte netwerk-blip
+(retry-on-failure) **zonder** dat de transacties in de app breken **zodat** de 2-PC-opstelling
+veerkrachtiger is bij Wi-Fi-haperingen.
+
+**Achtergrond (gevonden in de dry-run, 26 juli 2026):** `EnableRetryOnFailure`
+(`NpgsqlRetryingExecutionStrategy`) botst met door de gebruiker geopende transacties
+(`db.Database.BeginTransactionAsync`). De app doet dat op **13 plekken**: `ImportService`,
+`StockService` (7×), `OfferteArchiefService` (2×), `WerkBonArchiefService`, `WorkflowService` en de
+import-commit. Met retry aan faalt elk van die met *"The configured execution strategy
+'NpgsqlRetryingExecutionStrategy' does not support user-initiated transactions."* Voor de release is
+`EnableRetryOnFailure` daarom **weggehaald** (zie `App.axaml.cs`) — simpel, lost alle 13 plekken in
+één keer op, laagste risico. Op een bekabeld/LAN-Postgres is transient-retry weinig waard.
+
+### Acceptatiecriteria
+- Retry-on-failure staat weer aan voor PostgreSQL.
+- Alle 13 transactie-sites werken door ze in `db.Database.CreateExecutionStrategy().ExecuteAsync(...)`
+  te wikkelen (de héle transactie als één herhaalbare eenheid).
+- Elke ingepakte transactie is **idempotent/herstelbaar**: bij een retry mag er geen dubbele import,
+  dubbele voorraadmutatie of dubbel factuurnummer ontstaan.
+- Tests per pad die een transient fout simuleren en bevestigen dat de operatie precies één keer landt.
+- SQLite blijft ongewijzigd (geen retry-strategie daar).
+
+### Technische uitwerking
+- Helper op `AppDbContext` of een extension: `ExecuteInTransactionAsync(Func<...> work)` die
+  `CreateExecutionStrategy().ExecuteAsync` combineert met `BeginTransactionAsync` + commit/rollback.
+- De 13 sites één voor één omzetten en testen; let op state die vóór de transactie wordt opgebouwd
+  (moet binnen de retriable lambda opnieuw geldig zijn).
+- Vereist een draaiende PostgreSQL om de retry echt te valideren.
+
+⏱ Schatting: M. **Post-release.**
+
+**PROMPT:**
+```
+Voer US-43 uit volgens docs/backlog/UserStories_VervolgFuncties.md. Zet EnableRetryOnFailure weer aan
+voor PostgreSQL in App.axaml.cs en wikkel alle 13 BeginTransactionAsync-sites (ImportService,
+StockService, OfferteArchiefService, WerkBonArchiefService, WorkflowService) in
+db.Database.CreateExecutionStrategy().ExecuteAsync(...), met een herbruikbare helper. Zorg dat elke
+transactie idempotent is bij een retry (geen dubbele import/voorraad/factuurnummer) en voeg tests toe
+die een transient fout simuleren. Branch feature/us43-retry-execution-strategy. .\verify.ps1 groen.
+```
+
+---
+
 ### Status
 | Story | Onderwerp | Prioriteit | Status |
 |---|---|---|---|
 | US-40 | Audit-leesscherm in de app | Medium (na release) | ⬜ |
 | US-41 | Volledige EF-migraties voor PostgreSQL | Medium (na release) | ⬜ |
 | US-42 | Statussync offerte ↔ werkbon ↔ bestelbon | Hoog (na release) | ⬜ |
+| US-43 | Retry-on-failure via execution strategy | Medium (na release) | ⬜ |
