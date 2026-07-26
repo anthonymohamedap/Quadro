@@ -89,8 +89,76 @@ behoud van de xmin-concurrency? Lever een voorstel en wacht op akkoord. Vereist 
 PostgreSQL voor validatie. Branch feature/us41-pg-ef-migrations.
 ```
 
+---
+
+## US-42 · Statussynchronisatie offerte ↔ werkbon ↔ bestelbon
+
+**Als** gebruiker **wil ik** dat de status van een offerte, haar werkbon en de bijhorende bestelbon
+altijd samenhangen en overal gelijk bijwerken **zodat** ik op elk scherm hetzelfde, kloppende beeld
+van een job zie.
+
+**Achtergrond (geanalyseerd 26 juli 2026, `Service/WorkflowService.cs`):** er zijn drie statusmachines
+die nu maar **half en één-richting** gekoppeld zijn.
+
+Werkt wel (offerte → werkbon):
+- Offerte → *Goedgekeurd*: maakt WerkBon (Gepland) + reserveert voorraad.
+- Offerte → *Geannuleerd*: archiveert werkbon + geeft voorraad vrij.
+- WerkBon → *Afgewerkt*: verbruikt voorraad + maakt de bestelbon (factuur) aan.
+
+Ontbreekt (terugkoppeling naar de offerte):
+1. WerkBon → *InUitvoering* zet de offerte niet op *InProductie*.
+2. WerkBon → *Afgewerkt* zet de offerte niet op *Afgewerkt*.
+3. Bestelbon → *Betaald* zet de offerte niet op *Gefactureerd*/*Betaald*.
+
+Gevolg: een offerte kan "Goedgekeurd" tonen terwijl de werkbon "Afgewerkt" is en er een betaalde
+bestelbon bestaat. Elk scherm leest zijn eigen status (`Offerte.Status`, `WerkBon.Status`,
+`Factuur.Status`) → drie beelden van dezelfde job. De offerte-statussen *InProductie / Afgewerkt /
+Gefactureerd / Betaald* worden daardoor bijna nooit bereikt (deels dode enum-waarden).
+
+### Acceptatiecriteria
+- Werkbon- en bestelbon-transities **propageren** naar de offertestatus volgens een vastgelegde mapping:
+  - WerkBon *InUitvoering* → Offerte *InProductie*
+  - WerkBon *Afgewerkt* → Offerte *Afgewerkt*
+  - Bestelbon aangemaakt → Offerte *Gefactureerd* (of bij *Afgewerkt* → *Gefactureerd* zodra de bestelbon bestaat)
+  - Bestelbon *Betaald* → Offerte *Betaald*
+- De propagatie gebeurt in één transactie met de bron-transitie (consistent, geen half-bijgewerkte staat).
+- Bestaande transitievalidatie (`OfferteTransitions`) wordt uitgebreid zodat deze afgeleide overgangen
+  geldig zijn; ongeldige combinaties blijven geblokkeerd.
+- Alle lijsten (offertes, werkbonnen, facturen) tonen na een statuswijziging hetzelfde, actuele beeld
+  (reload/refresh of gedeelde bron).
+- Multi-user veilig: propagatie respecteert de optimistic-concurrency (RowVersion/xmin, REL-02).
+
+### Technische uitwerking
+- **Bron van waarheid:** de werkbon/bestelbon sturen de offertestatus (de offerte "volgt" de productie).
+  Overweeg een afgeleide/berekende status als alternatief, maar expliciet propageren is eenvoudiger te
+  auditen (US-36 logt de wijziging) en te tonen.
+- Centraliseer de mapping in `WorkflowService` (naast `OfferteTransitions`/`WerkBonTransitions`):
+  breid `ChangeWerkBonStatusAsync` en de factuur-transities (`FactuurWorkflowService`:
+  KlaarVoorExport/Betaald + factuur-aanmaak) uit met een `PropageerNaarOfferteAsync(...)`.
+- Let op de bestaande neveneffecten (voorraad verbruiken, bestelbon aanmaken) — die blijven, de
+  offertestatus komt er als extra, transactioneel, bovenop.
+- **Tests:** volledige keten — offerte goedkeuren → werkbon InUitvoering/Afgewerkt → bestelbon betaald,
+  en verifieer dat de offertestatus elke stap correct meebeweegt; plus ongeldige overgangen blijven
+  geblokkeerd.
+
+> **Belangrijk:** dit is een functionele kernwijziging (raakt voorraad + facturatie) — **niet** in de
+> release-branch. Post-release, met de volledige testketen groen.
+
+⏱ Schatting: M–L. **Post-release.**
+
+**PROMPT:**
+```
+Voer US-42 uit volgens docs/backlog/UserStories_VervolgFuncties.md. Begin met een ontwerpanalyse:
+bevestig de statusmapping (werkbon/bestelbon → offerte) en de uitgebreide transitievalidatie, en
+wacht op mijn akkoord. Implementeer daarna in WorkflowService + FactuurWorkflowService de
+transactionele propagatie naar Offerte.Status, met tests over de volledige keten (goedkeuren →
+InUitvoering → Afgewerkt → bestelbon betaald) en behoud van de bestaande voorraad-/factuur-
+neveneffecten en de optimistic concurrency. Branch feature/us42-statussync. .\verify.ps1 groen.
+```
+
 ### Status
 | Story | Onderwerp | Prioriteit | Status |
 |---|---|---|---|
 | US-40 | Audit-leesscherm in de app | Medium (na release) | ⬜ |
 | US-41 | Volledige EF-migraties voor PostgreSQL | Medium (na release) | ⬜ |
+| US-42 | Statussync offerte ↔ werkbon ↔ bestelbon | Hoog (na release) | ⬜ |
