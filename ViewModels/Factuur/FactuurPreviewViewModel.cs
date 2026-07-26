@@ -174,7 +174,11 @@ public partial class FactuurPreviewViewModel : ObservableObject
     private void SyncLijnen()
     {
         Lijnen.Clear();
-        foreach (var lijn in Factuur.Lijnen.OrderBy(x => x.Sortering))
+        // US-26: de "Meerprijs"-regel wordt niet getoond (zoals op de bestelbon-PDF).
+        // De regel blijft wél in Factuur.Lijnen zodat het bedrag in het totaal verrekend blijft.
+        foreach (var lijn in Factuur.Lijnen
+                     .Where(l => !l.Omschrijving.Equals("Meerprijs", StringComparison.OrdinalIgnoreCase))
+                     .OrderBy(x => x.Sortering))
             Lijnen.Add(lijn);
     }
 }
