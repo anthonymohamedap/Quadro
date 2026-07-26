@@ -33,13 +33,19 @@
 - [ ] Firewall PC 1: poort **5432** open voor het lokale netwerk.
 - [ ] Bepaal PC 1's LAN-IP (bv. `ipconfig` → 192.168.1.X) voor de PC 2-config.
 
-## D. Data migreren (eenmalig, SQLite → PostgreSQL)
+## D. Data opzetten (GEEN migratie nodig)
+
+> Bevestigd 26 juli 2026: er is géén bestaande productiedata om te migreren. De enige data zijn de
+> afwerkingsgroepen (referentiedata, worden automatisch aangemaakt) en de lijsten + afwerkingsopties
+> (komen via Excel-import). Klanten/offertes/facturen worden live aangemaakt.
+> **`Scripts/migrate_to_postgres.py` is dus NIET nodig voor deze uitrol.**
 
 - [ ] Start QuadroApp één keer met de PostgreSQL-connection string zodat het schema wordt aangemaakt
-      (`EnsureCreatedAsync`). *(Zie sectie E voor de connection string.)*
-- [ ] Draai `Scripts/migrate_to_postgres.py` om alle data te kopiëren (klanten, offertes, facturen,
-      gebruikers, auditlogs, …). Controleer vooraf dat het script alle huidige tabellen dekt.
-- [ ] Controleer in de app dat alle data zichtbaar en correct is (aantallen klanten/offertes/facturen).
+      (`EnsureCreatedAsync`) en de 5 afwerkingsgroepen (G/P/D/O/R) automatisch worden geseed
+      (`DbSeeder.SeedReferenceData`). *(Zie sectie E voor de connection string.)*
+- [ ] **Lijsten** importeren via de Excel-lijsten-import (unified import-preview → commit).
+- [ ] **Afwerkingsopties** importeren via de afwerking-Excel-import.
+- [ ] Controleer in de app dat lijsten en afwerkingen zichtbaar en correct zijn.
 
 ## E. Configuratie & secrets (PC 1 én PC 2)
 
