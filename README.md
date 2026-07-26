@@ -1,4 +1,4 @@
-# QuadroApp
+# QuadroApp update
 
 Desktop-applicatie voor inlijstwerkplaats **Quadro**: klantbeheer, offertes, werkbonnen, planning, facturatie/bestelbonnen en voorraadbeheer. Draait op Windows en macOS (Apple Silicon), met automatische updates via Velopack.
 
