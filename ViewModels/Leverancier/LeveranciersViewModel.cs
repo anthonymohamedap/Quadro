@@ -444,9 +444,11 @@ public partial class LeveranciersViewModel : AsyncViewModelBase, IAsyncInitializ
             await LoadLeveranciersAsync();
         }
         catch (Exception ex)
-        {
-            _toast.Error($"Verwijderen mislukt: {ex.InnerException?.Message ?? ex.Message}");
-        }
+            {
+                var conflict = QuadroApp.Service.Concurrency.ConcurrencyUx.Melding(ex);
+                if (conflict is not null) _toast.Warning(conflict);
+                else _toast.Error($"Verwijderen mislukt: {ex.InnerException?.Message ?? ex.Message}");
+            }
         finally
         {
             IsBusy = false;
@@ -487,9 +489,11 @@ public partial class LeveranciersViewModel : AsyncViewModelBase, IAsyncInitializ
                 await LoadTypeLijstenForSelectedAsync(SelectedLeverancier);
         }
         catch (Exception ex)
-        {
-            _toast.Error($"Ontvangst mislukt: {ex.InnerException?.Message ?? ex.Message}");
-        }
+            {
+                var conflict = QuadroApp.Service.Concurrency.ConcurrencyUx.Melding(ex);
+                if (conflict is not null) _toast.Warning(conflict);
+                else _toast.Error($"Ontvangst mislukt: {ex.InnerException?.Message ?? ex.Message}");
+            }
         finally
         {
             IsBusy = false;
@@ -511,9 +515,11 @@ public partial class LeveranciersViewModel : AsyncViewModelBase, IAsyncInitializ
                 await LoadTypeLijstenForSelectedAsync(SelectedLeverancier);
         }
         catch (Exception ex)
-        {
-            _toast.Error($"Annuleren mislukt: {ex.InnerException?.Message ?? ex.Message}");
-        }
+            {
+                var conflict = QuadroApp.Service.Concurrency.ConcurrencyUx.Melding(ex);
+                if (conflict is not null) _toast.Warning(conflict);
+                else _toast.Error($"Annuleren mislukt: {ex.InnerException?.Message ?? ex.Message}");
+            }
         finally
         {
             IsBusy = false;
@@ -557,9 +563,11 @@ public partial class LeveranciersViewModel : AsyncViewModelBase, IAsyncInitializ
                 await LoadTypeLijstenForSelectedAsync(SelectedLeverancier);
         }
         catch (Exception ex)
-        {
-            _toast.Error($"Bestelling aanmaken mislukt: {ex.InnerException?.Message ?? ex.Message}");
-        }
+            {
+                var conflict = QuadroApp.Service.Concurrency.ConcurrencyUx.Melding(ex);
+                if (conflict is not null) _toast.Warning(conflict);
+                else _toast.Error($"Bestelling aanmaken mislukt: {ex.InnerException?.Message ?? ex.Message}");
+            }
         finally
         {
             IsBusy = false;

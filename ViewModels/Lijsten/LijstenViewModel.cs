@@ -374,6 +374,13 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
             IsDetailOpen = false;
             GeselecteerdeLijst = null;
         }
+        catch (Exception ex) when (QuadroApp.Service.Concurrency.ConcurrencyUx.Melding(ex) is { } conflict)
+        {
+            // REL-03: iemand anders wijzigde deze lijst intussen — nette melding + herladen.
+            Foutmelding = conflict;
+            _toast.Warning(conflict);
+            await LoadAsync();
+        }
         catch (Exception ex)
         {
             var msg = ex.InnerException?.Message ?? ex.Message;
