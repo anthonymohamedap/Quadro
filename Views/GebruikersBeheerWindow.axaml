@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:QuadroApp.ViewModels.Gebruikers"
         xmlns:db="clr-namespace:QuadroApp.Model.DB"
+        xmlns:conv="clr-namespace:QuadroApp.Converters"
         x:Class="QuadroApp.Views.GebruikersBeheerWindow"
         x:DataType="vm:GebruikersBeheerViewModel"
         Title="Gebruikersbeheer"
@@ -32,7 +33,7 @@
 								</StackPanel>
 								<TextBlock Grid.Column="1" Classes="caption"
 										   VerticalAlignment="Center"
-										   Text="{Binding LaatsteLogin, StringFormat='Laatste login: {0:dd-MM-yyyy HH:mm}'}"
+										   Text="{Binding LaatsteLogin, Converter={x:Static conv:UtcToLocalConverter.Instance}, ConverterParameter='\'Laatste login: \'dd-MM-yyyy HH:mm'}"
 										   TextTrimming="CharacterEllipsis"/>
 								<TextBlock Grid.Column="2" Classes="label"
 										   VerticalAlignment="Center" Margin="8,0"

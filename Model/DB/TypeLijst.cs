@@ -61,7 +61,7 @@ namespace QuadroApp.Model.DB
 
         public TypeLijst()
         {
-            LaatsteUpdate = DateTime.Now;
+            LaatsteUpdate = DateTime.UtcNow;
         }
 
 
