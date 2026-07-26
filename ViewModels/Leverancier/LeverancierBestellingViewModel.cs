@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
@@ -154,9 +154,11 @@ public partial class LeverancierBestellingViewModel : ObservableObject
             await _requestRefresh();
         }
         catch (Exception ex)
-        {
-            _toast.Error($"Bestelling aanmaken mislukt: {ex.InnerException?.Message ?? ex.Message}");
-        }
+            {
+                var conflict = QuadroApp.Service.Concurrency.ConcurrencyUx.Melding(ex);
+                if (conflict is not null) _toast.Warning(conflict);
+                else _toast.Error($"Bestelling aanmaken mislukt: {ex.InnerException?.Message ?? ex.Message}");
+            }
         finally
         {
             _setBusy(false);
@@ -178,9 +180,11 @@ public partial class LeverancierBestellingViewModel : ObservableObject
             await _requestRefresh();
         }
         catch (Exception ex)
-        {
-            _toast.Error($"Ontvangst mislukt: {ex.InnerException?.Message ?? ex.Message}");
-        }
+            {
+                var conflict = QuadroApp.Service.Concurrency.ConcurrencyUx.Melding(ex);
+                if (conflict is not null) _toast.Warning(conflict);
+                else _toast.Error($"Ontvangst mislukt: {ex.InnerException?.Message ?? ex.Message}");
+            }
         finally
         {
             _setBusy(false);
@@ -202,9 +206,11 @@ public partial class LeverancierBestellingViewModel : ObservableObject
             await _requestRefresh();
         }
         catch (Exception ex)
-        {
-            _toast.Error($"Annuleren mislukt: {ex.InnerException?.Message ?? ex.Message}");
-        }
+            {
+                var conflict = QuadroApp.Service.Concurrency.ConcurrencyUx.Melding(ex);
+                if (conflict is not null) _toast.Warning(conflict);
+                else _toast.Error($"Annuleren mislukt: {ex.InnerException?.Message ?? ex.Message}");
+            }
         finally
         {
             _setBusy(false);
