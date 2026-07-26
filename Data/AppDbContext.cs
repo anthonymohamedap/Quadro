@@ -415,7 +415,15 @@ namespace QuadroApp.Data
                     // De byte[]-kolom blijft bestaan (data-import kopieert per kolomnaam) maar is
                     // op PostgreSQL géén token meer; xmin neemt die rol over.
                     et.Property("RowVersion").IsConcurrencyToken(false).ValueGeneratedNever();
-                    et.UseXminAsConcurrencyToken();
+
+                    // Equivalent van Npgsql's UseXminAsConcurrencyToken(), maar via kern-EF API
+                    // zodat het niet afhangt van de extensiemethode: de systeemkolom xmin als
+                    // shadow-property die PostgreSQL bij elke wijziging zelf ophoogt.
+                    et.Property<uint>("xmin")
+                      .HasColumnName("xmin")
+                      .HasColumnType("xid")
+                      .ValueGeneratedOnAddOrUpdate()
+                      .IsConcurrencyToken();
                 }
             }
         }
