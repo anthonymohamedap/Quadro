@@ -54,7 +54,7 @@ public sealed class AuthService : IAuthService
             return "Dit account is gedeactiveerd.";
         }
 
-        user.LaatsteLogin = DateTime.Now;
+        user.LaatsteLogin = DateTime.UtcNow; // event-tijdstip in UTC
         await db.SaveChangesAsync();
 
         CurrentUser = user;

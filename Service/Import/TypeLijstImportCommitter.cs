@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Model.Import;
@@ -65,7 +65,7 @@ public sealed class TypeLijstImportCommitter : IImportCommitter<TypeLijst>
                 parsed.Artikelnummer = artikelnummer;
                 parsed.Levcode = (parsed.Levcode ?? string.Empty).Trim();
                 parsed.Leverancier = leverancier;
-                parsed.LaatsteUpdate = DateTime.Now;
+                parsed.LaatsteUpdate = DateTime.UtcNow;
                 db.TypeLijsten.Add(parsed);
                 existing[artikelnummer] = parsed;
                 inserted++;
@@ -80,7 +80,7 @@ public sealed class TypeLijstImportCommitter : IImportCommitter<TypeLijst>
             current.VoorraadMeter = parsed.VoorraadMeter;
             current.MinimumVoorraad = parsed.MinimumVoorraad;
             current.InventarisKost = parsed.InventarisKost;
-            current.LaatsteUpdate = DateTime.Now;
+            current.LaatsteUpdate = DateTime.UtcNow;
             updated++;
         }
 

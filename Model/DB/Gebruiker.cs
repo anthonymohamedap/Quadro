@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace QuadroApp.Model.DB
@@ -25,7 +25,7 @@ namespace QuadroApp.Model.DB
         /// <summary>True zolang het initiële (door admin gezette) wachtwoord niet gewijzigd is.</summary>
         public bool MoetWachtwoordWijzigen { get; set; } = false;
 
-        public DateTime AangemaaktOp { get; set; } = DateTime.Now;
+        public DateTime AangemaaktOp { get; set; } = DateTime.UtcNow; // event-tijdstip in UTC
         public DateTime? LaatsteLogin { get; set; }
     }
 
