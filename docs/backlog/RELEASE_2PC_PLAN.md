@@ -39,8 +39,10 @@
 
 ## Categorie 1 — Klantwensen (Veerle & Kurt)
 
-> Bron: `docs/backlog/UserStories_VeerleKurt_v2.md`. Deze horen in de release omdat het door de klant
-> gevraagde gedragswijzigingen zijn. Aanbevolen volgorde: US-26 → US-28 → US-27.
+> Bron: `docs/backlog/UserStories_VeerleKurt_v2.md`.
+> **Stand (geverifieerd in code, 26 juli):** US-27 (plandatum = afhaaldatum, `SyncAfhaalDatumNaPlanningAsync`)
+> en US-28 (korting op incl. btw, `HerberekenTotalen`) zijn **al gedaan en gemerged**.
+> **Alleen US-26 staat nog open** — de rest hieronder is ter referentie/afvinken.
 
 ### US-26 · Meerprijs niet meer afdrukken op de bestelbon
 **Als** gebruiker **wil ik** dat een ingegeven meerprijs niet als aparte "Meerprijs"-regel op de
@@ -65,7 +67,10 @@ feature/us26-meerprijs-verbergen met een test die bewijst dat er geen Meerprijs-
 het totaal consistent blijft. Sluit af met .\verify.ps1 groen.
 ```
 
-### US-28 · Korting aftrekken van het bedrag inclusief btw
+### US-28 · Korting aftrekken van het bedrag inclusief btw — ✅ GEDAAN
+> Geïmplementeerd in `Service/FactuurWorkflowService.cs` (`HerberekenTotalen`, regel 288–303):
+> korting op `brutoIncl`, `KortingBedragExcl` bevat het incl.-kortingbedrag. Niets meer te doen.
+
 **Als** gebruiker **wil ik** dat een kortingspercentage van het bedrag **inclusief** btw wordt
 afgetrokken **zodat** de korting rekent zoals met de klant afgesproken.
 
@@ -87,7 +92,10 @@ korting op incl.-btw op branch feature/us28-korting-incl-btw met tests voor: kor
 en BTW-vrijstelling. Let op afronding en de preview in FactuurPreviewWindow. .\verify.ps1 groen.
 ```
 
-### US-27 · Plandatum = afhaaldatum op de bestelbon
+### US-27 · Plandatum = afhaaldatum op de bestelbon — ✅ GEDAAN
+> Geïmplementeerd in `Service/WerkBonWorkflowService.cs` (`SyncAfhaalDatumNaPlanningAsync`, regel 367+),
+> incl. de "laatste werkdag bij spreiding"-regel en propagatie naar `Offerte.AfhaalDatum`. Niets meer te doen.
+
 **Als** gebruiker **wil ik** dat de datum waarop ik een inlijsting in de kalender plan automatisch de
 afhaaldatum op de bestelbon wordt **zodat** ik ze niet dubbel hoef in te geven.
 
@@ -285,8 +293,8 @@ optioneel REL-H1..H5.
 | Stap | Onderwerp | Type | Insp. | Branch | Status |
 |---|---|---|---|---|---|
 | US-26 | Meerprijs niet afdrukken | klantwens | S | `feature/us26-meerprijs-verbergen` | ⬜ |
-| US-28 | Korting op incl. btw | klantwens | M | `feature/us28-korting-incl-btw` | ⬜ |
-| US-27 | Plandatum = afhaaldatum | klantwens | M | `feature/us27-plandatum-afhaaldatum` | ⬜ |
+| US-28 | Korting op incl. btw | klantwens | M | — | ✅ gedaan (in code) |
+| US-27 | Plandatum = afhaaldatum | klantwens | M | — | ✅ gedaan (in code) |
 | REL-01 | DateTime → UtcNow | PG-hardening | M | `fix/datetime-utc-normalization` | ⬜ |
 | REL-02 | PG-schemastrategie | PG-hardening | M–L | `feature/pg-migration-strategy` | ⬜ |
 | REL-03 | Concurrency-conflict-UX | PG-hardening | M | `feature/rel03-concurrency-ux` | ⬜ |
