@@ -41,6 +41,15 @@ publieke API van de VM alleen `FilteredOffertes` toont. Puur netheid, geen funct
 - Geen kapotte bindings (alle `{Binding ...}`-targets bestaan op de VM of het `Offerte`-model).
 - Geen duplicaat-scherm voor de offertelijst gevonden.
 
+### 4. [opgelost] Altijd-lege planningskolommen verwijderd
+De kolommen **Gepland**, **Deadline** en **Tijd (min)** bonden aan `Offerte.GeplandeDatum`,
+`Offerte.DeadlineDatum` en `Offerte.GeschatteMinuten`. Die offerte-*header*-velden worden **nergens
+gevuld**: geen invoer in `OfferteView`, en geen service schrijft ze (enkel zelf-kopieën bij opslaan).
+De echte planning zit op `WerkTaak` (GeplandVan/GeplandTot/DuurMinuten) en de afhaaldatum op
+`OfferteRegel` (US-27). Het waren dus verlaten velden → de kolommen stonden altijd leeg.
+**Opgelost:** de 3 lege kolommen + de dode trailing `Auto`-kolom verwijderd; lijst toont nu
+Nr, Klant, Datum, Status, Totaal incl. De model-velden blijven staan (geen migratie nodig).
+
 ## Aanbeveling
 Alleen **bevinding 1** is de moeite als losse fix (klein, verbetert de betrouwbaarheid: geen stille
 fouten). 2 en 3 zijn optioneel/cosmetisch. Los deze bij voorkeur op als kleine `fix/`-branch ná de
