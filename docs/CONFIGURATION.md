@@ -50,6 +50,17 @@ Logs staan in `%LOCALAPPDATA%\QuadroApp\logs\quadro-JJJJMMDD.log` (macOS: `~/Lib
 
 Geldige niveaus: `Verbose`, `Debug`, `Information` (standaard), `Warning`, `Error`. Onafgevangen crashes staan zowel in het log als in `crash.log`.
 
+## Databaseschema per provider (REL-02)
+
+- **SQLite** (lokaal/single-PC): schema via echte EF-migraties (`SqliteSchemaPatcher` +
+  `MigrateAsync`). Optimistic concurrency via `byte[] RowVersion`.
+- **PostgreSQL** (gedeeld/2-PC): verse install via `EnsureCreatedAsync`; data eenmalig geïmporteerd
+  met `Scripts/migrate_to_postgres.py`. Optimistic concurrency via de systeemkolom **`xmin`**
+  (geconfigureerd in `AppDbContext.OnModelCreating`) — de `byte[] RowVersion` wordt daar géén token.
+- **Beperking:** PostgreSQL heeft nog geen EF-migratiehistorie; toekomstige schemawijzigingen vereisen
+  een verse regeneratie of expliciete patch. Volledige EF-migraties voor PostgreSQL = post-release
+  story US-41 (zie `docs/backlog/UserStories_VervolgFuncties.md`).
+
 ## Tijd & tijdzones (REL-01)
 
 Voor een correcte werking op een gedeelde (mogelijk UTC-)PostgreSQL-server geldt:

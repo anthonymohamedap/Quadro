@@ -400,7 +400,24 @@ namespace QuadroApp.Data
                       .OnDelete(DeleteBehavior.NoAction);
             });
 
-
+            // ── REL-02: provider-specifieke optimistic concurrency ───────────
+            // SQLite: byte[] RowVersion via [Timestamp], beheerd door de patcher — ongewijzigd.
+            // PostgreSQL onderhoudt een bytea-kolom NIET automatisch, dus daar gebruiken we de
+            // systeemkolom xmin als concurrency-token. Zonder dit werkt de US-38 lost-update-
+            // detectie niet op PostgreSQL (byte[] verandert nooit → conflict wordt nooit gezien).
+            // Alleen de entiteiten die op SQLite écht een token hebben ([Timestamp]) krijgen xmin,
+            // zodat het gedrag tussen beide providers identiek blijft.
+            if (Database.IsNpgsql())
+            {
+                foreach (var clrType in new[] { typeof(Factuur), typeof(TypeLijst), typeof(WerkBon) })
+                {
+                    var et = b.Entity(clrType);
+                    // De byte[]-kolom blijft bestaan (data-import kopieert per kolomnaam) maar is
+                    // op PostgreSQL géén token meer; xmin neemt die rol over.
+                    et.Property("RowVersion").IsConcurrencyToken(false).ValueGeneratedNever();
+                    et.UseXminAsConcurrencyToken();
+                }
+            }
         }
         public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
         {
