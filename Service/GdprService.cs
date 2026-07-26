@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -57,7 +57,7 @@ public sealed class GdprService : IGdprService
 
         var export = new
         {
-            ExportDatum = DateTime.Now,
+            ExportDatum = DateTime.Now, // bewust lokaal: menselijk leesbaar "gegenereerd op"-stempel, geen queryveld
             Klant = new
             {
                 klant.Id, klant.Voornaam, klant.Achternaam, klant.Email, klant.Telefoon,
@@ -98,7 +98,7 @@ public sealed class GdprService : IGdprService
         klant.BtwNummer = null;
         klant.Opmerking = null;
         klant.IsGearchiveerd = true;
-        klant.GearchiveerdOp = DateTime.Now;
+        klant.GearchiveerdOp = DateTime.UtcNow; // event-tijdstip in UTC
 
         await db.SaveChangesAsync(); // audit-record van deze wijziging is gewenst
 
@@ -131,7 +131,9 @@ public sealed class GdprService : IGdprService
         if (instelling is not null && int.TryParse(instelling.Waarde, out var jaren) && jaren > 0)
             retentieJaren = jaren;
 
-        var cutoff = DateTime.Now.AddYears(-retentieJaren);
+        // Bewust LOKAAL: de cutoff wordt vergeleken met Offerte.Datum, een lokale
+        // kalenderdatum. UTC gebruiken zou een verkeerde vergelijking geven.
+        var cutoff = DateTime.Today.AddYears(-retentieJaren);
 
         var klanten = await db.Klanten.IgnoreQueryFilters()
             .Where(k => k.Achternaam != null && !k.Achternaam.StartsWith(Geanonimiseerd))

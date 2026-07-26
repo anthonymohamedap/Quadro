@@ -262,7 +262,7 @@ public partial class BulkLijstenViewModel : ObservableObject, IAsyncInitializabl
         foreach (var lijst in lijsten)
         {
             PasBulkVeldenToe(lijst);
-            lijst.LaatsteUpdate = DateTime.Now;
+            lijst.LaatsteUpdate = DateTime.UtcNow;
         }
 
         var batchDuplicaten = lijsten

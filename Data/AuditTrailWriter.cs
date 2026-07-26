@@ -43,7 +43,7 @@ public static class AuditTrailWriter
     public static List<PendingAudit> BuildEntries(ChangeTracker tracker)
     {
         var result = new List<PendingAudit>();
-        var nu = DateTime.Now;
+        var nu = DateTime.UtcNow; // event-tijdstip in UTC
         var gebruiker = AuditContext.CurrentUserName;
 
         // Materialize first: we voegen zelf entries toe aan de context.
