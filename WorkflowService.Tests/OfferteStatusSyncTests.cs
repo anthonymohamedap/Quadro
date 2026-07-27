@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service;
+using QuadroApp.Service.Interfaces;
 using QuadroApp.Service.Pricing;
 using QuadroApp.Service.Toast;
 using System;
