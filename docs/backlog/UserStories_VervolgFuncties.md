@@ -282,6 +282,14 @@ Het is het meest gebruikte dagelijkse scherm.
      voor zover die niet al via `Workflow` bestaan.
    Géén wijziging aan businessregels, commands of bestaande bindings.
 
+> **Samenhang met US-47 (hand in hand).** US-46 en US-47 worden gekoppeld uitgevoerd: de
+> View-redesign en de `OfferteViewModel`-decompositie lopen per fase samen. Concreet: **Fase A** van US-46
+> (prijs-dashboard) gaat samen met de extractie van een `PrijsberekeningViewModel`/`TotalenViewModel`
+> uit US-47 — de nieuwe `ResterendSaldo` en de gebundelde prijsweergave landen meteen in dat sub-VM
+> i.p.v. los in `OfferteViewModel`. Zo verandert Fase A van "strikt View-only" naar "View + gecoördineerde,
+> gedrag-behoudende VM-refactor", gedekt door de bestaande prijs-/workflow-tests (o.a.
+> `PricingEngineTests`, `OffertePricingDraftTests`). Elke fase blijft groen via `verify.ps1` + visuele test.
+
 ### Fasering (elke fase = eigen commit(s), `verify.ps1` + visuele QA, mergebaar los)
 - **Fase A — Overzicht & acties (hoogste waarde, laagste risico).** Sticky compacte samenvatting;
   statusbadge (`Offerte.Status` → kleur/label via converter); prijs-samenvatting bundelen (subtotaal,
@@ -327,6 +335,52 @@ visuele klik-test. Wacht daarna op akkoord voor Fase B.
 
 ---
 
+## US-47 · OfferteViewModel decompositie (god-object opsplitsen) — hand in hand met US-46
+
+**Als** ontwikkelaar **wil ik** `OfferteViewModel` verder opsplitsen in gerichte sub-viewmodels
+**zodat** het scherm onderhoudbaar blijft en de US-46-redesign schoon kan aanhaken, zonder dat er
+businessgedrag verandert.
+
+**Achtergrond (codebase-statistiek 27 juli 2026):** `OfferteViewModel.cs` is met **1.361 regels** het
+grootste handgeschreven bestand en het enige echte "god-object". Het is al deels opgesplitst in
+`KlantSelectieViewModel`, `Regelbeheer` en `Workflow`, maar de **prijs-/totalenlogica** zit er nog in.
+De rest van de codebase (Service/Model/Data/Validatie) is gezond verdeeld — hier valt de enige
+architecturale winst te halen.
+
+> **Koppeling met US-46.** Deze story loopt **hand in hand** met de OfferteView-redesign: de extracties
+> hieronder ondersteunen telkens de bijhorende US-46-fase. Ze delen branch en fasering; niet los uitvoeren.
+
+### Aanpak (gedrag-behoudend, gedekt door bestaande tests)
+- **Stap 1 (samen met US-46 Fase A) — `PrijsberekeningViewModel` / `TotalenViewModel`.**
+  Verplaats de prijs-/totalen-eigenschappen en -berekening (subtotaal, btw, korting, meerprijs, voorschot,
+  totaal + nieuwe `ResterendSaldo`) naar een eigen sub-VM, geëxposeerd op `OfferteViewModel` (zoals
+  `KlantSelectie`/`Regelbeheer` nu). Bindings in de view wijzen naar het sub-VM; commands blijven.
+- **Stap 2 (optioneel, samen met US-46 Fase B/C) — afwerkings-/regeldetailstukken** die nog in het
+  hoofd-VM zitten verhuizen naar `Regelbeheer` of een nieuw `AfwerkingConfiguratieViewModel`, mits dat de
+  redesign vereenvoudigt.
+- Puur **structureel**: geen wijziging aan berekeningen, validaties of commands. Elke stap moet de
+  bestaande suite groen houden (o.a. `PricingEngineTests`, `OffertePricingDraftTests`, `WorkflowServiceTests`).
+
+### Acceptatiecriteria
+- `OfferteViewModel` wordt merkbaar kleiner; prijs-/totalenlogica zit in een eigen, getest sub-VM.
+- Geen enkele binding/command breekt; identiek gedrag (zelfde totalen, zelfde workflow).
+- Bestaande tests blijven groen; waar logica verhuist, verhuizen/behouden de tests mee.
+- Geen nieuwe businessregels.
+
+⏱ Schatting: **M**, gefaseerd samen met US-46. **Post-release, na stabiele deployment.**
+
+**PROMPT:**
+```
+Voer US-47 Stap 1 uit, samen met US-46 Fase A, volgens docs/backlog/UserStories_VervolgFuncties.md.
+Extraheer de prijs-/totalenlogica uit OfferteViewModel naar een PrijsberekeningViewModel (sub-VM,
+geëxposeerd zoals KlantSelectie/Regelbeheer), inclusief de berekende ResterendSaldo. Puur structureel,
+gedrag-behoudend: geen wijziging aan berekeningen/commands, alle bindings blijven werken. Houd de
+bestaande tests groen (PricingEngineTests, OffertePricingDraftTests). Branch feature/us46-offerte-fase-a
+(gedeeld met US-46). .\verify.ps1 groen + visuele test.
+```
+
+---
+
 ### Status
 | Story | Onderwerp | Prioriteit | Status |
 |---|---|---|---|
@@ -336,4 +390,5 @@ visuele klik-test. Wacht daarna op akkoord voor Fase B.
 | US-43 | Retry-on-failure via execution strategy | Medium (na release) | ⬜ |
 | US-44 | Export Center → enterprise wizard (View-only) | Medium (na release) | 🟡 branch `feature/us44-export-wizard` (bevat ook export-kolomfixes) — verify + merge nog te doen |
 | US-45 | Facturen als export-dataset | Medium (na release) | ⬜ |
-| US-46 | OfferteView redesign (gefaseerd, ERP-werkruimte) | Hoog (na stabiele deployment) | ⬜ |
+| US-46 | OfferteView redesign (gefaseerd, ERP-werkruimte) | Hoog (na stabiele deployment) | ⬜ · hand in hand met US-47 |
+| US-47 | OfferteViewModel decompositie (god-object) | Hoog (na stabiele deployment) | ⬜ · hand in hand met US-46 |
