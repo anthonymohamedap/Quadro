@@ -30,10 +30,13 @@ public sealed partial class CentralExcelExportService
                 Col("klant", "Klant", "Klant", row => FormatKlant(((Offerte)row).Klant)),
                 Col("datum", "Datum", "Basis", row => FormatDate(((Offerte)row).Datum)),
                 Col("status", "Status", "Basis", row => ((Offerte)row).Status.ToString()),
+                Col("subtotaalExcl", "Subtotaal excl. btw", "Financieel", row => ((Offerte)row).SubtotaalExBtw),
+                Col("btwBedrag", "Btw-bedrag", "Financieel", row => ((Offerte)row).BtwBedrag),
+                Col("kortingPct", "Korting %", "Financieel", row => ((Offerte)row).KortingPct, false),
+                Col("meerprijs", "Meerprijs incl. btw", "Financieel", row => ((Offerte)row).MeerPrijsIncl, false),
                 Col("totaalIncl", "Totaal incl. btw", "Financieel", row => ((Offerte)row).TotaalInclBtw),
-                Col("geplandeDatum", "Geplande datum", "Planning", row => FormatNullableDate(((Offerte)row).GeplandeDatum)),
-                Col("deadline", "Deadline", "Planning", row => FormatNullableDate(((Offerte)row).DeadlineDatum)),
-                Col("geschatteMinuten", "Geschatte minuten", "Planning", row => ((Offerte)row).GeschatteMinuten?.ToString() ?? string.Empty),
+                Col("voorschotBedrag", "Voorschot", "Financieel", row => ((Offerte)row).VoorschotBedrag, false),
+                Col("voorschotBetaald", "Voorschot betaald", "Financieel", row => ((Offerte)row).IsVoorschotBetaald ? "Ja" : "Nee", false),
                 Col("opmerking", "Opmerking", "Administratie", row => ((Offerte)row).Opmerking ?? string.Empty, false)
             ],
             [

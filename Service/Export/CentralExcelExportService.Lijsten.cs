@@ -37,6 +37,7 @@ public sealed partial class CentralExcelExportService
                 Col("winst", "Winstfactor", "Prijs", row => ((TypeLijst)row).WinstFactor?.ToString(CultureInfo.InvariantCulture) ?? string.Empty, false),
                 Col("afval", "Afvalpercentage", "Prijs", row => ((TypeLijst)row).AfvalPercentage?.ToString(CultureInfo.InvariantCulture) ?? string.Empty, false),
                 Col("vasteKost", "Vaste kost", "Prijs", row => ((TypeLijst)row).VasteKost, false),
+                Col("inventarisKost", "Inventariskost", "Prijs", row => ((TypeLijst)row).InventarisKost, false),
                 Col("werkMinuten", "Werkminuten", "Prijs", row => ((TypeLijst)row).WerkMinuten, false),
                 Col("voorraad", "Voorraad", "Voorraad", row => ((TypeLijst)row).VoorraadMeter),
                 Col("gereserveerd", "Gereserveerd", "Voorraad", row => ((TypeLijst)row).GereserveerdeVoorraadMeter),
