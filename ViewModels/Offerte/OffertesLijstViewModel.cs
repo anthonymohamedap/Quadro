@@ -99,7 +99,10 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
         }
         catch (Exception ex)
         {
+            // Fix: laadfouten waren onzichtbaar (Foutmelding was nergens gebonden).
+            // Toon nu een toast, consistent met DeleteAsync.
             Foutmelding = $"Fout bij laden: {ex.Message}";
+            _toast.Error($"Laden van offertes mislukt: {ex.Message}");
         }
         finally { IsBusy = false; }
     }
