@@ -154,6 +154,7 @@ public partial class App : Application
 
         // US-32: authenticatie & autorisatie (singleton — CurrentUser is app-breed)
         services.AddSingleton<IAuthService, AuthService>();
+        services.AddSingleton<IAuditService, AuditService>(); // US-40
 
         // US-34: daily automatic backups (SQLite online-backup API)
         services.AddSingleton<IBackupService>(sp => new BackupService(
@@ -212,6 +213,7 @@ public partial class App : Application
         services.AddTransient<InstellingenViewModel>();
         services.AddTransient<ViewModels.Gebruikers.WachtwoordWijzigViewModel>();
         services.AddTransient<ViewModels.Gebruikers.GebruikersBeheerViewModel>();
+        services.AddTransient<ViewModels.Gebruikers.AuditLogViewModel>();
 
         Services = services.BuildServiceProvider();
         _logger = Services.GetRequiredService<ILogger<App>>();

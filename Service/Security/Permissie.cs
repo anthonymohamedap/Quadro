@@ -13,7 +13,8 @@ public enum Permissie
     GebruikersBeheren,
     GdprBeheer,
     ArchiefVerwijderen,
-    KlantVerwijderen
+    KlantVerwijderen,
+    AuditInzien
 }
 
 /// <summary>Statische rol → permissie mapping. Admin mag alles.</summary>
