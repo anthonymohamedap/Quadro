@@ -241,6 +241,92 @@ export-tests. Branch feature/us45-facturen-export. .\verify.ps1 groen.
 
 ---
 
+## US-46 · OfferteView (Offertebeheer) redesign naar begeleide ERP-werkruimte
+
+**Als** verkoopmedewerker **wil ik** offertes maken en beheren via een gestructureerde, overzichtelijke
+interface **zodat** ik sneller werk, minder fouten maak en de status van een offerte in één oogopslag zie.
+
+**Achtergrond (review 27 juli 2026):** de OfferteView is functioneel het krachtigste scherm van de app,
+maar combineert 11+ workflows op één pagina (klantselectie/-aanmaak, regels, regelbewerking,
+productconfiguratie/afwerkingen, legacy-codes, prijsaanpassingen, berekening, opslaan, factureren,
+planning, totalen). Dat verhoogt de cognitieve last. **Feitelijke omvang:** `Views/OfferteView.axaml`
+≈ 762 regels, `ViewModels/Offerte/OfferteViewModel.cs` ≈ 1361 regels, **101 bindings, 15 commands**.
+Het is het meest gebruikte dagelijkse scherm.
+
+> **Belangrijk (risico):** dit is géén Export-Center-klus. Dit is het kritische kernscherm met 101
+> bindings. Eén subtiel gebroken binding verstoort het dagelijkse werk. Daarom: **gefaseerd**, elke fase
+> apart met `verify.ps1` + visuele klik-test op Windows, en **pas oppakken ná een stabiele 2-PC-deployment**
+> — niet ertussen.
+
+### Gunstige uitgangspunten (uit de review)
+- Code-behind is leeg (geen event-handlers of named controls) → geen verborgen koppeling die breekt.
+- Het ViewModel is al opgesplitst in sub-VM's: `KlantSelectie`, `Regelbeheer`, `Workflow`.
+- Klantselectie heeft al `KlantZoekterm` + `GefilterdeKlanten` (ObservableCollection<Klant>) + `SelectedKlant`
+  → moderne zoekbare selector is grotendeels een View-klus.
+- `Offerte.Status` bestaat en bereikt sinds **US-42** écht de juiste waarden → statusbadge wordt nu zinvol.
+- Financiële modelvelden bestaan: `SubtotaalExBtw`, `BtwBedrag`, `KortingPct`, `MeerPrijsIncl`,
+  `VoorschotBedrag`, `IsVoorschotBetaald`, `TotaalInclBtw`.
+
+### Randvoorwaarden uit het datamodel (NIET leverbaar zoals in de originele story)
+- **Geen status per regel:** `OfferteRegel` heeft geen eigen status; alleen de offerte heeft er een.
+  De "status-indicator per regelkaart" vervalt (of toont hooguit een selectie-/geldigheidsindicator).
+- **Geen thumbnail/preview:** er is geen afbeeldingsdata in het model. De "preview op de regelkaart" vervalt.
+
+### Ontwerpbeslissingen (vooraf vast te leggen)
+1. **Secties i.p.v. harde tabs.** Bij een offerte weeg je klant, regels en prijs voortdurend tegen
+   elkaar af; tabs die inhoud verbergen schaden de workflow. Kies één scrollpagina met duidelijke secties
+   + een **sticky compacte samenvatting** (klant, aantal regels, totaal, afhaaldatum, status).
+2. **Toegestane minimale VM-toevoegingen (read-only, presentatie):**
+   - Berekende property `ResterendSaldo` (= `TotaalInclBtw − VoorschotBedrag`) voor het prijs-dashboard.
+   - Eventueel 1–2 zichtbaarheidsvlaggen voor conditionele acties (Factureren/Bevestigen/Planning),
+     voor zover die niet al via `Workflow` bestaan.
+   Géén wijziging aan businessregels, commands of bestaande bindings.
+
+### Fasering (elke fase = eigen commit(s), `verify.ps1` + visuele QA, mergebaar los)
+- **Fase A — Overzicht & acties (hoogste waarde, laagste risico).** Sticky compacte samenvatting;
+  statusbadge (`Offerte.Status` → kleur/label via converter); prijs-samenvatting bundelen (subtotaal,
+  korting, meerprijs, btw, voorschot, resterend saldo, totaal) i.p.v. versnipperd; footer-actie-hiërarchie
+  (primair **Offerte opslaan**; secundair Berekenen/Regel dupliceren; conditioneel Factureren/Bevestigen/
+  Planning); legacy-code in een inklapbare "Geavanceerd"-sectie.
+- **Fase B — Afwerkingen als kaarten.** Glas/Passe-partout(1&2)/Diepte/Opkleven/Rug elk in een Expander;
+  variant-selector pas tonen/actief wanneer een type gekozen is; minder verticale ruis.
+- **Fase C — Regels & regeldetails.** Regellijst als rijkere kaarten (titel, maat, lijst-type, prijs,
+  selectie-indicator); regeldetail-formulier groeperen in secties (Algemeen / Lijst / Afmetingen / Prijs /
+  Notities).
+- **Fase D — Klantselector-polish.** Zoekbare selector met klantkaarten en snelacties; geselecteerde klant
+  als compacte profielkaart (bouwt op bestaande `KlantZoekterm`/`GefilterdeKlanten`/`SelectedKlant`).
+
+### Acceptatiecriteria
+- Alle 101 bindings en 15 commands blijven werken; geen functionele regressie (business ongewijzigd).
+- Duidelijke workflow-secties + altijd zichtbare compacte samenvatting.
+- Afwerkingen als inklapbare kaarten; varianten enkel zichtbaar na typekeuze.
+- Rijkere regelkaarten (binnen de grenzen van het datamodel) + gegroepeerd regeldetail-formulier.
+- Prijs-dashboard met live waarden incl. resterend saldo.
+- Statusbadge met de offerte-levenscyclus.
+- Legacy in "Geavanceerd"; nette primair/secundair/conditioneel-actie-indeling.
+- Enterprise-UI-regels: MDI-iconen (geen emoji), 8pt-spacing, trimming+tooltips, `{DynamicResource}`-tokens,
+  toetsenbordnavigatie + zichtbare focus, responsive.
+
+### Definition of Done
+Verbeterde informatie-architectuur, minder scrollen, betere hiërarchie, moderne klantselectie, betere
+regelkaarten, professionele actie-indeling, prijs-dashboard, toegankelijkheid — en **nul regressies**,
+per fase geverifieerd op Windows.
+
+⏱ Schatting: **L** (grootste scherm; \~40–50 dev-uur, gefaseerd). **Post-release, na stabiele deployment.**
+
+**PROMPT (per fase uitvoeren, niet in één keer):**
+```
+Voer US-46 FASE A uit volgens docs/backlog/UserStories_VervolgFuncties.md. View-only redesign van
+Views/OfferteView.axaml: sticky compacte samenvatting, statusbadge (Offerte.Status via converter),
+gebundeld prijs-dashboard (incl. berekende ResterendSaldo — enige toegestane VM-toevoeging, read-only),
+footer-actie-hiërarchie (primair Opslaan; secundair Berekenen/Dupliceren; conditioneel Factureren/
+Bevestigen/Planning), legacy in Geavanceerd-Expander. Behoud ALLE bindings/commands; geen businesslogica.
+MDI-iconen, 8pt-spacing, trimming+tooltips. Branch feature/us46-offerte-fase-a. .\verify.ps1 groen +
+visuele klik-test. Wacht daarna op akkoord voor Fase B.
+```
+
+---
+
 ### Status
 | Story | Onderwerp | Prioriteit | Status |
 |---|---|---|---|
@@ -250,3 +336,4 @@ export-tests. Branch feature/us45-facturen-export. .\verify.ps1 groen.
 | US-43 | Retry-on-failure via execution strategy | Medium (na release) | ⬜ |
 | US-44 | Export Center → enterprise wizard (View-only) | Medium (na release) | 🟡 branch `feature/us44-export-wizard` (bevat ook export-kolomfixes) — verify + merge nog te doen |
 | US-45 | Facturen als export-dataset | Medium (na release) | ⬜ |
+| US-46 | OfferteView redesign (gefaseerd, ERP-werkruimte) | Hoog (na stabiele deployment) | ⬜ |
