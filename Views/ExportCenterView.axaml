@@ -7,253 +7,355 @@
              x:DataType="vm:ExportCenterViewModel"
              Background="{DynamicResource SurfaceMuted}">
 
+    <UserControl.Resources>
+        <!-- Professionele iconen (Material Design Icons paths) i.p.v. emoji. -->
+        <StreamGeometry x:Key="IconFolder">M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z</StreamGeometry>
+        <StreamGeometry x:Key="IconOpenFolder">M19,20H4C2.89,20 2,19.1 2,18V6C2,4.89 2.89,4 4,4H10L12,6H19A2,2 0 0,1 21,8H4V18L6.14,10H23.21L20.93,18.5C20.7,19.37 19.92,20 19,20Z</StreamGeometry>
+        <StreamGeometry x:Key="IconFile">M13,9V3.5L18.5,9M6,2C4.89,2 4,2.89 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6Z</StreamGeometry>
+        <StreamGeometry x:Key="IconCheckAll">M0.41,13.41L6,19L7.41,17.58L1.83,12M22.24,5.58L11.66,16.17L7.5,12L6.07,13.41L11.66,19L23.66,7M18,7L16.59,5.58L10.24,11.93L11.66,13.34L18,7Z</StreamGeometry>
+        <StreamGeometry x:Key="IconBroom">M19.36,2.72L20.78,4.14L15.06,9.85C16.13,11.39 16.28,13.24 15.38,14.44L9.06,8.12C10.26,7.22 12.11,7.37 13.65,8.44L19.36,2.72M5.93,17.57C3.92,15.56 2.69,13.16 2.35,10.92L7.23,8.83L14.67,16.27L12.58,21.15C10.34,20.81 7.94,19.58 5.93,17.57Z</StreamGeometry>
+        <StreamGeometry x:Key="IconExport">M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z</StreamGeometry>
+        <StreamGeometry x:Key="IconSearch">M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z</StreamGeometry>
+        <StreamGeometry x:Key="IconInfo">M13,9H11V7H13M13,17H11V11H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z</StreamGeometry>
+    </UserControl.Resources>
+
     <Grid RowDefinitions="Auto,*">
         <controls:QuadroHeader Title="EXPORTCENTER" BackCommand="{Binding GaTerugCommand}"/>
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel Margin="24" Spacing="16">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Configureerbare Excel-export"
-                               Classes="h1"
-                               TextTrimming="CharacterEllipsis"/>
-                    <TextBlock Text="Kies een dataset, pas velden en relaties aan, of start vanuit een Nederlandstalige preset."
-                               Foreground="{DynamicResource TextSecondary}"
-                               TextWrapping="Wrap"/>
-                </StackPanel>
+        <!-- Werkstroom links, sticky exportoverzicht rechts -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,360">
 
-                <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="12" Padding="16">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="Exportmap" Classes="h3" TextTrimming="CharacterEllipsis"/>
-                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                            <TextBox Grid.Column="0"
-                                     MinWidth="160"
-                                     Text="{Binding ExportFolder}"
-                                     IsReadOnly="True"
-                                     Watermark="Selecteer een map"/>
-                            <WrapPanel Grid.Column="1" VerticalAlignment="Center">
-                                <Button Content="📁 Kies map"
-                                        Command="{Binding ChooseExportFolderCommand}"
-                                        Classes="MainBtn"
-                                        Margin="0,0,8,6"/>
-                                <Button Content="✔️ Alles selecteren"
-                                        Command="{Binding SelecteerAlleVeldenCommand}"
-                                        Classes="MainBtn"
-                                        Margin="0,0,8,6"/>
-                                <Button Content="🧹 Wis selectie"
-                                        Command="{Binding WisVeldenCommand}"
-                                        Classes="MainBtn"
-                                        Margin="0,0,0,6"/>
-                            </WrapPanel>
-                        </Grid>
-                        <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap"/>
-                        <TextBlock Text="{Binding LastExportPath, StringFormat='Laatste bestand: {0}'}"
-                                   IsVisible="{Binding HasLastExportPath}"
-                                   Foreground="{DynamicResource TextSecondary}"
-                                   TextWrapping="Wrap"/>
-                        <WrapPanel>
-                            <Button Content="📂 Open exportmap"
-                                    Command="{Binding OpenExportFolderCommand}"
-                                    Classes="MainBtn"
-                                    Margin="0,0,8,6"/>
-                            <Button Content="🗎 Open laatste bestand"
-                                    Command="{Binding OpenLastExportCommand}"
-                                    Classes="MainBtn"
-                                    Margin="0,0,0,6"
-                                    IsVisible="{Binding HasLastExportPath}"/>
-                        </WrapPanel>
+            <!-- ============ WERKSTROOM ============ -->
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="24,24,16,24" Spacing="16">
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Excel-export" Classes="h1" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="Volg de stappen: kies een dataset, verfijn records, velden en relaties, en exporteer rechts."
+                                   Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
                     </StackPanel>
-                </Border>
 
-                <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="12" Padding="16">
-                    <StackPanel Spacing="14">
-                        <TextBlock Text="Exportinstellingen" Classes="h3" TextTrimming="CharacterEllipsis"/>
-
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                            <StackPanel Grid.Column="0" Spacing="6">
-                                <TextBlock Text="Dataset" Classes="label" Foreground="{DynamicResource TextSecondary}"/>
-                                <ComboBox ItemsSource="{Binding BeschikbareDatasets}"
-                                          HorizontalAlignment="Stretch"
-                                          SelectedItem="{Binding SelectedDataset, Mode=TwoWay}">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate x:DataType="sm:ExportDatasetOptie">
-                                            <StackPanel Spacing="2">
-                                                <TextBlock Text="{Binding Naam}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                                <TextBlock Text="{Binding Beschrijving}" Classes="caption" TextWrapping="Wrap"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
+                    <!-- STAP 1: DATASET -->
+                    <Border Classes="StepCard" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="12" Padding="16">
+                        <StackPanel Spacing="12">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource BrandYellow}" VerticalAlignment="Center">
+                                    <TextBlock Text="1" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource BrandDark}"/>
+                                </Border>
+                                <TextBlock Text="Dataset &amp; preset" Classes="h2" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                             </StackPanel>
 
-                            <StackPanel Grid.Column="1" Spacing="6">
-                                <TextBlock Text="Standaardpreset" Classes="label" Foreground="{DynamicResource TextSecondary}"/>
-                                <ComboBox ItemsSource="{Binding BeschikbarePresets}"
-                                          HorizontalAlignment="Stretch"
-                                          SelectedItem="{Binding SelectedPreset, Mode=TwoWay}">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate x:DataType="sm:ExportPresetOptie">
-                                            <StackPanel Spacing="2">
-                                                <TextBlock Text="{Binding Naam}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                                <TextBlock Text="{Binding Beschrijving}" Classes="caption" TextWrapping="Wrap"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                            </StackPanel>
-                        </Grid>
-
-                        <Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="10" Padding="12">
-                            <StackPanel Spacing="6">
-                                <TextBlock Text="{Binding DatasetBeschrijving}" FontWeight="SemiBold" Foreground="{DynamicResource TextHeading}" TextWrapping="Wrap"/>
-                                <TextBlock Text="{Binding GeselecteerdePresetBeschrijving}" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
-                                <TextBlock Text="{Binding GeselecteerdeEntiteitenTekst}" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap"/>
-                                <TextBlock Text="{Binding GeselecteerdeVeldenTekst}" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap"/>
-                                <TextBlock Text="{Binding GeselecteerdeRelatiesTekst}" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Border>
-
-                        <Button Content="📤 Exporteer huidige selectie"
-                                Command="{Binding ExporteerConfiguratieCommand}"
-                                Classes="MainBtn"
-                                HorizontalAlignment="Left"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="12" Padding="16">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="Specifieke records (optioneel)" Classes="h2" TextTrimming="CharacterEllipsis"/>
-                        <TextBlock Text="Laat alles leeg om de volledige dataset te exporteren, of kies hier specifieke records samen met hun relaties."
-                                   Foreground="{DynamicResource TextSecondary}"
-                                   TextWrapping="Wrap"/>
-
-                        <WrapPanel>
-                            <Button Content="✔️ Selecteer alle records"
-                                    Command="{Binding SelecteerAlleEntiteitenCommand}"
-                                    Classes="MainBtn"
-                                    Margin="0,0,8,6"/>
-                            <Button Content="🧹 Wis recordfilter"
-                                    Command="{Binding WisEntiteitenCommand}"
-                                    Classes="MainBtn"
-                                    Margin="0,0,0,6"/>
-                        </WrapPanel>
-
-                        <TextBox Watermark="🔍 Zoek op naam of omschrijving..."
-                                 Text="{Binding EntiteitZoekterm, Mode=TwoWay}"
-                                 Margin="0,4,0,0"/>
-
-                        <Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="8" Padding="10">
-                            <StackPanel Spacing="10">
-                                <TextBlock Text="Geen records beschikbaar voor deze dataset."
-                                           IsVisible="{Binding GeenEntiteiten}"
-                                           Foreground="{DynamicResource TextSecondary}"
-                                           TextWrapping="Wrap"/>
-
-                                <ItemsControl ItemsSource="{Binding GepagineerdeEntiteiten}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="sm:ExportEntiteitOptie">
-                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Margin="0,4">
-                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsGeselecteerd, Mode=TwoWay}" VerticalAlignment="Center"/>
-                                                <StackPanel Grid.Column="1" Spacing="2">
-                                                    <TextBlock Text="{Binding Label}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                                <StackPanel Grid.Column="0" Spacing="6">
+                                    <TextBlock Text="Dataset" Classes="label" Foreground="{DynamicResource TextSecondary}"/>
+                                    <ComboBox ItemsSource="{Binding BeschikbareDatasets}"
+                                              HorizontalAlignment="Stretch"
+                                              SelectedItem="{Binding SelectedDataset, Mode=TwoWay}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="sm:ExportDatasetOptie">
+                                                <StackPanel Spacing="2">
+                                                    <TextBlock Text="{Binding Naam}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                                     <TextBlock Text="{Binding Beschrijving}" Classes="caption" TextWrapping="Wrap"/>
                                                 </StackPanel>
-                                                <TextBlock Grid.Column="2" Text="{Binding Id}" Classes="caption" VerticalAlignment="Center"/>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-
-                                <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,8,0,0" IsVisible="{Binding HeeftEntiteiten}">
-                                    <Button Grid.Column="0"
-                                            Content="◀ Vorige"
-                                            Command="{Binding VorigePaginaCommand}"
-                                            Classes="MainBtn"
-                                            IsEnabled="{Binding KanNaarVorigePagina}"/>
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding PaginaInfo}"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"
-                                               Foreground="{DynamicResource TextPrimary}"
-                                               TextTrimming="CharacterEllipsis"/>
-                                    <Button Grid.Column="2"
-                                            Content="Volgende ▶"
-                                            Command="{Binding VolgendePaginaCommand}"
-                                            Classes="MainBtn"
-                                            IsEnabled="{Binding KanNaarVolgendePagina}"/>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Border>
-
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
-                    <Border Grid.Column="0" MinWidth="280" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="12" Padding="16">
-                        <StackPanel Spacing="10">
-                            <TextBlock Text="Hoofdvelden" Classes="h2" TextTrimming="CharacterEllipsis"/>
-                            <TextBlock Text="Vink de velden aan die je op het hoofdwerkblad wil opnemen." Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
-
-                            <Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="8" Padding="10">
-                                <ItemsControl ItemsSource="{Binding BeschikbareKolommen}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="sm:ExportKolomOptie">
-                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Margin="0,4">
-                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsGeselecteerd, Mode=TwoWay}" VerticalAlignment="Center"/>
-                                                <TextBlock Grid.Column="1" Text="{Binding Label}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                                                <TextBlock Grid.Column="2" Text="{Binding Groep}" Classes="caption" VerticalAlignment="Center"/>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </Border>
-                        </StackPanel>
-                    </Border>
-
-                    <Border Grid.Column="1" MinWidth="280" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="12" Padding="16">
-                        <StackPanel Spacing="10">
-                            <TextBlock Text="Relaties" Classes="h2" TextTrimming="CharacterEllipsis"/>
-                            <TextBlock Text="Kies extra werkbladen voor logische relaties, zoals leverancier → lijsten of klant → offertes." Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
-
-                            <Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="8" Padding="10">
-                                <StackPanel Spacing="10">
-                                    <TextBlock Text="Geen relaties beschikbaar voor deze dataset."
-                                               IsVisible="{Binding GeenRelaties}"
-                                               Foreground="{DynamicResource TextSecondary}"
-                                               TextWrapping="Wrap"/>
-
-                                    <ItemsControl ItemsSource="{Binding BeschikbareRelaties}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="sm:ExportRelatieOptie">
-                                                <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,4,0,0">
-                                                    <StackPanel Spacing="8">
-                                                        <CheckBox IsChecked="{Binding IsGeselecteerd, Mode=TwoWay}">
-                                                            <StackPanel Spacing="2">
-                                                                <TextBlock Text="{Binding Label}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                                                <TextBlock Text="{Binding Beschrijving}" Classes="caption" TextWrapping="Wrap"/>
-                                                            </StackPanel>
-                                                        </CheckBox>
-
-                                                        <ItemsControl ItemsSource="{Binding Kolommen}">
-                                                            <ItemsControl.ItemTemplate>
-                                                                <DataTemplate x:DataType="sm:ExportKolomOptie">
-                                                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Margin="18,0,0,0">
-                                                                        <CheckBox Grid.Column="0" IsChecked="{Binding IsGeselecteerd, Mode=TwoWay}" VerticalAlignment="Center"/>
-                                                                        <TextBlock Grid.Column="1" Text="{Binding Label}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                                                                        <TextBlock Grid.Column="2" Text="{Binding Groep}" Classes="caption" VerticalAlignment="Center"/>
-                                                                    </Grid>
-                                                                </DataTemplate>
-                                                            </ItemsControl.ItemTemplate>
-                                                        </ItemsControl>
-                                                    </StackPanel>
-                                                </Border>
                                             </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Spacing="6">
+                                    <TextBlock Text="Standaardpreset" Classes="label" Foreground="{DynamicResource TextSecondary}"/>
+                                    <ComboBox ItemsSource="{Binding BeschikbarePresets}"
+                                              HorizontalAlignment="Stretch"
+                                              SelectedItem="{Binding SelectedPreset, Mode=TwoWay}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="sm:ExportPresetOptie">
+                                                <StackPanel Spacing="2">
+                                                    <TextBlock Text="{Binding Naam}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding Beschrijving}" Classes="caption" TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+                            </Grid>
+
+                            <Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="10" Padding="12">
+                                <StackPanel Spacing="4" Orientation="Horizontal">
+                                    <PathIcon Data="{StaticResource IconInfo}" Width="16" Height="16" VerticalAlignment="Top" Margin="0,2,8,0" Foreground="{DynamicResource TextSecondary}"/>
+                                    <TextBlock Text="{Binding DatasetBeschrijving}" FontWeight="SemiBold" Foreground="{DynamicResource TextHeading}" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
                     </Border>
-                </Grid>
-            </StackPanel>
-        </ScrollViewer>
+
+                    <!-- STAP 2: RECORDS -->
+                    <Border Classes="StepCard" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="12" Padding="16">
+                        <StackPanel Spacing="12">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource BrandYellow}" VerticalAlignment="Center">
+                                    <TextBlock Text="2" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource BrandDark}"/>
+                                </Border>
+                                <StackPanel Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Records" Classes="h2" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="Optioneel — laat leeg voor de volledige dataset." Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                <TextBox Grid.Column="0" Watermark="Zoek op naam of omschrijving..."
+                                         Text="{Binding EntiteitZoekterm, Mode=TwoWay}">
+                                    <TextBox.InnerLeftContent>
+                                        <PathIcon Data="{StaticResource IconSearch}" Width="15" Height="15" Margin="8,0,0,0" Foreground="{DynamicResource TextSecondary}"/>
+                                    </TextBox.InnerLeftContent>
+                                </TextBox>
+                                <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <Button Command="{Binding SelecteerAlleEntiteitenCommand}" Classes="GhostBtn" Margin="0,0,8,0">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <PathIcon Data="{StaticResource IconCheckAll}" Width="16" Height="16"/>
+                                            <TextBlock Text="Alle records" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Command="{Binding WisEntiteitenCommand}" Classes="GhostBtn">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <PathIcon Data="{StaticResource IconBroom}" Width="16" Height="16"/>
+                                            <TextBlock Text="Wissen" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </WrapPanel>
+                            </Grid>
+
+                            <!-- Lege toestand -->
+                            <Border IsVisible="{Binding GeenEntiteiten}" Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="8" Padding="16">
+                                <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                    <PathIcon Data="{StaticResource IconFile}" Width="28" Height="28" HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondary}"/>
+                                    <TextBlock Text="Geen records voor deze dataset" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{DynamicResource TextHeading}"/>
+                                    <TextBlock Text="Kies bovenaan een andere dataset, of exporteer de volledige set zonder recordfilter."
+                                               Classes="caption" Foreground="{DynamicResource TextSecondary}"
+                                               TextWrapping="Wrap" TextAlignment="Center" MaxWidth="360"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border IsVisible="{Binding HeeftEntiteiten}" Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="8" Padding="10">
+                                <StackPanel Spacing="4">
+                                    <ItemsControl ItemsSource="{Binding GepagineerdeEntiteiten}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="sm:ExportEntiteitOptie">
+                                                <Border CornerRadius="6" Padding="8,6" Margin="0,2">
+                                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                                        <CheckBox Grid.Column="0" IsChecked="{Binding IsGeselecteerd, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                                        <StackPanel Grid.Column="1" Spacing="2">
+                                                            <TextBlock Text="{Binding Label}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Label}"/>
+                                                            <TextBlock Text="{Binding Beschrijving}" Classes="caption" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Beschrijving}"/>
+                                                        </StackPanel>
+                                                        <TextBlock Grid.Column="2" Text="{Binding Id}" Classes="caption" VerticalAlignment="Center"/>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,8,0,0">
+                                        <Button Grid.Column="0" Content="◀ Vorige"
+                                                Command="{Binding VorigePaginaCommand}"
+                                                Classes="GhostBtn"
+                                                IsEnabled="{Binding KanNaarVorigePagina}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding PaginaInfo}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextPrimary}"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        <Button Grid.Column="2" Content="Volgende ▶"
+                                                Command="{Binding VolgendePaginaCommand}"
+                                                Classes="GhostBtn"
+                                                IsEnabled="{Binding KanNaarVolgendePagina}"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- STAP 3: VELDEN (inklapbaar) -->
+                    <Border Classes="StepCard" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="12" Padding="16">
+                        <StackPanel Spacing="12">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource BrandYellow}" VerticalAlignment="Center">
+                                    <TextBlock Text="3" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource BrandDark}"/>
+                                </Border>
+                                <TextBlock Text="Hoofdvelden" Classes="h2" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+
+                            <WrapPanel>
+                                <Button Command="{Binding SelecteerAlleVeldenCommand}" Classes="GhostBtn" Margin="0,0,8,6">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <PathIcon Data="{StaticResource IconCheckAll}" Width="16" Height="16"/>
+                                        <TextBlock Text="Alle velden" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding WisVeldenCommand}" Classes="GhostBtn" Margin="0,0,0,6">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <PathIcon Data="{StaticResource IconBroom}" Width="16" Height="16"/>
+                                        <TextBlock Text="Wissen" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </WrapPanel>
+
+                            <Expander IsExpanded="True" Header="Velden op het hoofdwerkblad">
+                                <Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="8" Padding="10" Margin="0,8,0,0">
+                                    <ItemsControl ItemsSource="{Binding BeschikbareKolommen}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="sm:ExportKolomOptie">
+                                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Margin="0,4">
+                                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsGeselecteerd, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Label}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Label}"/>
+                                                    <Border Grid.Column="2" Background="{DynamicResource SurfaceMuted}" CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Groep}" Classes="caption"/>
+                                                    </Border>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Border>
+                            </Expander>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- STAP 4: RELATIES (inklapbaar) -->
+                    <Border Classes="StepCard" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="12" Padding="16">
+                        <StackPanel Spacing="12">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource BrandYellow}" VerticalAlignment="Center">
+                                    <TextBlock Text="4" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource BrandDark}"/>
+                                </Border>
+                                <StackPanel Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Relaties" Classes="h2" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="Extra werkbladen, bv. leverancier → lijsten of klant → offertes." Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Lege toestand -->
+                            <Border IsVisible="{Binding GeenRelaties}" Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="8" Padding="16">
+                                <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                    <PathIcon Data="{StaticResource IconOpenFolder}" Width="28" Height="28" HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondary}"/>
+                                    <TextBlock Text="Geen relaties voor deze dataset" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{DynamicResource TextHeading}"/>
+                                    <TextBlock Text="Deze dataset heeft geen gekoppelde werkbladen. Je exporteert enkel het hoofdwerkblad."
+                                               Classes="caption" Foreground="{DynamicResource TextSecondary}"
+                                               TextWrapping="Wrap" TextAlignment="Center" MaxWidth="360"/>
+                                </StackPanel>
+                            </Border>
+
+                            <ItemsControl ItemsSource="{Binding BeschikbareRelaties}" IsVisible="{Binding !GeenRelaties}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="sm:ExportRelatieOptie">
+                                        <Border Background="{DynamicResource SurfaceMutedAlt}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="8" Padding="4,2" Margin="0,4,0,0">
+                                            <Expander>
+                                                <Expander.Header>
+                                                    <CheckBox IsChecked="{Binding IsGeselecteerd, Mode=TwoWay}">
+                                                        <StackPanel Spacing="2">
+                                                            <TextBlock Text="{Binding Label}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Label}"/>
+                                                            <TextBlock Text="{Binding Beschrijving}" Classes="caption" TextWrapping="Wrap"/>
+                                                        </StackPanel>
+                                                    </CheckBox>
+                                                </Expander.Header>
+                                                <ItemsControl ItemsSource="{Binding Kolommen}" Margin="0,4,0,4">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="sm:ExportKolomOptie">
+                                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Margin="18,3,0,3">
+                                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsGeselecteerd, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                                                <TextBlock Grid.Column="1" Text="{Binding Label}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Label}"/>
+                                                                <TextBlock Grid.Column="2" Text="{Binding Groep}" Classes="caption" VerticalAlignment="Center"/>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </Expander>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ============ STICKY EXPORTOVERZICHT ============ -->
+            <Border Grid.Column="1" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1,0,0,0" Padding="20,24">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="Exportoverzicht" Classes="h2" TextTrimming="CharacterEllipsis"/>
+
+                        <StackPanel Spacing="10">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Dataset" Classes="label" Foreground="{DynamicResource TextSecondary}"/>
+                                <TextBlock Text="{Binding DatasetBeschrijving}" FontWeight="SemiBold" Foreground="{DynamicResource TextHeading}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Preset" Classes="label" Foreground="{DynamicResource TextSecondary}"/>
+                                <TextBlock Text="{Binding GeselecteerdePresetBeschrijving}" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <Border Height="1" Background="{DynamicResource BorderSubtle}"/>
+
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Records" Classes="label" Foreground="{DynamicResource TextSecondary}"/>
+                                <TextBlock Text="{Binding GeselecteerdeEntiteitenTekst}" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Velden" Classes="label" Foreground="{DynamicResource TextSecondary}"/>
+                                <TextBlock Text="{Binding GeselecteerdeVeldenTekst}" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Relaties" Classes="label" Foreground="{DynamicResource TextSecondary}"/>
+                                <TextBlock Text="{Binding GeselecteerdeRelatiesTekst}" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <Border Height="1" Background="{DynamicResource BorderSubtle}"/>
+
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Bestemming" Classes="label" Foreground="{DynamicResource TextSecondary}"/>
+                                <TextBox Text="{Binding ExportFolder}" IsReadOnly="True" Watermark="Selecteer een map"/>
+                                <Button Command="{Binding ChooseExportFolderCommand}" Classes="GhostBtn" HorizontalAlignment="Stretch">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                        <PathIcon Data="{StaticResource IconFolder}" Width="16" Height="16"/>
+                                        <TextBlock Text="Kies map" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Primaire actie -->
+                        <Button Command="{Binding ExporteerConfiguratieCommand}" Classes="AccentBtn" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                <PathIcon Data="{StaticResource IconExport}" Width="18" Height="18"/>
+                                <TextBlock Text="Exporteer naar Excel" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Button>
+
+                        <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap"/>
+
+                        <Border Height="1" Background="{DynamicResource BorderSubtle}"/>
+
+                        <StackPanel Spacing="8">
+                            <Button Command="{Binding OpenExportFolderCommand}" Classes="GhostBtn" HorizontalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                    <PathIcon Data="{StaticResource IconOpenFolder}" Width="16" Height="16"/>
+                                    <TextBlock Text="Open exportmap" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding OpenLastExportCommand}" Classes="GhostBtn" HorizontalAlignment="Stretch"
+                                    IsVisible="{Binding HasLastExportPath}">
+                                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                    <PathIcon Data="{StaticResource IconFile}" Width="16" Height="16"/>
+                                    <TextBlock Text="Open laatste bestand" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Text="{Binding LastExportPath, StringFormat='Laatste bestand: {0}'}"
+                                       IsVisible="{Binding HasLastExportPath}"
+                                       Foreground="{DynamicResource TextSecondary}" Classes="caption"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>
