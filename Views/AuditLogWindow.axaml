@@ -1,0 +1,82 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:QuadroApp.ViewModels.Gebruikers"
+        xmlns:conv="clr-namespace:QuadroApp.Converters"
+        x:Class="QuadroApp.Views.AuditLogWindow"
+        x:DataType="vm:AuditLogViewModel"
+        Title="Auditlogboek"
+        Width="1000" Height="640"
+        MinWidth="820" MinHeight="500"
+        CanResize="True"
+        WindowStartupLocation="CenterOwner">
+
+	<Grid RowDefinitions="Auto,Auto,*,Auto" Margin="16">
+
+		<TextBlock Grid.Row="0" Classes="h2" Text="Auditlogboek" Margin="0,0,0,12"/>
+
+		<!-- Filters -->
+		<Border Grid.Row="1" Classes="Card" Margin="0,0,0,12">
+			<StackPanel Spacing="8">
+				<Grid ColumnDefinitions="*,*,*,Auto,Auto" ColumnSpacing="8">
+					<ComboBox Grid.Column="0" HorizontalAlignment="Stretch"
+							  PlaceholderText="Alle gebruikers"
+							  ItemsSource="{Binding GebruikerOpties}"
+							  SelectedItem="{Binding GekozenGebruiker}"/>
+					<ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
+							  PlaceholderText="Alle types"
+							  ItemsSource="{Binding TypeOpties}"
+							  SelectedItem="{Binding GekozenType}"/>
+					<ComboBox Grid.Column="2" HorizontalAlignment="Stretch"
+							  PlaceholderText="Alle acties"
+							  ItemsSource="{Binding ActieOpties}"
+							  SelectedItem="{Binding GekozenActie}"/>
+					<DatePicker Grid.Column="3" SelectedDate="{Binding VanafDatum}"/>
+					<DatePicker Grid.Column="4" SelectedDate="{Binding TotDatum}"/>
+				</Grid>
+				<StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+					<TextBlock Classes="caption" VerticalAlignment="Center"
+							   Text="Van – tot (lokale datum, inclusief)"/>
+					<Button Classes="GhostBtn" Content="Wissen" Command="{Binding WisFilterCommand}"/>
+					<Button Classes="AccentBtn" Content="Zoeken" Command="{Binding ZoekCommand}"/>
+				</StackPanel>
+			</StackPanel>
+		</Border>
+
+		<!-- Resultaten -->
+		<Border Grid.Row="2" Classes="Card">
+			<DataGrid ItemsSource="{Binding Records}"
+					  IsReadOnly="True"
+					  CanUserResizeColumns="True"
+					  GridLinesVisibility="Horizontal"
+					  HeadersVisibility="Column">
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="Tijdstip" Width="Auto" MinWidth="150"
+										Binding="{Binding Tijdstip, Converter={x:Static conv:UtcToLocalConverter.Instance}, ConverterParameter='dd-MM-yyyy HH:mm:ss'}"/>
+					<DataGridTextColumn Header="Gebruiker" Width="*" MinWidth="100"
+										Binding="{Binding Gebruiker}"/>
+					<DataGridTextColumn Header="Type" Width="*" MinWidth="110"
+										Binding="{Binding EntiteitType}"/>
+					<DataGridTextColumn Header="Id" Width="Auto" MinWidth="60"
+										Binding="{Binding EntiteitId}"/>
+					<DataGridTextColumn Header="Actie" Width="Auto" MinWidth="90"
+										Binding="{Binding Actie}"/>
+					<DataGridTextColumn Header="Wijzigingen" Width="3*" MinWidth="200"
+										Binding="{Binding Wijzigingen}"/>
+				</DataGrid.Columns>
+			</DataGrid>
+		</Border>
+
+		<!-- Paginering -->
+		<Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,12,0,0">
+			<TextBlock Grid.Column="0" Classes="caption" VerticalAlignment="Center"
+					   Text="{Binding PaginaInfo}"/>
+			<Button Grid.Column="1" Classes="GhostBtn" Content="◀ Vorige"
+					Command="{Binding VorigeCommand}" Margin="0,0,8,0"/>
+			<Button Grid.Column="2" Classes="GhostBtn" Content="Volgende ▶"
+					Command="{Binding VolgendeCommand}"/>
+			<TextBlock Grid.Column="3" Classes="caption" VerticalAlignment="Center"
+					   Margin="12,0,0,0"
+					   Text="Alleen-lezen — het auditlog is onveranderbaar."/>
+		</Grid>
+	</Grid>
+</Window>

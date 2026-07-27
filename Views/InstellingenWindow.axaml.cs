@@ -19,6 +19,10 @@ public partial class InstellingenWindow : Window
             var knop = this.FindControl<Button>("GebruikersBeheerKnop");
             if (knop is not null)
                 knop.IsVisible = auth.HeeftPermissie(Permissie.GebruikersBeheren);
+
+            var auditKnop = this.FindControl<Button>("AuditLogKnop");
+            if (auditKnop is not null)
+                auditKnop.IsVisible = auth.HeeftPermissie(Permissie.AuditInzien);
         };
     }
 
@@ -41,6 +45,15 @@ public partial class InstellingenWindow : Window
         var venster = new GebruikersBeheerWindow
         {
             DataContext = App.Services.GetRequiredService<GebruikersBeheerViewModel>()
+        };
+        await venster.ShowDialog(this);
+    }
+
+    private async void AuditLog_Click(object? sender, RoutedEventArgs e)
+    {
+        var venster = new AuditLogWindow
+        {
+            DataContext = App.Services.GetRequiredService<AuditLogViewModel>()
         };
         await venster.ShowDialog(this);
     }
