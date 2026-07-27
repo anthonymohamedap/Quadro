@@ -219,19 +219,36 @@ namespace QuadroApp.Service
         {
             await using var db = await _factory.CreateDbContextAsync();
 
-            var werkBon = await db.WerkBonnen.FirstOrDefaultAsync(w => w.Id == werkBonId)
+            var werkBon = await db.WerkBonnen
+                .Include(w => w.Offerte)
+                .FirstOrDefaultAsync(w => w.Id == werkBonId)
                 ?? throw new InvalidOperationException("Werkbon niet gevonden.");
 
             var oldStatus = werkBon.Status;
             ValidateWerkBonTransition(oldStatus, newStatus);
 
             werkBon.Status = newStatus;
+
+            // US-42: de offerte volgt de productie. Werkbon in uitvoering → offerte InProductie.
+            // Werkbon + offertestatus in dezelfde SaveChanges = atomair.
+            if (newStatus == WerkBonStatus.InUitvoering && werkBon.Offerte is not null)
+                OfferteStatusPropagation.TryAdvanceTo(werkBon.Offerte, OfferteStatus.InProductie);
+
             await db.SaveChangesAsync();
 
             if (newStatus == WerkBonStatus.Afgewerkt)
             {
                 await _stock.ConsumeReservationsForWerkBonAsync(werkBonId);
                 await _factuurWorkflow.MaakFactuurVanWerkBonAsync(werkBonId);
+
+                // US-42: de bestelbon bestaat nu → offerte door naar Gefactureerd
+                // (Afgewerkt wordt overgeslagen, zoals afgesproken). Pas ná het aanmaken
+                // van de bestelbon zodat de offertestatus de werkelijkheid volgt.
+                if (werkBon.Offerte is not null &&
+                    OfferteStatusPropagation.TryAdvanceTo(werkBon.Offerte, OfferteStatus.Gefactureerd))
+                {
+                    await db.SaveChangesAsync();
+                }
             }
 
             _logger.LogInformation(

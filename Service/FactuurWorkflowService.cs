@@ -105,7 +105,35 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             throw new InvalidOperationException("Geannuleerde factuur kan niet betaald worden.");
         factuur.Status = FactuurStatus.Betaald;
         factuur.BijgewerktOp = DateTime.UtcNow;
+
+        // US-42: bestelbon betaald → offerte volgt naar Betaald (in dezelfde SaveChanges = atomair).
+        await PropageerOfferteAsync(db, factuur, OfferteStatus.Betaald);
+
         await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// US-42 — zet de bij de factuur horende offerte vooruit naar <paramref name="target"/>
+    /// (idempotent/lenient via <see cref="OfferteStatusPropagation"/>). De offerte-id komt van
+    /// de factuur zelf of anders via de gekoppelde werkbon.
+    /// </summary>
+    private static async Task PropageerOfferteAsync(AppDbContext db, Factuur factuur, OfferteStatus target)
+    {
+        var offerteId = factuur.OfferteId;
+        if (offerteId is null && factuur.WerkBonId is int wid)
+        {
+            offerteId = await db.WerkBonnen
+                .Where(w => w.Id == wid)
+                .Select(w => (int?)w.OfferteId)
+                .FirstOrDefaultAsync();
+        }
+
+        if (offerteId is int oid)
+        {
+            var offerte = await db.Offertes.FirstOrDefaultAsync(o => o.Id == oid);
+            if (offerte is not null)
+                OfferteStatusPropagation.TryAdvanceTo(offerte, target);
+        }
     }
 
     public async Task SaveDraftAsync(Factuur updated)
