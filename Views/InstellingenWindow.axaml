@@ -68,8 +68,12 @@
                                     Content="Gebruikersbeheer"
                                     Classes="GhostBtn"
                                     Click="GebruikersBeheer_Click"/>
+                            <Button x:Name="AuditLogKnop"
+                                    Content="Auditlogboek"
+                                    Classes="GhostBtn"
+                                    Click="AuditLog_Click"/>
                         </StackPanel>
-                        <TextBlock Text="Gebruikersbeheer is alleen beschikbaar voor beheerders."
+                        <TextBlock Text="Gebruikersbeheer en auditlogboek zijn alleen beschikbaar voor beheerders."
                                    Classes="caption" TextWrapping="Wrap"/>
                     </StackPanel>
                 </Border>

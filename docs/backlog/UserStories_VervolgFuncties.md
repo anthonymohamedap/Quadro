@@ -204,7 +204,7 @@ die een transient fout simuleren. Branch feature/us43-retry-execution-strategy. 
 ### Status
 | Story | Onderwerp | Prioriteit | Status |
 |---|---|---|---|
-| US-40 | Audit-leesscherm in de app | Medium (na release) | ⬜ |
+| US-40 | Audit-leesscherm in de app | Medium (na release) | 🟡 branch `feature/us40-audit-leesscherm` — verify + merge nog te doen |
 | US-41 | Volledige EF-migraties voor PostgreSQL | Medium (na release) | ⬜ |
 | US-42 | Statussync offerte ↔ werkbon ↔ bestelbon | Hoog (na release) | 🟡 branch `feature/us42-statussync` — verify + merge nog te doen |
 | US-43 | Retry-on-failure via execution strategy | Medium (na release) | ⬜ |
