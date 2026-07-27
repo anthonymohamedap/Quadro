@@ -201,6 +201,46 @@ die een transient fout simuleren. Branch feature/us43-retry-execution-strategy. 
 
 ---
 
+## US-45 · Facturen/bestelbonnen als export-dataset in het Exportcenter
+
+**Als** zaakvoerder **wil ik** mijn facturen/bestelbonnen ook als Excel-overzicht kunnen exporteren
+vanuit het Exportcenter **zodat** ik een volledig financieel overzicht heb zonder elke bestelbon apart
+als PDF te openen.
+
+**Achtergrond (cross-check 27 juli 2026):** het Exportcenter (`CentralExcelExportService`) heeft
+datasets voor Klanten, Leveranciers, Lijsten, Offertes en Afwerkingen — maar **niet voor Facturen**.
+Facturen kunnen nu enkel per stuk als PDF via `FactuurExportService`. Er is geen Excel-dataset met alle
+bestelbonnen (met bedragen, status, klant, datum) en hun regels.
+
+### Acceptatiecriteria
+- Nieuwe dataset "Facturen" (of "Bestelbonnen") in `GetDatasetDefinitions()`, met kolommen o.a.:
+  FactuurNummer, DocumentType, KlantNaam, FactuurDatum, VervalDatum, Status, TotaalExclBtw, TotaalBtw,
+  TotaalInclBtw, VoorschotBedrag, KortingPct, IsBtwVrijgesteld, AfhaalDatum.
+- Relatie "Factuurregels" (`FactuurLijn`) als extra werkblad, net als bij offertes.
+- Optioneel: één of twee presets (bv. "Boekhouding" met de financiële kernkolommen).
+- Volgt exact het bestaande patroon (typed `Col(...)`-lambda's, `DatasetDefinitie`, `RelatieDefinitie`);
+  geen wijziging aan de exportmotor zelf.
+- Tests analoog aan de bestaande export-tests (dataset verschijnt, kolommen kloppen, export draait).
+
+### Technische uitwerking
+- Nieuw partial-bestand `Service/Export/CentralExcelExportService.Facturen.cs` met
+  `BuildFacturenDefinition()`, geregistreerd in `GetDatasetDefinitions()`.
+- Bron: `db.Facturen.Include(x => x.Lijnen)` (+ eventueel WerkBon/Offerte voor koppeling).
+- Enum `ExcelExportDataset` uitbreiden met `Facturen`.
+
+⏱ Schatting: S–M. **Post-release.**
+
+**PROMPT:**
+```
+Voer US-45 uit volgens docs/backlog/UserStories_VervolgFuncties.md. Voeg een Facturen-dataset toe aan
+CentralExcelExportService (nieuw partial BuildFacturenDefinition, ExcelExportDataset.Facturen,
+db.Facturen.Include(Lijnen)) met financiële kernkolommen + een Factuurregels-relatie, volgens het
+bestaande typed Col(...)-patroon. Geen wijziging aan de exportmotor. Tests analoog aan de bestaande
+export-tests. Branch feature/us45-facturen-export. .\verify.ps1 groen.
+```
+
+---
+
 ### Status
 | Story | Onderwerp | Prioriteit | Status |
 |---|---|---|---|
@@ -208,3 +248,5 @@ die een transient fout simuleren. Branch feature/us43-retry-execution-strategy. 
 | US-41 | Volledige EF-migraties voor PostgreSQL | Medium (na release) | ⬜ |
 | US-42 | Statussync offerte ↔ werkbon ↔ bestelbon | Hoog (na release) | ⬜ |
 | US-43 | Retry-on-failure via execution strategy | Medium (na release) | ⬜ |
+| US-44 | Export Center → enterprise wizard (View-only) | Medium (na release) | 🟡 branch `feature/us44-export-wizard` (bevat ook export-kolomfixes) — verify + merge nog te doen |
+| US-45 | Facturen als export-dataset | Medium (na release) | ⬜ |
