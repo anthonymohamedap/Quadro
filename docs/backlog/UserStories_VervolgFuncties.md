@@ -438,7 +438,8 @@ in de UI. Tests over de mapping + idempotentie. Branch feature/us48-status-recon
 | US-43 | Retry-on-failure via execution strategy | Medium | ⬜ |
 | US-44 | Export Center → enterprise wizard (+ export-kolomfixes) | Medium | ✅ gereleased |
 | US-45 | Facturen als export-dataset | Medium | ⬜ |
-| US-46 | OfferteView redesign (gefaseerd, ERP-werkruimte) | Hoog | 🟡 Fase A deels gereleased (actie-hiërarchie, legacy inklapbaar); prijs-dashboard + conditionele acties bleken al aanwezig. Rest (statusbadge, compacte samenvatting, Fase B/C/D) optioneel |
+| US-46 | OfferteView redesign — Fase A | Hoog | ✅ afgerond op branch `feature/us46-offerte-fase-a` (actie-hiërarchie, statusbadge, compacte sticky samenvatting, legacy inklapbaar; prijs-dashboard + conditionele acties bleken al aanwezig) |
+| US-46b | OfferteView redesign — Fase B/C/D (cosmetische kaart-herbouw) | Laag | ⬜ aparte branch; alleen veilig met live preview / micro-stapjes (functionele delen zoals variant-tonen zijn al klaar) |
 | US-47 | OfferteViewModel decompositie (god-object) | Hoog | ✅ was al voldaan (prijslogica in OffertePrijsViewModel, RestTeBetalen bestaat) |
 | US-48 | Eenmalige status-reconciliatie bestaande offertes | Hoog | ⬜ |
 
