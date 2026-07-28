@@ -45,6 +45,13 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
     [ObservableProperty] private int selectedWeekNr;
     [ObservableProperty] private ObservableCollection<DayRow> weekDayRows = new();
 
+    // US-49 Fase A — dashboard-KPI's (berekend in LoadAsync; read-only presentatie, geen businesslogica).
+    [ObservableProperty] private string kpiUtilVandaag = "–";
+    [ObservableProperty] private string kpiUtilWeek = "–";
+    [ObservableProperty] private int kpiOpenWerkbonnen;
+    [ObservableProperty] private int kpiBlokdagen;
+    [ObservableProperty] private string kpiBeschikbareUren = "–";
+
     public IRelayCommand PrevMonthCommand { get; }
     public IRelayCommand NextMonthCommand { get; }
     public IRelayCommand TodayCommand { get; }
@@ -500,6 +507,34 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             });
             weekStart = weekEnd;
         }
+
+        // ── US-49 Fase A: dashboard-KPI's (afgeleid van de geladen data) ──
+        var vandaagTile = MonthDays.FirstOrDefault(d => d.IsToday);
+        KpiUtilVandaag = vandaagTile is null ? "–" : $"{(int)Math.Round(vandaagTile.Busy * 100)}%";
+
+        var refDatum = vandaagTile?.Date ?? DateTime.Today;
+        int refWeek = ISOWeek.GetWeekOfYear(refDatum);
+        var weekWerkdagen = MonthDays
+            .Where(d => ISOWeek.GetWeekOfYear(d.Date) == refWeek
+                        && d.Date.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday))
+            .ToList();
+        double weekUtil = weekWerkdagen.Count == 0 ? 0 : weekWerkdagen.Average(d => d.Busy);
+        KpiUtilWeek = $"{(int)Math.Round(weekUtil * 100)}%";
+
+        KpiOpenWerkbonnen = taken
+            .Where(t => t.GeplandVan.Month == Month && t.GeplandVan.Year == Year)
+            .Select(t => t.WerkBonId).Distinct().Count();
+
+        KpiBlokdagen = MonthDays.Count(d => d.IsGeblokkeerd && !d.IsOtherMonth);
+
+        int beschikbaarMin = 0;
+        foreach (var dag in MonthDays.Where(d => !d.IsOtherMonth && !d.IsGeblokkeerd
+                     && d.Date.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday)))
+        {
+            var usedDag = taken.Where(t => t.GeplandVan.Date == dag.Date).Sum(t => t.DuurMinuten);
+            beschikbaarMin += Math.Max(0, CapaciteitMinuten - usedDag);
+        }
+        KpiBeschikbareUren = $"{beschikbaarMin / 60}u";
 
         OnPropertyChanged(nameof(IsGeselecteerdeDagGeblokkeerd));
         OnPropertyChanged(nameof(BlokkeerDagButtonText));

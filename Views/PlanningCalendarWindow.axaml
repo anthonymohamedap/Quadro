@@ -106,7 +106,7 @@
 
 	<!-- ROOT: Panel wraps Grid + Toast overlay -->
 	<Panel>
-		<Grid RowDefinitions="70,Auto,*">
+		<Grid RowDefinitions="70,Auto,Auto,*">
 
 			<!-- ══════════════ HEADER (zelfde taal als QuadroHeader) ══════════════ -->
 			<Border Grid.Row="0" Background="{DynamicResource BrandDark}">
@@ -159,7 +159,59 @@
 			</Border>
 
 			<!-- ══════════════ BODY: 2-column ══════════════ -->
-			<Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+			<!-- US-49 Fase A: dashboard-KPI's + capaciteitslegende -->
+			<Border Grid.Row="2" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="0,0,0,1" Padding="20,12">
+				<Grid ColumnDefinitions="*,Auto">
+				<StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+					<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="10" Padding="14,8" MinWidth="110">
+						<StackPanel Spacing="1">
+							<TextBlock Text="Bezetting vandaag" Classes="caption" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+							<TextBlock Text="{Binding KpiUtilVandaag}" Classes="h2" Foreground="{DynamicResource TextHeading}"/>
+						</StackPanel>
+					</Border>
+					<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="10" Padding="14,8" MinWidth="110">
+						<StackPanel Spacing="1">
+							<TextBlock Text="Bezetting deze week" Classes="caption" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+							<TextBlock Text="{Binding KpiUtilWeek}" Classes="h2" Foreground="{DynamicResource TextHeading}"/>
+						</StackPanel>
+					</Border>
+					<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="10" Padding="14,8" MinWidth="110">
+						<StackPanel Spacing="1">
+							<TextBlock Text="Open werkbonnen" Classes="caption" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+							<TextBlock Text="{Binding KpiOpenWerkbonnen}" Classes="h2" Foreground="{DynamicResource TextHeading}"/>
+						</StackPanel>
+					</Border>
+					<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="10" Padding="14,8" MinWidth="110">
+						<StackPanel Spacing="1">
+							<TextBlock Text="Geblokkeerde dagen" Classes="caption" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+							<TextBlock Text="{Binding KpiBlokdagen}" Classes="h2" Foreground="{DynamicResource TextHeading}"/>
+						</StackPanel>
+					</Border>
+					<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="10" Padding="14,8" MinWidth="110">
+						<StackPanel Spacing="1">
+							<TextBlock Text="Beschikbare uren" Classes="caption" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+							<TextBlock Text="{Binding KpiBeschikbareUren}" Classes="h2" Foreground="{DynamicResource TextHeading}"/>
+						</StackPanel>
+					</Border>
+				</StackPanel>
+				<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
+					<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+						<Border Width="12" Height="12" CornerRadius="3" Background="{DynamicResource CapacityLow}"/>
+						<TextBlock Text="Rustig" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+					</StackPanel>
+					<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+						<Border Width="12" Height="12" CornerRadius="3" Background="{DynamicResource CapacityHigh}"/>
+						<TextBlock Text="Vol" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+					</StackPanel>
+					<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+						<Border Width="12" Height="12" CornerRadius="3" Background="{DynamicResource Danger}"/>
+						<TextBlock Text="Geblokkeerd" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+					</StackPanel>
+				</StackPanel>
+				</Grid>
+			</Border>
+
+			<Grid Grid.Row="3" ColumnDefinitions="*,Auto">
 
 				<!-- LEFT — Calendar grid -->
 				<Grid Grid.Column="0"
