@@ -29,6 +29,9 @@ public partial class DayTile : ObservableObject
     public bool CapHigh => !IsGeblokkeerd && Busy > 0.75 && Busy <= 0.9;
     public bool CapFull => IsGeblokkeerd || Busy > 0.9;
 
+    // US-49 Fase B — bezettingspercentage voor op de tegel (leeg bij geblokkeerd).
+    public string BusyPct => IsGeblokkeerd ? "" : $"{(int)Math.Round(Busy * 100)}%";
+
     [ObservableProperty] private bool isSelected;
 }
 

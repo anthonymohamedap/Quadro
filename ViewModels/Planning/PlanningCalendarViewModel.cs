@@ -496,7 +496,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
                 .Count(x => x.Date >= weekStart && x.Date < weekEnd && x.IsGeblokkeerd);
 
             var label = weekGeblokkeerd > 0
-                ? $"{weekMinutes / 60}u {weekMinutes % 60}m · {weekGeblokkeerd}🚫"
+                ? $"{weekMinutes / 60}u {weekMinutes % 60}m · {weekGeblokkeerd} geblok."
                 : $"{weekMinutes / 60}u {weekMinutes % 60}m";
 
             WeekSummaries.Add(new WeekSummary

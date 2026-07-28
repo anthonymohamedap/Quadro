@@ -259,16 +259,12 @@
 										PointerPressed="DayTile_PointerPressed">
 
 									<StackPanel Spacing="4">
-										<!-- Day number (+ blok-indicator) -->
-										<StackPanel Orientation="Horizontal" Spacing="4">
-											<TextBlock Text="🚫"
-													   Classes="caption"
-													   IsVisible="{Binding IsGeblokkeerd}"
-													   VerticalAlignment="Center"/>
-											<TextBlock Text="{Binding DayNumber}"
-													   Classes="body"
-													   FontWeight="Bold"/>
-										</StackPanel>
+										<!-- Day number + blok-badge + bezettings-% -->
+										<Grid ColumnDefinitions="Auto,*,Auto">
+											<Border Grid.Column="0" Width="8" Height="8" CornerRadius="4" Background="{DynamicResource Danger}" IsVisible="{Binding IsGeblokkeerd}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+											<TextBlock Grid.Column="1" Text="{Binding DayNumber}" Classes="body" FontWeight="Bold"/>
+											<TextBlock Grid.Column="2" Text="{Binding BusyPct}" Classes="caption" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+										</Grid>
 
 										<!-- Capacity bar (proportioneel — schaalt mee met de tegel) -->
 										<ProgressBar Classes="Capacity"
@@ -322,7 +318,7 @@
 									Margin="0,0,0,12">
 								<StackPanel Spacing="4">
 									<StackPanel Orientation="Horizontal" Spacing="10">
-										<TextBlock Text="🚫" Classes="h3" VerticalAlignment="Center"/>
+										<Border Width="14" Height="14" CornerRadius="7" Background="{DynamicResource Danger}" VerticalAlignment="Center"/>
 										<TextBlock Text="Deze dag is geblokkeerd — er kunnen geen taken worden ingepland."
 												   Classes="label"
 												   Foreground="{DynamicResource Danger}"
