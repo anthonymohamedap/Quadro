@@ -226,11 +226,6 @@
 												</ComboBox>
 
 											</StackPanel>
-
-											<TextBlock Grid.Row="3" Grid.Column="0" Text="Dealeroptie" Classes="label" Foreground="{DynamicResource TextSecondary}" Margin="0,6,0,4"/>
-											<ToggleSwitch Grid.Row="3" Grid.Column="1"
-														  IsChecked="{Binding IsDealerOptie}"
-														  IsEnabled="False"/>
 										</Grid>
 									</StackPanel>
 
