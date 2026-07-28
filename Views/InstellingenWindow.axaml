@@ -72,6 +72,10 @@
                                     Content="Auditlogboek"
                                     Classes="GhostBtn"
                                     Click="AuditLog_Click"/>
+                            <Button x:Name="StatusReconciliatieKnop"
+                                    Content="Herbereken offertestatussen"
+                                    Classes="GhostBtn"
+                                    Click="StatusReconciliatie_Click"/>
                         </StackPanel>
                         <TextBlock Text="Gebruikersbeheer en auditlogboek zijn alleen beschikbaar voor beheerders."
                                    Classes="caption" TextWrapping="Wrap"/>
