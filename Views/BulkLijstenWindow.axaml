@@ -74,80 +74,9 @@
                             </StackPanel>
                         </Border>
 
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Grid ColumnDefinitions="*">
+
                             <Border Grid.Column="0"
-                                    Background="{DynamicResource InfoBg}"
-                                    BorderBrush="{DynamicResource InfoBorder}"
-                                    BorderThickness="1"
-                                    CornerRadius="6"
-                                    Padding="10">
-                                <StackPanel Spacing="8">
-                                    <CheckBox Content="Leverancier bijwerken"
-                                              IsChecked="{Binding LeverancierVeld.Bijwerken}" Foreground = "Black" />
-                                    <ComboBox ItemsSource="{Binding BulkLeveranciers}" Foreground = "Black" 
-                                              SelectedItem="{Binding LeverancierVeld.Waarde, Mode=TwoWay}"
-                                              HorizontalAlignment="Stretch">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate x:DataType="m:Leverancier">
-                                                <TextBlock Foreground = "Black"  Text="{Binding Naam}"/>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Grid.Column="1"
-                                    Background="{DynamicResource InfoBg}"
-                                    BorderBrush="{DynamicResource InfoBorder}"
-                                    BorderThickness="1"
-                                    CornerRadius="6"
-                                    Padding="10">
-                                <StackPanel Spacing="8">
-                                    <CheckBox Content="Breedte (cm) bijwerken"
-                                              Foreground="Black"
-                                              IsChecked="{Binding BreedteCmVeld.Bijwerken}"/>
-                                    <NumericUpDown Value="{Binding BreedteCmVeld.Waarde, Mode=TwoWay}"
-                                                   Foreground="Black"
-                                                   Increment="1"
-                                                   FormatString="0"
-                                                   Minimum="0"/>
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-
-                        <Border Background="{DynamicResource InfoBg}"
-                                BorderBrush="{DynamicResource InfoBorder}"
-                                BorderThickness="1"
-                                CornerRadius="6"
-                                Padding="10">
-                            <StackPanel Spacing="8">
-                                <CheckBox Content="Soort bijwerken"
-                                          Foreground="Black"
-                                          IsChecked="{Binding SoortVeld.Bijwerken}"/>
-                                <TextBox Text="{Binding SoortVeld.Waarde, Mode=TwoWay}"
-                                         Foreground="Black"
-                                         Watermark="Nieuwe soort"/>
-                            </StackPanel>
-                        </Border>
-
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                            <Border Grid.Column="0"
-                                    Background="{DynamicResource InfoBg}"
-                                    BorderBrush="{DynamicResource InfoBorder}"
-                                    BorderThickness="1"
-                                    CornerRadius="6"
-                                    Padding="10">
-                                <StackPanel Spacing="8">
-                                    <CheckBox Content="Dealerstatus bijwerken"
-                                              Foreground="Black"
-                                              IsChecked="{Binding IsDealerVeld.Bijwerken}"/>
-                                    <CheckBox Content="Instellen als dealer"
-                                              Foreground="Black"
-                                              IsChecked="{Binding IsDealerVeld.Waarde}"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Grid.Column="1"
                                     Background="{DynamicResource InfoBg}"
                                     BorderBrush="{DynamicResource InfoBorder}"
                                     BorderThickness="1"
