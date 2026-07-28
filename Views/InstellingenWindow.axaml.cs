@@ -23,6 +23,10 @@ public partial class InstellingenWindow : Window
             var auditKnop = this.FindControl<Button>("AuditLogKnop");
             if (auditKnop is not null)
                 auditKnop.IsVisible = auth.HeeftPermissie(Permissie.AuditInzien);
+
+            var reconKnop = this.FindControl<Button>("StatusReconciliatieKnop");
+            if (reconKnop is not null)
+                reconKnop.IsVisible = auth.HeeftPermissie(Permissie.GebruikersBeheren);
         };
     }
 
@@ -56,5 +60,31 @@ public partial class InstellingenWindow : Window
             DataContext = App.Services.GetRequiredService<AuditLogViewModel>()
         };
         await venster.ShowDialog(this);
+    }
+
+    // US-48 — eenmalige/herhaalbare reconciliatie van bestaande offertestatussen.
+    private async void StatusReconciliatie_Click(object? sender, RoutedEventArgs e)
+    {
+        var dialogs = App.Services.GetRequiredService<IDialogService>();
+        var toast = App.Services.GetRequiredService<IToastService>();
+        var recon = App.Services.GetRequiredService<IOfferteStatusReconciliatieService>();
+
+        var ok = await dialogs.ConfirmAsync(
+            "Offertestatussen herberekenen",
+            "Alle offertestatussen worden bijgewerkt op basis van hun werkbon en bestelbon " +
+            "(alleen vooruit; geannuleerde offertes blijven ongemoeid). Doorgaan?");
+        if (!ok) return;
+
+        try
+        {
+            var aantal = await recon.ReconcilieerAlleAsync();
+            toast.Success(aantal == 0
+                ? "Alle offertestatussen waren al correct."
+                : $"{aantal} offerte(s) bijgewerkt naar de juiste status.");
+        }
+        catch (System.Exception ex)
+        {
+            toast.Error($"Herberekenen mislukt: {ex.Message}");
+        }
     }
 }

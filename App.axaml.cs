@@ -155,6 +155,7 @@ public partial class App : Application
         // US-32: authenticatie & autorisatie (singleton — CurrentUser is app-breed)
         services.AddSingleton<IAuthService, AuthService>();
         services.AddSingleton<IAuditService, AuditService>(); // US-40
+        services.AddSingleton<IOfferteStatusReconciliatieService, OfferteStatusReconciliatieService>(); // US-48
 
         // US-34: daily automatic backups (SQLite online-backup API)
         services.AddSingleton<IBackupService>(sp => new BackupService(
