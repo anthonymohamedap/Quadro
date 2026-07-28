@@ -3,6 +3,12 @@ name: Auto-tag na merge
 on:
   push:
     branches: [main]
+    # Alleen-documentatie merges (docs/ of losse .md) maken GEEN nieuwe release.
+    # Een merge die zowel code als docs raakt, tagt wél (paths-ignore slaat alleen
+    # over als ALLE gewijzigde bestanden onder deze patterns vallen).
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
 
 permissions:
   contents: write

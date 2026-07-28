@@ -8,15 +8,50 @@
     x:Class="QuadroApp.Views.OfferteView"
     x:DataType="vm:OfferteViewModel">
 
-	<Grid RowDefinitions="Auto,*,Auto"
+	<Grid RowDefinitions="Auto,Auto,*,Auto"
           Background="{DynamicResource SurfaceMutedAlt}"
           TextElement.Foreground="{DynamicResource TextPrimary}">
 
 		<!-- ================= HEADER ================= -->
 		<controls:QuadroHeader Grid.Row="0" Title="OFFERTEBEHEER" BackCommand="{Binding GaTerugCommand}"/>
 
+		<!-- ================= COMPACTE SAMENVATTING (sticky) ================= -->
+		<Border Grid.Row="1"
+				Background="{DynamicResource Surface}"
+				BorderBrush="{DynamicResource BorderSubtle}"
+				BorderThickness="0,0,0,1"
+				Padding="24,10">
+			<StackPanel Orientation="Horizontal" Spacing="28" VerticalAlignment="Center">
+				<StackPanel Spacing="1">
+					<TextBlock Text="Klant" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+					<TextBlock Text="{Binding SelectedKlant.Achternaam, TargetNullValue='—'}"
+							   FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+							   MaxWidth="220" ToolTip.Tip="{Binding SelectedKlant.Achternaam}"/>
+				</StackPanel>
+				<StackPanel Spacing="1">
+					<TextBlock Text="Regels" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+					<TextBlock Text="{Binding Regels.Count}" FontWeight="SemiBold"/>
+				</StackPanel>
+				<StackPanel Spacing="1">
+					<TextBlock Text="Totaal incl." Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+					<TextBlock Text="{Binding OfferteIncl, StringFormat=€ {0:N2}}" FontWeight="SemiBold"/>
+				</StackPanel>
+				<StackPanel Spacing="1">
+					<TextBlock Text="Afhalen" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+					<TextBlock Text="{Binding Offerte.AfhaalDatum, StringFormat='{}{0:dd-MM-yyyy}', TargetNullValue='—'}"
+							   FontWeight="SemiBold"/>
+				</StackPanel>
+				<Border CornerRadius="10" Padding="10,3" VerticalAlignment="Center"
+						Background="{Binding Offerte.Status, Converter={x:Static conv:OfferteStatusToBrushConverter.Instance}}"
+						IsVisible="{Binding Offerte, Converter={x:Static ObjectConverters.IsNotNull}}">
+					<TextBlock Text="{Binding Offerte.Status}"
+							   Foreground="White" FontWeight="SemiBold" FontSize="12"/>
+				</Border>
+			</StackPanel>
+		</Border>
+
 		<!-- ================= BODY ================= -->
-		<ScrollViewer Grid.Row="1"
+		<ScrollViewer Grid.Row="2"
                       Margin="24"
                       VerticalScrollBarVisibility="Auto">
 
@@ -568,8 +603,9 @@
 						</Grid>
 					</Border>
 
-					<!-- LEGACY -->
+					<!-- GEAVANCEERD (legacy afwerkingscode, ingeklapt) -->
 					<Border Classes="quadro-card">
+						<Expander Header="Geavanceerd — afwerkingscode (G P P D O R)">
 						<Grid ColumnDefinitions="Auto,*,Auto,Auto"
                               ColumnSpacing="8">
 
@@ -589,6 +625,7 @@
                                     Content="Genereren"
                                     Command="{Binding GenerateLegacyCodeCommand}"/>
 						</Grid>
+						</Expander>
 					</Border>
 					<Border Classes="quadro-card">
 
@@ -638,7 +675,7 @@
 		</ScrollViewer>
 
 		<!-- ================= STICKY FOOTER ================= -->
-		<Border Grid.Row="2"
+		<Border Grid.Row="3"
                 Background="{DynamicResource Surface}"
                 BorderBrush="{DynamicResource BorderSubtle}"
                 BorderThickness="0,1,0,0"
@@ -652,7 +689,7 @@
 
 						<Button Content="Berekenen"
 								Command="{Binding BerekenCommand}"
-								Classes="AccentBtn"
+								Classes="GhostBtn"
 								Margin="0,0,12,6"/>
 
 						<Button Content="Opslaan"
@@ -675,7 +712,7 @@
 								Margin="0,0,12,6"/>
 
 						<!-- Planning: zichtbaar zodra de werkbon bestaat -->
-						<Button Content="📅 Planning bekijken"
+						<Button Content="Planning bekijken"
 								Command="{Binding OpenPlanningCommand}"
 								IsVisible="{Binding IsPlanningZichtbaar}"
 								Background="{DynamicResource SuccessBg}"
@@ -683,6 +720,13 @@
 								FontWeight="Bold"
 								Margin="0,0,12,6"/>
 					</WrapPanel>
+
+					<Border CornerRadius="10" Padding="10,3" HorizontalAlignment="Left"
+							Background="{Binding Offerte.Status, Converter={x:Static conv:OfferteStatusToBrushConverter.Instance}}"
+							IsVisible="{Binding Offerte, Converter={x:Static ObjectConverters.IsNotNull}}">
+						<TextBlock Text="{Binding Offerte.Status}"
+								   Foreground="White" FontWeight="SemiBold" FontSize="12"/>
+					</Border>
 
 					<TextBlock Text="{Binding FactuurStatusText}"
 							   Classes="label"

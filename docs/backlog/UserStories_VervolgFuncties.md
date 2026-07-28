@@ -381,14 +381,68 @@ bestaande tests groen (PricingEngineTests, OffertePricingDraftTests). Branch fea
 
 ---
 
+## US-48 · Eenmalige status-reconciliatie van bestaande offertes
+
+**Als** gebruiker **wil ik** dat bestaande offertes hun juiste status krijgen op basis van hun werkbon en
+bestelbon **zodat** de lijst geen offertes meer toont op "Concept" terwijl de werkbon al afgewerkt en de
+bestelbon al betaald is.
+
+**Achtergrond (gemeld 28 juli 2026):** US-42 propageert de offertestatus **op het moment van een
+overgang** (werkbon → InUitvoering/Afgewerkt, bestelbon → Betaald). Offertes waarvan die overgangen
+al gebeurd waren **vóór** US-42 live ging, zijn nooit bijgewerkt — hun `Offerte.Status` is stil blijven
+staan (bv. Concept/Goedgekeurd). De lenient forward-only propagatie (`OfferteStatusPropagation`) lost dit
+niet op, want die raakt offertes vóór Goedgekeurd bewust niet aan. Er is dus een **eenmalige
+reconciliatie** nodig die de status afleidt uit de werkelijke staat.
+
+### Acceptatiecriteria
+- Een eenmalige actie werkt alle offertes bij op basis van hun werkbon + bestelbon (Factuur):
+  - Bestelbon **Betaald** → Offerte **Betaald**
+  - Bestelbon bestaat (aangemaakt) of werkbon **Afgewerkt** → Offerte **Gefactureerd**
+  - Werkbon **InUitvoering** → Offerte **InProductie**
+  - Werkbon bestaat (Gepland) → minstens **Goedgekeurd**
+- **Nooit terug** (alleen omhoog corrigeren) en **Geannuleerde offertes blijven ongemoeid**.
+- In tegenstelling tot de gewone propagatie corrigeert dit óók offertes die nu vóór Goedgekeurd staan
+  (Concept/Verzonden) maar aantoonbaar verder in de productie zitten.
+- Idempotent: nogmaals draaien verandert niets meer.
+- Multi-user/transactioneel veilig; respecteert de optimistic concurrency.
+- Tests over de mapping (elke bron-combinatie → verwachte offertestatus) + idempotentie.
+
+### Technische uitwerking
+- Nieuwe `IOfferteStatusReconciliatieService.ReconcilieerAlleAsync()` die per offerte de doelstatus
+  bepaalt uit `WerkBon.Status` + de bijhorende `Factuur.Status`, en `Offerte.Status` naar boven bijstelt.
+- Aparte reconciliatie-mapping (niet `OfferteStatusPropagation.TryAdvanceTo`, want die negeert pre-Goedgekeurd).
+- **Uitvoering:** admin-only actie in de app ("Herbereken offertestatussen", bv. in Instellingen of
+  Gebruikersbeheer) — expliciet en herhaalbaar. Alternatief: eenmalig bij opstarten met een vlag, maar
+  een expliciete knop is veiliger en auditbaar (US-36 logt de wijzigingen).
+- Draai het één keer na de uitrol; daarna houdt US-42 alles vanzelf in sync.
+
+⏱ Schatting: S–M. **Losstaand; kan vóór of los van US-46.**
+
+**PROMPT:**
+```
+Voer US-48 uit volgens docs/backlog/UserStories_VervolgFuncties.md. Bouw IOfferteStatusReconciliatie-
+Service.ReconcilieerAlleAsync die per offerte de doelstatus afleidt uit werkbon + bestelbon (Betaald→
+Betaald, bestelbon/afgewerkt→Gefactureerd, InUitvoering→InProductie, werkbon→min. Goedgekeurd), alleen
+omhoog, Geannuleerd ongemoeid, idempotent, transactioneel. Admin-only actie "Herbereken offertestatussen"
+in de UI. Tests over de mapping + idempotentie. Branch feature/us48-status-reconciliatie. .\verify.ps1 groen.
+```
+
+---
+
 ### Status
 | Story | Onderwerp | Prioriteit | Status |
 |---|---|---|---|
-| US-40 | Audit-leesscherm in de app | Medium (na release) | 🟡 branch `feature/us40-audit-leesscherm` — verify + merge nog te doen |
-| US-41 | Volledige EF-migraties voor PostgreSQL | Medium (na release) | ⬜ |
-| US-42 | Statussync offerte ↔ werkbon ↔ bestelbon | Hoog (na release) | 🟡 branch `feature/us42-statussync` — verify + merge nog te doen |
-| US-43 | Retry-on-failure via execution strategy | Medium (na release) | ⬜ |
-| US-44 | Export Center → enterprise wizard (View-only) | Medium (na release) | 🟡 branch `feature/us44-export-wizard` (bevat ook export-kolomfixes) — verify + merge nog te doen |
-| US-45 | Facturen als export-dataset | Medium (na release) | ⬜ |
-| US-46 | OfferteView redesign (gefaseerd, ERP-werkruimte) | Hoog (na stabiele deployment) | ⬜ · hand in hand met US-47 |
-| US-47 | OfferteViewModel decompositie (god-object) | Hoog (na stabiele deployment) | ⬜ · hand in hand met US-46 |
+| US-40 | Audit-leesscherm in de app | Medium | ✅ gereleased |
+| US-41 | Volledige EF-migraties voor PostgreSQL | Medium | ⬜ |
+| US-42 | Statussync offerte ↔ werkbon ↔ bestelbon | Hoog | ✅ gereleased |
+| US-43 | Retry-on-failure via execution strategy | Medium | ⬜ |
+| US-44 | Export Center → enterprise wizard (+ export-kolomfixes) | Medium | ✅ gereleased |
+| US-45 | Facturen als export-dataset | Medium | ⬜ |
+| US-46 | OfferteView redesign — Fase A | Hoog | ✅ afgerond op branch `feature/us46-offerte-fase-a` (actie-hiërarchie, statusbadge, compacte sticky samenvatting, legacy inklapbaar; prijs-dashboard + conditionele acties bleken al aanwezig) |
+| US-46b | OfferteView redesign — Fase B/C/D (cosmetische kaart-herbouw) | Laag | ⬜ aparte branch; alleen veilig met live preview / micro-stapjes (functionele delen zoals variant-tonen zijn al klaar) |
+| US-47 | OfferteViewModel decompositie (god-object) | Hoog | ✅ was al voldaan (prijslogica in OffertePrijsViewModel, RestTeBetalen bestaat) |
+| US-48 | Eenmalige status-reconciliatie bestaande offertes | Hoog | ⬜ |
+
+> Ook gereleased (buiten de US-nummering): offertelijst-laadfouten via toast, en de CI-fix voor
+> release-automatisering (`workflow_dispatch` + optionele `RELEASE_PAT`). Sindsdien wordt elke release
+> automatisch gebouwd; alleen-docs merges triggeren géén release (`paths-ignore` in `auto-tag.yml`).
