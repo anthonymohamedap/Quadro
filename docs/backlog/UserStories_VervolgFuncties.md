@@ -390,8 +390,8 @@ bestaande tests groen (PricingEngineTests, OffertePricingDraftTests). Branch fea
 | US-43 | Retry-on-failure via execution strategy | Medium | ⬜ |
 | US-44 | Export Center → enterprise wizard (+ export-kolomfixes) | Medium | ✅ gereleased |
 | US-45 | Facturen als export-dataset | Medium | ⬜ |
-| US-46 | OfferteView redesign (gefaseerd, ERP-werkruimte) | Hoog (na stabiele deployment) | ⬜ · hand in hand met US-47 |
-| US-47 | OfferteViewModel decompositie (god-object) | Hoog (na stabiele deployment) | ⬜ · hand in hand met US-46 |
+| US-46 | OfferteView redesign (gefaseerd, ERP-werkruimte) | Hoog | 🟡 Fase A deels gereleased (actie-hiërarchie, legacy inklapbaar); prijs-dashboard + conditionele acties bleken al aanwezig. Rest (statusbadge, compacte samenvatting, Fase B/C/D) optioneel |
+| US-47 | OfferteViewModel decompositie (god-object) | Hoog | ✅ was al voldaan (prijslogica in OffertePrijsViewModel, RestTeBetalen bestaat) |
 
 > Ook gereleased (buiten de US-nummering): offertelijst-laadfouten via toast, en de CI-fix voor
 > release-automatisering (`workflow_dispatch` + optionele `RELEASE_PAT`). Sindsdien wordt elke release
