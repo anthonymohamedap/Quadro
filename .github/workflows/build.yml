@@ -1,10 +1,18 @@
 name: Release QuadroApp
 
 # Triggers when you push a version tag: git tag v1.2.3 && git push origin v1.2.3
+#
+# LET OP (bekende GitHub-valkuil): een tag die door auto-tag.yml wordt gepusht met de
+# standaard GITHUB_TOKEN start deze workflow NIET (anti-recursie-beveiliging). Daarom ook
+# een handmatige trigger hieronder: draai deze release-build met
+#   gh workflow run build.yml --ref v1.3.2
+# of via Actions -> "Release QuadroApp" -> Run workflow (kies de tag als ref).
+# Volledig automatisch = auto-tag.yml een RELEASE_PAT-secret geven (zie dat bestand).
 on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
 
 permissions:
   contents: write   # Required to create GitHub Releases and upload assets
