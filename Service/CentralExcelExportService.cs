@@ -340,7 +340,8 @@ public sealed partial class CentralExcelExportService : ICentralExcelExportServi
         BuildLijstenDefinition(),
         BuildAfwerkingenDefinition(),
         BuildLeveranciersDefinition(),
-        BuildOffertesDefinition()
+        BuildOffertesDefinition(),
+        BuildFacturenDefinition()
     ];
 
     private static ExportKolomDefinitie Col(string sleutel, string label, string groep, Func<object, object?> waarde, bool standaardGeselecteerd = true)

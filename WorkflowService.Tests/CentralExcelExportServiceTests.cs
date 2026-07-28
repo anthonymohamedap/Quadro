@@ -21,6 +21,7 @@ public sealed class CentralExcelExportServiceTests
     [InlineData(ExcelExportDataset.Afwerkingen, "Afwerkingen", "Mat")]
     [InlineData(ExcelExportDataset.Leveranciers, "Leveranciers", "LEV")]
     [InlineData(ExcelExportDataset.Offertes, "Offertes", "Concept")]
+    [InlineData(ExcelExportDataset.Facturen, "Facturen", "BON-2026-0001")]
     public async Task ExportAsync_MaaktExcelBestandMetVerwachteData(
         ExcelExportDataset dataset,
         string expectedWorksheet,
@@ -101,6 +102,39 @@ public sealed class CentralExcelExportServiceTests
 
             using var workbook = new XLWorkbook(result.BestandPad);
             AssertWorksheetContains(workbook, "Klanten - Offertes", "Concept");
+        }
+        finally
+        {
+            DeleteDirectory(exportDirectory);
+        }
+    }
+
+    [Fact]
+    public async Task ExportAsync_FacturenMetRegels_MaaktRelatieWerkblad()
+    {
+        await using var sqlite = await DbFactoryBuilder.CreateSqliteAsync();
+        await SeedExportDataAsync(sqlite.Factory);
+        var sut = new CentralExcelExportService(sqlite.Factory);
+        var exportDirectory = CreateExportDirectory();
+
+        try
+        {
+            var result = await sut.ExportAsync(new ExportAanvraag
+            {
+                Dataset = ExcelExportDataset.Facturen,
+                KolomSleutels = ["factuurNummer", "klant", "status"],
+                Relaties =
+                [
+                    new ExportRelatieAanvraag
+                    {
+                        Sleutel = "factuur-regels",
+                        KolomSleutels = ["factuurId", "omschrijving", "totaalIncl"]
+                    }
+                ]
+            }, exportDirectory);
+
+            using var workbook = new XLWorkbook(result.BestandPad);
+            AssertWorksheetContains(workbook, "Facturen - Regels", "Poster inlijsten");
         }
         finally
         {
@@ -425,6 +459,35 @@ public sealed class CentralExcelExportServiceTests
             MutatieDatum = new DateTime(2026, 3, 22, 9, 30, 0),
             Referentie = "Reservatie"
         });
+
+        var factuur = new Factuur
+        {
+            OfferteId = offerte.Id,
+            Jaar = 2026,
+            VolgNr = 1,
+            FactuurNummer = "BON-2026-0001",
+            DocumentType = "Bestelbon",
+            KlantNaam = "Jan Jansen",
+            FactuurDatum = new DateTime(2026, 3, 23),
+            VervalDatum = new DateTime(2026, 4, 23),
+            Status = FactuurStatus.KlaarVoorExport,
+            TotaalExclBtw = 123.97m,
+            TotaalBtw = 26.03m,
+            TotaalInclBtw = 150m
+        };
+        factuur.Lijnen.Add(new FactuurLijn
+        {
+            Omschrijving = "Poster inlijsten",
+            Aantal = 1m,
+            Eenheid = "st",
+            PrijsExcl = 123.97m,
+            BtwPct = 21m,
+            TotaalExcl = 123.97m,
+            TotaalBtw = 26.03m,
+            TotaalIncl = 150m,
+            Sortering = 1
+        });
+        db.Facturen.Add(factuur);
 
         await db.SaveChangesAsync();
     }
