@@ -292,6 +292,7 @@ public sealed partial class CentralExcelExportService : ICentralExcelExportServi
         ExcelExportDataset.Afwerkingen => "afwerkingen-families",
         ExcelExportDataset.Leveranciers => "leverancier-voorraadbundel",
         ExcelExportDataset.Offertes => "offertebundel",
+        ExcelExportDataset.Facturen => string.Empty, // geen standaardpreset → standaard geselecteerde kolommen
         _ => throw new InvalidOperationException($"Onbekende exportdataset: {dataset}.")
     };
 
