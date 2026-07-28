@@ -384,11 +384,15 @@ bestaande tests groen (PricingEngineTests, OffertePricingDraftTests). Branch fea
 ### Status
 | Story | Onderwerp | Prioriteit | Status |
 |---|---|---|---|
-| US-40 | Audit-leesscherm in de app | Medium (na release) | 🟡 branch `feature/us40-audit-leesscherm` — verify + merge nog te doen |
-| US-41 | Volledige EF-migraties voor PostgreSQL | Medium (na release) | ⬜ |
-| US-42 | Statussync offerte ↔ werkbon ↔ bestelbon | Hoog (na release) | 🟡 branch `feature/us42-statussync` — verify + merge nog te doen |
-| US-43 | Retry-on-failure via execution strategy | Medium (na release) | ⬜ |
-| US-44 | Export Center → enterprise wizard (View-only) | Medium (na release) | 🟡 branch `feature/us44-export-wizard` (bevat ook export-kolomfixes) — verify + merge nog te doen |
-| US-45 | Facturen als export-dataset | Medium (na release) | ⬜ |
+| US-40 | Audit-leesscherm in de app | Medium | ✅ gereleased |
+| US-41 | Volledige EF-migraties voor PostgreSQL | Medium | ⬜ |
+| US-42 | Statussync offerte ↔ werkbon ↔ bestelbon | Hoog | ✅ gereleased |
+| US-43 | Retry-on-failure via execution strategy | Medium | ⬜ |
+| US-44 | Export Center → enterprise wizard (+ export-kolomfixes) | Medium | ✅ gereleased |
+| US-45 | Facturen als export-dataset | Medium | ⬜ |
 | US-46 | OfferteView redesign (gefaseerd, ERP-werkruimte) | Hoog (na stabiele deployment) | ⬜ · hand in hand met US-47 |
 | US-47 | OfferteViewModel decompositie (god-object) | Hoog (na stabiele deployment) | ⬜ · hand in hand met US-46 |
+
+> Ook gereleased (buiten de US-nummering): offertelijst-laadfouten via toast, en de CI-fix voor
+> release-automatisering (`workflow_dispatch` + optionele `RELEASE_PAT`). Sindsdien wordt elke release
+> automatisch gebouwd; alleen-docs merges triggeren géén release (`paths-ignore` in `auto-tag.yml`).
