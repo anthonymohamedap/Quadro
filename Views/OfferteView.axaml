@@ -568,8 +568,9 @@
 						</Grid>
 					</Border>
 
-					<!-- LEGACY -->
+					<!-- GEAVANCEERD (legacy afwerkingscode, ingeklapt) -->
 					<Border Classes="quadro-card">
+						<Expander Header="Geavanceerd — afwerkingscode (G P P D O R)">
 						<Grid ColumnDefinitions="Auto,*,Auto,Auto"
                               ColumnSpacing="8">
 
@@ -589,6 +590,7 @@
                                     Content="Genereren"
                                     Command="{Binding GenerateLegacyCodeCommand}"/>
 						</Grid>
+						</Expander>
 					</Border>
 					<Border Classes="quadro-card">
 
@@ -652,7 +654,7 @@
 
 						<Button Content="Berekenen"
 								Command="{Binding BerekenCommand}"
-								Classes="AccentBtn"
+								Classes="GhostBtn"
 								Margin="0,0,12,6"/>
 
 						<Button Content="Opslaan"
@@ -675,7 +677,7 @@
 								Margin="0,0,12,6"/>
 
 						<!-- Planning: zichtbaar zodra de werkbon bestaat -->
-						<Button Content="📅 Planning bekijken"
+						<Button Content="Planning bekijken"
 								Command="{Binding OpenPlanningCommand}"
 								IsVisible="{Binding IsPlanningZichtbaar}"
 								Background="{DynamicResource SuccessBg}"
