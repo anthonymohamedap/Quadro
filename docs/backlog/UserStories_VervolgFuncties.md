@@ -80,6 +80,15 @@ toekomstige schemawijzigingen bestaan.
 
 ⏱ Schatting: L. **Post-release.**
 
+> **Bijgewerkte analyse + beslissing (28-07-2026):** EF past *alle* migraties in één project toe voor
+> een context, dus SQLite- en Npgsql-migraties naast elkaar in hetzelfde project botsen. De nette oplossing
+> vereist een **apart migratie-project per provider** (structurele verbouwing). Bovendien draait de live
+> Postgres al op `EnsureCreated` (tabellen bestaan), dus overschakelen naar `MigrateAsync` vereist een
+> eenmalige, delicate **baseline-markering** van de bestaande DB (anders probeert EF de tabellen opnieuw
+> aan te maken). **Beslissing:** Postgres blijft voorlopig op `EnsureCreatedAsync` — dat werkt en het
+> schema is stabiel na de release. US-41 pas oppakken wanneer iemand het op een dev-machine kan opzetten
+> en itereren (kan niet blind/zonder draaiende EF-tooling). Waarde is laag zolang het schema niet wijzigt.
+
 **PROMPT:**
 ```
 Voer US-41 uit volgens docs/backlog/UserStories_VervolgFuncties.md en de analyse in
