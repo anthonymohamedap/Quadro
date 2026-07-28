@@ -686,6 +686,13 @@
 								Margin="0,0,12,6"/>
 					</WrapPanel>
 
+					<Border CornerRadius="10" Padding="10,3" HorizontalAlignment="Left"
+							Background="{Binding Offerte.Status, Converter={x:Static conv:OfferteStatusToBrushConverter.Instance}}"
+							IsVisible="{Binding Offerte, Converter={x:Static ObjectConverters.IsNotNull}}">
+						<TextBlock Text="{Binding Offerte.Status}"
+								   Foreground="White" FontWeight="SemiBold" FontSize="12"/>
+					</Border>
+
 					<TextBlock Text="{Binding FactuurStatusText}"
 							   Classes="label"
 							   Foreground="{DynamicResource TextSecondary}"
