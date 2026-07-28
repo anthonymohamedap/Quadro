@@ -437,7 +437,7 @@ in de UI. Tests over de mapping + idempotentie. Branch feature/us48-status-recon
 | US-42 | Statussync offerte ↔ werkbon ↔ bestelbon | Hoog | ✅ gereleased |
 | US-43 | Retry-on-failure via execution strategy | Medium | ⬜ |
 | US-44 | Export Center → enterprise wizard (+ export-kolomfixes) | Medium | ✅ gereleased |
-| US-45 | Facturen als export-dataset | Medium | ⬜ |
+| US-45 | Facturen als export-dataset | Medium | 🟡 branch `feature/us45-facturen-export` — verify + merge |
 | US-46 | OfferteView redesign — Fase A | Hoog | ✅ afgerond op branch `feature/us46-offerte-fase-a` (actie-hiërarchie, statusbadge, compacte sticky samenvatting, legacy inklapbaar; prijs-dashboard + conditionele acties bleken al aanwezig) |
 | US-46b | OfferteView redesign — Fase B/C/D (cosmetische kaart-herbouw) | Laag | ⬜ aparte branch; alleen veilig met live preview / micro-stapjes (functionele delen zoals variant-tonen zijn al klaar) |
 | US-47 | OfferteViewModel decompositie (god-object) | Hoog | ✅ was al voldaan (prijslogica in OffertePrijsViewModel, RestTeBetalen bestaat) |

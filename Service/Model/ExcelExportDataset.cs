@@ -6,5 +6,6 @@ public enum ExcelExportDataset
     Lijsten = 1,
     Afwerkingen = 2,
     Leveranciers = 3,
-    Offertes = 4
+    Offertes = 4,
+    Facturen = 5
 }
