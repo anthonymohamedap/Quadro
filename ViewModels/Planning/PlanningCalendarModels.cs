@@ -50,7 +50,7 @@ public class DayRow
     public int Uren { get; set; }
     public int Minuten { get; set; }
     public bool IsGeblokkeerd { get; set; }
-    public string UurMinText => IsGeblokkeerd ? "🚫" : $"{Uren:00}:{Minuten:00}";
+    public string UurMinText => IsGeblokkeerd ? "Geblok." : $"{Uren:00}:{Minuten:00}";
 }
 
 public class WeekRow
