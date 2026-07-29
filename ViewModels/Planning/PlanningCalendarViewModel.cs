@@ -285,6 +285,11 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             {
                 RegelId = r.Id,
                 Label = $"{r.AantalStuks}x {r.BreedteCm}×{r.HoogteCm} — {r.TypeLijst?.Artikelnummer ?? "?"}",
+                Titel = string.IsNullOrWhiteSpace(r.Titel) ? "Inlijsting" : r.Titel!,
+                Afmeting = $"{r.AantalStuks}× {r.BreedteCm:0.#}×{r.HoogteCm:0.#} cm",
+                LijstLabel = r.TypeLijst is null
+                    ? "Geen lijst gekozen"
+                    : $"{r.TypeLijst.Artikelnummer} · {r.TypeLijst.Soort}",
                 IsSelected = false
             })
         );
