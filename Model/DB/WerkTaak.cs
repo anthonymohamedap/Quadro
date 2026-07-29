@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace QuadroApp.Model.DB
@@ -49,6 +50,16 @@ namespace QuadroApp.Model.DB
 
         [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public bool KanBesteldWorden => !IsBesteld;
+
+        /// <summary>US-51 — er is pas écht een bestelling nodig als de lijst niet al besteld is
+        /// én niet op voorraad ligt. Voorkomt de tegenstrijdige "op voorraad + bestelling vereist".</summary>
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public bool MoetBesteldWorden => !IsBesteld && !IsOpVoorraad;
+
+        /// <summary>US-51 — keuzelijst voor de bestelwijze in de UI.</summary>
+        private static readonly BestelVorm[] _bestelVormOpties = Enum.GetValues<BestelVorm>();
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public IReadOnlyList<BestelVorm> BestelVormOpties => _bestelVormOpties;
 
         /// <summary>Bestelwijze geselecteerd door de gebruiker in de UI — niet opgeslagen in DB,
         /// wordt doorgegeven bij het aanmaken van de bestelling.</summary>

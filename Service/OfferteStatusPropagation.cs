@@ -13,8 +13,8 @@ namespace QuadroApp.Service;
 ///
 /// De offertestatussen zijn lineair geordend
 /// (Concept 0 → Verzonden 1 → Goedgekeurd 2 → InProductie 3 → Afgewerkt 4 →
-///  Gefactureerd 5 → Betaald 6, Geannuleerd 7). We propageren alleen naar
-/// InProductie/Afgewerkt/Gefactureerd/Betaald en nooit terug.
+///  Besteld 5 → Betaald 6, Geannuleerd 7). We propageren alleen naar
+/// InProductie/Afgewerkt/Besteld/Betaald en nooit terug.
 /// </summary>
 public static class OfferteStatusPropagation
 {
@@ -26,7 +26,7 @@ public static class OfferteStatusPropagation
     {
         // Alleen productie-/facturatiestatussen zijn afgeleid propageerbaar.
         if (target is not (OfferteStatus.InProductie or OfferteStatus.Afgewerkt
-            or OfferteStatus.Gefactureerd or OfferteStatus.Betaald))
+            or OfferteStatus.Besteld or OfferteStatus.Betaald))
             return false;
 
         var current = offerte.Status;

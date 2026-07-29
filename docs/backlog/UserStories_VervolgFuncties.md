@@ -468,6 +468,10 @@ DnD-API (DataObject/DoDragDrop/DragEventArgs.Data) naar de nieuwe DataTransfer-A
 #pragma warning disable/restore CS0618. Gedrag identiek houden: regel slepen naar dagtegel
 plant via vm.PlanRegelOpDatumAsync, betaald/afgewerkt geblokkeerd. Branch
 feature/us50-datatransfer-dnd. .\verify.ps1 groen, 0 warnings.
+```
+
+---
+
 ## US-49 · Planning-kalender redesign naar productieplanning-werkruimte (gefaseerd)
 
 **Als** productieplanner **wil ik** werkbonnen beheren via een overzichtelijke planning-werkruimte
@@ -536,6 +540,100 @@ voor Fase B.
 
 ---
 
+## US-51 · Werkbonnen-lijst + werkbon-overzicht revamp
+
+**Als** werkvoorbereider/zaakvoerder **wil ik** in de werkbonnenlijst meteen de kerninfo per werkbon zien
+én per werkbon een overzichtelijk scherm met álle details **zodat** ik niet hoef te graven en niet per
+ongeluk in de offerte beland.
+
+**Achtergrond (review 29-07-2026):** `Views/WerkBonLijstView.axaml` (~344 regels) +
+`ViewModels/WerkBonLijstViewModel.cs` (~263 regels). Code-behind is minimaal (laadt bij
+`AttachedToVisualTree`).
+
+Huidige situatie:
+- **Lijst** toont enkel: bon-nr, achternaam klant, ruwe status-enum-tekst, aanmaakdatum + "Bekijk".
+- **Detail** = smal inline paneel rechts: bon-nr, klant (achternaam), status-dropdown, "Opslaan status",
+  een knop "📄 Open bestelbon", en de takenlijst met per-taak bestel-/voorraadacties.
+- **Verwarrend (feitelijke bug):** de knop **"Open bestelbon" roept `OpenBestelBonAsync` →
+  `OpenOfferteAsync` aan en opent dus de OFFERTE**, niet een bestelbon. Label ≠ gedrag.
+- **Ontbreekt in de lijst:** offerte-referentie, volledige klantnaam, aantal taken, bestel-voortgang,
+  afhaaldatum, totaalprijs, en een gekleurde status-badge (nu kale enum-tekst).
+
+### Wat bestaat al (geen datamodel-uitbreiding nodig)
+- `WerkBon`: `TotaalPrijsIncl`, `AfhaalDatum`, `Status`, `AangemaaktOp`, `BijgewerktOp`, `Taken`.
+- `WerkTaak`: `Omschrijving`, lijst via `OfferteRegel.TypeLijst`, afmeting via `OfferteRegel`,
+  `DuurMinuten`, `GeplandVan/Tot`, `IsBesteld`/`BestelDatum`, `IsOpVoorraad`, `VoorraadStatus`,
+  `BenodigdeMeter`.
+- `Factuur` (= bestelbon, **uniek per `WerkBonId`**): `FactuurNummer`, `DocumentType`, `Status`
+  (incl. *Betaald*), `FactuurDatum`, `VervalDatum`, totalen, voorschot.
+- `Offerte → Klant` voor volledige naam + contactgegevens.
+- Bestaande commands (behouden): `SelecteerWerkBon`, `SaveStatus`, `MarkeerLijstAlsBesteld`,
+  `OpenPlanning`, `Refresh`, `GaTerug`, zoek-/jaarfilter.
+
+### Beslissingen (met gebruiker afgestemd, 29-07-2026)
+- Het werkbon-overzicht opent als **apart modaal venster** (zoals `PlanningCalendarWindow`), niet als
+  volledig genavigeerd scherm.
+- De lijst **houdt een compacte inline preview**; een knop **"Open werkbon"** opent het volledige
+  overzichtsvenster.
+- De offerte is **één stap verwijderd**: knop **"Open offerte"** staat op het overzichtsvenster, niet
+  meer los in de lijst. Zo verdwijnt de misleidende "Open bestelbon"-knop.
+
+> **Risicopunten (belangrijk):**
+> - "Opslaan status" met overgang naar **Afgewerkt** heeft neveneffecten via
+>   `IWorkflowService.ChangeWerkBonStatusAsync` (maakt bestelbon/factuur aan + navigeert naar Facturen) —
+>   deze logica **ongewijzigd** meenemen naar het venster.
+> - Per-lijst bestellen (`MarkeerLijstAlsBesteldAsync` + bestelvorm-radio's) moet mee naar het overzicht.
+> - Alle bestaande bindings/commands + de `#Root.((vm:...)DataContext).*`-verwijzingen behouden.
+
+### Fasering (elke fase = eigen branch, `.\verify.ps1` + visuele test, mergebaar los)
+- **Fase A — Lijst-revamp.** Rijkere rij/kaart met **gekleurde status-badge** (converter, consistent met
+  offerte-badges), volledige klantnaam, offerte-nr, aantal taken, afhaaldatum, **bestel-voortgang**
+  (bv. "3/5 besteld"), totaalprijs. Statusfilter naast het jaarfilter. Inline preview compacter, met knop
+  "Open werkbon".
+- **Fase B — Werkbon-overzichtsvenster (nieuw).** `WerkBonDetailWindow` (modal) +
+  `WerkBonDetailViewModel`. Kop: bon-nr + status-badge + klant + datums + totaal. Secties: planning-
+  samenvatting (geplande uren, periode), taken/lijsten (afmeting, duur, bestel-/voorraadstatus),
+  gekoppelde **bestelbon/factuur read-only** (nummer, status, bedragen). Acties: status wijzigen +
+  opslaan, per-lijst bestellen. Secundair onderaan: **"Open offerte"**.
+- **Fase C — Flow opschonen.** Verwijder de misleidende "Open bestelbon"; offerte enkel nog via het
+  overzichtsvenster. Emoji's (🧾👁📌📄🛠) vervangen door MDI-PathIcons in de huisstijl.
+
+### Acceptatiecriteria
+- Lijst toont per werkbon minstens: bon-nr, klant (volledige naam), status als **gekleurde badge**,
+  aanmaak-/afhaaldatum, aantal taken, bestel-voortgang, totaalprijs.
+- "Open werkbon" opent een modaal venster met alle werkbon-info overzichtelijk gegroepeerd.
+- Statuswijziging **incl. neveneffect** (Afgewerkt → bestelbon/factuur) werkt vanuit het venster;
+  per-lijst bestellen werkt.
+- "Open offerte" op het venster opent de gekoppelde offerte (huidige `OpenOfferteAsync`).
+- Gekoppelde bestelbon/factuur wordt **read-only** getoond (geen dubbele bewerkweg).
+- Geen functionele regressie: alle bestaande commands + zoek-/jaarfilter blijven werken.
+- Enterprise-UI: MDI-iconen (geen emoji), tokens, 8pt-spacing, trimming+tooltips, kolommen met MinWidth,
+  ScrollViewer, zichtbare focus.
+
+### Technische uitwerking
+- Nieuw `Views/WerkBonDetailWindow.axaml(.cs)` + `WerkBonDetailViewModel`; laad de werkbon met Includes
+  (`Offerte.Klant`, `Taken.OfferteRegel.TypeLijst`) + de gekoppelde `Factuur` (query op `WerkBonId`).
+- Verplaats de status-/bestel-acties uit het inline paneel naar het venster (logica hergebruiken, niet
+  herschrijven). Inline preview behoudt enkel lezen + "Open werkbon".
+- Status-badge-converter `WerkBonStatus → kleur/label` (hergebruik/naar analogie van de offerte-badge).
+- Bestel-voortgang = `Taken.Count(t => t.IsBesteld)` / `Taken.Count` (excl. op-voorraad indien gewenst).
+- Vervang emoji door `PathIcon` met MDI-data, net als in de planning-revamp.
+
+⏱ Schatting: **M–L**, gefaseerd. **Post-release, na stabiele deployment.**
+
+**PROMPT (Fase A, niet in één keer):**
+```
+Voer US-51 FASE A uit volgens docs/backlog/UserStories_VervolgFuncties.md. Revamp de werkbonnenlijst in
+Views/WerkBonLijstView.axaml: rijkere rijen met gekleurde WerkBonStatus-badge (nieuwe converter), volledige
+klantnaam, offerte-nr, aantal taken, afhaaldatum, bestel-voortgang (x/y besteld) en totaalprijs; voeg een
+statusfilter toe naast het jaarfilter; maak de inline preview compacter met een knop "Open werkbon"
+(venster volgt in Fase B). Behoud ALLE bestaande commands/bindings en de LoadAsync-on-attach. MDI-iconen
+i.p.v. emoji, tokens, 8pt. Branch feature/us51-werkbon-lijst-fase-a. .\verify.ps1 groen + visuele test.
+Wacht op akkoord voor Fase B (het overzichtsvenster).
+```
+
+---
+
 ### Status
 | Story | Onderwerp | Prioriteit | Status |
 |---|---|---|---|
@@ -549,9 +647,9 @@ voor Fase B.
 | US-46b | OfferteView redesign — Fase B/C/D (cosmetische kaart-herbouw) | Laag | ⬜ aparte branch; alleen veilig met live preview / micro-stapjes (functionele delen zoals variant-tonen zijn al klaar) |
 | US-47 | OfferteViewModel decompositie (god-object) | Hoog | ✅ was al voldaan (prijslogica in OffertePrijsViewModel, RestTeBetalen bestaat) |
 | US-48 | Eenmalige status-reconciliatie bestaande offertes | Hoog | 🟡 branch `feature/us48-status-reconciliatie` — verify + merge |
+| US-49 | Planning-kalender redesign (gefaseerd, productieplanning) | Medium (na stabiele deployment) | 🟡 in uitvoering op branch `feature/us49-planning-fase-a` (Fase A–D + drag-drop, dagtegel-hints, weekdetail per dag) |
 | US-50 | Drag-drop planning → nieuwe DataTransfer-API (CS0618 wegwerken) | Laag | ⬜ tech-debt; CS0618 nu onderdrukt met `#pragma` |
-| US-48 | Eenmalige status-reconciliatie bestaande offertes | Hoog | ✅ gereleased |
-| US-49 | Planning-kalender redesign (gefaseerd, productieplanning) | Medium (na stabiele deployment) | ⬜ |
+| US-51 | Werkbonnen-lijst + werkbon-overzicht revamp (gefaseerd) | Medium | ✅ afgerond op branch `feature/us51-werkbon-lijst-fase-a` (Fase A rijkere lijst+statusfilter, B modaal overzichtsvenster, C flow-opschoning; extra: duidelijker bestel-UI, afwerking+code+varianten, zijbalk verwijderd, Gefactureerd→Besteld, planning→offerte InProductie) |
 
 > Ook gereleased (buiten de US-nummering): offertelijst-laadfouten via toast, en de CI-fix voor
 > release-automatisering (`workflow_dispatch` + optionele `RELEASE_PAT`). Sindsdien wordt elke release
