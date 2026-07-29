@@ -41,9 +41,25 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
     public IAsyncRelayCommand<WerkTaak> HerplanTaakCommand   => Uitvoering.HerplanTaakCommand;
     public IAsyncRelayCommand<WerkTaak> VerwijderTaakCommand => Uitvoering.VerwijderTaakCommand;
 
+    // US-49 — drag & drop: één regel op een dag laten vallen (aangeroepen vanuit code-behind).
+    public Task PlanRegelOpDatumAsync(int regelId, DateTime datum) => Uitvoering.PlanRegelOpDatumAsync(regelId, datum);
+
     [ObservableProperty] private DayRow? selectedDayRow;
     [ObservableProperty] private int selectedWeekNr;
     [ObservableProperty] private ObservableCollection<DayRow> weekDayRows = new();
+
+    // US-49 Fase A — dashboard-KPI's (berekend in LoadAsync; read-only presentatie, geen businesslogica).
+    [ObservableProperty] private string kpiUtilVandaag = "–";
+    [ObservableProperty] private string kpiUtilWeek = "–";
+    [ObservableProperty] private int kpiOpenWerkbonnen;
+    [ObservableProperty] private int kpiBlokdagen;
+    [ObservableProperty] private string kpiBeschikbareUren = "–";
+
+    // US-49 Fase C — dag- en week-samenvatting (berekend in de laad-methodes).
+    [ObservableProperty] private string dagGeplandLabel = "0u 0m";
+    [ObservableProperty] private string dagVrijLabel = "–";
+    [ObservableProperty] private string weekGeplandLabel = "0u 0m";
+    [ObservableProperty] private string weekUtilLabel = "0%";
 
     public IRelayCommand PrevMonthCommand { get; }
     public IRelayCommand NextMonthCommand { get; }
@@ -269,6 +285,11 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             {
                 RegelId = r.Id,
                 Label = $"{r.AantalStuks}x {r.BreedteCm}×{r.HoogteCm} — {r.TypeLijst?.Artikelnummer ?? "?"}",
+                Titel = string.IsNullOrWhiteSpace(r.Titel) ? "Inlijsting" : r.Titel!,
+                Afmeting = $"{r.AantalStuks}× {r.BreedteCm:0.#}×{r.HoogteCm:0.#} cm",
+                LijstLabel = r.TypeLijst is null
+                    ? "Geen lijst gekozen"
+                    : $"{r.TypeLijst.Artikelnummer} · {r.TypeLijst.Soort}",
                 IsSelected = false
             })
         );
@@ -387,6 +408,12 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             .ToListAsync();
 
         TakenVanDag = new ObservableCollection<WerkTaak>(taken);
+
+        // US-49 Fase C — dag-workload samenvatting.
+        var usedDag = taken.Sum(t => t.DuurMinuten);
+        DagGeplandLabel = $"{usedDag / 60}u {usedDag % 60}m";
+        var vrij = Math.Max(0, CapaciteitMinuten - usedDag);
+        DagVrijLabel = IsGeselecteerdeDagGeblokkeerd ? "geblokkeerd" : $"{vrij / 60}u {vrij % 60}m";
     }
 
     // ───────── MAAND OVERZICHT ─────────
@@ -396,6 +423,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
 
     [ObservableProperty] private ObservableCollection<DayRow> dayRows = new();
     [ObservableProperty] private ObservableCollection<WeekRow> weekRows = new();
+    [ObservableProperty] private ObservableCollection<WeekDagGroep> weekDagGroepen = new();
 
     public async Task LoadAsync()
     {
@@ -412,6 +440,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
         var end = start.AddDays(totalCells);
 
         var taken = await db.WerkTaken
+            .Include(t => t.WerkBon).ThenInclude(w => w.Offerte).ThenInclude(o => o.Klant)
             .Where(t => t.GeplandVan >= start && t.GeplandVan < end)
             .ToListAsync();
 
@@ -452,11 +481,28 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
                     : $"{used / 60}u {used % 60}m / {CapaciteitMinuten / 60}u";
             }
 
+            // US-49 — korte klant-hint op de tegel (zonder klikken).
+            string taakPreview = "";
+            if (!isGeblokkeerd && dagTaken.Count > 0)
+            {
+                var namen = dagTaken
+                    .Select(t => t.WerkBon?.Offerte?.Klant?.Achternaam)
+                    .Where(n => !string.IsNullOrWhiteSpace(n))
+                    .Distinct()
+                    .ToList();
+                taakPreview = namen.Count == 0
+                    ? $"{dagTaken.Count} taak/taken"
+                    : namen.Count <= 2
+                        ? string.Join(", ", namen)
+                        : $"{namen[0]}, {namen[1]} +{namen.Count - 2}";
+            }
+
             MonthDays.Add(new DayTile
             {
                 Date = date,
                 DayNumber = date.Day.ToString(),
                 BusyLabel = busyLabel,
+                TakenPreview = taakPreview,
                 Busy = util,
                 IsToday = isVandaag,
                 IsWeekend = isWeekend,
@@ -489,7 +535,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
                 .Count(x => x.Date >= weekStart && x.Date < weekEnd && x.IsGeblokkeerd);
 
             var label = weekGeblokkeerd > 0
-                ? $"{weekMinutes / 60}u {weekMinutes % 60}m · {weekGeblokkeerd}🚫"
+                ? $"{weekMinutes / 60}u {weekMinutes % 60}m · {weekGeblokkeerd} geblok."
                 : $"{weekMinutes / 60}u {weekMinutes % 60}m";
 
             WeekSummaries.Add(new WeekSummary
@@ -500,6 +546,34 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             });
             weekStart = weekEnd;
         }
+
+        // ── US-49 Fase A: dashboard-KPI's (afgeleid van de geladen data) ──
+        var vandaagTile = MonthDays.FirstOrDefault(d => d.IsToday);
+        KpiUtilVandaag = vandaagTile is null ? "–" : $"{(int)Math.Round(vandaagTile.Busy * 100)}%";
+
+        var refDatum = vandaagTile?.Date ?? DateTime.Today;
+        int refWeek = ISOWeek.GetWeekOfYear(refDatum);
+        var weekWerkdagen = MonthDays
+            .Where(d => ISOWeek.GetWeekOfYear(d.Date) == refWeek
+                        && d.Date.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday))
+            .ToList();
+        double weekUtil = weekWerkdagen.Count == 0 ? 0 : weekWerkdagen.Average(d => d.Busy);
+        KpiUtilWeek = $"{(int)Math.Round(weekUtil * 100)}%";
+
+        KpiOpenWerkbonnen = taken
+            .Where(t => t.GeplandVan.Month == Month && t.GeplandVan.Year == Year)
+            .Select(t => t.WerkBonId).Distinct().Count();
+
+        KpiBlokdagen = MonthDays.Count(d => d.IsGeblokkeerd && !d.IsOtherMonth);
+
+        int beschikbaarMin = 0;
+        foreach (var dag in MonthDays.Where(d => !d.IsOtherMonth && !d.IsGeblokkeerd
+                     && d.Date.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday)))
+        {
+            var usedDag = taken.Where(t => t.GeplandVan.Date == dag.Date).Sum(t => t.DuurMinuten);
+            beschikbaarMin += Math.Max(0, CapaciteitMinuten - usedDag);
+        }
+        KpiBeschikbareUren = $"{beschikbaarMin / 60}u";
 
         OnPropertyChanged(nameof(IsGeselecteerdeDagGeblokkeerd));
         OnPropertyChanged(nameof(BlokkeerDagButtonText));
@@ -535,6 +609,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             {
                 BonNr = t.WerkBonId,
                 DuurMin = t.DuurMinuten,
+                Datum = t.GeplandVan.Date,
                 KlantNaam = t.WerkBon?.Offerte?.Klant?.Achternaam ?? "",
                 Afmeting = r is null ? "" : $"{r.AantalStuks}× {r.BreedteCm}×{r.HoogteCm}",
                 Lijst = r?.TypeLijst?.Artikelnummer ?? "",
@@ -542,5 +617,23 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
                 Dag = Capitalize(t.GeplandVan.ToString("ddd dd/MM", Nl))
             });
         }
+
+        // US-49 — weekdetail per dag groeperen (leesbaarder dan één platte lijst).
+        WeekDagGroepen.Clear();
+        foreach (var g in WeekRows.GroupBy(w => w.Datum).OrderBy(x => x.Key))
+        {
+            var min = g.Sum(w => w.DuurMin);
+            WeekDagGroepen.Add(new WeekDagGroep
+            {
+                DagLabel = Capitalize(g.Key.ToString("dddd dd/MM", Nl)),
+                TotaalLabel = $"{g.Count()} regel(s) · {min / 60}u {min % 60:00}m",
+                Regels = g.ToList()
+            });
+        }
+
+        // US-49 Fase C — week-samenvatting.
+        var weekMin = taken.Sum(t => t.DuurMinuten);
+        WeekGeplandLabel = $"{weekMin / 60}u {weekMin % 60}m";
+        WeekUtilLabel = $"{(int)Math.Round(100.0 * weekMin / (5 * CapaciteitMinuten))}%";
     }
 }

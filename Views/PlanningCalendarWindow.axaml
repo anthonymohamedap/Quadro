@@ -106,7 +106,7 @@
 
 	<!-- ROOT: Panel wraps Grid + Toast overlay -->
 	<Panel>
-		<Grid RowDefinitions="70,Auto,*">
+		<Grid RowDefinitions="70,Auto,Auto,*">
 
 			<!-- ══════════════ HEADER (zelfde taal als QuadroHeader) ══════════════ -->
 			<Border Grid.Row="0" Background="{DynamicResource BrandDark}">
@@ -159,7 +159,59 @@
 			</Border>
 
 			<!-- ══════════════ BODY: 2-column ══════════════ -->
-			<Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+			<!-- US-49 Fase A: dashboard-KPI's + capaciteitslegende -->
+			<Border Grid.Row="2" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="0,0,0,1" Padding="20,12">
+				<Grid ColumnDefinitions="*,Auto">
+				<StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+					<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="10" Padding="14,8" MinWidth="110">
+						<StackPanel Spacing="1">
+							<TextBlock Text="Bezetting vandaag" Classes="caption" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+							<TextBlock Text="{Binding KpiUtilVandaag}" Classes="h2" Foreground="{DynamicResource TextHeading}"/>
+						</StackPanel>
+					</Border>
+					<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="10" Padding="14,8" MinWidth="110">
+						<StackPanel Spacing="1">
+							<TextBlock Text="Bezetting deze week" Classes="caption" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+							<TextBlock Text="{Binding KpiUtilWeek}" Classes="h2" Foreground="{DynamicResource TextHeading}"/>
+						</StackPanel>
+					</Border>
+					<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="10" Padding="14,8" MinWidth="110">
+						<StackPanel Spacing="1">
+							<TextBlock Text="Open werkbonnen" Classes="caption" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+							<TextBlock Text="{Binding KpiOpenWerkbonnen}" Classes="h2" Foreground="{DynamicResource TextHeading}"/>
+						</StackPanel>
+					</Border>
+					<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="10" Padding="14,8" MinWidth="110">
+						<StackPanel Spacing="1">
+							<TextBlock Text="Geblokkeerde dagen" Classes="caption" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+							<TextBlock Text="{Binding KpiBlokdagen}" Classes="h2" Foreground="{DynamicResource TextHeading}"/>
+						</StackPanel>
+					</Border>
+					<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="10" Padding="14,8" MinWidth="110">
+						<StackPanel Spacing="1">
+							<TextBlock Text="Beschikbare uren" Classes="caption" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+							<TextBlock Text="{Binding KpiBeschikbareUren}" Classes="h2" Foreground="{DynamicResource TextHeading}"/>
+						</StackPanel>
+					</Border>
+				</StackPanel>
+				<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
+					<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+						<Border Width="12" Height="12" CornerRadius="3" Background="{DynamicResource CapacityLow}"/>
+						<TextBlock Text="Rustig" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+					</StackPanel>
+					<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+						<Border Width="12" Height="12" CornerRadius="3" Background="{DynamicResource CapacityHigh}"/>
+						<TextBlock Text="Vol" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+					</StackPanel>
+					<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+						<Border Width="12" Height="12" CornerRadius="3" Background="{DynamicResource Danger}"/>
+						<TextBlock Text="Geblokkeerd" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+					</StackPanel>
+				</StackPanel>
+				</Grid>
+			</Border>
+
+			<Grid Grid.Row="3" ColumnDefinitions="*,Auto">
 
 				<!-- LEFT — Calendar grid -->
 				<Grid Grid.Column="0"
@@ -204,19 +256,16 @@
 										Padding="10,8"
 										MinHeight="80"
 										Cursor="Hand"
-										PointerPressed="DayTile_PointerPressed">
+										PointerPressed="DayTile_PointerPressed"
+										DragDrop.AllowDrop="True">
 
 									<StackPanel Spacing="4">
-										<!-- Day number (+ blok-indicator) -->
-										<StackPanel Orientation="Horizontal" Spacing="4">
-											<TextBlock Text="🚫"
-													   Classes="caption"
-													   IsVisible="{Binding IsGeblokkeerd}"
-													   VerticalAlignment="Center"/>
-											<TextBlock Text="{Binding DayNumber}"
-													   Classes="body"
-													   FontWeight="Bold"/>
-										</StackPanel>
+										<!-- Day number + blok-badge + bezettings-% -->
+										<Grid ColumnDefinitions="Auto,*,Auto">
+											<Border Grid.Column="0" Width="8" Height="8" CornerRadius="4" Background="{DynamicResource Danger}" IsVisible="{Binding IsGeblokkeerd}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+											<TextBlock Grid.Column="1" Text="{Binding DayNumber}" Classes="body" FontWeight="Bold"/>
+											<TextBlock Grid.Column="2" Text="{Binding BusyPct}" Classes="caption" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+										</Grid>
 
 										<!-- Capacity bar (proportioneel — schaalt mee met de tegel) -->
 										<ProgressBar Classes="Capacity"
@@ -231,6 +280,12 @@
 												   Classes="caption"
 												   TextTrimming="CharacterEllipsis"
 												   ToolTip.Tip="{Binding BusyLabel}"/>
+										<TextBlock Text="{Binding TakenPreview}"
+											   Classes="caption"
+											   Foreground="{DynamicResource TextSecondary}"
+											   TextTrimming="CharacterEllipsis"
+											   ToolTip.Tip="{Binding TakenPreview}"
+											   IsVisible="{Binding TakenPreview, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 									</StackPanel>
 								</Border>
 							</DataTemplate>
@@ -259,6 +314,18 @@
 										   TextTrimming="CharacterEllipsis"
 										   ToolTip.Tip="{Binding SelectedDateLang}"/>
 							</StackPanel>
+								<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="8" Padding="12,8" Margin="0,0,0,12">
+									<Grid ColumnDefinitions="*,*">
+										<StackPanel Grid.Column="0" Spacing="1">
+											<TextBlock Text="Gepland" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+											<TextBlock Text="{Binding DagGeplandLabel}" Classes="body" FontWeight="SemiBold"/>
+										</StackPanel>
+										<StackPanel Grid.Column="1" Spacing="1">
+											<TextBlock Text="Beschikbaar" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+											<TextBlock Text="{Binding DagVrijLabel}" Classes="body" FontWeight="SemiBold"/>
+										</StackPanel>
+									</Grid>
+								</Border>
 
 							<!-- Geblokkeerd indicator -->
 							<Border IsVisible="{Binding IsGeselecteerdeDagGeblokkeerd}"
@@ -270,7 +337,7 @@
 									Margin="0,0,0,12">
 								<StackPanel Spacing="4">
 									<StackPanel Orientation="Horizontal" Spacing="10">
-										<TextBlock Text="🚫" Classes="h3" VerticalAlignment="Center"/>
+										<Border Width="14" Height="14" CornerRadius="7" Background="{DynamicResource Danger}" VerticalAlignment="Center"/>
 										<TextBlock Text="Deze dag is geblokkeerd — er kunnen geen taken worden ingepland."
 												   Classes="label"
 												   Foreground="{DynamicResource Danger}"
@@ -302,14 +369,15 @@
 
 											<Border.ContextMenu>
 												<ContextMenu>
-													<MenuItem Header="✏ Herplannen"
+													<MenuItem Header="Herplannen"
 															  Click="OnHerplanMenuClick"/>
-													<MenuItem Header="🗑 Verwijderen"
+													<MenuItem Header="Verwijderen"
 															  Click="OnVerwijderMenuClick"/>
 												</ContextMenu>
 											</Border.ContextMenu>
 
-											<Grid ColumnDefinitions="*,Auto">
+											<StackPanel Spacing="6">
+<Grid ColumnDefinitions="*,Auto">
 												<StackPanel Spacing="3">
 													<TextBlock Text="{Binding WerkBon.Id, StringFormat='WerkBon #{0}'}"
 															   Classes="body"
@@ -334,6 +402,11 @@
 															   Classes="caption"/>
 												</Border>
 											</Grid>
+											<StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right" Margin="0,8,0,0">
+												<Button Content="Herplannen" Classes="GhostBtn" Padding="8,3" Command="{Binding $parent[ItemsControl].DataContext.HerplanTaakCommand}" CommandParameter="{Binding}"/>
+												<Button Content="Verwijderen" Classes="DangerBtn" Padding="8,3" Command="{Binding $parent[ItemsControl].DataContext.VerwijderTaakCommand}" CommandParameter="{Binding}"/>
+											</StackPanel>
+										</StackPanel>
 										</Border>
 									</DataTemplate>
 								</ItemsControl.ItemTemplate>
@@ -360,7 +433,7 @@
 									Padding="14,12"
 									Margin="0,0,0,16">
 								<StackPanel Orientation="Horizontal" Spacing="10">
-									<TextBlock Text="📋" Classes="h3" VerticalAlignment="Center"/>
+									<TextBlock Text="" Classes="h3" VerticalAlignment="Center"/>
 									<TextBlock Text="Open planning vanuit een werkbon om regels te kunnen plannen."
 											   Classes="label"
 											   Foreground="{DynamicResource InfoText}"
@@ -374,6 +447,7 @@
 										Spacing="10"
 										Margin="0,0,0,16">
 								<TextBlock Text="WERKBON REGELS" Classes="caption" FontWeight="SemiBold"/>
+								<TextBlock Text="Sleep een regel op een dag, of vink aan en klik 'Plan op geselecteerde dag'." Classes="caption" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Margin="0,0,0,2"/>
 
 								<ListBox ItemsSource="{Binding RegelsVanWerkBon}"
 										 Background="{DynamicResource SurfaceMutedAlt}"
@@ -381,24 +455,23 @@
 										 Padding="8">
 									<ListBox.ItemTemplate>
 										<DataTemplate>
-											<Border Padding="6,5"
-													Margin="0,2"
-													CornerRadius="6"
-													Cursor="Hand">
-												<StackPanel Orientation="Horizontal" Spacing="10">
-													<CheckBox IsChecked="{Binding IsSelected}"
-															  VerticalAlignment="Center"/>
-													<TextBlock Text="{Binding Label}"
-															   Classes="label"
-															   TextWrapping="Wrap"
-															   VerticalAlignment="Center"/>
-												</StackPanel>
+											<Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="8" Padding="10,9" Margin="0,3" PointerPressed="Regel_PointerPressed">
+												<Grid ColumnDefinitions="Auto,Auto,*,Auto">
+													<CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+													<PathIcon Grid.Column="1" Data="M9,3H11V5H9V3M13,3H15V5H13V3M9,7H11V9H9V7M13,7H15V9H13V7M9,11H11V13H9V11M13,11H15V13H13V11M9,15H11V17H9V15M13,15H15V17H13V15M9,19H11V21H9V19M13,19H15V21H13V19Z" Width="14" Height="14" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,10,0" Cursor="Hand"/>
+													<StackPanel Grid.Column="2" Spacing="2" Cursor="Hand">
+														<TextBlock Text="{Binding Titel}" Classes="body" FontWeight="Bold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Titel}"/>
+														<TextBlock Text="{Binding LijstLabel}" Classes="caption" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding LijstLabel}"/>
+														<TextBlock Text="{Binding Afmeting}" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+													</StackPanel>
+													<TextBlock Grid.Column="3" Text="sleep →" Classes="caption" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+												</Grid>
 											</Border>
 										</DataTemplate>
 									</ListBox.ItemTemplate>
 								</ListBox>
 
-								<Button Content="Plan geselecteerde regels"
+								<Button Content="Plan op geselecteerde dag"
 										Command="{Binding PlanGeselecteerdeRegelsCommand}"
 										Classes="AccentBtn"
 										Padding="12,8"
@@ -420,7 +493,7 @@
 								<DockPanel>
 									<TextBlock Text="WEEKDETAIL" Classes="caption" FontWeight="SemiBold" VerticalAlignment="Center"/>
 									<Button DockPanel.Dock="Right"
-											Content="🖨 Weeklijst"
+											Content="Weeklijst"
 											Command="{Binding OpenWeekWerkLijstCommand}"
 											Classes="GhostBtn"/>
 								</DockPanel>
@@ -444,6 +517,8 @@
 														   FontWeight="SemiBold"
 														   Foreground="{DynamicResource InfoText}"/>
 											</Border>
+										<TextBlock Text="{Binding WeekGeplandLabel, StringFormat='· gepland {0}'}" Classes="caption" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+										<TextBlock Text="{Binding WeekUtilLabel, StringFormat='· bezetting {0}'}" Classes="caption" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
 										</StackPanel>
 
 										<!-- Empty state -->
@@ -451,7 +526,7 @@
 												Padding="0,16"
 												HorizontalAlignment="Center">
 											<StackPanel Spacing="6" HorizontalAlignment="Center">
-												<TextBlock Text="📋"
+												<TextBlock Text=""
 														   Classes="h2"
 														   HorizontalAlignment="Center"/>
 												<TextBlock Text="Geen regels voor deze week"
@@ -460,43 +535,60 @@
 											</StackPanel>
 										</Border>
 
-										<!-- Week table -->
-										<StackPanel IsVisible="{Binding WeekRows.Count}" Spacing="4">
+										<!-- Week per dag -->
+										<StackPanel IsVisible="{Binding WeekRows.Count}" Spacing="6">
 
 											<!-- Column headers -->
-											<Grid ColumnDefinitions="48,1.2*,1.2*,*,*,48" ColumnSpacing="4" Margin="0,0,0,4">
-												<TextBlock Text="Bon"      Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="1" Text="Klant"    Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="2" Text="Afmeting" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="3" Text="Lijst"    Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="4" Text="Dag"      Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="5" Text="Duur"     Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+											<Grid ColumnDefinitions="1.4*,1.1*,*,44" ColumnSpacing="6" Margin="2,0">
+												<TextBlock Text="Klant"    Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="1" Text="Afmeting" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="2" Text="Lijst"    Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="3" Text="Duur"     Classes="caption" FontWeight="SemiBold" TextAlignment="Right"/>
 											</Grid>
 
 											<Rectangle Classes="Divider"/>
 
-											<!-- Data rows -->
-											<ListBox ItemsSource="{Binding WeekRows}" MaxHeight="300">
-												<ListBox.ItemTemplate>
-													<DataTemplate>
-														<Border Background="{DynamicResource Surface}"
-																BorderBrush="{DynamicResource BorderSubtle}"
-																BorderThickness="1"
-																CornerRadius="6"
-																Padding="6,7"
-																Margin="0,2">
-															<Grid ColumnDefinitions="48,1.2*,1.2*,*,*,48" ColumnSpacing="4">
-																<TextBlock Text="{Binding BonNr}"     Classes="label" TextTrimming="CharacterEllipsis"/>
-																<TextBlock Grid.Column="1" Text="{Binding KlantNaam}" Classes="label" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding KlantNaam}"/>
-																<TextBlock Grid.Column="2" Text="{Binding Afmeting}"  Classes="label" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Afmeting}"/>
-																<TextBlock Grid.Column="3" Text="{Binding Lijst}"     Classes="label" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Lijst}"/>
-																<TextBlock Grid.Column="4" Text="{Binding Dag}"       Classes="caption" TextTrimming="CharacterEllipsis"/>
-																<TextBlock Grid.Column="5" Text="{Binding DuurMin, StringFormat='{}{0}m'}" Classes="label" TextTrimming="CharacterEllipsis"/>
-															</Grid>
-														</Border>
-													</DataTemplate>
-												</ListBox.ItemTemplate>
-											</ListBox>
+											<!-- Dag-groepen -->
+											<ScrollViewer MaxHeight="340" HorizontalScrollBarVisibility="Disabled">
+												<ItemsControl ItemsSource="{Binding WeekDagGroepen}">
+													<ItemsControl.ItemTemplate>
+														<DataTemplate>
+															<StackPanel Spacing="3" Margin="0,0,0,10">
+
+																<!-- Dagkop met subtotaal -->
+																<DockPanel Margin="2,0">
+																	<TextBlock Text="{Binding TotaalLabel}" DockPanel.Dock="Right"
+																			   Classes="caption"
+																			   Foreground="{DynamicResource TextSecondary}"
+																			   VerticalAlignment="Center"/>
+																	<TextBlock Text="{Binding DagLabel}" Classes="label" FontWeight="SemiBold"/>
+																</DockPanel>
+
+																<!-- Regels van die dag -->
+																<ItemsControl ItemsSource="{Binding Regels}">
+																	<ItemsControl.ItemTemplate>
+																		<DataTemplate>
+																			<Border Background="{DynamicResource Surface}"
+																					BorderBrush="{DynamicResource BorderSubtle}"
+																					BorderThickness="1"
+																					CornerRadius="6"
+																					Padding="8,6"
+																					Margin="0,2">
+																				<Grid ColumnDefinitions="1.4*,1.1*,*,44" ColumnSpacing="6">
+																					<TextBlock Text="{Binding KlantNaam}" Classes="label" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding KlantTip}"/>
+																					<TextBlock Grid.Column="1" Text="{Binding Afmeting}"   Classes="label" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Afmeting}"/>
+																					<TextBlock Grid.Column="2" Text="{Binding LijstLabel}" Classes="label" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding LijstLabel}"/>
+																					<TextBlock Grid.Column="3" Text="{Binding DuurLabel}"  Classes="label" TextAlignment="Right"/>
+																				</Grid>
+																			</Border>
+																		</DataTemplate>
+																	</ItemsControl.ItemTemplate>
+																</ItemsControl>
+															</StackPanel>
+														</DataTemplate>
+													</ItemsControl.ItemTemplate>
+												</ItemsControl>
+											</ScrollViewer>
 										</StackPanel>
 
 									</StackPanel>
