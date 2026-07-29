@@ -223,6 +223,17 @@ namespace QuadroApp.Model.DB
         // Vereist dat de afwerkings-navigaties (Glas/PassePartout1/2/DiepteKern/Opkleven/Rug)
         // mee geladen zijn; niet-geladen of niet-gekozen opties worden gewoon overgeslagen.
         // ========================
+        /// <summary>US-51 — "3× 40×50 cm" voor op het werktaak-kaartje.</summary>
+        [NotMapped]
+        public string AfmetingLabel => $"{AantalStuks}× {BreedteCm:0.#}×{HoogteCm:0.#} cm";
+
+        /// <summary>US-51 — inleg-/passe-partout-opening, enkel als ingevuld.</summary>
+        [NotMapped]
+        public bool HeeftInleg => InlegBreedteCm.HasValue && InlegHoogteCm.HasValue;
+
+        [NotMapped]
+        public string InlegLabel => HeeftInleg ? $"Inleg {InlegBreedteCm:0.#}×{InlegHoogteCm:0.#} cm" : "";
+
         [NotMapped]
         public string AfwerkingSamenvatting
         {
