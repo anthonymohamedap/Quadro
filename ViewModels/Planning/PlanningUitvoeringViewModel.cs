@@ -92,32 +92,9 @@ public partial class PlanningUitvoeringViewModel : ObservableObject
 
         int totaalGeschat = regels.Sum(CalcMinutenVoorRegel);
 
-        // Datum bepalen via dialoog
-        DateTime startDag;
-        if (ShowTijdDialogAsync is not null)
-        {
-            var werkBonLabel = await dbCalc.WerkBonnen
-                .Where(w => w.Id == WerkBonId)
-                .Select(w => w.Offerte.Klant != null ? w.Offerte.Klant.Achternaam : null)
-                .FirstOrDefaultAsync() ?? $"WerkBon #{WerkBonId}";
-
-            var dialogVm = new PlanningTijdDialogViewModel
-            {
-                ContextLabel = $"WerkBon #{WerkBonId} — {werkBonLabel} · {selectedIds.Count} regel(s)",
-                GeplandeDatum = new DateTimeOffset(SelectedDate.Date),
-                TotaalMinuten = totaalGeschat,
-            };
-
-            bool ok = await ShowTijdDialogAsync(dialogVm);
-            if (!ok) return;
-
-            startDag = dialogVm.GetStartDatum();
-        }
-        else
-        {
-            startDag = SelectedDate.Date.AddHours(9);
-        }
-
+        // US-49 Fase D — klik-om-te-plannen: direct op de geselecteerde dag, GEEN
+        // tijd-dialoog. Start om 9:00; de capaciteit-spreiding regelt de rest.
+        var startDag = SelectedDate.Date.AddHours(9);
         var huidigeDag = startDag.Date;
 
         try
@@ -141,7 +118,10 @@ public partial class PlanningUitvoeringViewModel : ObservableObject
             return;
         }
 
-        _toast.Success($"{regels.Count} taken gepland vanaf {startDag:dd/MM}.");
+        int dagen = (int)Math.Ceiling((double)totaalGeschat / CapaciteitMinuten);
+        _toast.Success(dagen > 1
+            ? $"{regels.Count} regel(s) gepland vanaf {startDag:dd/MM} · loopt door over ± {dagen} dagen."
+            : $"{regels.Count} regel(s) gepland op {startDag:dd/MM}.");
         await _requestRefresh();
     }
 

@@ -369,7 +369,8 @@
 												</ContextMenu>
 											</Border.ContextMenu>
 
-											<Grid ColumnDefinitions="*,Auto">
+											<StackPanel Spacing="6">
+<Grid ColumnDefinitions="*,Auto">
 												<StackPanel Spacing="3">
 													<TextBlock Text="{Binding WerkBon.Id, StringFormat='WerkBon #{0}'}"
 															   Classes="body"
@@ -394,6 +395,11 @@
 															   Classes="caption"/>
 												</Border>
 											</Grid>
+											<StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right" Margin="0,8,0,0">
+												<Button Content="Herplannen" Classes="GhostBtn" Padding="8,3" Command="{Binding $parent[ItemsControl].DataContext.HerplanTaakCommand}" CommandParameter="{Binding}"/>
+												<Button Content="Verwijderen" Classes="DangerBtn" Padding="8,3" Command="{Binding $parent[ItemsControl].DataContext.VerwijderTaakCommand}" CommandParameter="{Binding}"/>
+											</StackPanel>
+										</StackPanel>
 										</Border>
 									</DataTemplate>
 								</ItemsControl.ItemTemplate>
@@ -458,7 +464,7 @@
 									</ListBox.ItemTemplate>
 								</ListBox>
 
-								<Button Content="Plan geselecteerde regels"
+								<Button Content="Plan op geselecteerde dag"
 										Command="{Binding PlanGeselecteerdeRegelsCommand}"
 										Classes="AccentBtn"
 										Padding="12,8"
