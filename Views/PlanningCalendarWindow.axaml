@@ -280,6 +280,12 @@
 												   Classes="caption"
 												   TextTrimming="CharacterEllipsis"
 												   ToolTip.Tip="{Binding BusyLabel}"/>
+										<TextBlock Text="{Binding TakenPreview}"
+											   Classes="caption"
+											   Foreground="{DynamicResource TextSecondary}"
+											   TextTrimming="CharacterEllipsis"
+											   ToolTip.Tip="{Binding TakenPreview}"
+											   IsVisible="{Binding TakenPreview, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 									</StackPanel>
 								</Border>
 							</DataTemplate>
