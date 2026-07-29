@@ -108,8 +108,9 @@ namespace QuadroApp.Service
             await SyncAfhaalDatumNaPlanningAsync(db, regel, start.Date);
             await db.SaveChangesAsync();
 
-            if (werkBon.Status == WerkBonStatus.Gepland)
-                await _workflow.ChangeWerkBonStatusAsync(werkBonId, WerkBonStatus.InUitvoering);
+            // US-51: inplannen laat de offerte de productie volgen -> InProductie
+            // (de werkbon blijft Gepland tot hij expliciet in uitvoering gaat).
+            await AdvanceOfferteNaPlanningAsync(db, werkBon.OfferteId);
         }
 
         public async Task<DateTime> PlanRegelMetDagCapaciteitAsync(
@@ -222,8 +223,9 @@ namespace QuadroApp.Service
             await SyncAfhaalDatumNaPlanningAsync(db, regel, segmenten[^1].Dag);
             await db.SaveChangesAsync();
 
-            if (werkBon.Status == WerkBonStatus.Gepland)
-                await _workflow.ChangeWerkBonStatusAsync(werkBonId, WerkBonStatus.InUitvoering);
+            // US-51: inplannen laat de offerte de productie volgen -> InProductie
+            // (de werkbon blijft Gepland tot hij expliciet in uitvoering gaat).
+            await AdvanceOfferteNaPlanningAsync(db, werkBon.OfferteId);
 
             return segmenten[^1].Dag;
         }
@@ -286,8 +288,21 @@ namespace QuadroApp.Service
 
             await db.SaveChangesAsync();
 
-            if (werkBon.Status == WerkBonStatus.Gepland)
-                await _workflow.ChangeWerkBonStatusAsync(werkBonId, WerkBonStatus.InUitvoering);
+            // US-51: inplannen laat de offerte de productie volgen -> InProductie
+            // (de werkbon blijft Gepland tot hij expliciet in uitvoering gaat).
+            await AdvanceOfferteNaPlanningAsync(db, werkBon.OfferteId);
+        }
+
+        // US-51: bij inplannen volgt de offerte de productie en gaat naar InProductie.
+        // De werkbon zelf blijft Gepland tot hij expliciet op InUitvoering wordt gezet.
+        private static async Task AdvanceOfferteNaPlanningAsync(AppDbContext db, int offerteId)
+        {
+            var offerte = await db.Offertes.FindAsync(offerteId);
+            if (offerte is not null &&
+                OfferteStatusPropagation.TryAdvanceTo(offerte, OfferteStatus.InProductie))
+            {
+                await db.SaveChangesAsync();
+            }
         }
 
         public Task VeranderStatusAsync(int werkBonId, WerkBonStatus nieuweStatus) =>
