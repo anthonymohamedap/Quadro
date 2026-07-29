@@ -439,6 +439,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
         var end = start.AddDays(totalCells);
 
         var taken = await db.WerkTaken
+            .Include(t => t.WerkBon).ThenInclude(w => w.Offerte).ThenInclude(o => o.Klant)
             .Where(t => t.GeplandVan >= start && t.GeplandVan < end)
             .ToListAsync();
 
@@ -479,11 +480,28 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
                     : $"{used / 60}u {used % 60}m / {CapaciteitMinuten / 60}u";
             }
 
+            // US-49 — korte klant-hint op de tegel (zonder klikken).
+            string taakPreview = "";
+            if (!isGeblokkeerd && dagTaken.Count > 0)
+            {
+                var namen = dagTaken
+                    .Select(t => t.WerkBon?.Offerte?.Klant?.Achternaam)
+                    .Where(n => !string.IsNullOrWhiteSpace(n))
+                    .Distinct()
+                    .ToList();
+                taakPreview = namen.Count == 0
+                    ? $"{dagTaken.Count} taak/taken"
+                    : namen.Count <= 2
+                        ? string.Join(", ", namen)
+                        : $"{namen[0]}, {namen[1]} +{namen.Count - 2}";
+            }
+
             MonthDays.Add(new DayTile
             {
                 Date = date,
                 DayNumber = date.Day.ToString(),
                 BusyLabel = busyLabel,
+                TakenPreview = taakPreview,
                 Busy = util,
                 IsToday = isVandaag,
                 IsWeekend = isWeekend,

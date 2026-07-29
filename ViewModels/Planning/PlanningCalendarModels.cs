@@ -14,6 +14,9 @@ public partial class DayTile : ObservableObject
     public string DayNumber { get; set; } = "";
     public string BusyLabel { get; set; } = "";
 
+    /// <summary>US-49 — korte hint van wie er die dag gepland staat (klantnamen).</summary>
+    public string TakenPreview { get; set; } = "";
+
     /// <summary>Bezetting 0..1 t.o.v. dagcapaciteit (geblokkeerd = 1).</summary>
     public double Busy { get; set; }
 
