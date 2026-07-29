@@ -1,11 +1,9 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
-using System;
-using System.ComponentModel.DataAnnotations;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,14 +21,7 @@ namespace QuadroApp.ViewModels
 
         [ObservableProperty] private ObservableCollection<WerkBon> werkBonnen = new();
         [ObservableProperty] private WerkBon? selectedWerkBon;
-
-        [ObservableProperty] private ObservableCollection<WerkTaak> selectedWerkBonTaken = new();
-
         [ObservableProperty] private string? zoekterm;
-
-        [ObservableProperty] private bool isDetailOpen;
-
-        [ObservableProperty] private DateTimeOffset? geselecteerdeBestelDatum = DateTimeOffset.Now.Date;
 
         // ── Jaar-filter ───────────────────────────────────────────────────────
         public ObservableCollection<int> BeschikbareJaren { get; } = new();
@@ -46,13 +37,6 @@ namespace QuadroApp.ViewModels
             new WerkBonStatusFilterOptie("Afgehaald",      WerkBonStatus.Afgehaald),
         };
         [ObservableProperty] private WerkBonStatusFilterOptie? geselecteerdeStatusFilter;
-
-        // Dropdown data
-        public ObservableCollection<WerkBonStatus> WerkBonStatusOpties { get; } =
-            new ObservableCollection<WerkBonStatus>(Enum.GetValues<WerkBonStatus>());
-
-        // gekozen statuses in UI
-        [ObservableProperty] private WerkBonStatus? selectedWerkBonStatus;
 
         public WerkBonLijstViewModel(
             IDbContextFactory<AppDbContext> factory,
@@ -79,16 +63,12 @@ namespace QuadroApp.ViewModels
         {
             await using var db = await _factory.CreateDbContextAsync();
 
+            // De lijst toont per werkbon enkel kern-info + afgeleide tellers (aantal taken,
+            // bestel-voortgang); het volledige detail (taken/lijst/afwerking) zit in het
+            // modale overzichtsvenster. Daarom hier alleen Offerte.Klant + Taken laden.
             var query = db.WerkBonnen
                 .Include(w => w.Offerte).ThenInclude(o => o.Klant)
-                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.TypeLijst)
-                // US-51: afwerkings-opties mee laden voor de samenvatting op het taakkaartje.
-                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.Glas)
-                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.PassePartout1)
-                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.PassePartout2)
-                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.DiepteKern)
-                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.Opkleven)
-                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.Rug)
+                .Include(w => w.Taken)
                 .AsQueryable();
 
             // Jaar-filter
@@ -136,26 +116,6 @@ namespace QuadroApp.ViewModels
         partial void OnGeselecteerdJaarChanged(int value) => RunAsync(LoadAsync);
         partial void OnGeselecteerdeStatusFilterChanged(WerkBonStatusFilterOptie? value) => RunAsync(LoadAsync);
 
-        partial void OnSelectedWerkBonChanged(WerkBon? value)
-        {
-            if (value is null)
-            {
-                IsDetailOpen = false;
-                SelectedWerkBonTaken = new ObservableCollection<WerkTaak>();
-                SelectedWerkBonStatus = null;
-                return;
-            }
-
-            IsDetailOpen = true;
-
-            SelectedWerkBonTaken = new ObservableCollection<WerkTaak>(
-                (value.Taken ?? Enumerable.Empty<WerkTaak>()).OrderBy(t => t.GeplandVan)
-            );
-
-            SelectedWerkBonStatus = value.Status;
-            GeselecteerdeBestelDatum = DateTimeOffset.Now.Date;
-        }
-
         [RelayCommand]
         private async Task RefreshAsync() => await LoadAsync();
 
@@ -190,83 +150,6 @@ namespace QuadroApp.ViewModels
                 SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == bewaardeId.Value);
         }
 
-        /// <summary>
-        /// Save status changes:
-        /// - WerkBon.Status aanpassen
-        /// - Offerte.Status aanpassen (belangrijk: als terug naar Nieuw => terug zichtbaar in OffertesLijst)
-        /// </summary>
-        [RelayCommand]
-        private async Task SaveStatusAsync()
-        {
-            if (SelectedWerkBon == null)
-                return;
-
-            var wasAfgewerkt = SelectedWerkBon.Status == WerkBonStatus.Afgewerkt;
-            var wordtAfgewerkt = SelectedWerkBonStatus == WerkBonStatus.Afgewerkt;
-
-            try
-            {
-                if (SelectedWerkBonStatus.HasValue && SelectedWerkBonStatus.Value != SelectedWerkBon.Status)
-                    await _statusWorkflow.ChangeWerkBonStatusAsync(SelectedWerkBon.Id, SelectedWerkBonStatus.Value);
-            }
-            catch (InvalidOperationException ex)
-            {
-                // Ongeldige statusovergang e.d.: toon een duidelijke melding en stop;
-                // de status wordt niet gewijzigd en de app crasht niet.
-                _toast.Warning(ex.Message);
-                return;
-            }
-
-            var selectedWerkBonId = SelectedWerkBon.Id;
-
-            await LoadAsync();
-
-            // reselect
-            SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == selectedWerkBonId);
-
-            if (!wasAfgewerkt && wordtAfgewerkt)
-            {
-                _toast.Success("Werkbon afgewerkt: bestelbon/factuur werd automatisch aangemaakt.");
-                await _nav.NavigateToAsync<FacturenViewModel>();
-            }
-        }
-
-        [RelayCommand]
-        private async Task MarkeerLijstAlsBesteldAsync(WerkTaak? taak)
-        {
-            if (taak is null)
-                return;
-
-            try
-            {
-                var bestelDatum = DateTime.Today;
-                await _statusWorkflow.MarkLijstAsBesteldAsync(taak.Id, bestelDatum, taak.GeselecteerdeBestelVorm);
-            }
-            catch (ValidationException ex)
-            {
-                _toast.Error(ex.Message);
-                return;
-            }
-            catch (InvalidOperationException ex)
-            {
-                _toast.Error(ex.Message);
-                return;
-            }
-
-            var selectedWerkBonId = SelectedWerkBon?.Id;
-            await LoadAsync();
-
-            if (selectedWerkBonId.HasValue)
-                SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == selectedWerkBonId.Value);
-        }
-
-        /// <summary>Expliciet selecteren via de rij (toont de inline preview).</summary>
-        [RelayCommand]
-        private void SelecteerWerkBon(WerkBon? werkBon)
-        {
-            SelectedWerkBon = werkBon;
-        }
-
         /// <summary>US-51 Fase B — opent het volledige werkbon-overzicht in een modaal venster.</summary>
         [RelayCommand]
         private async Task OpenWerkBonDetailAsync(WerkBon? werkBon)
@@ -275,8 +158,7 @@ namespace QuadroApp.ViewModels
             if (wb is null)
                 return;
 
-            // toon ook de inline preview van dezelfde werkbon
-            SelectedWerkBon = wb;
+            SelectedWerkBon = wb; // markeer de rij als geselecteerd
 
             var vm = new WerkBonDetailViewModel(_factory, _statusWorkflow, _offerteNav, _toast, wb.Id);
             await vm.LoadAsync();
@@ -298,16 +180,6 @@ namespace QuadroApp.ViewModels
             await LoadAsync();
             SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == bewaardeId);
         }
-
-        /// <summary>Sluit het detailpaneel zonder de selectie te bewaren.</summary>
-        [RelayCommand]
-        private void SluitDetail()
-        {
-            SelectedWerkBon = null;
-        }
-        // US-51 Fase C: de misleidende "Open bestelbon"-actie (opende in werkelijkheid de
-        // offerte) is verwijderd. De offerte is nu bereikbaar via "Open offerte" in het
-        // werkbon-overzichtsvenster (WerkBonDetailWindow).
 
         [RelayCommand]
         private async Task GaTerugAsync()

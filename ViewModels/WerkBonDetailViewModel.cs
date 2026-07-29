@@ -78,6 +78,13 @@ namespace QuadroApp.ViewModels
                 .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.DiepteKern)
                 .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.Opkleven)
                 .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.Rug)
+                // US-51: ook de gekozen afwerking-varianten (kleur/uitvoering) voor de samenvatting.
+                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.GlasVariant)
+                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.PassePartout1Variant)
+                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.PassePartout2Variant)
+                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.DiepteKernVariant)
+                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.OpklevenVariant)
+                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.RugVariant)
                 .FirstOrDefaultAsync(w => w.Id == _werkBonId);
 
             if (wb is null)
