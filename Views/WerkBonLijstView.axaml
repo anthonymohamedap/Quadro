@@ -155,7 +155,7 @@
 													Padding="10,6"
 													Cursor="Hand"
 													VerticalAlignment="Center"
-													Command="{Binding #Root.((vm:WerkBonLijstViewModel)DataContext).SelecteerWerkBonCommand}"
+													Command="{Binding #Root.((vm:WerkBonLijstViewModel)DataContext).OpenWerkBonDetailCommand}"
 													CommandParameter="{Binding}"/>
 										</Grid>
 									</Border>
