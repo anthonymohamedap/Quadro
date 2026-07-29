@@ -182,6 +182,12 @@ namespace QuadroApp.ViewModels
 
                 await window.ShowDialog(owner);
             }
+
+            // Na plannen kan de status gewijzigd zijn (offerte → InProductie) → lijst verversen.
+            var bewaardeId = SelectedWerkBon?.Id;
+            await LoadAsync();
+            if (bewaardeId.HasValue)
+                SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == bewaardeId.Value);
         }
 
         /// <summary>
