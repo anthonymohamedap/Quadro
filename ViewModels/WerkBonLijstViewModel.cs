@@ -299,19 +299,9 @@ namespace QuadroApp.ViewModels
         {
             SelectedWerkBon = null;
         }
-
-        [RelayCommand]
-        private async Task OpenBestelBonAsync()
-        {
-            var offerteId = SelectedWerkBon?.Offerte?.Id ?? 0;
-            if (offerteId == 0)
-            {
-                _toast.Error("Geen gekoppelde offerte gevonden.");
-                return;
-            }
-
-            await _offerteNav.OpenOfferteAsync(offerteId);
-        }
+        // US-51 Fase C: de misleidende "Open bestelbon"-actie (opende in werkelijkheid de
+        // offerte) is verwijderd. De offerte is nu bereikbaar via "Open offerte" in het
+        // werkbon-overzichtsvenster (WerkBonDetailWindow).
 
         [RelayCommand]
         private async Task GaTerugAsync()
