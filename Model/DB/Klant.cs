@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuadroApp.Model.DB
 {
@@ -8,6 +9,10 @@ namespace QuadroApp.Model.DB
         public int Id { get; set; }
         public string Voornaam { get; set; } = null!;
         public string Achternaam { get; set; } = null!;
+
+        /// <summary>US-51 — volledige naam voor weergave (niet in DB).</summary>
+        [NotMapped]
+        public string VolledigeNaam => $"{Voornaam} {Achternaam}".Trim();
         public string? Email { get; set; }
         public string? Telefoon { get; set; }
         public string? Straat { get; set; }

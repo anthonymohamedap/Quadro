@@ -59,6 +59,16 @@
 									</DataTemplate>
 								</ComboBox.ItemTemplate>
 							</ComboBox>
+							<ComboBox ItemsSource="{Binding StatusFilterOpties}"
+									  SelectedItem="{Binding GeselecteerdeStatusFilter, Mode=TwoWay}"
+									  MinWidth="140"
+									  VerticalAlignment="Center">
+								<ComboBox.ItemTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding Label}"/>
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
 						</StackPanel>
 
 						<StackPanel Grid.Column="1"
@@ -77,19 +87,12 @@
 
 					</Grid>
 
-					<!-- Headers -->
-					<Grid ColumnDefinitions="0.5*,1.8*,1.2*,1.1*,90">
-						<TextBlock Text="Bon" Grid.Column="0" FontWeight="Bold" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
-						<TextBlock Text="Klant" Grid.Column="1" FontWeight="Bold" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
-						<TextBlock Text="Status" Grid.Column="2" FontWeight="Bold" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
-						<TextBlock Text="Aangemaakt" Grid.Column="3" FontWeight="Bold" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
-					</Grid>
-
+					<!-- Werkbonnen-lijst (kaarten) -->
 					<Border Background="{DynamicResource Surface}"
 							BorderBrush="{DynamicResource BorderSubtle}"
 							BorderThickness="1"
 							CornerRadius="8"
-							Padding="4">
+							Padding="6">
 
 						<ListBox ItemsSource="{Binding WerkBonnen}"
 								 SelectedItem="{Binding SelectedWerkBon, Mode=TwoWay}"
@@ -98,37 +101,64 @@
 
 							<ListBox.ItemTemplate>
 								<DataTemplate x:DataType="m:WerkBon">
-									<Grid ColumnDefinitions="0.5*,1.8*,1.2*,1.1*,90"
-										  Margin="0,2">
-										<TextBlock Grid.Column="0"
-												   Text="{Binding Id}"
-												   FontWeight="Bold"
-												   TextAlignment="Center"
-												   VerticalAlignment="Center"/>
-										<TextBlock Grid.Column="1"
-												   Text="{Binding Offerte.Klant.Achternaam}"
-												   ToolTip.Tip="{Binding Offerte.Klant.Achternaam}"
-												   TextTrimming="CharacterEllipsis"
-												   TextAlignment="Center"
-												   VerticalAlignment="Center"/>
-										<TextBlock Grid.Column="2"
-												   Text="{Binding Status}"
-												   TextTrimming="CharacterEllipsis"
-												   TextAlignment="Center"
-												   VerticalAlignment="Center"/>
-										<TextBlock Grid.Column="3"
-												   Text="{Binding AangemaaktOp, StringFormat='dd/MM/yyyy'}"
-												   TextTrimming="CharacterEllipsis"
-												   TextAlignment="Center"
-												   VerticalAlignment="Center"/>
-										<Button Grid.Column="4"
-												Content="👁 Bekijk"
-												Padding="6,4"
-												Classes="AccentBtn"
-												Cursor="Hand"
-												Command="{Binding #Root.((vm:WerkBonLijstViewModel)DataContext).SelecteerWerkBonCommand}"
-												CommandParameter="{Binding}"/>
-									</Grid>
+									<Border Background="{DynamicResource Surface}"
+											BorderBrush="{DynamicResource BorderSubtle}"
+											BorderThickness="1"
+											CornerRadius="8"
+											Padding="12,10"
+											Margin="0,3">
+										<Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="14">
+
+											<!-- Bon-nr + status-badge -->
+											<StackPanel Grid.Column="0" Spacing="5" MinWidth="72" VerticalAlignment="Center">
+												<TextBlock Text="{Binding Id, StringFormat='Bon #{0}'}" FontWeight="Bold"/>
+												<Border Background="{Binding Status, Converter={x:Static conv:WerkBonStatusToBrushConverter.Instance}}"
+														CornerRadius="10" Padding="9,2" HorizontalAlignment="Left">
+													<TextBlock Text="{Binding Status, Converter={x:Static conv:WerkBonStatusToLabelConverter.Instance}}"
+															   Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+												</Border>
+											</StackPanel>
+
+											<!-- Klant + meta -->
+											<StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+												<TextBlock Text="{Binding Offerte.Klant.VolledigeNaam}"
+														   FontWeight="SemiBold"
+														   TextTrimming="CharacterEllipsis"
+														   ToolTip.Tip="{Binding Offerte.Klant.VolledigeNaam}"/>
+												<StackPanel Orientation="Horizontal" Spacing="6">
+													<TextBlock Text="{Binding OfferteId, StringFormat='Offerte #{0}'}"
+															   Foreground="{DynamicResource TextSecondary}" FontSize="12"/>
+													<TextBlock Text="·" Foreground="{DynamicResource TextSecondary}" FontSize="12"/>
+													<TextBlock Text="{Binding AantalTaken, StringFormat='{}{0} taken'}"
+															   Foreground="{DynamicResource TextSecondary}" FontSize="12"/>
+												</StackPanel>
+												<TextBlock Text="{Binding BestelVoortgangLabel}"
+														   Foreground="{DynamicResource TextSecondary}" FontSize="12"
+														   IsVisible="{Binding BestelVoortgangLabel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+											</StackPanel>
+
+											<!-- Totaal + datums -->
+											<StackPanel Grid.Column="2" Spacing="3" VerticalAlignment="Center" HorizontalAlignment="Right">
+												<TextBlock Text="{Binding TotaalPrijsIncl, StringFormat='€ {0:N2}'}"
+														   FontWeight="Bold" HorizontalAlignment="Right"/>
+												<TextBlock Text="{Binding AangemaaktOp, StringFormat='Aangemaakt {0:dd/MM/yyyy}'}"
+														   Foreground="{DynamicResource TextSecondary}" FontSize="11" HorizontalAlignment="Right"/>
+												<TextBlock Text="{Binding AfhaalDatum, StringFormat='Ophalen {0:dd/MM/yyyy}'}"
+														   Foreground="{DynamicResource TextSecondary}" FontSize="11" HorizontalAlignment="Right"
+														   IsVisible="{Binding AfhaalDatum, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+											</StackPanel>
+
+											<!-- Actie -->
+											<Button Grid.Column="3"
+													Content="Open werkbon"
+													Classes="AccentBtn"
+													Padding="10,6"
+													Cursor="Hand"
+													VerticalAlignment="Center"
+													Command="{Binding #Root.((vm:WerkBonLijstViewModel)DataContext).SelecteerWerkBonCommand}"
+													CommandParameter="{Binding}"/>
+										</Grid>
+									</Border>
 								</DataTemplate>
 							</ListBox.ItemTemplate>
 
