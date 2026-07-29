@@ -94,9 +94,11 @@
 					<TextBlock Text="Meld je aan om verder te gaan"
 							   FontSize="13" Opacity="0.7"
 							   HorizontalAlignment="Center"/>
-					<TextBox Watermark="Gebruikersnaam"
+					<TextBox x:Name="UserBox"
+							 Watermark="Gebruikersnaam"
 							 Text="{Binding LoginGebruikersnaam}"/>
-					<TextBox Watermark="Wachtwoord"
+					<TextBox x:Name="PwdBox"
+							 Watermark="Wachtwoord"
 							 PasswordChar="●"
 							 Text="{Binding LoginWachtwoord}">
 						<TextBox.KeyBindings>
