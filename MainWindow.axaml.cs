@@ -15,6 +15,17 @@ namespace QuadroApp
             AddHandler(PointerPressedEvent, (_, _) => Vm?.RegistreerActiviteit(), handledEventsToo: true);
             AddHandler(KeyDownEvent, (_, _) => Vm?.RegistreerActiviteit(), handledEventsToo: true);
 
+            // Login-focus: staat de gebruikersnaam al voor-ingevuld (onthouden van vorige
+            // sessie), spring dan meteen naar het wachtwoordveld; anders naar de naam.
+            Opened += (_, _) =>
+            {
+                if (Vm is null || !Vm.IsLocked) return;
+                if (!string.IsNullOrWhiteSpace(Vm.LoginGebruikersnaam))
+                    PwdBox?.Focus();
+                else
+                    UserBox?.Focus();
+            };
+
             // Verplichte wachtwoordwijziging: open de dialoog direct na login.
             DataContextChanged += (_, _) =>
             {
