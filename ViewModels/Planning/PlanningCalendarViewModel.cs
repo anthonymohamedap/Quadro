@@ -423,6 +423,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
 
     [ObservableProperty] private ObservableCollection<DayRow> dayRows = new();
     [ObservableProperty] private ObservableCollection<WeekRow> weekRows = new();
+    [ObservableProperty] private ObservableCollection<WeekDagGroep> weekDagGroepen = new();
 
     public async Task LoadAsync()
     {
@@ -608,11 +609,25 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             {
                 BonNr = t.WerkBonId,
                 DuurMin = t.DuurMinuten,
+                Datum = t.GeplandVan.Date,
                 KlantNaam = t.WerkBon?.Offerte?.Klant?.Achternaam ?? "",
                 Afmeting = r is null ? "" : $"{r.AantalStuks}× {r.BreedteCm}×{r.HoogteCm}",
                 Lijst = r?.TypeLijst?.Artikelnummer ?? "",
                 LijstType = r?.TypeLijst?.Soort ?? "",
                 Dag = Capitalize(t.GeplandVan.ToString("ddd dd/MM", Nl))
+            });
+        }
+
+        // US-49 — weekdetail per dag groeperen (leesbaarder dan één platte lijst).
+        WeekDagGroepen.Clear();
+        foreach (var g in WeekRows.GroupBy(w => w.Datum).OrderBy(x => x.Key))
+        {
+            var min = g.Sum(w => w.DuurMin);
+            WeekDagGroepen.Add(new WeekDagGroep
+            {
+                DagLabel = Capitalize(g.Key.ToString("dddd dd/MM", Nl)),
+                TotaalLabel = $"{g.Count()} regel(s) · {min / 60}u {min % 60:00}m",
+                Regels = g.ToList()
             });
         }
 
