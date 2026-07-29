@@ -36,6 +36,17 @@ namespace QuadroApp.ViewModels
         public ObservableCollection<int> BeschikbareJaren { get; } = new();
         [ObservableProperty] private int geselecteerdJaar = 0;
 
+        // ── US-51: status-filter (naast het jaarfilter) ────────────────────────
+        public ObservableCollection<WerkBonStatusFilterOptie> StatusFilterOpties { get; } = new()
+        {
+            new WerkBonStatusFilterOptie("Alle statussen", null),
+            new WerkBonStatusFilterOptie("Gepland",        WerkBonStatus.Gepland),
+            new WerkBonStatusFilterOptie("In uitvoering",  WerkBonStatus.InUitvoering),
+            new WerkBonStatusFilterOptie("Afgewerkt",      WerkBonStatus.Afgewerkt),
+            new WerkBonStatusFilterOptie("Afgehaald",      WerkBonStatus.Afgehaald),
+        };
+        [ObservableProperty] private WerkBonStatusFilterOptie? geselecteerdeStatusFilter;
+
         // Dropdown data
         public ObservableCollection<WerkBonStatus> WerkBonStatusOpties { get; } =
             new ObservableCollection<WerkBonStatus>(Enum.GetValues<WerkBonStatus>());
@@ -58,6 +69,10 @@ namespace QuadroApp.ViewModels
             _toast = toast;
             _workflow = workflow;
             _statusWorkflow = statusWorkflow;
+
+            // US-51: standaard "Alle statussen" (veld direct zetten zodat LoadAsync niet
+            // al vanuit de constructor afvuurt).
+            geselecteerdeStatusFilter = StatusFilterOpties[0];
         }
 
         public async Task LoadAsync()
@@ -72,6 +87,10 @@ namespace QuadroApp.ViewModels
             // Jaar-filter
             if (GeselecteerdJaar > 0)
                 query = query.Where(w => w.AangemaaktOp.Year == GeselecteerdJaar);
+
+            // US-51: status-filter
+            if (GeselecteerdeStatusFilter?.Status is WerkBonStatus statusFilter)
+                query = query.Where(w => w.Status == statusFilter);
 
             if (!string.IsNullOrWhiteSpace(Zoekterm))
             {
@@ -108,6 +127,7 @@ namespace QuadroApp.ViewModels
 
         partial void OnZoektermChanged(string? value) => RunAsync(LoadAsync);
         partial void OnGeselecteerdJaarChanged(int value) => RunAsync(LoadAsync);
+        partial void OnGeselecteerdeStatusFilterChanged(WerkBonStatusFilterOptie? value) => RunAsync(LoadAsync);
 
         partial void OnSelectedWerkBonChanged(WerkBon? value)
         {
@@ -260,4 +280,7 @@ namespace QuadroApp.ViewModels
             await _nav.NavigateToAsync<HomeViewModel>();
         }
     }
+
+    /// <summary>US-51 — één keuze in het status-filter; <c>Status = null</c> betekent "alle statussen".</summary>
+    public sealed record WerkBonStatusFilterOptie(string Label, WerkBonStatus? Status);
 }

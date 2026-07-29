@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace QuadroApp.Model.DB
 {
@@ -34,5 +36,19 @@ namespace QuadroApp.Model.DB
         [Timestamp] public byte[]? RowVersion { get; set; }
 
         public ICollection<WerkTaak> Taken { get; set; } = new List<WerkTaak>();
+
+        // ── US-51: afgeleide weergave voor de werkbonnenlijst (niet in DB) ──────
+        /// <summary>Aantal werktaken op deze werkbon.</summary>
+        [NotMapped]
+        public int AantalTaken => Taken?.Count ?? 0;
+
+        /// <summary>Aantal taken dat besteld is (of geen bestelling nodig heeft = op voorraad).</summary>
+        [NotMapped]
+        public int AantalBesteldOfKlaar => Taken?.Count(t => t.IsBesteld || t.IsOpVoorraad) ?? 0;
+
+        /// <summary>Compacte bestel-voortgang, bv. "3/5 besteld" — leeg als er geen taken zijn.</summary>
+        [NotMapped]
+        public string BestelVoortgangLabel =>
+            AantalTaken == 0 ? "" : $"{AantalBesteldOfKlaar}/{AantalTaken} besteld";
     }
 }
