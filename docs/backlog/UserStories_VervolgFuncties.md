@@ -468,6 +468,70 @@ DnD-API (DataObject/DoDragDrop/DragEventArgs.Data) naar de nieuwe DataTransfer-A
 #pragma warning disable/restore CS0618. Gedrag identiek houden: regel slepen naar dagtegel
 plant via vm.PlanRegelOpDatumAsync, betaald/afgewerkt geblokkeerd. Branch
 feature/us50-datatransfer-dnd. .\verify.ps1 groen, 0 warnings.
+## US-49 · Planning-kalender redesign naar productieplanning-werkruimte (gefaseerd)
+
+**Als** productieplanner **wil ik** werkbonnen beheren via een overzichtelijke planning-werkruimte
+**zodat** ik snel capaciteit zie, planningsconflicten herken en efficiënt kan plannen.
+
+**Achtergrond (review 28-07-2026):** de planningskalender is krachtig (capaciteit, geblokkeerde dagen,
+per-regel plannen, weekoverzicht) maar toont veel operationele info tegelijk en mist een dashboard/
+hiërarchie. **Feitelijke omvang:** `Views/PlanningCalendarWindow.axaml` ≈ 564 regels, 62 bindings,
+8 commands; VM netjes opgesplitst (`PlanningCalendarViewModel` + `PlanningUitvoeringViewModel` +
+`PlanningCalendarModels`).
+
+> **Risicopunt (belangrijk):** dit scherm heeft **code-behind-koppeling** — `DayTile_PointerPressed`
+> (klik op een dagtegel) en `OnDataContextChanged`. Een herontwerp van de kalendertegels moet die
+> dag-klik-afhandeling intact houden, anders breekt de dagselectie. Gefaseerd + verify + visuele test
+> per fase, en pas oppakken bij stabiele deployment.
+
+### Wat bestaat al (grond voor View-only)
+- `DayTile`: `Busy` (bezetting), vulkleur, `IsGeblokkeerd`, `IsToday`, `DayNumber`, `BusyLabel`.
+- `DayRow` (uren/minuten per dag, geblokkeerd), `WeekRow` (BonNr, KlantNaam, DuurMin, dag), `WeekSummary`
+  (titel/range/totaal), `SelectedDayRow`, `SelectedWeekNr`, `BlokkeerReden`.
+- Commands: plannen, per-regel plannen, herplannen, taak verwijderen, vorige/volgende maand, vandaag,
+  weekwerklijst, dag blokkeren.
+
+### Toegestane minimale VM-toevoegingen (berekende presentatie, geen businesslogica)
+- KPI-aggregaten: utilisatie vandaag/deze week, aantal open werkbonnen, aantal blokdagen, beschikbare uren.
+- Week-metrics op `WeekSummary`: geplande uren, resterende capaciteit, utilisatie %, blokdagen, "health".
+- Maand-/jaarkiezer-bindings + "spring naar week"; eventueel een "week blokkeren"-command.
+
+### Randvoorwaarden datamodel (NIET leverbaar zoals gevraagd)
+- **Prioriteit per taak** — geen prioriteitsveld op werktaak/werkbon. Vervalt op de taakkaart.
+- **Productiestatus per taak** — er is `WerkTaak.VoorraadStatus` (voorraad), geen echte productiestatus.
+- **"Vertraagde werkbonnen" als KPI** — er is geen deadline-vs-geplande-datum-vergelijking (offerte-deadline
+  is een dood veld). Kan niet zinvol berekend worden zonder eerst dat begrip + data toe te voegen. Laat deze
+  KPI weg tot dat er is.
+
+### Fasering (elke fase = eigen commit(s), `.\verify.ps1` + visuele test, mergebaar los)
+- **Fase A** — dashboard-header met de afleidbare KPI's (utilisatie, open werkbonnen, blokdagen,
+  beschikbare uren) + een capaciteitslegende. "Vertraagd" bewust weglaten.
+- **Fase B** — kalendertegels verrijken (voortgangsbalk, %, blocked-badge, overload-kleur), **voorzichtig
+  met de `DayTile_PointerPressed`-koppeling**.
+- **Fase C** — dag-detailpaneel (datum, workload, beschikbare uren, blokstatus + reden, taken, acties) +
+  week-samenvattingkaarten met de nieuwe berekende metrics.
+- **Fase D** — navigatie (maand-/jaarkiezer, spring-naar-week) + planningsacties netjes groeperen
+  (primair vs. destructief gescheiden).
+- **Toekomst (niet nu bouwen):** drag-drop, Gantt, resource-/machine-/personeelsplanning — alleen de layout
+  zo houden dat het later past.
+
+### Acceptatiecriteria
+- Alle 62 bindings + 8 commands blijven werken; geen wijziging aan planningslogica/algoritmes/blokdagen.
+- Dashboard-KPI's, verrijkte kalender, dag-detailpaneel, week-kaarten, gegroepeerde acties, betere navigatie.
+- MDI-iconen (geen emoji), 8pt-spacing, trimming+tooltips, tokens, toetsenbord + zichtbare focus, responsive.
+- Geen functionele regressie (per fase geverifieerd, dag-klik werkt).
+
+⏱ Schatting: **L** (~50–56 dev-uur, gefaseerd). **Post-release, na stabiele deployment.**
+
+**PROMPT (per fase, niet in één keer):**
+```
+Voer US-49 FASE A uit volgens docs/backlog/UserStories_VervolgFuncties.md. View-first redesign van
+Views/PlanningCalendarWindow.axaml: dashboard-header met afleidbare KPI's (utilisatie vandaag/week,
+open werkbonnen, blokdagen, beschikbare uren) + capaciteitslegende. Enige toegestane VM-toevoeging:
+berekende KPI-properties (read-only, geen businesslogica). Laat "vertraagde werkbonnen" weg (geen
+deadline-data). Behoud ALLE bindings/commands en de DayTile_PointerPressed-koppeling. MDI-iconen,
+8pt-spacing. Branch feature/us49-planning-fase-a. .\verify.ps1 groen + visuele test. Wacht op akkoord
+voor Fase B.
 ```
 
 ---
@@ -486,6 +550,8 @@ feature/us50-datatransfer-dnd. .\verify.ps1 groen, 0 warnings.
 | US-47 | OfferteViewModel decompositie (god-object) | Hoog | ✅ was al voldaan (prijslogica in OffertePrijsViewModel, RestTeBetalen bestaat) |
 | US-48 | Eenmalige status-reconciliatie bestaande offertes | Hoog | 🟡 branch `feature/us48-status-reconciliatie` — verify + merge |
 | US-50 | Drag-drop planning → nieuwe DataTransfer-API (CS0618 wegwerken) | Laag | ⬜ tech-debt; CS0618 nu onderdrukt met `#pragma` |
+| US-48 | Eenmalige status-reconciliatie bestaande offertes | Hoog | ✅ gereleased |
+| US-49 | Planning-kalender redesign (gefaseerd, productieplanning) | Medium (na stabiele deployment) | ⬜ |
 
 > Ook gereleased (buiten de US-nummering): offertelijst-laadfouten via toast, en de CI-fix voor
 > release-automatisering (`workflow_dispatch` + optionele `RELEASE_PAT`). Sindsdien wordt elke release
