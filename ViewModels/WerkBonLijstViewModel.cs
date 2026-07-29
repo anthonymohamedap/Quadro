@@ -254,11 +254,43 @@ namespace QuadroApp.ViewModels
                 SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == selectedWerkBonId.Value);
         }
 
-        /// <summary>Expliciet selecteren via de 'Bekijk'-knop in de rij.</summary>
+        /// <summary>Expliciet selecteren via de rij (toont de inline preview).</summary>
         [RelayCommand]
         private void SelecteerWerkBon(WerkBon? werkBon)
         {
             SelectedWerkBon = werkBon;
+        }
+
+        /// <summary>US-51 Fase B — opent het volledige werkbon-overzicht in een modaal venster.</summary>
+        [RelayCommand]
+        private async Task OpenWerkBonDetailAsync(WerkBon? werkBon)
+        {
+            var wb = werkBon ?? SelectedWerkBon;
+            if (wb is null)
+                return;
+
+            // toon ook de inline preview van dezelfde werkbon
+            SelectedWerkBon = wb;
+
+            var vm = new WerkBonDetailViewModel(_factory, _statusWorkflow, _offerteNav, _toast, wb.Id);
+            await vm.LoadAsync();
+
+            var window = new QuadroApp.Views.WerkBonDetailWindow { DataContext = vm };
+
+            if (App.Current?.ApplicationLifetime is
+                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                var owner = desktop.MainWindow;
+                if (owner is null)
+                    return;
+
+                await window.ShowDialog(owner);
+            }
+
+            // Status/bestellingen kunnen in het venster gewijzigd zijn → lijst verversen.
+            var bewaardeId = wb.Id;
+            await LoadAsync();
+            SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == bewaardeId);
         }
 
         /// <summary>Sluit het detailpaneel zonder de selectie te bewaren.</summary>
