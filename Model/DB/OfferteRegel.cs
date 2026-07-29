@@ -228,13 +228,14 @@ namespace QuadroApp.Model.DB
         {
             get
             {
+                // DisplayLabel = "{Volgnummer} - {Kleur} - {Naam}" → bevat de code (Volgnummer).
                 var delen = new List<string>();
-                if (Glas is not null)           delen.Add($"Glas: {Glas.Naam}");
-                if (PassePartout1 is not null)  delen.Add($"Passe-partout: {PassePartout1.Naam}");
-                if (PassePartout2 is not null)  delen.Add($"Passe-partout 2: {PassePartout2.Naam}");
-                if (DiepteKern is not null)     delen.Add($"Diepte: {DiepteKern.Naam}");
-                if (Opkleven is not null)       delen.Add($"Opkleven: {Opkleven.Naam}");
-                if (Rug is not null)            delen.Add($"Rug: {Rug.Naam}");
+                if (Glas is not null)           delen.Add($"Glas: {Glas.DisplayLabel}");
+                if (PassePartout1 is not null)  delen.Add($"Passe-partout: {PassePartout1.DisplayLabel}");
+                if (PassePartout2 is not null)  delen.Add($"Passe-partout 2: {PassePartout2.DisplayLabel}");
+                if (DiepteKern is not null)     delen.Add($"Diepte: {DiepteKern.DisplayLabel}");
+                if (Opkleven is not null)       delen.Add($"Opkleven: {Opkleven.DisplayLabel}");
+                if (Rug is not null)            delen.Add($"Rug: {Rug.DisplayLabel}");
                 return delen.Count == 0 ? "" : string.Join(", ", delen);
             }
         }
