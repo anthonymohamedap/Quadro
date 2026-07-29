@@ -208,8 +208,16 @@ namespace QuadroApp.Data
                 entity.Property(o => o.BtwBedrag).HasColumnType("decimal(18,2)");
                 entity.Property(o => o.TotaalInclBtw).HasColumnType("decimal(18,2)");
 
+                // Enum als string. Legacy-tolerant: oude rijen met "Gefactureerd"
+                // (voor de hernoeming naar Besteld, US-51) worden bij het lezen
+                // omgezet naar OfferteStatus.Besteld, zodat bestaande data intact blijft
+                // zonder migratie. Nieuwe rijen schrijven "Besteld".
                 entity.Property(o => o.Status)
-                      .HasConversion<string>()      // enum als string
+                      .HasConversion(
+                          v => v.ToString(),
+                          v => v == "Gefactureerd"
+                                   ? OfferteStatus.Besteld
+                                   : System.Enum.Parse<OfferteStatus>(v))
                       .HasMaxLength(30);
 
                 // Optioneel extra configuratie voor planning-velden

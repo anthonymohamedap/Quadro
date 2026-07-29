@@ -29,13 +29,13 @@ public class OfferteStatusReconciliatieServiceTests
             OfferteStatusReconciliatieService.BepaalDoelStatus(new WerkBon { Status = WerkBonStatus.InUitvoering }, null));
 
     [Fact]
-    public void Mapping_werkbon_afgewerkt_is_Gefactureerd()
-        => Assert.Equal(OfferteStatus.Gefactureerd,
+    public void Mapping_werkbon_afgewerkt_is_Besteld()
+        => Assert.Equal(OfferteStatus.Besteld,
             OfferteStatusReconciliatieService.BepaalDoelStatus(new WerkBon { Status = WerkBonStatus.Afgewerkt }, null));
 
     [Fact]
-    public void Mapping_bestelbon_bestaat_is_Gefactureerd()
-        => Assert.Equal(OfferteStatus.Gefactureerd,
+    public void Mapping_bestelbon_bestaat_is_Besteld()
+        => Assert.Equal(OfferteStatus.Besteld,
             OfferteStatusReconciliatieService.BepaalDoelStatus(null, new Factuur { Status = FactuurStatus.KlaarVoorExport }));
 
     [Fact]
