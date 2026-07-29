@@ -256,7 +256,8 @@
 										Padding="10,8"
 										MinHeight="80"
 										Cursor="Hand"
-										PointerPressed="DayTile_PointerPressed">
+										PointerPressed="DayTile_PointerPressed"
+										DragDrop.AllowDrop="True">
 
 									<StackPanel Spacing="4">
 										<!-- Day number + blok-badge + bezettings-% -->
@@ -454,7 +455,7 @@
 												<StackPanel Orientation="Horizontal" Spacing="10">
 													<CheckBox IsChecked="{Binding IsSelected}"
 															  VerticalAlignment="Center"/>
-													<TextBlock Text="{Binding Label}"
+													<TextBlock Text="{Binding Label}" PointerPressed="Regel_PointerPressed" Cursor="Hand"
 															   Classes="label"
 															   TextWrapping="Wrap"
 															   VerticalAlignment="Center"/>

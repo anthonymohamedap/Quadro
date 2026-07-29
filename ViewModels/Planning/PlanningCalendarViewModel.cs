@@ -41,6 +41,9 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
     public IAsyncRelayCommand<WerkTaak> HerplanTaakCommand   => Uitvoering.HerplanTaakCommand;
     public IAsyncRelayCommand<WerkTaak> VerwijderTaakCommand => Uitvoering.VerwijderTaakCommand;
 
+    // US-49 — drag & drop: één regel op een dag laten vallen (aangeroepen vanuit code-behind).
+    public Task PlanRegelOpDatumAsync(int regelId, DateTime datum) => Uitvoering.PlanRegelOpDatumAsync(regelId, datum);
+
     [ObservableProperty] private DayRow? selectedDayRow;
     [ObservableProperty] private int selectedWeekNr;
     [ObservableProperty] private ObservableCollection<DayRow> weekDayRows = new();
