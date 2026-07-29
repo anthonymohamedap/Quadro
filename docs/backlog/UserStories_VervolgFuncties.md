@@ -438,6 +438,40 @@ in de UI. Tests over de mapping + idempotentie. Branch feature/us48-status-recon
 
 ---
 
+## US-50 · Drag-drop planning migreren naar nieuwe Avalonia DataTransfer-API
+
+**Waarom.** De drag-drop in de Planningskalender (regel → dagtegel, US-49) gebruikt de
+klassieke Avalonia drag-drop API: `DataObject`, `DragDrop.DoDragDrop(...)` en
+`DragEventArgs.Data`. Avalonia 11.3 heeft die soft-deprecated (CS0618) t.v.v. de nieuwe
+`DataTransfer`-API (`DoDragDropAsync`, `DragEventArgs.DataTransfer`, `DataFormat`/
+`DataTransferItem`). De klassieke API werkt volledig; de waarschuwingen zijn nu gericht
+onderdrukt met `#pragma warning disable CS0618` rond het DnD-blok in
+`Views/PlanningCalendarWindow.axaml.cs`. Dit is technische schuld: bij een toekomstige
+Avalonia-upgrade kan de klassieke API verdwijnen.
+
+**Wat.** Het DnD-blok herschrijven naar de nieuwe API en het `#pragma` weghalen:
+- sleep-start: `DataTransfer` opbouwen met een typed `DataFormat` voor `planRegelId` en
+  `DragDrop.DoDragDropAsync(...)` aanroepen;
+- `OnDragOver`/`OnDrop`: lezen via `DragEventArgs.DataTransfer` (`TryGetValue`/`Contains`)
+  i.p.v. `e.Data`.
+
+**Risico / aanpak.** Laag-medium, maar de nieuwe lees-API (`DataTransfer`-extensies) is
+nieuw en niet in de sandbox te compileren. Doen op een aparte branch, op Windows testen
+dat slepen van een regel naar een dag nog steeds plant (incl. de betaald/afgewerkt-guard),
+`.\verify.ps1` groen. Puur interne refactor — geen gedrags- of UI-wijziging.
+
+**Prompt.**
+```
+Migreer de drag-drop in Views/PlanningCalendarWindow.axaml.cs van de klassieke Avalonia
+DnD-API (DataObject/DoDragDrop/DragEventArgs.Data) naar de nieuwe DataTransfer-API
+(DoDragDropAsync/DragEventArgs.DataTransfer/DataFormat). Verwijder daarna het
+#pragma warning disable/restore CS0618. Gedrag identiek houden: regel slepen naar dagtegel
+plant via vm.PlanRegelOpDatumAsync, betaald/afgewerkt geblokkeerd. Branch
+feature/us50-datatransfer-dnd. .\verify.ps1 groen, 0 warnings.
+```
+
+---
+
 ### Status
 | Story | Onderwerp | Prioriteit | Status |
 |---|---|---|---|
@@ -451,6 +485,7 @@ in de UI. Tests over de mapping + idempotentie. Branch feature/us48-status-recon
 | US-46b | OfferteView redesign — Fase B/C/D (cosmetische kaart-herbouw) | Laag | ⬜ aparte branch; alleen veilig met live preview / micro-stapjes (functionele delen zoals variant-tonen zijn al klaar) |
 | US-47 | OfferteViewModel decompositie (god-object) | Hoog | ✅ was al voldaan (prijslogica in OffertePrijsViewModel, RestTeBetalen bestaat) |
 | US-48 | Eenmalige status-reconciliatie bestaande offertes | Hoog | 🟡 branch `feature/us48-status-reconciliatie` — verify + merge |
+| US-50 | Drag-drop planning → nieuwe DataTransfer-API (CS0618 wegwerken) | Laag | ⬜ tech-debt; CS0618 nu onderdrukt met `#pragma` |
 
 > Ook gereleased (buiten de US-nummering): offertelijst-laadfouten via toast, en de CI-fix voor
 > release-automatisering (`workflow_dispatch` + optionele `RELEASE_PAT`). Sindsdien wordt elke release
