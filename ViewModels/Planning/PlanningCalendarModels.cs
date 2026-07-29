@@ -60,9 +60,27 @@ public class WeekRow
 {
     public int BonNr { get; set; }
     public int DuurMin { get; set; }
+    public DateTime Datum { get; set; }
     public string KlantNaam { get; set; } = "";
     public string Afmeting { get; set; } = "";
     public string Lijst { get; set; } = "";
     public string LijstType { get; set; } = "";
     public string Dag { get; set; } = "";
+
+    // US-49 — weekdetail: bon-referentie + gecombineerd lijstlabel voor één kolom.
+    public string BonLabel => $"#{BonNr}";
+    public string DuurLabel => $"{DuurMin}m";
+    public string KlantTip => $"Bon #{BonNr} — {KlantNaam}";
+    public string LijstLabel =>
+        string.IsNullOrWhiteSpace(Lijst)
+            ? (string.IsNullOrWhiteSpace(LijstType) ? "–" : LijstType)
+            : string.IsNullOrWhiteSpace(LijstType) ? Lijst : $"{Lijst} · {LijstType}";
+}
+
+// US-49 — weekdetail gegroepeerd per dag (dagkop + subtotaal + regels).
+public class WeekDagGroep
+{
+    public string DagLabel { get; set; } = "";
+    public string TotaalLabel { get; set; } = "";
+    public System.Collections.Generic.List<WeekRow> Regels { get; set; } = new();
 }

@@ -535,43 +535,60 @@
 											</StackPanel>
 										</Border>
 
-										<!-- Week table -->
-										<StackPanel IsVisible="{Binding WeekRows.Count}" Spacing="4">
+										<!-- Week per dag -->
+										<StackPanel IsVisible="{Binding WeekRows.Count}" Spacing="6">
 
 											<!-- Column headers -->
-											<Grid ColumnDefinitions="48,1.2*,1.2*,*,*,48" ColumnSpacing="4" Margin="0,0,0,4">
-												<TextBlock Text="Bon"      Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="1" Text="Klant"    Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="2" Text="Afmeting" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="3" Text="Lijst"    Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="4" Text="Dag"      Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="5" Text="Duur"     Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+											<Grid ColumnDefinitions="1.4*,1.1*,*,44" ColumnSpacing="6" Margin="2,0">
+												<TextBlock Text="Klant"    Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="1" Text="Afmeting" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="2" Text="Lijst"    Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="3" Text="Duur"     Classes="caption" FontWeight="SemiBold" TextAlignment="Right"/>
 											</Grid>
 
 											<Rectangle Classes="Divider"/>
 
-											<!-- Data rows -->
-											<ListBox ItemsSource="{Binding WeekRows}" MaxHeight="300">
-												<ListBox.ItemTemplate>
-													<DataTemplate>
-														<Border Background="{DynamicResource Surface}"
-																BorderBrush="{DynamicResource BorderSubtle}"
-																BorderThickness="1"
-																CornerRadius="6"
-																Padding="6,7"
-																Margin="0,2">
-															<Grid ColumnDefinitions="48,1.2*,1.2*,*,*,48" ColumnSpacing="4">
-																<TextBlock Text="{Binding BonNr}"     Classes="label" TextTrimming="CharacterEllipsis"/>
-																<TextBlock Grid.Column="1" Text="{Binding KlantNaam}" Classes="label" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding KlantNaam}"/>
-																<TextBlock Grid.Column="2" Text="{Binding Afmeting}"  Classes="label" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Afmeting}"/>
-																<TextBlock Grid.Column="3" Text="{Binding Lijst}"     Classes="label" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Lijst}"/>
-																<TextBlock Grid.Column="4" Text="{Binding Dag}"       Classes="caption" TextTrimming="CharacterEllipsis"/>
-																<TextBlock Grid.Column="5" Text="{Binding DuurMin, StringFormat='{}{0}m'}" Classes="label" TextTrimming="CharacterEllipsis"/>
-															</Grid>
-														</Border>
-													</DataTemplate>
-												</ListBox.ItemTemplate>
-											</ListBox>
+											<!-- Dag-groepen -->
+											<ScrollViewer MaxHeight="340" HorizontalScrollBarVisibility="Disabled">
+												<ItemsControl ItemsSource="{Binding WeekDagGroepen}">
+													<ItemsControl.ItemTemplate>
+														<DataTemplate>
+															<StackPanel Spacing="3" Margin="0,0,0,10">
+
+																<!-- Dagkop met subtotaal -->
+																<DockPanel Margin="2,0">
+																	<TextBlock Text="{Binding TotaalLabel}" DockPanel.Dock="Right"
+																			   Classes="caption"
+																			   Foreground="{DynamicResource TextSecondary}"
+																			   VerticalAlignment="Center"/>
+																	<TextBlock Text="{Binding DagLabel}" Classes="label" FontWeight="SemiBold"/>
+																</DockPanel>
+
+																<!-- Regels van die dag -->
+																<ItemsControl ItemsSource="{Binding Regels}">
+																	<ItemsControl.ItemTemplate>
+																		<DataTemplate>
+																			<Border Background="{DynamicResource Surface}"
+																					BorderBrush="{DynamicResource BorderSubtle}"
+																					BorderThickness="1"
+																					CornerRadius="6"
+																					Padding="8,6"
+																					Margin="0,2">
+																				<Grid ColumnDefinitions="1.4*,1.1*,*,44" ColumnSpacing="6">
+																					<TextBlock Text="{Binding KlantNaam}" Classes="label" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding KlantTip}"/>
+																					<TextBlock Grid.Column="1" Text="{Binding Afmeting}"   Classes="label" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Afmeting}"/>
+																					<TextBlock Grid.Column="2" Text="{Binding LijstLabel}" Classes="label" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding LijstLabel}"/>
+																					<TextBlock Grid.Column="3" Text="{Binding DuurLabel}"  Classes="label" TextAlignment="Right"/>
+																				</Grid>
+																			</Border>
+																		</DataTemplate>
+																	</ItemsControl.ItemTemplate>
+																</ItemsControl>
+															</StackPanel>
+														</DataTemplate>
+													</ItemsControl.ItemTemplate>
+												</ItemsControl>
+											</ScrollViewer>
 										</StackPanel>
 
 									</StackPanel>
