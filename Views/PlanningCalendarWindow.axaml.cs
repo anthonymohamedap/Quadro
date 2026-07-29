@@ -24,6 +24,12 @@ public partial class PlanningCalendarWindow : Window
     }
 
     // ───────── DRAG & DROP ─────────
+    // Bewust de klassieke drag-drop API (DataObject / DoDragDrop / DragEventArgs.Data).
+    // Avalonia 11.3 markeert die als [Obsolete] t.v.v. de nieuwe DataTransfer-API, maar
+    // de klassieke API werkt volledig en is stabiel. CS0618 hier gericht onderdrukt zodat
+    // de rest van de build waarschuwingsvrij blijft; migratie kan later als de nieuwe API
+    // is uitgekristalliseerd.
+#pragma warning disable CS0618
 
     // Sleep-start op een regel (op het label, zodat de checkbox klikbaar blijft).
     private void Regel_PointerPressed(object? sender, PointerPressedEventArgs e)
@@ -55,6 +61,7 @@ public partial class PlanningCalendarWindow : Window
 
         await vm.PlanRegelOpDatumAsync(regelId, tile.Date);
     }
+#pragma warning restore CS0618
 
     // ───────── DIALOG DELEGATE INJECTEREN ─────────
 
