@@ -52,6 +52,12 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
     [ObservableProperty] private int kpiBlokdagen;
     [ObservableProperty] private string kpiBeschikbareUren = "–";
 
+    // US-49 Fase C — dag- en week-samenvatting (berekend in de laad-methodes).
+    [ObservableProperty] private string dagGeplandLabel = "0u 0m";
+    [ObservableProperty] private string dagVrijLabel = "–";
+    [ObservableProperty] private string weekGeplandLabel = "0u 0m";
+    [ObservableProperty] private string weekUtilLabel = "0%";
+
     public IRelayCommand PrevMonthCommand { get; }
     public IRelayCommand NextMonthCommand { get; }
     public IRelayCommand TodayCommand { get; }
@@ -394,6 +400,12 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             .ToListAsync();
 
         TakenVanDag = new ObservableCollection<WerkTaak>(taken);
+
+        // US-49 Fase C — dag-workload samenvatting.
+        var usedDag = taken.Sum(t => t.DuurMinuten);
+        DagGeplandLabel = $"{usedDag / 60}u {usedDag % 60}m";
+        var vrij = Math.Max(0, CapaciteitMinuten - usedDag);
+        DagVrijLabel = IsGeselecteerdeDagGeblokkeerd ? "geblokkeerd" : $"{vrij / 60}u {vrij % 60}m";
     }
 
     // ───────── MAAND OVERZICHT ─────────
@@ -577,5 +589,10 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
                 Dag = Capitalize(t.GeplandVan.ToString("ddd dd/MM", Nl))
             });
         }
+
+        // US-49 Fase C — week-samenvatting.
+        var weekMin = taken.Sum(t => t.DuurMinuten);
+        WeekGeplandLabel = $"{weekMin / 60}u {weekMin % 60}m";
+        WeekUtilLabel = $"{(int)Math.Round(100.0 * weekMin / (5 * CapaciteitMinuten))}%";
     }
 }

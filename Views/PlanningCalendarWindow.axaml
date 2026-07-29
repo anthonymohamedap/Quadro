@@ -307,6 +307,18 @@
 										   TextTrimming="CharacterEllipsis"
 										   ToolTip.Tip="{Binding SelectedDateLang}"/>
 							</StackPanel>
+								<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="8" Padding="12,8" Margin="0,0,0,12">
+									<Grid ColumnDefinitions="*,*">
+										<StackPanel Grid.Column="0" Spacing="1">
+											<TextBlock Text="Gepland" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+											<TextBlock Text="{Binding DagGeplandLabel}" Classes="body" FontWeight="SemiBold"/>
+										</StackPanel>
+										<StackPanel Grid.Column="1" Spacing="1">
+											<TextBlock Text="Beschikbaar" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+											<TextBlock Text="{Binding DagVrijLabel}" Classes="body" FontWeight="SemiBold"/>
+										</StackPanel>
+									</Grid>
+								</Border>
 
 							<!-- Geblokkeerd indicator -->
 							<Border IsVisible="{Binding IsGeselecteerdeDagGeblokkeerd}"
@@ -350,9 +362,9 @@
 
 											<Border.ContextMenu>
 												<ContextMenu>
-													<MenuItem Header="✏ Herplannen"
+													<MenuItem Header="Herplannen"
 															  Click="OnHerplanMenuClick"/>
-													<MenuItem Header="🗑 Verwijderen"
+													<MenuItem Header="Verwijderen"
 															  Click="OnVerwijderMenuClick"/>
 												</ContextMenu>
 											</Border.ContextMenu>
@@ -408,7 +420,7 @@
 									Padding="14,12"
 									Margin="0,0,0,16">
 								<StackPanel Orientation="Horizontal" Spacing="10">
-									<TextBlock Text="📋" Classes="h3" VerticalAlignment="Center"/>
+									<TextBlock Text="" Classes="h3" VerticalAlignment="Center"/>
 									<TextBlock Text="Open planning vanuit een werkbon om regels te kunnen plannen."
 											   Classes="label"
 											   Foreground="{DynamicResource InfoText}"
@@ -468,7 +480,7 @@
 								<DockPanel>
 									<TextBlock Text="WEEKDETAIL" Classes="caption" FontWeight="SemiBold" VerticalAlignment="Center"/>
 									<Button DockPanel.Dock="Right"
-											Content="🖨 Weeklijst"
+											Content="Weeklijst"
 											Command="{Binding OpenWeekWerkLijstCommand}"
 											Classes="GhostBtn"/>
 								</DockPanel>
@@ -492,6 +504,8 @@
 														   FontWeight="SemiBold"
 														   Foreground="{DynamicResource InfoText}"/>
 											</Border>
+										<TextBlock Text="{Binding WeekGeplandLabel, StringFormat='· gepland {0}'}" Classes="caption" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+										<TextBlock Text="{Binding WeekUtilLabel, StringFormat='· bezetting {0}'}" Classes="caption" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
 										</StackPanel>
 
 										<!-- Empty state -->
@@ -499,7 +513,7 @@
 												Padding="0,16"
 												HorizontalAlignment="Center">
 											<StackPanel Spacing="6" HorizontalAlignment="Center">
-												<TextBlock Text="📋"
+												<TextBlock Text=""
 														   Classes="h2"
 														   HorizontalAlignment="Center"/>
 												<TextBlock Text="Geen regels voor deze week"
