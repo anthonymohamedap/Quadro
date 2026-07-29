@@ -324,6 +324,21 @@ public partial class PlanningUitvoeringViewModel : ObservableObject
     {
         if (ShowTijdDialogAsync is null) return;
 
+        // US-49 — een afgewerkte/afgehaalde werkbon (gefactureerde/betaalde offerte)
+        // mag niet meer herpland worden.
+        await using (var dbStatus = await _factory.CreateDbContextAsync())
+        {
+            var status = await dbStatus.WerkBonnen
+                .Where(w => w.Id == taak.WerkBonId)
+                .Select(w => (WerkBonStatus?)w.Status)
+                .FirstOrDefaultAsync();
+            if (status is WerkBonStatus.Afgewerkt or WerkBonStatus.Afgehaald)
+            {
+                _toast.Error("Deze werkbon is al afgewerkt of afgehaald en kan niet meer herpland worden.");
+                return;
+            }
+        }
+
         var dialogVm = new PlanningTijdDialogViewModel
         {
             ContextLabel = $"WerkBon #{taak.WerkBonId} — {taak.Omschrijving}",
