@@ -34,10 +34,10 @@ public class OfferteStatusSyncTests
     [Fact]
     public void Advance_can_skip_steps_forward()
     {
-        // InProductie → Gefactureerd (Afgewerkt overgeslagen), zoals afgesproken.
+        // InProductie → Besteld (Afgewerkt overgeslagen), zoals afgesproken.
         var offerte = new Offerte { Status = OfferteStatus.InProductie };
-        Assert.True(OfferteStatusPropagation.TryAdvanceTo(offerte, OfferteStatus.Gefactureerd));
-        Assert.Equal(OfferteStatus.Gefactureerd, offerte.Status);
+        Assert.True(OfferteStatusPropagation.TryAdvanceTo(offerte, OfferteStatus.Besteld));
+        Assert.Equal(OfferteStatus.Besteld, offerte.Status);
     }
 
     [Fact]
@@ -51,9 +51,9 @@ public class OfferteStatusSyncTests
     [Fact]
     public void Advance_never_moves_backward()
     {
-        var offerte = new Offerte { Status = OfferteStatus.Gefactureerd };
+        var offerte = new Offerte { Status = OfferteStatus.Besteld };
         Assert.False(OfferteStatusPropagation.TryAdvanceTo(offerte, OfferteStatus.InProductie));
-        Assert.Equal(OfferteStatus.Gefactureerd, offerte.Status);
+        Assert.Equal(OfferteStatus.Besteld, offerte.Status);
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public class OfferteStatusSyncTests
     }
 
     [Fact]
-    public async Task WerkBon_Afgewerkt_zet_offerte_op_Gefactureerd()
+    public async Task WerkBon_Afgewerkt_zet_offerte_op_Besteld()
     {
         var factory = CreateInMemoryFactory();
         var (offerteId, werkBonId) = await SeedAsync(factory, OfferteStatus.InProductie, WerkBonStatus.InUitvoering);
@@ -109,7 +109,7 @@ public class OfferteStatusSyncTests
 
         await using var db = await factory.CreateDbContextAsync();
         var offerte = await db.Offertes.FindAsync(offerteId);
-        Assert.Equal(OfferteStatus.Gefactureerd, offerte!.Status);
+        Assert.Equal(OfferteStatus.Besteld, offerte!.Status);
     }
 
     // ── Integratie: bestelbon betaald → offerte ─────────────────────────────
@@ -123,7 +123,7 @@ public class OfferteStatusSyncTests
         int offerteId, factuurId;
         await using (var db = await factory.CreateDbContextAsync())
         {
-            var offerte = new Offerte { Datum = DateTime.UtcNow, Status = OfferteStatus.Gefactureerd, TotaalInclBtw = 100m };
+            var offerte = new Offerte { Datum = DateTime.UtcNow, Status = OfferteStatus.Besteld, TotaalInclBtw = 100m };
             db.Offertes.Add(offerte);
             await db.SaveChangesAsync();
 

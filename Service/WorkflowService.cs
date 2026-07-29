@@ -67,8 +67,8 @@ namespace QuadroApp.Service
                 [OfferteStatus.Verzonden]   = new() { OfferteStatus.Goedgekeurd, OfferteStatus.Geannuleerd },
                 [OfferteStatus.Goedgekeurd] = new() { OfferteStatus.InProductie, OfferteStatus.Geannuleerd },
                 [OfferteStatus.InProductie] = new() { OfferteStatus.Afgewerkt, OfferteStatus.Geannuleerd },
-                [OfferteStatus.Afgewerkt]   = new() { OfferteStatus.Gefactureerd },
-                [OfferteStatus.Gefactureerd]= new() { OfferteStatus.Betaald }
+                [OfferteStatus.Afgewerkt]   = new() { OfferteStatus.Besteld },
+                [OfferteStatus.Besteld]= new() { OfferteStatus.Betaald }
             };
 
         private static readonly IReadOnlyDictionary<WerkBonStatus, HashSet<WerkBonStatus>> WerkBonTransitions =
@@ -241,11 +241,11 @@ namespace QuadroApp.Service
                 await _stock.ConsumeReservationsForWerkBonAsync(werkBonId);
                 await _factuurWorkflow.MaakFactuurVanWerkBonAsync(werkBonId);
 
-                // US-42: de bestelbon bestaat nu → offerte door naar Gefactureerd
+                // US-42: de bestelbon bestaat nu → offerte door naar Besteld
                 // (Afgewerkt wordt overgeslagen, zoals afgesproken). Pas ná het aanmaken
                 // van de bestelbon zodat de offertestatus de werkelijkheid volgt.
                 if (werkBon.Offerte is not null &&
-                    OfferteStatusPropagation.TryAdvanceTo(werkBon.Offerte, OfferteStatus.Gefactureerd))
+                    OfferteStatusPropagation.TryAdvanceTo(werkBon.Offerte, OfferteStatus.Besteld))
                 {
                     await db.SaveChangesAsync();
                 }

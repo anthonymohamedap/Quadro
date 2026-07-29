@@ -67,10 +67,10 @@ public sealed class OfferteStatusReconciliatieService : IOfferteStatusReconcilia
         if (factuur is { Status: FactuurStatus.Betaald })
             return OfferteStatus.Betaald;
 
-        // Bestelbon bestaat (niet geannuleerd) of werkbon afgewerkt/afgehaald → Gefactureerd.
+        // Bestelbon bestaat (niet geannuleerd) of werkbon afgewerkt/afgehaald → Besteld.
         if ((factuur is not null && factuur.Status != FactuurStatus.Geannuleerd)
             || werkbon is { Status: WerkBonStatus.Afgewerkt or WerkBonStatus.Afgehaald })
-            return OfferteStatus.Gefactureerd;
+            return OfferteStatus.Besteld;
 
         // Werkbon in uitvoering → InProductie.
         if (werkbon is { Status: WerkBonStatus.InUitvoering })
