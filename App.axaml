@@ -13,7 +13,10 @@
 		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
 		<StyleInclude Source="avares://QuadroApp/Styles/QuadroTheme.axaml" />
 		<Style Selector="NumericUpDown">
+			<!-- Spin-functie uit én de op/neer-pijltjesknoppen verbergen (die bleven
+			     anders zichtbaar maar zonder functie). Geldt voor álle numerieke velden. -->
 			<Setter Property="AllowSpin" Value="False"/>
+			<Setter Property="ShowButtonSpinner" Value="False"/>
 		</Style>
 	</Application.Styles>
 
