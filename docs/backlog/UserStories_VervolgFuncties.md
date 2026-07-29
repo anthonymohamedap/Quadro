@@ -649,7 +649,7 @@ Wacht op akkoord voor Fase B (het overzichtsvenster).
 | US-48 | Eenmalige status-reconciliatie bestaande offertes | Hoog | 🟡 branch `feature/us48-status-reconciliatie` — verify + merge |
 | US-49 | Planning-kalender redesign (gefaseerd, productieplanning) | Medium (na stabiele deployment) | 🟡 in uitvoering op branch `feature/us49-planning-fase-a` (Fase A–D + drag-drop, dagtegel-hints, weekdetail per dag) |
 | US-50 | Drag-drop planning → nieuwe DataTransfer-API (CS0618 wegwerken) | Laag | ⬜ tech-debt; CS0618 nu onderdrukt met `#pragma` |
-| US-51 | Werkbonnen-lijst + werkbon-overzicht revamp (gefaseerd) | Medium (na stabiele deployment) | 🟡 Fase A op branch `feature/us51-werkbon-lijst-fase-a` |
+| US-51 | Werkbonnen-lijst + werkbon-overzicht revamp (gefaseerd) | Medium | ✅ afgerond op branch `feature/us51-werkbon-lijst-fase-a` (Fase A rijkere lijst+statusfilter, B modaal overzichtsvenster, C flow-opschoning; extra: duidelijker bestel-UI, afwerking+code+varianten, zijbalk verwijderd, Gefactureerd→Besteld, planning→offerte InProductie) |
 
 > Ook gereleased (buiten de US-nummering): offertelijst-laadfouten via toast, en de CI-fix voor
 > release-automatisering (`workflow_dispatch` + optionele `RELEASE_PAT`). Sindsdien wordt elke release

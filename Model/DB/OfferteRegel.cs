@@ -240,13 +240,23 @@ namespace QuadroApp.Model.DB
             get
             {
                 // DisplayLabel = "{Volgnummer} - {Kleur} - {Naam}" → bevat de code (Volgnummer).
+                // De gekozen variant (bv. "Brons") komt tussen haakjes erachter.
                 var delen = new List<string>();
-                if (Glas is not null)           delen.Add($"Glas: {Glas.DisplayLabel}");
-                if (PassePartout1 is not null)  delen.Add($"Passe-partout: {PassePartout1.DisplayLabel}");
-                if (PassePartout2 is not null)  delen.Add($"Passe-partout 2: {PassePartout2.DisplayLabel}");
-                if (DiepteKern is not null)     delen.Add($"Diepte: {DiepteKern.DisplayLabel}");
-                if (Opkleven is not null)       delen.Add($"Opkleven: {Opkleven.DisplayLabel}");
-                if (Rug is not null)            delen.Add($"Rug: {Rug.DisplayLabel}");
+                void Voeg(string label, AfwerkingsOptie? optie, AfwerkingsVariant? variant)
+                {
+                    if (optie is null) return;
+                    var tekst = $"{label}: {optie.DisplayLabel}";
+                    if (variant is not null && !string.IsNullOrWhiteSpace(variant.Beschrijving))
+                        tekst += $" ({variant.Beschrijving})";
+                    delen.Add(tekst);
+                }
+
+                Voeg("Glas", Glas, GlasVariant);
+                Voeg("Passe-partout", PassePartout1, PassePartout1Variant);
+                Voeg("Passe-partout 2", PassePartout2, PassePartout2Variant);
+                Voeg("Diepte", DiepteKern, DiepteKernVariant);
+                Voeg("Opkleven", Opkleven, OpklevenVariant);
+                Voeg("Rug", Rug, RugVariant);
                 return delen.Count == 0 ? "" : string.Join(", ", delen);
             }
         }
