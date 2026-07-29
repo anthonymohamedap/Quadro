@@ -28,7 +28,7 @@ namespace QuadroApp.Converters
                     OfferteStatus.Concept or OfferteStatus.Verzonden       => Grijs,
                     OfferteStatus.Goedgekeurd or OfferteStatus.InProductie => Blauw,
                     OfferteStatus.Afgewerkt                                => Amber,
-                    OfferteStatus.Gefactureerd or OfferteStatus.Betaald    => Groen,
+                    OfferteStatus.Besteld or OfferteStatus.Betaald    => Groen,
                     OfferteStatus.Geannuleerd                              => Rood,
                     _                                                      => Grijs
                 }

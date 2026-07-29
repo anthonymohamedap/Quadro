@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -216,5 +217,48 @@ namespace QuadroApp.Model.DB
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotaalInclBtw { get; set; }
+
+        // ========================
+        // US-51: compacte afwerkings-samenvatting voor weergave (niet in DB).
+        // Vereist dat de afwerkings-navigaties (Glas/PassePartout1/2/DiepteKern/Opkleven/Rug)
+        // mee geladen zijn; niet-geladen of niet-gekozen opties worden gewoon overgeslagen.
+        // ========================
+        /// <summary>US-51 — "3× 40×50 cm" voor op het werktaak-kaartje.</summary>
+        [NotMapped]
+        public string AfmetingLabel => $"{AantalStuks}× {BreedteCm:0.#}×{HoogteCm:0.#} cm";
+
+        /// <summary>US-51 — inleg-/passe-partout-opening, enkel als ingevuld.</summary>
+        [NotMapped]
+        public bool HeeftInleg => InlegBreedteCm.HasValue && InlegHoogteCm.HasValue;
+
+        [NotMapped]
+        public string InlegLabel => HeeftInleg ? $"Inleg {InlegBreedteCm:0.#}×{InlegHoogteCm:0.#} cm" : "";
+
+        [NotMapped]
+        public string AfwerkingSamenvatting
+        {
+            get
+            {
+                // DisplayLabel = "{Volgnummer} - {Kleur} - {Naam}" → bevat de code (Volgnummer).
+                // De gekozen variant (bv. "Brons") komt tussen haakjes erachter.
+                var delen = new List<string>();
+                void Voeg(string label, AfwerkingsOptie? optie, AfwerkingsVariant? variant)
+                {
+                    if (optie is null) return;
+                    var tekst = $"{label}: {optie.DisplayLabel}";
+                    if (variant is not null && !string.IsNullOrWhiteSpace(variant.Beschrijving))
+                        tekst += $" ({variant.Beschrijving})";
+                    delen.Add(tekst);
+                }
+
+                Voeg("Glas", Glas, GlasVariant);
+                Voeg("Passe-partout", PassePartout1, PassePartout1Variant);
+                Voeg("Passe-partout 2", PassePartout2, PassePartout2Variant);
+                Voeg("Diepte", DiepteKern, DiepteKernVariant);
+                Voeg("Opkleven", Opkleven, OpklevenVariant);
+                Voeg("Rug", Rug, RugVariant);
+                return delen.Count == 0 ? "" : string.Join(", ", delen);
+            }
+        }
     }
 }
