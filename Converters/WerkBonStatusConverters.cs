@@ -36,6 +36,26 @@ namespace QuadroApp.Converters
             => throw new NotSupportedException();
     }
 
+    /// <summary>US-51 — leesbaar NL-label voor een <see cref="BestelVorm"/> (In verstek / In lengte / Gemonteerd).</summary>
+    public sealed class BestelVormToLabelConverter : IValueConverter
+    {
+        public static readonly BestelVormToLabelConverter Instance = new();
+
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+            => value is BestelVorm v
+                ? v switch
+                {
+                    BestelVorm.Verstek    => "In verstek",
+                    BestelVorm.InLengte   => "In lengte",
+                    BestelVorm.Gemonteerd => "Gemonteerd",
+                    _                     => v.ToString()
+                }
+                : "";
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+            => throw new NotSupportedException();
+    }
+
     /// <summary>US-51 — leesbaar NL-label voor een <see cref="WerkBonStatus"/>.</summary>
     public sealed class WerkBonStatusToLabelConverter : IValueConverter
     {
