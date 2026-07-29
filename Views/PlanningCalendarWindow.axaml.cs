@@ -1,7 +1,9 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using QuadroApp.Model;
 using QuadroApp.Model.DB;
 using QuadroApp.ViewModels;
 using System;
