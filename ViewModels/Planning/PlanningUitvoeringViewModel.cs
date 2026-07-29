@@ -125,6 +125,61 @@ public partial class PlanningUitvoeringViewModel : ObservableObject
         await _requestRefresh();
     }
 
+    // ───────── DRAG & DROP — één regel op een dag laten vallen (US-49) ─────────
+
+    /// <summary>
+    /// US-49 — plant één inlijsting (regel) op een specifieke dag; aangeroepen wanneer
+    /// een regel op een dagtegel wordt gesleept. Géén dialoog. Hergebruikt hetzelfde
+    /// capaciteit-spreidings-algoritme als de gewone plan-knop.
+    /// </summary>
+    public async Task PlanRegelOpDatumAsync(int regelId, DateTime datum)
+    {
+        if (WerkBonId == 0)
+        {
+            _toast.Error("Open planning vanuit een werkbon om regels te plannen.");
+            return;
+        }
+
+        await using var db = await _factory.CreateDbContextAsync();
+
+        var werkBonStatus = await db.WerkBonnen
+            .Where(w => w.Id == WerkBonId)
+            .Select(w => (WerkBonStatus?)w.Status)
+            .FirstOrDefaultAsync();
+        if (werkBonStatus is WerkBonStatus.Afgewerkt or WerkBonStatus.Afgehaald)
+        {
+            _toast.Error("Deze werkbon is al afgewerkt of afgehaald en kan niet meer gepland worden.");
+            return;
+        }
+
+        var regel = await db.OfferteRegels
+            .Include(r => r.TypeLijst)
+            .Include(r => r.Glas)
+            .Include(r => r.PassePartout1)
+            .Include(r => r.PassePartout2)
+            .Include(r => r.DiepteKern)
+            .Include(r => r.Opkleven)
+            .Include(r => r.Rug)
+            .FirstOrDefaultAsync(r => r.Id == regelId);
+        if (regel is null) return;
+
+        int duur = CalcMinutenVoorRegel(regel);
+        try
+        {
+            await _workflow.PlanRegelMetDagCapaciteitAsync(
+                WerkBonId, regelId, datum.Date, duur, CapaciteitMinuten, "Inlijsten");
+        }
+        catch (InvalidOperationException ex)
+        {
+            _toast.Error(ex.Message);
+            await _requestRefresh();
+            return;
+        }
+
+        _toast.Success($"Inlijsting gepland op {datum:dd/MM}.");
+        await _requestRefresh();
+    }
+
     // ───────── PLAN PER REGEL — eigen datum per inlijsting (US-21) ─────────
 
     /// <summary>
