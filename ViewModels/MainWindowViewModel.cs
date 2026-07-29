@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using QuadroApp.Service.Interfaces;
+using QuadroApp.Service.Security;
 using System;
 using System.ComponentModel;
 using System.Reflection;
@@ -86,6 +87,10 @@ namespace QuadroApp.ViewModels
 
             _nav.CurrentViewModelChanged += vm => CurrentViewModel = vm;
 
+            // Laatst gebruikte gebruikersnaam voor-invullen (nooit het wachtwoord),
+            // zodat de gebruiker bij elke opstart enkel het wachtwoord hoeft te typen.
+            LoginGebruikersnaam = LastLoginStore.Read();
+
             // US-32: auto-lock na inactiviteit (standaard 15 min)
             _idleTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
             _idleTimer.Tick += (_, _) =>
@@ -163,6 +168,9 @@ namespace QuadroApp.ViewModels
             IngelogdeGebruiker = _auth.CurrentUser?.VolledigeNaam ?? _auth.CurrentUser?.GebruikersNaam ?? "";
             _laatsteActiviteit = DateTime.Now;
             IsLocked = false;
+
+            // Onthoud de gebruikersnaam voor de volgende opstart (geen wachtwoord).
+            LastLoginStore.Save(_auth.CurrentUser?.GebruikersNaam ?? LoginGebruikersnaam);
 
             if (_auth.CurrentUser?.MoetWachtwoordWijzigen == true)
             {
