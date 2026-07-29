@@ -108,9 +108,22 @@
                                 <StackPanel Spacing="6">
                                     <TextBlock Text="{Binding Omschrijving}" FontWeight="Bold"
                                                TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Omschrijving}"/>
+                                    <TextBlock Text="{Binding OfferteRegel.Titel, StringFormat='Titel: {0}'}"
+                                               Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"
+                                               IsVisible="{Binding OfferteRegel.Titel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                    <TextBlock Text="{Binding OfferteRegel.LegacyCode, StringFormat='Code: {0}'}"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               IsVisible="{Binding OfferteRegel.LegacyCode, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                    <TextBlock Text="{Binding OfferteRegel.AfmetingLabel, StringFormat='Afmeting: {0}'}" Foreground="{DynamicResource TextSecondary}"/>
+                                    <TextBlock Text="{Binding OfferteRegel.InlegLabel}"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               IsVisible="{Binding OfferteRegel.HeeftInleg}"/>
                                     <TextBlock Text="{Binding DuurMinuten, StringFormat='Duur: {0} min'}" Foreground="{DynamicResource TextSecondary}"/>
                                     <TextBlock Text="{Binding GeplandVan, StringFormat='Van: {0:dd/MM HH:mm}'}" Foreground="{DynamicResource TextSecondary}"/>
                                     <TextBlock Text="{Binding GeplandTot, StringFormat='Tot: {0:dd/MM HH:mm}'}" Foreground="{DynamicResource TextSecondary}"/>
+                                    <TextBlock Text="{Binding OfferteRegel.AfhaalDatum, StringFormat='Afhalen: {0:dd/MM/yyyy}'}"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               IsVisible="{Binding OfferteRegel.AfhaalDatum, Converter={x:Static ObjectConverters.IsNotNull}}"/>
                                     <TextBlock Text="{Binding OfferteRegel.TypeLijst.Artikelnummer, StringFormat='Lijst: {0}'}"
                                                Foreground="{DynamicResource TextSecondary}"
                                                TextTrimming="CharacterEllipsis"
@@ -119,6 +132,9 @@
                                                Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"
                                                ToolTip.Tip="{Binding OfferteRegel.AfwerkingSamenvatting}"
                                                IsVisible="{Binding OfferteRegel.AfwerkingSamenvatting, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                    <TextBlock Text="{Binding OfferteRegel.Opmerking, StringFormat='Opmerking: {0}'}"
+                                               Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"
+                                               IsVisible="{Binding OfferteRegel.Opmerking, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
                                     <!-- Status-chip (elkaar uitsluitend) -->
                                     <Border CornerRadius="6" Padding="8,4" HorizontalAlignment="Left"
