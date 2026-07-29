@@ -269,7 +269,7 @@
 										Margin="0,0,0,6"/>
 							</WrapPanel>
 
-							<TextBlock Text="🛠 Werktaken"
+							<TextBlock Text="Werktaken"
 									   Classes="h2"/>
 
 							<Border Background="{DynamicResource SurfaceMutedAlt}"
@@ -304,55 +304,40 @@
 															   TextTrimming="CharacterEllipsis"
 															   ToolTip.Tip="{Binding OfferteRegel.TypeLijst.Artikelnummer}"/>
 
-													<!-- Besteld badge -->
-													<Border Background="{DynamicResource SuccessBg}" CornerRadius="6" Padding="8,5"
-													        IsVisible="{Binding IsBesteld}">
-														<StackPanel Orientation="Horizontal" Spacing="6">
-														<TextBlock Text="✅ Besteld op" Foreground="{DynamicResource Success}" FontWeight="SemiBold" VerticalAlignment="Center"/>
-														<TextBlock Text="{Binding BestelDatum, StringFormat='dd/MM/yyyy'}" Foreground="{DynamicResource Success}" FontWeight="SemiBold" VerticalAlignment="Center"/>
-														</StackPanel>
+													<!-- US-51: één status-chip (elkaar uitsluitend) -->
+													<Border CornerRadius="6" Padding="8,4" HorizontalAlignment="Left"
+															Background="{DynamicResource SuccessBg}" IsVisible="{Binding IsBesteld}">
+														<TextBlock Foreground="{DynamicResource Success}" FontWeight="SemiBold"
+																   Text="{Binding BestelDatum, StringFormat='Besteld op {0:dd/MM/yyyy}'}"/>
+													</Border>
+													<Border CornerRadius="6" Padding="8,4" HorizontalAlignment="Left"
+															Background="{DynamicResource SuccessBg}" IsVisible="{Binding IsOpVoorraad}">
+														<TextBlock Text="Op voorraad — geen bestelling nodig"
+																   Foreground="{DynamicResource Success}" FontWeight="SemiBold" TextWrapping="Wrap"/>
 													</Border>
 
-													<!-- Op voorraad badge -->
-													<Border Background="{DynamicResource SuccessBg}" CornerRadius="6" Padding="8,5"
-													        IsVisible="{Binding IsOpVoorraad}">
-														<TextBlock Text="✅ Op voorraad — geen bestelling nodig"
-														           Foreground="{DynamicResource Success}"
-														           FontWeight="SemiBold"
-														           TextWrapping="Wrap"/>
-													</Border>
-
-													<!-- Bestelling vereist + input -->
-													<StackPanel Spacing="4" IsVisible="{Binding KanBesteldWorden}">
-														<Border Background="{DynamicResource WarningBg}" CornerRadius="6" Padding="8,5">
-															<TextBlock Text="⚠️ Bestelling vereist" Foreground="{DynamicResource Warning}" FontWeight="SemiBold"/>
+													<!-- US-51: bestelblok enkel als er écht besteld moet worden -->
+													<StackPanel Spacing="6" IsVisible="{Binding MoetBesteldWorden}">
+														<Border Background="{DynamicResource WarningBg}" CornerRadius="6" Padding="8,4" HorizontalAlignment="Left">
+															<TextBlock Text="Te bestellen" Foreground="{DynamicResource Warning}" FontWeight="SemiBold"/>
 														</Border>
-														<StackPanel Spacing="4">
-															<WrapPanel>
-																<TextBlock Text="Bestelwijze:" VerticalAlignment="Center" Classes="caption" Margin="0,0,12,4"/>
-																<RadioButton Content="In verstek"
-																		 GroupName="{Binding Id, StringFormat='BVT{0}'}"
-																		 IsChecked="{Binding BestelVormIsVerstek, Mode=TwoWay}"
-																		 Margin="0,0,12,4"/>
-																<RadioButton Content="In lengte"
-																		 GroupName="{Binding Id, StringFormat='BVT{0}'}"
-																		 IsChecked="{Binding BestelVormIsInLengte, Mode=TwoWay}"
-																		 Margin="0,0,12,4"/>
-																<RadioButton Content="Gemonteerd"
-																		 GroupName="{Binding Id, StringFormat='BVT{0}'}"
-																		 IsChecked="{Binding BestelVormIsGemonteerd, Mode=TwoWay}"
-																		 Margin="0,0,0,4"/>
-															</WrapPanel>
-															<Button Content="Maak bestelling"
-																	Classes="AccentBtn"
-																	Command="{Binding #Root.((vm:WerkBonLijstViewModel)DataContext).MarkeerLijstAlsBesteldCommand}"
-																	CommandParameter="{Binding}"/>
-															<TextBlock Text="{Binding BestelDatum, StringFormat='Besteld op: {0:dd/MM/yyyy}'}"
-																	   VerticalAlignment="Center"
-																	   Foreground="{DynamicResource Success}"
-																	   FontWeight="SemiBold"
-																	   IsVisible="{Binding IsBesteld}"/>
+														<StackPanel Orientation="Horizontal" Spacing="8">
+															<TextBlock Text="Bestelwijze" VerticalAlignment="Center" Classes="caption"/>
+															<ComboBox MinWidth="150"
+																	  ItemsSource="{Binding BestelVormOpties}"
+																	  SelectedItem="{Binding GeselecteerdeBestelVorm, Mode=TwoWay}">
+																<ComboBox.ItemTemplate>
+																	<DataTemplate x:DataType="m:BestelVorm">
+																		<TextBlock Text="{Binding Converter={x:Static conv:BestelVormToLabelConverter.Instance}}"/>
+																	</DataTemplate>
+																</ComboBox.ItemTemplate>
+															</ComboBox>
 														</StackPanel>
+														<Button Content="Bestelling plaatsen"
+																Classes="AccentBtn"
+																HorizontalAlignment="Left"
+																Command="{Binding #Root.((vm:WerkBonLijstViewModel)DataContext).MarkeerLijstAlsBesteldCommand}"
+																CommandParameter="{Binding}"/>
 													</StackPanel>
 												</StackPanel>
 											</Border>
