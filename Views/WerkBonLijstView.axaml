@@ -303,6 +303,11 @@
 															   Foreground="{DynamicResource TextSecondary}"
 															   TextTrimming="CharacterEllipsis"
 															   ToolTip.Tip="{Binding OfferteRegel.TypeLijst.Artikelnummer}"/>
+													<TextBlock Text="{Binding OfferteRegel.AfwerkingSamenvatting, StringFormat='Afwerking: {0}'}"
+															   Foreground="{DynamicResource TextSecondary}"
+															   TextWrapping="Wrap"
+															   ToolTip.Tip="{Binding OfferteRegel.AfwerkingSamenvatting}"
+															   IsVisible="{Binding OfferteRegel.AfwerkingSamenvatting, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
 													<!-- US-51: één status-chip (elkaar uitsluitend) -->
 													<Border CornerRadius="6" Padding="8,4" HorizontalAlignment="Left"

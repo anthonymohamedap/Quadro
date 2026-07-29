@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -216,5 +217,26 @@ namespace QuadroApp.Model.DB
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotaalInclBtw { get; set; }
+
+        // ========================
+        // US-51: compacte afwerkings-samenvatting voor weergave (niet in DB).
+        // Vereist dat de afwerkings-navigaties (Glas/PassePartout1/2/DiepteKern/Opkleven/Rug)
+        // mee geladen zijn; niet-geladen of niet-gekozen opties worden gewoon overgeslagen.
+        // ========================
+        [NotMapped]
+        public string AfwerkingSamenvatting
+        {
+            get
+            {
+                var delen = new List<string>();
+                if (Glas is not null)           delen.Add($"Glas: {Glas.Naam}");
+                if (PassePartout1 is not null)  delen.Add($"Passe-partout: {PassePartout1.Naam}");
+                if (PassePartout2 is not null)  delen.Add($"Passe-partout 2: {PassePartout2.Naam}");
+                if (DiepteKern is not null)     delen.Add($"Diepte: {DiepteKern.Naam}");
+                if (Opkleven is not null)       delen.Add($"Opkleven: {Opkleven.Naam}");
+                if (Rug is not null)            delen.Add($"Rug: {Rug.Naam}");
+                return delen.Count == 0 ? "" : string.Join(", ", delen);
+            }
+        }
     }
 }

@@ -82,6 +82,13 @@ namespace QuadroApp.ViewModels
             var query = db.WerkBonnen
                 .Include(w => w.Offerte).ThenInclude(o => o.Klant)
                 .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.TypeLijst)
+                // US-51: afwerkings-opties mee laden voor de samenvatting op het taakkaartje.
+                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.Glas)
+                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.PassePartout1)
+                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.PassePartout2)
+                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.DiepteKern)
+                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.Opkleven)
+                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.Rug)
                 .AsQueryable();
 
             // Jaar-filter
