@@ -51,15 +51,14 @@
 		</Border>
 
 		<!-- ================= BODY ================= -->
-		<ScrollViewer Grid.Row="2"
-                      Margin="24"
-                      VerticalScrollBarVisibility="Auto">
-
-			<Grid ColumnDefinitions="1*,1.05*"
+		<Grid Grid.Row="2"
+                  Margin="24"
+                  ColumnDefinitions="1*,1.05*"
                   ColumnSpacing="24">
 
-				<!-- ================= LEFT COLUMN ================= -->
-				<StackPanel Grid.Column="1" Spacing="20">
+				<!-- ===== RECHTS: klant + regeloverzicht (eigen scroll) ===== -->
+				<ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+				<StackPanel Spacing="20">
 
 					<!-- KLANT -->
 					<Border Classes="quadro-card">
@@ -190,9 +189,11 @@
 					</Border>
 
 				</StackPanel>
+				</ScrollViewer>
 
-				<!-- ================= RIGHT COLUMN ================= -->
-				<StackPanel Grid.Column="0"
+				<!-- ===== LINKS: regel bewerken (eigen scroll) ===== -->
+				<ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+				<StackPanel
                             Spacing="20">
 
 					<!-- REGEL DETAILS -->
@@ -619,8 +620,8 @@
 
 					</Border>
 				</StackPanel>
+				</ScrollViewer>
 			</Grid>
-		</ScrollViewer>
 
 		<!-- ================= STICKY FOOTER ================= -->
 		<Border Grid.Row="3"
