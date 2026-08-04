@@ -185,34 +185,48 @@
 
 					<!-- REGEL DETAILS -->
 					<Border Classes="quadro-card">
-						<Grid ColumnDefinitions="Auto,*"
-                              RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
-                              RowSpacing="10"
-                              ColumnSpacing="12">
+					<StackPanel Spacing="16">
 
-							<TextBlock Text="Regel details"
-                                       Grid.ColumnSpan="2"
-                                       Classes="h2"
-                                       TextTrimming="CharacterEllipsis"/>
+						<TextBlock Text="Regel details" Classes="h2" TextTrimming="CharacterEllipsis"/>
 
-							<!-- ══ TITEL — eerste invoerveld ══ -->
-							<TextBlock Grid.Row="1" Grid.Column="0" Text="Titel (verschijnt op bon)" VerticalAlignment="Center" MaxWidth="220" TextWrapping="Wrap"/>
-							<TextBox Grid.Row="1"
+						<StackPanel Spacing="6">
+							<TextBlock Text="Algemeen" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
+							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
+							<TextBlock Grid.Row="0" Grid.Column="0" Text="Titel (verschijnt op bon)" VerticalAlignment="Center" MaxWidth="220" TextWrapping="Wrap"/>
+							<TextBox Grid.Row="0"
                                      Grid.Column="1"
                                      Watermark="bv. Poster A3, Trouwfoto, Canvas..."
                                      Text="{Binding SelectedRegel.Titel, Mode=TwoWay}"/>
-
-							<TextBlock Grid.Row="2" Grid.Column="0" Text="Aantal stuks" VerticalAlignment="Center"/>
-							<NumericUpDown Grid.Row="2"
+							<TextBlock Grid.Row="1" Grid.Column="0" Text="Aantal stuks" VerticalAlignment="Center"/>
+							<NumericUpDown Grid.Row="1"
                                            Grid.Column="1"
                                            Foreground="{DynamicResource TextPrimary}"
                                            Minimum="1"
                                            Maximum="999"
                                            Value="{Binding SelectedRegel.AantalStuks, Mode=TwoWay}"/>
+							<TextBlock Grid.Row="2" Grid.Column="0" Text="Afhaal datum" VerticalAlignment="Center"/>
+							<StackPanel Grid.Row="2"
+										Grid.Column="1"
+										Orientation="Horizontal"
+										Spacing="8"
+										VerticalAlignment="Center">
+								<TextBlock Text="{Binding SelectedRegel.AfhaalDatum, StringFormat='{}{0:dd/MM/yyyy}', TargetNullValue='— nog niet gepland'}"
+										   VerticalAlignment="Center"
+										   FontWeight="SemiBold"
+										   Foreground="{DynamicResource TextPrimary}"/>
+								<TextBlock Text="(via planning)"
+										   Classes="caption"
+										   VerticalAlignment="Center"/>
+							</StackPanel>
+							</Grid>
+						</StackPanel>
 
-							<TextBlock Grid.Row="3" Grid.Column="0" Text="Type lijst" VerticalAlignment="Top"/>
+						<StackPanel Spacing="6">
+							<TextBlock Text="Lijst" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
+							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" RowSpacing="10" ColumnSpacing="12">
+							<TextBlock Grid.Row="0" Grid.Column="0" Text="Type lijst" VerticalAlignment="Top"/>
 
-							<StackPanel Grid.Row="3"
+							<StackPanel Grid.Row="0"
                                         Grid.Column="1"
                                         Spacing="6">
 
@@ -266,26 +280,24 @@
 								</ComboBox>
 
 							</StackPanel>
+							</Grid>
+						</StackPanel>
 
-							<TextBlock Grid.Row="4" Grid.Column="0" Text="Breedte (cm)" VerticalAlignment="Center"/>
-							<NumericUpDown Grid.Row="4"
+						<StackPanel Spacing="6">
+							<TextBlock Text="Afmetingen" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
+							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
+							<TextBlock Grid.Row="0" Grid.Column="0" Text="Breedte (cm)" VerticalAlignment="Center"/>
+							<NumericUpDown Grid.Row="0"
                                            Foreground="{DynamicResource TextPrimary}"
                                            Grid.Column="1"
                                            Value="{Binding SelectedRegel.BreedteCm, Mode=TwoWay}"/>
-
-							<TextBlock Grid.Row="5" Grid.Column="0" Text="Hoogte (cm)" VerticalAlignment="Center"/>
-							<NumericUpDown Grid.Row="5"
+							<TextBlock Grid.Row="1" Grid.Column="0" Text="Hoogte (cm)" VerticalAlignment="Center"/>
+							<NumericUpDown Grid.Row="1"
                                            Foreground="{DynamicResource TextPrimary}"
                                            Grid.Column="1"
                                            Value="{Binding SelectedRegel.HoogteCm, Mode=TwoWay}"/>
-
-							<TextBlock Grid.Row="6" Grid.Column="0" Text="Afgesproken prijs (incl. BTW)" VerticalAlignment="Center" MaxWidth="220" TextWrapping="Wrap"/>
-							<TextBox Grid.Row="6"
-                                     Grid.Column="1"
-                                     Text="{Binding SelectedRegelAfgesprokenPrijs, Mode=TwoWay}"/>
-
-							<TextBlock Grid.Row="7" Grid.Column="0" Text="Inleg (B × H) cm" VerticalAlignment="Center"/>
-							<Grid Grid.Row="7"
+							<TextBlock Grid.Row="2" Grid.Column="0" Text="Inleg (B × H) cm" VerticalAlignment="Center"/>
+							<Grid Grid.Row="2"
                                   Grid.Column="1"
                                   ColumnDefinitions="*,8,*">
 								<NumericUpDown Value="{Binding SelectedRegel.InlegBreedteCm, Mode=TwoWay}"
@@ -297,12 +309,28 @@
                                                Foreground="{DynamicResource TextPrimary}"
                                                Value="{Binding SelectedRegel.InlegHoogteCm, Mode=TwoWay}"/>
 							</Grid>
-							<TextBlock Grid.Row="8"
+							</Grid>
+						</StackPanel>
+
+						<StackPanel Spacing="6">
+							<TextBlock Text="Prijs" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
+							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" RowSpacing="10" ColumnSpacing="12">
+							<TextBlock Grid.Row="0" Grid.Column="0" Text="Afgesproken prijs (incl. BTW)" VerticalAlignment="Center" MaxWidth="220" TextWrapping="Wrap"/>
+							<TextBox Grid.Row="0"
+                                     Grid.Column="1"
+                                     Text="{Binding SelectedRegelAfgesprokenPrijs, Mode=TwoWay}"/>
+							</Grid>
+						</StackPanel>
+
+						<StackPanel Spacing="6">
+							<TextBlock Text="Notities" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
+							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" RowSpacing="10" ColumnSpacing="12">
+							<TextBlock Grid.Row="0"
                                        Grid.Column="0"
                                        VerticalAlignment="Top"
                                        Text="Opmerking"/>
 
-							<TextBox Grid.Row="8"
+							<TextBox Grid.Row="0"
 									 Grid.Column="1"
 									 AcceptsReturn="True"
 									 MinHeight="70"
@@ -310,21 +338,9 @@
 									 Text="{Binding SelectedRegel.Opmerking, Mode=TwoWay}"/>
 
 							<!-- AFHAAL DATUM PER REGEL — read-only: wordt bepaald via de planning (US-27) -->
-							<TextBlock Grid.Row="9" Grid.Column="0" Text="Afhaal datum" VerticalAlignment="Center"/>
-							<StackPanel Grid.Row="9"
-										Grid.Column="1"
-										Orientation="Horizontal"
-										Spacing="8"
-										VerticalAlignment="Center">
-								<TextBlock Text="{Binding SelectedRegel.AfhaalDatum, StringFormat='{}{0:dd/MM/yyyy}', TargetNullValue='— nog niet gepland'}"
-										   VerticalAlignment="Center"
-										   FontWeight="SemiBold"
-										   Foreground="{DynamicResource TextPrimary}"/>
-								<TextBlock Text="(via planning)"
-										   Classes="caption"
-										   VerticalAlignment="Center"/>
-							</StackPanel>
-						</Grid>
+							</Grid>
+						</StackPanel>
+					</StackPanel>
 					</Border>
 
 					<!-- AFWERKINGEN -->
