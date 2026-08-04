@@ -74,12 +74,24 @@
 										CornerRadius="6"
 										Padding="6">
 
-									<TextBlock FontWeight="SemiBold"
-											   Foreground="{DynamicResource InfoText}"
-											   TextTrimming="CharacterEllipsis"
-											   ToolTip.Tip="{Binding SelectedKlant.Achternaam}"
-											   Text="{Binding SelectedKlant.Achternaam,
-                                  TargetNullValue='Geen klant geselecteerd'}"/>
+									<StackPanel Spacing="2">
+											<TextBlock FontWeight="SemiBold"
+													   Foreground="{DynamicResource InfoText}"
+													   TextTrimming="CharacterEllipsis"
+													   ToolTip.Tip="{Binding SelectedKlant.VolledigeNaam}"
+													   Text="{Binding SelectedKlant.VolledigeNaam, TargetNullValue='Geen klant geselecteerd'}"/>
+											<StackPanel Spacing="0" IsVisible="{Binding SelectedKlant, Converter={x:Static ObjectConverters.IsNotNull}}">
+												<TextBlock Classes="caption" Foreground="{DynamicResource InfoText}" TextTrimming="CharacterEllipsis"
+														   Text="{Binding SelectedKlant.Telefoon}"
+														   IsVisible="{Binding SelectedKlant.Telefoon, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+												<TextBlock Classes="caption" Foreground="{DynamicResource InfoText}" TextTrimming="CharacterEllipsis"
+														   Text="{Binding SelectedKlant.Email}"
+														   IsVisible="{Binding SelectedKlant.Email, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+												<TextBlock Classes="caption" Foreground="{DynamicResource InfoText}" TextTrimming="CharacterEllipsis"
+														   Text="{Binding SelectedKlant.Gemeente}"
+														   IsVisible="{Binding SelectedKlant.Gemeente, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+											</StackPanel>
+										</StackPanel>
 								</Border>
 								<!-- Zoek -->
 								<TextBox Watermark="Zoek klant..."
@@ -92,11 +104,17 @@
 
 									<ComboBox.ItemTemplate>
 										<DataTemplate x:DataType="m:Klant">
-											<TextBlock TextTrimming="CharacterEllipsis">
-												<Run Text="{Binding Voornaam}" />
-												<Run Text=" " />
-												<Run Text="{Binding Achternaam}" />
-											</TextBlock>
+											<StackPanel Spacing="0">
+													<TextBlock FontWeight="SemiBold" TextTrimming="CharacterEllipsis">
+														<Run Text="{Binding Voornaam}" />
+														<Run Text=" " />
+														<Run Text="{Binding Achternaam}" />
+													</TextBlock>
+													<TextBlock Classes="caption" Foreground="{DynamicResource TextSecondary}"
+															   TextTrimming="CharacterEllipsis"
+															   Text="{Binding Gemeente}"
+															   IsVisible="{Binding Gemeente, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+												</StackPanel>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 
