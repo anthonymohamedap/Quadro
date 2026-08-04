@@ -116,6 +116,8 @@ namespace QuadroApp.Service
         public async Task<int> HerstellenAsync(int archiefId)
         {
             await using var db = await _factory.CreateDbContextAsync();
+            return await db.ExecuteWithRetryAsync(async () =>
+            {
             await using var tx = await db.Database.BeginTransactionAsync();
 
             var archief = await db.WerkBonArchieven.FirstOrDefaultAsync(a => a.Id == archiefId)
@@ -201,6 +203,7 @@ namespace QuadroApp.Service
                 archiefId, nieuweOfferte.Id);
 
             return nieuweOfferte.Id;
+            });
         }
 
         // ─────────────────────────────────────────────────────────────────

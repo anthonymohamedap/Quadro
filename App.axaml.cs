@@ -98,19 +98,17 @@ public partial class App : Application
         services.AddDbContextFactory<AppDbContext>(options =>
         {
             if (isPostgres)
-                options.UseNpgsql(connectionString);
-                // LET OP: bewust GEEN EnableRetryOnFailure hier.
-                // De retry-strategie (NpgsqlRetryingExecutionStrategy) verbiedt
-                // door de gebruiker zelf geopende transacties (db.Database.BeginTransactionAsync).
-                // De app opent op 13 plekken zo'n transactie (ImportService, StockService,
-                // OfferteArchiefService, WerkBonArchiefService, WorkflowService) en die
-                // zouden dan allemaal falen met:
-                //   "The configured execution strategy 'NpgsqlRetryingExecutionStrategy'
-                //    does not support user-initiated transactions."
-                // Op een bekabeld/LAN-Postgres is transient-retry weinig waard; bij een
-                // netwerk-blip krijgt de gebruiker de nette 'probeer opnieuw'-melding.
-                // Retry terugbrengen = alle transacties in CreateExecutionStrategy().ExecuteAsync
-                // wikkelen -> aparte post-release story.
+                // US-43: retry-on-failure weer aan. Alle 12 door-de-gebruiker geopende
+                // transacties (ImportService, StockService, OfferteArchiefService,
+                // WerkBonArchiefService, WorkflowService) draaien nu binnen
+                // db.ExecuteWithRetryAsync(...) (CreateExecutionStrategy().ExecuteAsync),
+                // zodat de retry-strategie ze wél toelaat: een korte netwerk-blip wordt
+                // automatisch opnieuw geprobeerd i.p.v. te falen.
+                options.UseNpgsql(connectionString, npgsql =>
+                    npgsql.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(5),
+                        errorCodesToAdd: null));
             else
                 options.UseSqlite(connectionString);
 
