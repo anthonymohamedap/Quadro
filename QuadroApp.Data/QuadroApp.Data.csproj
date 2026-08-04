@@ -16,6 +16,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <!-- Security: GHSA-2m69-gcr7-jv3q (CVE-2025-6965) — overschrijf de kwetsbare
+         transitieve SQLitePCLRaw (2.1.x) met de gepatchte 3.0.3, net als in QuadroApp. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
   </ItemGroup>
 
 </Project>
