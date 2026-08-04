@@ -51,15 +51,14 @@
 		</Border>
 
 		<!-- ================= BODY ================= -->
-		<ScrollViewer Grid.Row="2"
-                      Margin="24"
-                      VerticalScrollBarVisibility="Auto">
-
-			<Grid ColumnDefinitions="1*,1.05*"
+		<Grid Grid.Row="2"
+                  Margin="24"
+                  ColumnDefinitions="1*,1.05*"
                   ColumnSpacing="24">
 
-				<!-- ================= LEFT COLUMN ================= -->
-				<StackPanel Grid.Column="1" Spacing="20">
+				<!-- ===== RECHTS: klant + regeloverzicht (eigen scroll) ===== -->
+				<ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+				<StackPanel Spacing="20">
 
 					<!-- KLANT -->
 					<Border Classes="quadro-card">
@@ -75,12 +74,24 @@
 										CornerRadius="6"
 										Padding="6">
 
-									<TextBlock FontWeight="SemiBold"
-											   Foreground="{DynamicResource InfoText}"
-											   TextTrimming="CharacterEllipsis"
-											   ToolTip.Tip="{Binding SelectedKlant.Achternaam}"
-											   Text="{Binding SelectedKlant.Achternaam,
-                                  TargetNullValue='Geen klant geselecteerd'}"/>
+									<StackPanel Spacing="2">
+											<TextBlock FontWeight="SemiBold"
+													   Foreground="{DynamicResource InfoText}"
+													   TextTrimming="CharacterEllipsis"
+													   ToolTip.Tip="{Binding SelectedKlant.VolledigeNaam}"
+													   Text="{Binding SelectedKlant.VolledigeNaam, TargetNullValue='Geen klant geselecteerd'}"/>
+											<StackPanel Spacing="0" IsVisible="{Binding SelectedKlant, Converter={x:Static ObjectConverters.IsNotNull}}">
+												<TextBlock Classes="caption" Foreground="{DynamicResource InfoText}" TextTrimming="CharacterEllipsis"
+														   Text="{Binding SelectedKlant.Telefoon}"
+														   IsVisible="{Binding SelectedKlant.Telefoon, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+												<TextBlock Classes="caption" Foreground="{DynamicResource InfoText}" TextTrimming="CharacterEllipsis"
+														   Text="{Binding SelectedKlant.Email}"
+														   IsVisible="{Binding SelectedKlant.Email, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+												<TextBlock Classes="caption" Foreground="{DynamicResource InfoText}" TextTrimming="CharacterEllipsis"
+														   Text="{Binding SelectedKlant.Gemeente}"
+														   IsVisible="{Binding SelectedKlant.Gemeente, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+											</StackPanel>
+										</StackPanel>
 								</Border>
 								<!-- Zoek -->
 								<TextBox Watermark="Zoek klant..."
@@ -93,11 +104,17 @@
 
 									<ComboBox.ItemTemplate>
 										<DataTemplate x:DataType="m:Klant">
-											<TextBlock TextTrimming="CharacterEllipsis">
-												<Run Text="{Binding Voornaam}" />
-												<Run Text=" " />
-												<Run Text="{Binding Achternaam}" />
-											</TextBlock>
+											<StackPanel Spacing="0">
+													<TextBlock FontWeight="SemiBold" TextTrimming="CharacterEllipsis">
+														<Run Text="{Binding Voornaam}" />
+														<Run Text=" " />
+														<Run Text="{Binding Achternaam}" />
+													</TextBlock>
+													<TextBlock Classes="caption" Foreground="{DynamicResource TextSecondary}"
+															   TextTrimming="CharacterEllipsis"
+															   Text="{Binding Gemeente}"
+															   IsVisible="{Binding Gemeente, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+												</StackPanel>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 
@@ -142,20 +159,6 @@
                                         Classes="AccentBtn"/>
 							</Grid>
 
-							<!-- TABEL HEADERS -->
-							<Grid ColumnDefinitions="Auto,60,60,60,90,*,110"
-                                  Opacity="0.6">
-								<TextBlock Grid.Column="1" Text="Aantal" Classes="label" TextTrimming="CharacterEllipsis"/>
-								<TextBlock Grid.Column="2" Text="Breedte" Classes="label" TextTrimming="CharacterEllipsis"/>
-								<TextBlock Grid.Column="3" Text="Hoogte" Classes="label" TextTrimming="CharacterEllipsis"/>
-								<TextBlock Grid.Column="4" Text="Type lijst" Classes="label" TextTrimming="CharacterEllipsis"/>
-								<TextBlock Grid.Column="6"
-                                           Text="Totaal"
-                                           Classes="label"
-                                           HorizontalAlignment="Right"/>
-							</Grid>
-
-							<Separator/>
 
 							<ListBox ItemsSource="{Binding Regels}"
                                      SelectedItem="{Binding SelectedRegel, Mode=TwoWay}"
@@ -164,23 +167,24 @@
 
 								<ListBox.ItemTemplate>
 									<DataTemplate x:DataType="m:OfferteRegel">
-										<Border Padding="6">
-											<Grid ColumnDefinitions="Auto,60,60,60,90,*,110">
-												<TextBlock Grid.Column="1" Text="{Binding AantalStuks}"/>
-												<TextBlock Grid.Column="2"
-                                                           Text="{Binding BreedteCm, StringFormat={}{0} cm}"
-                                                           TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="3"
-                                                           Text="{Binding HoogteCm, StringFormat={}{0} cm}"
-                                                           TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="4"
-                                                           Text="{Binding TypeLijst.Artikelnummer}"
-                                                           ToolTip.Tip="{Binding TypeLijst.Artikelnummer}"
-                                                           TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="6"
-                                                           Text="{Binding TotaalInclBtw, StringFormat=€ {0:N2}}"
-                                                           HorizontalAlignment="Right"
-                                                           FontWeight="SemiBold"/>
+										<Border Background="{DynamicResource Surface}"
+												BorderBrush="{DynamicResource BorderSubtle}"
+												BorderThickness="1" CornerRadius="8"
+												Padding="10,8" Margin="0,3">
+											<Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+												<StackPanel Grid.Column="0" Spacing="2">
+													<TextBlock Text="{Binding AfmetingLabel}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+													<TextBlock Text="{Binding Titel}" Classes="caption"
+															   Foreground="{DynamicResource TextSecondary}"
+															   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Titel}"
+															   IsVisible="{Binding Titel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+													<TextBlock Text="{Binding TypeLijst.Artikelnummer, StringFormat='Lijst: {0}'}"
+															   Classes="caption" Foreground="{DynamicResource TextSecondary}"
+															   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding TypeLijst.Artikelnummer}"
+															   IsVisible="{Binding TypeLijst, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+												</StackPanel>
+												<TextBlock Grid.Column="1" Text="{Binding TotaalInclBtw, StringFormat=€ {0:N2}}"
+														   FontWeight="SemiBold" VerticalAlignment="Center"/>
 											</Grid>
 										</Border>
 									</DataTemplate>
@@ -190,41 +194,57 @@
 					</Border>
 
 				</StackPanel>
+				</ScrollViewer>
 
-				<!-- ================= RIGHT COLUMN ================= -->
-				<StackPanel Grid.Column="0"
+				<!-- ===== LINKS: regel bewerken (eigen scroll) ===== -->
+				<ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+				<StackPanel
                             Spacing="20">
 
 					<!-- REGEL DETAILS -->
 					<Border Classes="quadro-card">
-						<Grid ColumnDefinitions="Auto,*"
-                              RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
-                              RowSpacing="10"
-                              ColumnSpacing="12">
+					<StackPanel Spacing="16">
 
-							<TextBlock Text="Regel details"
-                                       Grid.ColumnSpan="2"
-                                       Classes="h2"
-                                       TextTrimming="CharacterEllipsis"/>
+						<TextBlock Text="Regel details" Classes="h2" TextTrimming="CharacterEllipsis"/>
 
-							<!-- ══ TITEL — eerste invoerveld ══ -->
-							<TextBlock Grid.Row="1" Grid.Column="0" Text="Titel (verschijnt op bon)" VerticalAlignment="Center" MaxWidth="220" TextWrapping="Wrap"/>
-							<TextBox Grid.Row="1"
+						<StackPanel Spacing="6">
+							<TextBlock Text="Algemeen" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
+							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
+							<TextBlock Grid.Row="0" Grid.Column="0" Text="Titel (verschijnt op bon)" VerticalAlignment="Center" MaxWidth="220" TextWrapping="Wrap"/>
+							<TextBox Grid.Row="0"
                                      Grid.Column="1"
                                      Watermark="bv. Poster A3, Trouwfoto, Canvas..."
                                      Text="{Binding SelectedRegel.Titel, Mode=TwoWay}"/>
-
-							<TextBlock Grid.Row="2" Grid.Column="0" Text="Aantal stuks" VerticalAlignment="Center"/>
-							<NumericUpDown Grid.Row="2"
+							<TextBlock Grid.Row="1" Grid.Column="0" Text="Aantal stuks" VerticalAlignment="Center"/>
+							<NumericUpDown Grid.Row="1"
                                            Grid.Column="1"
                                            Foreground="{DynamicResource TextPrimary}"
                                            Minimum="1"
                                            Maximum="999"
                                            Value="{Binding SelectedRegel.AantalStuks, Mode=TwoWay}"/>
+							<TextBlock Grid.Row="2" Grid.Column="0" Text="Afhaal datum" VerticalAlignment="Center"/>
+							<StackPanel Grid.Row="2"
+										Grid.Column="1"
+										Orientation="Horizontal"
+										Spacing="8"
+										VerticalAlignment="Center">
+								<TextBlock Text="{Binding SelectedRegel.AfhaalDatum, StringFormat='{}{0:dd/MM/yyyy}', TargetNullValue='— nog niet gepland'}"
+										   VerticalAlignment="Center"
+										   FontWeight="SemiBold"
+										   Foreground="{DynamicResource TextPrimary}"/>
+								<TextBlock Text="(via planning)"
+										   Classes="caption"
+										   VerticalAlignment="Center"/>
+							</StackPanel>
+							</Grid>
+						</StackPanel>
 
-							<TextBlock Grid.Row="3" Grid.Column="0" Text="Type lijst" VerticalAlignment="Top"/>
+						<StackPanel Spacing="6">
+							<TextBlock Text="Lijst" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
+							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" RowSpacing="10" ColumnSpacing="12">
+							<TextBlock Grid.Row="0" Grid.Column="0" Text="Type lijst" VerticalAlignment="Top"/>
 
-							<StackPanel Grid.Row="3"
+							<StackPanel Grid.Row="0"
                                         Grid.Column="1"
                                         Spacing="6">
 
@@ -278,26 +298,24 @@
 								</ComboBox>
 
 							</StackPanel>
+							</Grid>
+						</StackPanel>
 
-							<TextBlock Grid.Row="4" Grid.Column="0" Text="Breedte (cm)" VerticalAlignment="Center"/>
-							<NumericUpDown Grid.Row="4"
+						<StackPanel Spacing="6">
+							<TextBlock Text="Afmetingen" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
+							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
+							<TextBlock Grid.Row="0" Grid.Column="0" Text="Breedte (cm)" VerticalAlignment="Center"/>
+							<NumericUpDown Grid.Row="0"
                                            Foreground="{DynamicResource TextPrimary}"
                                            Grid.Column="1"
                                            Value="{Binding SelectedRegel.BreedteCm, Mode=TwoWay}"/>
-
-							<TextBlock Grid.Row="5" Grid.Column="0" Text="Hoogte (cm)" VerticalAlignment="Center"/>
-							<NumericUpDown Grid.Row="5"
+							<TextBlock Grid.Row="1" Grid.Column="0" Text="Hoogte (cm)" VerticalAlignment="Center"/>
+							<NumericUpDown Grid.Row="1"
                                            Foreground="{DynamicResource TextPrimary}"
                                            Grid.Column="1"
                                            Value="{Binding SelectedRegel.HoogteCm, Mode=TwoWay}"/>
-
-							<TextBlock Grid.Row="6" Grid.Column="0" Text="Afgesproken prijs (incl. BTW)" VerticalAlignment="Center" MaxWidth="220" TextWrapping="Wrap"/>
-							<TextBox Grid.Row="6"
-                                     Grid.Column="1"
-                                     Text="{Binding SelectedRegelAfgesprokenPrijs, Mode=TwoWay}"/>
-
-							<TextBlock Grid.Row="7" Grid.Column="0" Text="Inleg (B × H) cm" VerticalAlignment="Center"/>
-							<Grid Grid.Row="7"
+							<TextBlock Grid.Row="2" Grid.Column="0" Text="Inleg (B × H) cm" VerticalAlignment="Center"/>
+							<Grid Grid.Row="2"
                                   Grid.Column="1"
                                   ColumnDefinitions="*,8,*">
 								<NumericUpDown Value="{Binding SelectedRegel.InlegBreedteCm, Mode=TwoWay}"
@@ -309,12 +327,28 @@
                                                Foreground="{DynamicResource TextPrimary}"
                                                Value="{Binding SelectedRegel.InlegHoogteCm, Mode=TwoWay}"/>
 							</Grid>
-							<TextBlock Grid.Row="8"
+							</Grid>
+						</StackPanel>
+
+						<StackPanel Spacing="6">
+							<TextBlock Text="Prijs" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
+							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" RowSpacing="10" ColumnSpacing="12">
+							<TextBlock Grid.Row="0" Grid.Column="0" Text="Afgesproken prijs (incl. BTW)" VerticalAlignment="Center" MaxWidth="220" TextWrapping="Wrap"/>
+							<TextBox Grid.Row="0"
+                                     Grid.Column="1"
+                                     Text="{Binding SelectedRegelAfgesprokenPrijs, Mode=TwoWay}"/>
+							</Grid>
+						</StackPanel>
+
+						<StackPanel Spacing="6">
+							<TextBlock Text="Notities" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
+							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" RowSpacing="10" ColumnSpacing="12">
+							<TextBlock Grid.Row="0"
                                        Grid.Column="0"
                                        VerticalAlignment="Top"
                                        Text="Opmerking"/>
 
-							<TextBox Grid.Row="8"
+							<TextBox Grid.Row="0"
 									 Grid.Column="1"
 									 AcceptsReturn="True"
 									 MinHeight="70"
@@ -322,57 +356,24 @@
 									 Text="{Binding SelectedRegel.Opmerking, Mode=TwoWay}"/>
 
 							<!-- AFHAAL DATUM PER REGEL — read-only: wordt bepaald via de planning (US-27) -->
-							<TextBlock Grid.Row="9" Grid.Column="0" Text="Afhaal datum" VerticalAlignment="Center"/>
-							<StackPanel Grid.Row="9"
-										Grid.Column="1"
-										Orientation="Horizontal"
-										Spacing="8"
-										VerticalAlignment="Center">
-								<TextBlock Text="{Binding SelectedRegel.AfhaalDatum, StringFormat='{}{0:dd/MM/yyyy}', TargetNullValue='— nog niet gepland'}"
-										   VerticalAlignment="Center"
-										   FontWeight="SemiBold"
-										   Foreground="{DynamicResource TextPrimary}"/>
-								<TextBlock Text="(via planning)"
-										   Classes="caption"
-										   VerticalAlignment="Center"/>
-							</StackPanel>
-						</Grid>
+							</Grid>
+						</StackPanel>
+					</StackPanel>
 					</Border>
 
 					<!-- AFWERKINGEN -->
 					<Border Classes="quadro-card">
 
-						<Grid ColumnDefinitions="Auto,*,Auto,*"
-							  RowDefinitions="Auto,Auto,Auto,Auto"
-							  ColumnSpacing="16"
-							  RowSpacing="12">
+						<StackPanel Spacing="6">
 
-							<!-- Titel -->
-							<StackPanel Grid.Row="0"
-										Grid.ColumnSpan="4"
-										Spacing="2"
-										Margin="0,0,0,6">
+						<StackPanel Spacing="2" Margin="0,0,0,4">
+							<TextBlock Text="Afwerkingen" Classes="h2" TextTrimming="CharacterEllipsis"/>
+							<TextBlock Text="Glas – Passe-partout – Diepte – Opkleven – Rug" Classes="caption"
+									   TextTrimming="CharacterEllipsis" ToolTip.Tip="Glas – Passe-partout – Diepte – Opkleven – Rug"/>
+						</StackPanel>
 
-								<TextBlock Text="Afwerkingen"
-										   Classes="h2"
-										   TextTrimming="CharacterEllipsis"/>
-
-								<TextBlock Text="Glas – Passe-partout – Diepte – Opkleven – Rug"
-										   Classes="caption"
-										   TextTrimming="CharacterEllipsis"
-										   ToolTip.Tip="Glas – Passe-partout – Diepte – Opkleven – Rug"/>
-							</StackPanel>
-
-							<!-- ================= RIJ 1 ================= -->
-							<TextBlock Grid.Row="1"
-									   Grid.Column="0"
-									   Text="(G)"
-									   VerticalAlignment="Center"
-									   FontWeight="SemiBold"
-									   Opacity="0.8"
-									   Foreground="{DynamicResource TextPrimary}"/>
-
-							<StackPanel Grid.Row="1" Grid.Column="1" Spacing="4">
+						<Expander Header="Glas (G)" IsExpanded="True" Margin="0,0,0,6">
+							<StackPanel Spacing="4">
 								<ComboBox ItemsSource="{Binding GlasNamen}"
 										  SelectedItem="{Binding SelectedGlasNaam, Mode=TwoWay}"
 										  HorizontalAlignment="Stretch"
@@ -402,16 +403,10 @@
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 							</StackPanel>
+						</Expander>
 
-							<TextBlock Grid.Row="1"
-									   Grid.Column="2"
-									   Text="(P)"
-									   VerticalAlignment="Center"
-									   FontWeight="SemiBold"
-									   Opacity="0.8"
-									   Foreground="{DynamicResource TextPrimary}"/>
-
-							<StackPanel Grid.Row="1" Grid.Column="3" Spacing="4">
+						<Expander Header="Passe-partout 1 (P)" IsExpanded="True" Margin="0,0,0,6">
+							<StackPanel Spacing="4">
 								<ComboBox ItemsSource="{Binding Passe1Namen}"
 										  SelectedItem="{Binding SelectedPasse1Naam, Mode=TwoWay}"
 										  HorizontalAlignment="Stretch"
@@ -442,17 +437,10 @@
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 							</StackPanel>
+						</Expander>
 
-							<!-- ================= RIJ 2 ================= -->
-							<TextBlock Grid.Row="2"
-									   Grid.Column="0"
-									   Text="(P)"
-									   VerticalAlignment="Center"
-									   FontWeight="SemiBold"
-									   Opacity="0.8"
-									   Foreground="{DynamicResource TextPrimary}"/>
-
-							<StackPanel Grid.Row="2" Grid.Column="1" Spacing="4">
+						<Expander Header="Passe-partout 2 (P)" IsExpanded="True" Margin="0,0,0,6">
+							<StackPanel Spacing="4">
 								<ComboBox ItemsSource="{Binding Passe2Namen}"
 										  SelectedItem="{Binding SelectedPasse2Naam, Mode=TwoWay}"
 										  HorizontalAlignment="Stretch"
@@ -482,16 +470,10 @@
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 							</StackPanel>
+						</Expander>
 
-							<TextBlock Grid.Row="2"
-									   Grid.Column="2"
-									   Text="(D)"
-									   VerticalAlignment="Center"
-									   FontWeight="SemiBold"
-									   Opacity="0.8"
-									   Foreground="{DynamicResource TextPrimary}"/>
-
-							<StackPanel Grid.Row="2" Grid.Column="3" Spacing="4">
+						<Expander Header="Diepte (D)" IsExpanded="True" Margin="0,0,0,6">
+							<StackPanel Spacing="4">
 								<ComboBox ItemsSource="{Binding DiepteNamen}"
 										  SelectedItem="{Binding SelectedDiepteNaam, Mode=TwoWay}"
 										  HorizontalAlignment="Stretch"
@@ -521,17 +503,10 @@
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 							</StackPanel>
+						</Expander>
 
-							<!-- ================= RIJ 3 ================= -->
-							<TextBlock Grid.Row="3"
-									   Grid.Column="0"
-									   Text="(O)"
-									   VerticalAlignment="Center"
-									   FontWeight="SemiBold"
-									   Opacity="0.8"
-									   Foreground="{DynamicResource TextPrimary}"/>
-
-							<StackPanel Grid.Row="3" Grid.Column="1" Spacing="4">
+						<Expander Header="Opkleven (O)" IsExpanded="True" Margin="0,0,0,6">
+							<StackPanel Spacing="4">
 								<ComboBox ItemsSource="{Binding OpklevenNamen}"
 										  SelectedItem="{Binding SelectedOpklevenNaam, Mode=TwoWay}"
 										  HorizontalAlignment="Stretch"
@@ -561,15 +536,10 @@
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 							</StackPanel>
+						</Expander>
 
-							<TextBlock Grid.Row="3"
-									   Grid.Column="2"
-									   Text="(R)"
-									   VerticalAlignment="Center"
-									   FontWeight="SemiBold"
-									   Opacity="0.8"/>
-
-							<StackPanel Grid.Row="3" Grid.Column="3" Spacing="4">
+						<Expander Header="Rug (R)" IsExpanded="True" Margin="0,0,0,6">
+							<StackPanel Spacing="4">
 								<ComboBox ItemsSource="{Binding RugNamen}"
 										  SelectedItem="{Binding SelectedRugNaam, Mode=TwoWay}"
 										  HorizontalAlignment="Stretch"
@@ -599,8 +569,8 @@
 									</ComboBox.ItemTemplate>
 								</ComboBox>
 							</StackPanel>
-
-						</Grid>
+						</Expander>
+						</StackPanel>
 					</Border>
 
 					<!-- GEAVANCEERD (legacy afwerkingscode, ingeklapt) -->
@@ -671,8 +641,8 @@
 
 					</Border>
 				</StackPanel>
+				</ScrollViewer>
 			</Grid>
-		</ScrollViewer>
 
 		<!-- ================= STICKY FOOTER ================= -->
 		<Border Grid.Row="3"
