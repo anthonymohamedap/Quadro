@@ -133,75 +133,85 @@ namespace QuadroApp.Service
         public async Task ChangeOfferteStatusAsync(int offerteId, OfferteStatus newStatus)
         {
             await using var db = await _factory.CreateDbContextAsync();
-            await using var tx = await db.Database.BeginTransactionAsync();
 
-            var offerte = await db.Offertes
-                .Include(o => o.WerkBon)
-                .FirstOrDefaultAsync(o => o.Id == offerteId)
-                ?? throw new InvalidOperationException("Offerte niet gevonden.");
-
-            var oldStatus = offerte.Status;
-            ValidateOfferteTransition(oldStatus, newStatus);
-
-            offerte.Status = newStatus;
-
-            // ── Annulering: archiveer werkbon + geef stock vrij ─────────────
-            if (newStatus == OfferteStatus.Geannuleerd && offerte.WerkBon is not null)
+            // US-43: het transactionele deel (status + evt. werkbon-aanmaak) draait binnen
+            // de execution strategy (retry-veilig). De neveneffecten (stock vrijgeven/
+            // reserveren, archiveren) gebeuren ERNA, buiten de retriable transactie, zodat
+            // een retry ze niet dubbel uitvoert.
+            var (oldStatus, annuleerWerkBonId, createdWerkBonId) =
+                await db.ExecuteWithRetryAsync(async () =>
             {
-                var werkBonId = offerte.WerkBon.Id;
+                await using var tx = await db.Database.BeginTransactionAsync();
 
-                // Commit status EERST zodat de snapshot de juiste statussen vastlegt
+                var offerte = await db.Offertes
+                    .Include(o => o.WerkBon)
+                    .FirstOrDefaultAsync(o => o.Id == offerteId)
+                    ?? throw new InvalidOperationException("Offerte niet gevonden.");
+
+                var old = offerte.Status;
+                ValidateOfferteTransition(old, newStatus);
+
+                offerte.Status = newStatus;
+
+                int? annuleerWbId = null;
+                var createdWbId = 0;
+
+                // ── Annulering: werkbon markeren voor stock-vrijgave + archivering (erna) ──
+                if (newStatus == OfferteStatus.Geannuleerd && offerte.WerkBon is not null)
+                {
+                    annuleerWbId = offerte.WerkBon.Id;
+                }
+                // ── Goedkeuring: maak werkbon aan indien nog niet bestaat ───────
+                else if (newStatus == OfferteStatus.Goedgekeurd && offerte.WerkBon is null)
+                {
+                    var existingWerkBon = await db.WerkBonnen
+                        .FirstOrDefaultAsync(w => w.OfferteId == offerteId);
+
+                    if (existingWerkBon is null)
+                    {
+                        var werkBon = new WerkBon
+                        {
+                            OfferteId = offerte.Id,
+                            TotaalPrijsIncl = offerte.TotaalInclBtw,
+                            Status = WerkBonStatus.Gepland,
+                            StockReservationProcessed = false
+                        };
+
+                        db.WerkBonnen.Add(werkBon);
+                        await db.SaveChangesAsync();
+                        createdWbId = werkBon.Id;
+                    }
+                }
+
                 await db.SaveChangesAsync();
                 await tx.CommitAsync();
+                return (old, annuleerWbId, createdWbId);
+            });
 
-                // Stock vrijgeven (buiten transactie — eigen transactie intern)
-                await _stock.ReleaseReservationsForWerkBonAsync(werkBonId, cancelOpenOrders: true);
+            // ── Neveneffecten buiten de transactie (elk met eigen interne transactie) ──
+            if (annuleerWerkBonId is int annulWerkBonId)
+            {
+                // Stock vrijgeven
+                await _stock.ReleaseReservationsForWerkBonAsync(annulWerkBonId, cancelOpenOrders: true);
 
-                // Archiveer — eigen transactie intern in de service
+                // Archiveer — mag de annulering zelf NIET blokkeren
                 try
                 {
-                    await _archief.ArchiveerAsync(werkBonId, annuleringsReden: null);
+                    await _archief.ArchiveerAsync(annulWerkBonId, annuleringsReden: null);
                 }
                 catch (Exception ex)
                 {
-                    // Archivering mag de annulering zelf NIET blokkeren — log en ga door.
                     _logger.LogError(ex,
                         "Archivering van WerkBon {WerkBonId} mislukt na annulering van offerte {OfferteId}.",
-                        werkBonId, offerteId);
+                        annulWerkBonId, offerteId);
                 }
 
                 _logger.LogInformation(
                     "Offerte {OfferteId} geannuleerd (was {OldStatus}), WerkBon {WerkBonId} gearchiveerd.",
-                    offerteId, oldStatus, werkBonId);
+                    offerteId, oldStatus, annulWerkBonId);
 
                 return;
             }
-
-            // ── Goedkeuring: maak werkbon aan indien nog niet bestaat ───────
-            var createdWerkBonId = 0;
-            if (newStatus == OfferteStatus.Goedgekeurd && offerte.WerkBon is null)
-            {
-                var existingWerkBon = await db.WerkBonnen
-                    .FirstOrDefaultAsync(w => w.OfferteId == offerteId);
-
-                if (existingWerkBon is null)
-                {
-                    var werkBon = new WerkBon
-                    {
-                        OfferteId = offerte.Id,
-                        TotaalPrijsIncl = offerte.TotaalInclBtw,
-                        Status = WerkBonStatus.Gepland,
-                        StockReservationProcessed = false
-                    };
-
-                    db.WerkBonnen.Add(werkBon);
-                    await db.SaveChangesAsync();
-                    createdWerkBonId = werkBon.Id;
-                }
-            }
-
-            await db.SaveChangesAsync();
-            await tx.CommitAsync();
 
             if (createdWerkBonId > 0)
             {
