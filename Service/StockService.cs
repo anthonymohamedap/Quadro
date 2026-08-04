@@ -25,12 +25,15 @@ namespace QuadroApp.Service
             try
             {
                 await using var db = await _factory.CreateDbContextAsync();
+                await db.ExecuteWithRetryAsync(async () =>
+                {
                 await using var tx = await db.Database.BeginTransactionAsync();
 
                 await StockReservatieService.ReserveWerkBonAsync(db, werkBonId, _toast);
                 await VoorraadAlertService.RefreshAsync(db);
                 await db.SaveChangesAsync();
                 await tx.CommitAsync();
+                });
             }
             catch (DbUpdateConcurrencyException ex)
             {
@@ -43,6 +46,8 @@ namespace QuadroApp.Service
             try
             {
                 await using var db = await _factory.CreateDbContextAsync();
+                await db.ExecuteWithRetryAsync(async () =>
+                {
                 await using var tx = await db.Database.BeginTransactionAsync();
 
                 var werkBon = await db.WerkBonnen
@@ -85,6 +90,7 @@ namespace QuadroApp.Service
                 await VoorraadAlertService.RefreshAsync(db);
                 await db.SaveChangesAsync();
                 await tx.CommitAsync();
+                });
             }
             catch (DbUpdateConcurrencyException ex)
             {
@@ -97,6 +103,8 @@ namespace QuadroApp.Service
             try
             {
                 await using var db = await _factory.CreateDbContextAsync();
+                await db.ExecuteWithRetryAsync(async () =>
+                {
                 await using var tx = await db.Database.BeginTransactionAsync();
 
                 var werkBon = await db.WerkBonnen
@@ -154,6 +162,7 @@ namespace QuadroApp.Service
                 await VoorraadAlertService.RefreshAsync(db);
                 await db.SaveChangesAsync();
                 await tx.CommitAsync();
+                });
             }
             catch (DbUpdateConcurrencyException ex)
             {
@@ -166,6 +175,8 @@ namespace QuadroApp.Service
             try
             {
                 await using var db = await _factory.CreateDbContextAsync();
+                await db.ExecuteWithRetryAsync(async () =>
+                {
                 await using var tx = await db.Database.BeginTransactionAsync();
 
                 var taak = await db.WerkTaken
@@ -251,6 +262,7 @@ namespace QuadroApp.Service
                 await tx.CommitAsync();
 
                 _toast.Success($"Bestelling {bestelling.BestelNummer} geplaatst voor {typeLijst.Artikelnummer}.");
+                });
             }
             catch (DbUpdateConcurrencyException ex)
             {
@@ -266,6 +278,8 @@ namespace QuadroApp.Service
             try
             {
                 await using var db = await _factory.CreateDbContextAsync();
+                await db.ExecuteWithRetryAsync(async () =>
+                {
                 await using var tx = await db.Database.BeginTransactionAsync();
 
                 var typeLijst = await db.TypeLijsten
@@ -312,6 +326,7 @@ namespace QuadroApp.Service
                 await tx.CommitAsync();
 
                 _toast.Success($"Bestelling {bestelling.BestelNummer} geplaatst voor {typeLijst.Artikelnummer}.");
+                });
             }
             catch (DbUpdateConcurrencyException ex)
             {
@@ -324,6 +339,8 @@ namespace QuadroApp.Service
             try
             {
                 await using var db = await _factory.CreateDbContextAsync();
+                await db.ExecuteWithRetryAsync(async () =>
+                {
                 await using var tx = await db.Database.BeginTransactionAsync();
 
                 var lijn = await db.Set<LeverancierBestelLijn>()
@@ -412,6 +429,7 @@ namespace QuadroApp.Service
                 await tx.CommitAsync();
 
                 _toast.Success($"Ontvangst geboekt voor bestelling {lijn.LeverancierBestelling.BestelNummer}.");
+                });
             }
             catch (DbUpdateConcurrencyException ex)
             {
@@ -424,12 +442,15 @@ namespace QuadroApp.Service
             try
             {
                 await using var db = await _factory.CreateDbContextAsync();
+                await db.ExecuteWithRetryAsync(async () =>
+                {
                 await using var tx = await db.Database.BeginTransactionAsync();
 
                 await LeverancierBestelService.CancelOrderAsync(db, bestellingId);
                 await VoorraadAlertService.RefreshAsync(db);
                 await db.SaveChangesAsync();
                 await tx.CommitAsync();
+                });
             }
             catch (DbUpdateConcurrencyException ex)
             {
