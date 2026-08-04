@@ -107,6 +107,9 @@ public sealed class ImportService : IImportService
         _logger.LogInformation("Commit started for import preview.");
         await using var db = await _dbFactory.CreateDbContextAsync(ct);
         await EnsureImportAuditTablesAsync(db, ct);
+
+        return await db.ExecuteWithRetryAsync(async () =>
+        {
         await using var tx = await db.Database.BeginTransactionAsync(ct);
 
         var entityName = preview.GlobalIssues.FirstOrDefault(i => i.ColumnName == "__EntityName")?.Message ?? typeof(T).Name;
@@ -180,6 +183,7 @@ public sealed class ImportService : IImportService
             _logger.LogError(ex, "Commit failed SessionId={SessionId}", session.Id);
             throw;
         }
+        });
     }
 
 
