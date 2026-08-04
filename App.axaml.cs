@@ -98,13 +98,17 @@ public partial class App : Application
         services.AddDbContextFactory<AppDbContext>(options =>
         {
             if (isPostgres)
-                // US-43 (in uitvoering): EnableRetryOnFailure wordt pas AANgezet in de
-                // laatste increment, wanneer ALLE door-de-gebruiker geopende transacties
-                // (ImportService, StockService, OfferteArchiefService, WerkBonArchiefService,
-                // WorkflowService) in db.ExecuteWithRetryAsync(...) gewikkeld zijn. Zolang niet
-                // alle sites om zijn, blijft retry uit zodat die transacties niet falen met
-                // "does not support user-initiated transactions".
-                options.UseNpgsql(connectionString);
+                // US-43: retry-on-failure weer aan. Alle 12 door-de-gebruiker geopende
+                // transacties (ImportService, StockService, OfferteArchiefService,
+                // WerkBonArchiefService, WorkflowService) draaien nu binnen
+                // db.ExecuteWithRetryAsync(...) (CreateExecutionStrategy().ExecuteAsync),
+                // zodat de retry-strategie ze wél toelaat: een korte netwerk-blip wordt
+                // automatisch opnieuw geprobeerd i.p.v. te falen.
+                options.UseNpgsql(connectionString, npgsql =>
+                    npgsql.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(5),
+                        errorCodesToAdd: null));
             else
                 options.UseSqlite(connectionString);
 
