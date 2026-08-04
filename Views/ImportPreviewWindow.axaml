@@ -1,7 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:QuadroApp.ViewModels"
-        xmlns:imp="clr-namespace:QuadroApp.Model.Import"
+        xmlns:imp="clr-namespace:QuadroApp.Model.Import;assembly=QuadroApp.Data"
         x:Class="QuadroApp.Views.ImportPreviewWindow"
         x:DataType="vm:ImportPreviewViewModel"
         Width="1100" Height="700"

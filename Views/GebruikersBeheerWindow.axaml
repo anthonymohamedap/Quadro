@@ -1,7 +1,7 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:QuadroApp.ViewModels.Gebruikers"
-        xmlns:db="clr-namespace:QuadroApp.Model.DB"
+        xmlns:db="clr-namespace:QuadroApp.Model.DB;assembly=QuadroApp.Data"
         xmlns:conv="clr-namespace:QuadroApp.Converters"
         x:Class="QuadroApp.Views.GebruikersBeheerWindow"
         x:DataType="vm:GebruikersBeheerViewModel"
