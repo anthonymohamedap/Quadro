@@ -105,10 +105,15 @@ public partial class App : Application
                 // zodat de retry-strategie ze wél toelaat: een korte netwerk-blip wordt
                 // automatisch opnieuw geprobeerd i.p.v. te falen.
                 options.UseNpgsql(connectionString, npgsql =>
+                {
+                    // US-41: PG-migraties leven in QuadroApp.Migrations.Npgsql. (Init draait
+                    // nog op EnsureCreatedAsync tot de Baseline gegenereerd is — zie US41-plan.)
+                    npgsql.MigrationsAssembly("QuadroApp.Migrations.Npgsql");
                     npgsql.EnableRetryOnFailure(
                         maxRetryCount: 5,
                         maxRetryDelay: TimeSpan.FromSeconds(5),
-                        errorCodesToAdd: null));
+                        errorCodesToAdd: null);
+                });
             else
                 options.UseSqlite(connectionString);
 
