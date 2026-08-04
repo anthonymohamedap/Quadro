@@ -505,24 +505,21 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// PostgreSQL initialisatie (REL-02, Optie A). Verse install: EnsureCreatedAsync bouwt het
-    /// hele schema uit het EF-model met PostgreSQL-native types. Data wordt eenmalig vanuit SQLite
-    /// gemigreerd met Scripts/migrate_to_postgres.py.
+    /// PostgreSQL initialisatie (US-41). Draait nu op echte EF-migraties via
+    /// <see cref="PostgresSchemaPatcher"/>:
+    ///   • verse DB → MigrateAsync bouwt het schema uit de Baseline;
+    ///   • bestaande (EnsureCreated-)DB → de Baseline wordt eenmalig gemarkeerd als toegepast
+    ///     (geen DDL) en daarna past MigrateAsync enkel nieuwere migraties toe.
     ///
     /// Optimistic concurrency draait op PostgreSQL via de systeemkolom xmin (geconfigureerd in
     /// AppDbContext.OnModelCreating), NIET via de byte[] RowVersion — die wordt door PostgreSQL
     /// niet automatisch onderhouden. Zo werkt de US-38 lost-update-detectie ook multi-user.
-    ///
-    /// Bekende beperking: PostgreSQL heeft (nog) geen EF-migratiehistorie. Toekomstige
-    /// schemawijzigingen vereisen een verse regeneratie of expliciete patch. Volledige EF-migraties
-    /// voor PostgreSQL staan als post-release story (zie docs/backlog/UserStories_VervolgFuncties.md, US-41).
     /// </summary>
     private static async Task InitializePostgresDatabaseAsync(AppDbContext db)
     {
         try
         {
-            await db.Database.EnsureCreatedAsync();
-            _logger.LogInformation("[DB] PostgreSQL schema gecontroleerd/aangemaakt.");
+            await PostgresSchemaPatcher.PatchAsync(db, _logger);
         }
         catch (Exception ex)
         {
