@@ -122,5 +122,20 @@
     <AvaloniaResource Remove="Scripts\**\*" />
     <Page Remove="Scripts\**\*" />
   </ItemGroup>
+
+  <!-- US-41: de EF-laag (context, model, migraties) is verhuisd naar QuadroApp.Data.
+       De root-glob mag die niet dubbel compileren. -->
+  <ItemGroup>
+    <Compile Remove="QuadroApp.Data\**\*.cs" />
+    <EmbeddedResource Remove="QuadroApp.Data\**\*" />
+    <None Remove="QuadroApp.Data\**\*" />
+    <Content Remove="QuadroApp.Data\**\*" />
+    <AvaloniaResource Remove="QuadroApp.Data\**\*" />
+    <Page Remove="QuadroApp.Data\**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="QuadroApp.Data\QuadroApp.Data.csproj" />
+  </ItemGroup>
 </Project>
 
