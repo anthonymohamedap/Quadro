@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuadroApp", "QuadroApp.cspr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuadroApp.Data", "QuadroApp.Data\QuadroApp.Data.csproj", "{A1B2C3D4-E5F6-47A8-9B0C-1D2E3F4A5B6C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuadroApp.Migrations.Npgsql", "QuadroApp.Migrations.Npgsql\QuadroApp.Migrations.Npgsql.csproj", "{B2C3D4E5-F6A7-48B9-AC0D-2E3F4A5B6C7D}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkflowService.Tests", "WorkflowService.Tests\WorkflowService.Tests.csproj", "{D0F69E1A-5B40-4F29-8A6A-A63D49D6E22F}"
 EndProject
 Global
@@ -23,6 +25,10 @@ Global
 		{A1B2C3D4-E5F6-47A8-9B0C-1D2E3F4A5B6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1B2C3D4-E5F6-47A8-9B0C-1D2E3F4A5B6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1B2C3D4-E5F6-47A8-9B0C-1D2E3F4A5B6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2C3D4E5-F6A7-48B9-AC0D-2E3F4A5B6C7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2C3D4E5-F6A7-48B9-AC0D-2E3F4A5B6C7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2C3D4E5-F6A7-48B9-AC0D-2E3F4A5B6C7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2C3D4E5-F6A7-48B9-AC0D-2E3F4A5B6C7D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D0F69E1A-5B40-4F29-8A6A-A63D49D6E22F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D0F69E1A-5B40-4F29-8A6A-A63D49D6E22F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0F69E1A-5B40-4F29-8A6A-A63D49D6E22F}.Release|Any CPU.ActiveCfg = Release|Any CPU
