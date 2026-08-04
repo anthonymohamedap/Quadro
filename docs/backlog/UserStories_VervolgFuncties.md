@@ -644,7 +644,7 @@ Wacht op akkoord voor Fase B (het overzichtsvenster).
 | US-44 | Export Center → enterprise wizard (+ export-kolomfixes) | Medium | ✅ gereleased |
 | US-45 | Facturen als export-dataset | Medium | ✅ gemerged |
 | US-46 | OfferteView redesign — Fase A | Hoog | ✅ afgerond op branch `feature/us46-offerte-fase-a` (actie-hiërarchie, statusbadge, compacte sticky samenvatting, legacy inklapbaar; prijs-dashboard + conditionele acties bleken al aanwezig) |
-| US-46b | OfferteView redesign — Fase B/C/D (cosmetische kaart-herbouw) | Laag | ⬜ aparte branch; alleen veilig met live preview / micro-stapjes (functionele delen zoals variant-tonen zijn al klaar) |
+| US-46b | OfferteView redesign — Fase B/C/D (cosmetische kaart-herbouw) | Laag | ✅ afgerond op branch `feature/us46b-offerte-fase-b` (B: afwerkingen als Expanders; C: regelkaarten + gegroepeerd regeldetail-formulier; D: klant-profielkaart + rijkere klantkeuzelijst; extra: onafhankelijke scroll per kolom, factuur→bestelbon-tekst) — visuele check op Windows |
 | US-47 | OfferteViewModel decompositie (god-object) | Hoog | ✅ was al voldaan (prijslogica in OffertePrijsViewModel, RestTeBetalen bestaat) |
 | US-48 | Eenmalige status-reconciliatie bestaande offertes | Hoog | ✅ gemerged |
 | US-49 | Planning-kalender redesign (gefaseerd, productieplanning) | Medium | ✅ gemerged (Fase A–D + drag-drop, dagtegel-hints, weekdetail per dag) |
