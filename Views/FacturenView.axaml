@@ -11,7 +11,7 @@
   <Grid RowDefinitions="Auto,*">
 
     <!-- ░░ HEADER ░░ -->
-    <controls:QuadroHeader Grid.Row="0" Title="FACTUREN" BackCommand="{Binding GaTerugCommand}"/>
+    <controls:QuadroHeader Grid.Row="0" Title="BESTELBONNEN" BackCommand="{Binding GaTerugCommand}"/>
 
     <!-- ░░ MAIN CONTENT ░░
          Beide kolommen zijn star-gesized met interne scrollregio's:
