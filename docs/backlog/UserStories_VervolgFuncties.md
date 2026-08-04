@@ -642,14 +642,14 @@ Wacht op akkoord voor Fase B (het overzichtsvenster).
 | US-42 | Statussync offerte ↔ werkbon ↔ bestelbon | Hoog | ✅ gereleased |
 | US-43 | Retry-on-failure via execution strategy | Medium | ⬜ |
 | US-44 | Export Center → enterprise wizard (+ export-kolomfixes) | Medium | ✅ gereleased |
-| US-45 | Facturen als export-dataset | Medium | 🟡 branch `feature/us45-facturen-export` — verify + merge |
+| US-45 | Facturen als export-dataset | Medium | ✅ gemerged |
 | US-46 | OfferteView redesign — Fase A | Hoog | ✅ afgerond op branch `feature/us46-offerte-fase-a` (actie-hiërarchie, statusbadge, compacte sticky samenvatting, legacy inklapbaar; prijs-dashboard + conditionele acties bleken al aanwezig) |
 | US-46b | OfferteView redesign — Fase B/C/D (cosmetische kaart-herbouw) | Laag | ⬜ aparte branch; alleen veilig met live preview / micro-stapjes (functionele delen zoals variant-tonen zijn al klaar) |
 | US-47 | OfferteViewModel decompositie (god-object) | Hoog | ✅ was al voldaan (prijslogica in OffertePrijsViewModel, RestTeBetalen bestaat) |
-| US-48 | Eenmalige status-reconciliatie bestaande offertes | Hoog | 🟡 branch `feature/us48-status-reconciliatie` — verify + merge |
-| US-49 | Planning-kalender redesign (gefaseerd, productieplanning) | Medium (na stabiele deployment) | 🟡 in uitvoering op branch `feature/us49-planning-fase-a` (Fase A–D + drag-drop, dagtegel-hints, weekdetail per dag) |
+| US-48 | Eenmalige status-reconciliatie bestaande offertes | Hoog | ✅ gemerged |
+| US-49 | Planning-kalender redesign (gefaseerd, productieplanning) | Medium | ✅ gemerged (Fase A–D + drag-drop, dagtegel-hints, weekdetail per dag) |
 | US-50 | Drag-drop planning → nieuwe DataTransfer-API (CS0618 wegwerken) | Laag | ⬜ tech-debt; CS0618 nu onderdrukt met `#pragma` |
-| US-51 | Werkbonnen-lijst + werkbon-overzicht revamp (gefaseerd) | Medium | ✅ afgerond op branch `feature/us51-werkbon-lijst-fase-a` (Fase A rijkere lijst+statusfilter, B modaal overzichtsvenster, C flow-opschoning; extra: duidelijker bestel-UI, afwerking+code+varianten, zijbalk verwijderd, Gefactureerd→Besteld, planning→offerte InProductie) |
+| US-51 | Werkbonnen-lijst + werkbon-overzicht revamp (gefaseerd) | Medium | ✅ gemerged (Fase A rijkere lijst+statusfilter, B modaal overzichtsvenster, C flow-opschoning; extra: duidelijker bestel-UI, afwerking+code+varianten, zijbalk verwijderd, Gefactureerd→Besteld, planning→offerte InProductie) |
 
 > Ook gereleased (buiten de US-nummering): offertelijst-laadfouten via toast, en de CI-fix voor
 > release-automatisering (`workflow_dispatch` + optionele `RELEASE_PAT`). Sindsdien wordt elke release
