@@ -117,9 +117,15 @@ public partial class App : Application
             else
                 options.UseSqlite(connectionString);
 
-            // US-30: schema wordt beheerd via echte EF-migraties (Baseline-squash).
-            // De vroegere PendingModelChangesWarning-onderdrukking is verwijderd:
-            // model-drift moet nu een fout geven i.p.v. stil genegeerd te worden.
+            // US-30/US-41: schema wordt beheerd via echte EF-migraties.
+            // Model-drift wordt bewaakt op BUILD/CI-niveau met
+            //   dotnet ef migrations has-pending-model-changes
+            // (zie US41-plan, stap H). Op de RUNTIME mag de app echter niet crashen op de
+            // model-vs-snapshot-vergelijking van MigrateAsync: de database matcht het model
+            // en migraties moeten gewoon toegepast worden. Daarom loggen we die waarschuwing
+            // hier i.p.v. 'm als fout te gooien.
+            options.ConfigureWarnings(w =>
+                w.Log(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
         });
 
         // ==============================
