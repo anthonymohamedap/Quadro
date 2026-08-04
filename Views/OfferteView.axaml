@@ -141,20 +141,6 @@
                                         Classes="AccentBtn"/>
 							</Grid>
 
-							<!-- TABEL HEADERS -->
-							<Grid ColumnDefinitions="Auto,60,60,60,90,*,110"
-                                  Opacity="0.6">
-								<TextBlock Grid.Column="1" Text="Aantal" Classes="label" TextTrimming="CharacterEllipsis"/>
-								<TextBlock Grid.Column="2" Text="Breedte" Classes="label" TextTrimming="CharacterEllipsis"/>
-								<TextBlock Grid.Column="3" Text="Hoogte" Classes="label" TextTrimming="CharacterEllipsis"/>
-								<TextBlock Grid.Column="4" Text="Type lijst" Classes="label" TextTrimming="CharacterEllipsis"/>
-								<TextBlock Grid.Column="6"
-                                           Text="Totaal"
-                                           Classes="label"
-                                           HorizontalAlignment="Right"/>
-							</Grid>
-
-							<Separator/>
 
 							<ListBox ItemsSource="{Binding Regels}"
                                      SelectedItem="{Binding SelectedRegel, Mode=TwoWay}"
@@ -163,23 +149,24 @@
 
 								<ListBox.ItemTemplate>
 									<DataTemplate x:DataType="m:OfferteRegel">
-										<Border Padding="6">
-											<Grid ColumnDefinitions="Auto,60,60,60,90,*,110">
-												<TextBlock Grid.Column="1" Text="{Binding AantalStuks}"/>
-												<TextBlock Grid.Column="2"
-                                                           Text="{Binding BreedteCm, StringFormat={}{0} cm}"
-                                                           TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="3"
-                                                           Text="{Binding HoogteCm, StringFormat={}{0} cm}"
-                                                           TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="4"
-                                                           Text="{Binding TypeLijst.Artikelnummer}"
-                                                           ToolTip.Tip="{Binding TypeLijst.Artikelnummer}"
-                                                           TextTrimming="CharacterEllipsis"/>
-												<TextBlock Grid.Column="6"
-                                                           Text="{Binding TotaalInclBtw, StringFormat=€ {0:N2}}"
-                                                           HorizontalAlignment="Right"
-                                                           FontWeight="SemiBold"/>
+										<Border Background="{DynamicResource Surface}"
+												BorderBrush="{DynamicResource BorderSubtle}"
+												BorderThickness="1" CornerRadius="8"
+												Padding="10,8" Margin="0,3">
+											<Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+												<StackPanel Grid.Column="0" Spacing="2">
+													<TextBlock Text="{Binding AfmetingLabel}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+													<TextBlock Text="{Binding Titel}" Classes="caption"
+															   Foreground="{DynamicResource TextSecondary}"
+															   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Titel}"
+															   IsVisible="{Binding Titel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+													<TextBlock Text="{Binding TypeLijst.Artikelnummer, StringFormat='Lijst: {0}'}"
+															   Classes="caption" Foreground="{DynamicResource TextSecondary}"
+															   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding TypeLijst.Artikelnummer}"
+															   IsVisible="{Binding TypeLijst, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+												</StackPanel>
+												<TextBlock Grid.Column="1" Text="{Binding TotaalInclBtw, StringFormat=€ {0:N2}}"
+														   FontWeight="SemiBold" VerticalAlignment="Center"/>
 											</Grid>
 										</Border>
 									</DataTemplate>
