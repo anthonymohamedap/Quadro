@@ -39,6 +39,8 @@ namespace QuadroApp.Service
         public async Task<OfferteArchief> ArchiveerAsync(int offerteId, string? reden = null)
         {
             await using var db = await _factory.CreateDbContextAsync();
+            return await db.ExecuteWithRetryAsync(async () =>
+            {
             await using var tx = await db.Database.BeginTransactionAsync();
 
             var offerte = await db.Offertes
@@ -120,6 +122,7 @@ namespace QuadroApp.Service
                 offerteId, archief.Id);
 
             return archief;
+            });
         }
 
         // ─── HerstellenAsync ─────────────────────────────────────────────────
@@ -127,6 +130,8 @@ namespace QuadroApp.Service
         public async Task<int> HerstellenAsync(int archiefId)
         {
             await using var db = await _factory.CreateDbContextAsync();
+            return await db.ExecuteWithRetryAsync(async () =>
+            {
             await using var tx = await db.Database.BeginTransactionAsync();
 
             var archief = await db.OfferteArchieven.FirstOrDefaultAsync(a => a.Id == archiefId)
@@ -214,6 +219,7 @@ namespace QuadroApp.Service
                 archiefId, nieuweOfferte.Id);
 
             return nieuweOfferte.Id;
+            });
         }
 
         // ─── GetAlleAsync ─────────────────────────────────────────────────────
