@@ -45,9 +45,9 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
                 return $"Bestelbon {GekoppeldeFactuur.FactuurNummer} ({GekoppeldeFactuur.Status})";
 
             if (GekoppeldeWerkBon is null)
-                return "Nog geen factuur voor deze offerte.";
+                return "Nog geen bestelbon voor deze offerte.";
 
-            return $"Nog geen factuur. Werkbon status: {GekoppeldeWerkBon.Status}.";
+            return $"Nog geen bestelbon. Werkbon status: {GekoppeldeWerkBon.Status}.";
         }
     }
 
@@ -254,7 +254,7 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
 
         if (_getOfferteId() == 0)
         {
-            Toast.Error("Sla de offerte eerst op voordat je een factuur opent.");
+            Toast.Error("Sla de offerte eerst op voordat je een bestelbon opent.");
             return;
         }
 
