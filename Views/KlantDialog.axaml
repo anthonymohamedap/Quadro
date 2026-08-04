@@ -1,6 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:m="using:QuadroApp.Model.DB"
+        xmlns:m="clr-namespace:QuadroApp.Model.DB;assembly=QuadroApp.Data"
         x:Class="QuadroApp.Views.KlantDialog"
         x:DataType="m:Klant"
         Width="460"
