@@ -424,14 +424,11 @@ namespace QuadroApp.Data
                     // op PostgreSQL géén token meer; xmin neemt die rol over.
                     et.Property("RowVersion").IsConcurrencyToken(false).ValueGeneratedNever();
 
-                    // Equivalent van Npgsql's UseXminAsConcurrencyToken(), maar via kern-EF API
-                    // zodat het niet afhangt van de extensiemethode: de systeemkolom xmin als
-                    // shadow-property die PostgreSQL bij elke wijziging zelf ophoogt.
-                    et.Property<uint>("xmin")
-                      .HasColumnName("xmin")
-                      .HasColumnType("xid")
-                      .ValueGeneratedOnAddOrUpdate()
-                      .IsConcurrencyToken();
+                    // US-41: gebruik Npgsql's UseXminAsConcurrencyToken(). Dat mapt de SYSTEEMkolom
+                    // xmin als concurrency-token ZONDER er een kolom voor te genereren in migraties
+                    // (de eerdere handmatige shadow-property mapte xmin als gewone kolom → migratie
+                    // probeerde 'CREATE ... xmin xid', wat botst met PostgreSQL's systeemkolom).
+                    et.UseXminAsConcurrencyToken();
                 }
             }
         }
