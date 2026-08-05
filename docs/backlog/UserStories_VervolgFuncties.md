@@ -638,7 +638,7 @@ Wacht op akkoord voor Fase B (het overzichtsvenster).
 | Story | Onderwerp | Prioriteit | Status |
 |---|---|---|---|
 | US-40 | Audit-leesscherm in de app | Medium | ✅ gereleased |
-| US-41 | Volledige EF-migraties voor PostgreSQL | Medium | ⬜ |
+| US-41 | Volledige EF-migraties voor PostgreSQL | Medium | ✅ afgerond + live op `quadrodb` (branch `feature/us41-pg-ef-migrations`): EF-laag → `QuadroApp.Data`, apart `QuadroApp.Migrations.Npgsql` + Npgsql-Baseline, `PostgresSchemaPatcher` (self-healing), init op `MigrateAsync`, drift-guard. Live-DB baseline-gemarkeerd bij 1e start (data intact); `EnsureCreatedAsync` uitgefaseerd voor PG |
 | US-42 | Statussync offerte ↔ werkbon ↔ bestelbon | Hoog | ✅ gereleased |
 | US-43 | Retry-on-failure via execution strategy | Medium | 🟡 branch `feature/us43-retry-execution-strategy` — alle 12 transactie-sites in `ExecuteWithRetryAsync`, retry aan; verify op Windows + Postgres-smoketest, dan merge |
 | US-44 | Export Center → enterprise wizard (+ export-kolomfixes) | Medium | ✅ gereleased |

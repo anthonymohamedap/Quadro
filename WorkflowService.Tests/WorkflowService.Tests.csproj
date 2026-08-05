@@ -20,5 +20,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\QuadroApp.csproj" />
+    <ProjectReference Include="..\QuadroApp.Data\QuadroApp.Data.csproj" />
   </ItemGroup>
 </Project>

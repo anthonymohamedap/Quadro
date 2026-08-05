@@ -122,5 +122,29 @@
     <AvaloniaResource Remove="Scripts\**\*" />
     <Page Remove="Scripts\**\*" />
   </ItemGroup>
+
+  <!-- US-41: de EF-laag (context, model, migraties) is verhuisd naar QuadroApp.Data,
+       en de PG-migraties zitten in QuadroApp.Migrations.Npgsql.
+       De root-glob mag die submappen niet dubbel compileren. -->
+  <ItemGroup>
+    <Compile Remove="QuadroApp.Data\**\*.cs" />
+    <EmbeddedResource Remove="QuadroApp.Data\**\*" />
+    <None Remove="QuadroApp.Data\**\*" />
+    <Content Remove="QuadroApp.Data\**\*" />
+    <AvaloniaResource Remove="QuadroApp.Data\**\*" />
+    <Page Remove="QuadroApp.Data\**\*" />
+
+    <Compile Remove="QuadroApp.Migrations.Npgsql\**\*.cs" />
+    <EmbeddedResource Remove="QuadroApp.Migrations.Npgsql\**\*" />
+    <None Remove="QuadroApp.Migrations.Npgsql\**\*" />
+    <Content Remove="QuadroApp.Migrations.Npgsql\**\*" />
+    <AvaloniaResource Remove="QuadroApp.Migrations.Npgsql\**\*" />
+    <Page Remove="QuadroApp.Migrations.Npgsql\**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="QuadroApp.Data\QuadroApp.Data.csproj" />
+    <ProjectReference Include="QuadroApp.Migrations.Npgsql\QuadroApp.Migrations.Npgsql.csproj" />
+  </ItemGroup>
 </Project>
 

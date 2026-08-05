@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RootNamespace>QuadroApp.Migrations.Npgsql</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Bevat uitsluitend de PostgreSQL-migraties voor AppDbContext.
+         Verwijst naar de EF-laag (context + model) in QuadroApp.Data. -->
+    <ProjectReference Include="..\QuadroApp.Data\QuadroApp.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.9" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.9">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <!-- Security: overschrijf de kwetsbare transitieve SQLitePCLRaw (via EF Sqlite in QuadroApp.Data). -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
+  </ItemGroup>
+
+</Project>
