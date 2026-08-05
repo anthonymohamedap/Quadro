@@ -23,34 +23,33 @@ public partial class PlanningCalendarWindow : Window
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
     }
 
-    // ───────── DRAG & DROP ─────────
-    // Bewust de klassieke drag-drop API (DataObject / DoDragDrop / DragEventArgs.Data).
-    // Avalonia 11.3 markeert die als [Obsolete] t.v.v. de nieuwe DataTransfer-API, maar
-    // de klassieke API werkt volledig en is stabiel. CS0618 hier gericht onderdrukt zodat
-    // de rest van de build waarschuwingsvrij blijft; migratie kan later als de nieuwe API
-    // is uitgekristalliseerd.
-#pragma warning disable CS0618
+    // ───────── DRAG & DROP (US-50: nieuwe Avalonia DataTransfer-API) ─────────
+    // MIME-achtige sleutel voor de gesleepte planregel; blijft binnen de app.
+    private const string PlanRegelFormat = "application/x-quadro-planregel";
 
     // Sleep-start op een regel (op het label, zodat de checkbox klikbaar blijft).
-    private void Regel_PointerPressed(object? sender, PointerPressedEventArgs e)
+    private async void Regel_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (sender is not Control c || c.DataContext is not RegelPlanItem regel) return;
         if (!e.GetCurrentPoint(c).Properties.IsLeftButtonPressed) return;
 
-        var data = new DataObject();
-        data.Set("planRegelId", regel.RegelId);
-        _ = DragDrop.DoDragDrop(e, data, DragDropEffects.Move);
+        var data = new DataTransfer();
+        data.Set(PlanRegelFormat, regel.RegelId);
+        // NB: de DataTransfer NIET disposen — de drag-source-infrastructuur doet dat zelf.
+        await DragDrop.DoDragDropAsync(e, data, DragDropEffects.Move);
     }
 
     private void OnDragOver(object? sender, DragEventArgs e)
     {
-        e.DragEffects = e.Data.Contains("planRegelId") ? DragDropEffects.Move : DragDropEffects.None;
+        e.DragEffects = e.DataTransfer.Get(PlanRegelFormat) is int
+            ? DragDropEffects.Move
+            : DragDropEffects.None;
     }
 
     private async void OnDrop(object? sender, DragEventArgs e)
     {
         if (DataContext is not PlanningCalendarViewModel vm) return;
-        if (e.Data.Get("planRegelId") is not int regelId) return;
+        if (e.DataTransfer.Get(PlanRegelFormat) is not int regelId) return;
 
         var tile = (e.Source as Visual)?.GetSelfAndVisualAncestors()
             .OfType<Control>()
@@ -61,7 +60,6 @@ public partial class PlanningCalendarWindow : Window
 
         await vm.PlanRegelOpDatumAsync(regelId, tile.Date);
     }
-#pragma warning restore CS0618
 
     // ───────── DIALOG DELEGATE INJECTEREN ─────────
 
