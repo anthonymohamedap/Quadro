@@ -638,13 +638,13 @@ Wacht op akkoord voor Fase B (het overzichtsvenster).
 | Story | Onderwerp | Prioriteit | Status |
 |---|---|---|---|
 | US-40 | Audit-leesscherm in de app | Medium | ✅ gereleased |
-| US-41 | Volledige EF-migraties voor PostgreSQL | Medium | ✅ afgerond + live op `quadrodb` (branch `feature/us41-pg-ef-migrations`): EF-laag → `QuadroApp.Data`, apart `QuadroApp.Migrations.Npgsql` + Npgsql-Baseline, `PostgresSchemaPatcher` (self-healing), init op `MigrateAsync`, drift-guard. Live-DB baseline-gemarkeerd bij 1e start (data intact); `EnsureCreatedAsync` uitgefaseerd voor PG |
+| US-41 | Volledige EF-migraties voor PostgreSQL | Medium | ✅ gemerged + live op `quadrodb`: EF-laag → `QuadroApp.Data`, apart `QuadroApp.Migrations.Npgsql` + Npgsql-Baseline, `PostgresSchemaPatcher` (self-healing), init op `MigrateAsync`, drift-guard, `EnsureCreatedAsync` uitgefaseerd voor PG |
 | US-42 | Statussync offerte ↔ werkbon ↔ bestelbon | Hoog | ✅ gereleased |
-| US-43 | Retry-on-failure via execution strategy | Medium | 🟡 branch `feature/us43-retry-execution-strategy` — alle 12 transactie-sites in `ExecuteWithRetryAsync`, retry aan; verify op Windows + Postgres-smoketest, dan merge |
+| US-43 | Retry-on-failure via execution strategy | Medium | ✅ gemerged (alle 12 transactie-sites in `ExecuteWithRetryAsync`, retry weer aan voor Postgres) |
 | US-44 | Export Center → enterprise wizard (+ export-kolomfixes) | Medium | ✅ gereleased |
 | US-45 | Facturen als export-dataset | Medium | ✅ gemerged |
-| US-46 | OfferteView redesign — Fase A | Hoog | ✅ afgerond op branch `feature/us46-offerte-fase-a` (actie-hiërarchie, statusbadge, compacte sticky samenvatting, legacy inklapbaar; prijs-dashboard + conditionele acties bleken al aanwezig) |
-| US-46b | OfferteView redesign — Fase B/C/D (cosmetische kaart-herbouw) | Laag | ✅ afgerond op branch `feature/us46b-offerte-fase-b` (B: afwerkingen als Expanders; C: regelkaarten + gegroepeerd regeldetail-formulier; D: klant-profielkaart + rijkere klantkeuzelijst; extra: onafhankelijke scroll per kolom, factuur→bestelbon-tekst) — visuele check op Windows |
+| US-46 | OfferteView redesign — Fase A | Hoog | ✅ gemerged (actie-hiërarchie, statusbadge, compacte sticky samenvatting, legacy inklapbaar; prijs-dashboard + conditionele acties bleken al aanwezig) |
+| US-46b | OfferteView redesign — Fase B/C/D (cosmetische kaart-herbouw) | Laag | ✅ gemerged (B: afwerkingen als Expanders; C: regelkaarten + gegroepeerd regeldetail-formulier; D: klant-profielkaart + rijkere klantkeuzelijst; extra: onafhankelijke scroll per kolom, factuur→bestelbon-tekst) |
 | US-47 | OfferteViewModel decompositie (god-object) | Hoog | ✅ was al voldaan (prijslogica in OffertePrijsViewModel, RestTeBetalen bestaat) |
 | US-48 | Eenmalige status-reconciliatie bestaande offertes | Hoog | ✅ gemerged |
 | US-49 | Planning-kalender redesign (gefaseerd, productieplanning) | Medium | ✅ gemerged (Fase A–D + drag-drop, dagtegel-hints, weekdetail per dag) |
