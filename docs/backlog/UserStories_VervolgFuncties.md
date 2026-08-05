@@ -648,7 +648,7 @@ Wacht op akkoord voor Fase B (het overzichtsvenster).
 | US-47 | OfferteViewModel decompositie (god-object) | Hoog | ✅ was al voldaan (prijslogica in OffertePrijsViewModel, RestTeBetalen bestaat) |
 | US-48 | Eenmalige status-reconciliatie bestaande offertes | Hoog | ✅ gemerged |
 | US-49 | Planning-kalender redesign (gefaseerd, productieplanning) | Medium | ✅ gemerged (Fase A–D + drag-drop, dagtegel-hints, weekdetail per dag) |
-| US-50 | Drag-drop planning → nieuwe DataTransfer-API (CS0618 wegwerken) | Laag | ⬜ tech-debt; CS0618 nu onderdrukt met `#pragma` |
+| US-50 | Drag-drop planning → nieuwe DataTransfer-API (CS0618 wegwerken) | Laag | 🟡 branch `feature/us50-datatransfer-dnd` — DnD gemigreerd naar `DataTransfer`/`DoDragDropAsync` (`Set`/`Get` op MIME-sleutel), `#pragma CS0618` weg; verify op Windows (build 0 warnings + sleep-test) |
 | US-51 | Werkbonnen-lijst + werkbon-overzicht revamp (gefaseerd) | Medium | ✅ gemerged (Fase A rijkere lijst+statusfilter, B modaal overzichtsvenster, C flow-opschoning; extra: duidelijker bestel-UI, afwerking+code+varianten, zijbalk verwijderd, Gefactureerd→Besteld, planning→offerte InProductie) |
 
 > Ook gereleased (buiten de US-nummering): offertelijst-laadfouten via toast, en de CI-fix voor
