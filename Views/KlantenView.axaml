@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:vm="using:QuadroApp.ViewModels" xmlns:m="using:QuadroApp.Model.DB" xmlns:controls="clr-namespace:QuadroApp.Views.Controls" x:Class="QuadroApp.Views.KlantenView" x:DataType="vm:KlantenViewModel" Background="{DynamicResource SurfaceMuted}">
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:vm="using:QuadroApp.ViewModels" xmlns:m="clr-namespace:QuadroApp.Model.DB;assembly=QuadroApp.Data" xmlns:controls="clr-namespace:QuadroApp.Views.Controls" x:Class="QuadroApp.Views.KlantenView" x:DataType="vm:KlantenViewModel" Background="{DynamicResource SurfaceMuted}">
 	<Grid RowDefinitions="Auto,*">
 		<!-- ░░ HEADER ░░ -->
 		<controls:QuadroHeader Title="KLANTENBEHEER" BackCommand="{Binding GaTerugCommand}"/>

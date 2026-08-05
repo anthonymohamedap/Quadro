@@ -1,7 +1,7 @@
 ﻿  <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:QuadroApp.ViewModels"
-        xmlns:m="using:QuadroApp.Model.DB"
+        xmlns:m="clr-namespace:QuadroApp.Model.DB;assembly=QuadroApp.Data"
         
         x:Class="QuadroApp.Views.BulkLijstenWindow"
         x:DataType="vm:BulkLijstenViewModel"

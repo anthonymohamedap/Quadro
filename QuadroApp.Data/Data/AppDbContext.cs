@@ -427,6 +427,9 @@ namespace QuadroApp.Data
                     // Equivalent van Npgsql's UseXminAsConcurrencyToken(), maar via kern-EF API
                     // zodat het niet afhangt van de extensiemethode: de systeemkolom xmin als
                     // shadow-property die PostgreSQL bij elke wijziging zelf ophoogt.
+                    // NB: de Npgsql-SQL-generator slaat de systeemkolom xmin over in CREATE TABLE
+                    // (zowel bij EnsureCreated als bij migraties); de xmin-regel in het gegenereerde
+                    // migratiebestand is enkel model-metadata en maakt géén echte kolom aan.
                     et.Property<uint>("xmin")
                       .HasColumnName("xmin")
                       .HasColumnType("xid")
