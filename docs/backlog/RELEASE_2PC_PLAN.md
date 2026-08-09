@@ -300,6 +300,7 @@ optioneel REL-H1..H5.
 | REL-03 | Concurrency-conflict-UX | PG-hardening | M | `feature/rel03-concurrency-ux` | ⬜ |
 | REL-06 | DEPLOYMENT_CHECKLIST | docs | S | `docs/deployment-checklist` | ⬜ |
 | REL-04 | PostgreSQL uitrol + datamigratie | operationeel | M | — (runbook) | ⬜ |
+| REL-04c | Cloud-PostgreSQL uitrol (managed, EU, GDPR) — zie `REL04c_CloudPostgres_Plan.md` | operationeel + kleine config | M | — | 🟢 verbinding getest & werkend (Scaleway `DB-DEV-S` HA, Parijs); rest: backups/DPA/GDPR-notitie/uitrol |
 | REL-05 | Release bouwen + verifiëren | operationeel | M | — (tag/Velopack) | ⬜ |
 | REL-H1 | AsSplitQuery | hygiëne | S | `perf/split-queries` | ⬜ |
 | REL-H2 | Dode code + EPPlus | hygiëne | S | `chore/cleanup-dead-code` | ⬜ |
