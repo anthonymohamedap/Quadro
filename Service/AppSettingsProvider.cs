@@ -12,9 +12,13 @@ namespace QuadroApp.Service;
 
 public sealed class AppSettingsProvider : IAppSettingsProvider
 {
-    private const decimal DefaultPrijsPerMeter = 0m;
-    private const decimal DefaultWinstFactor = 0m;
-    private const decimal DefaultAfvalPercentage = 0m;
+    // Terugvalwaarden wanneer er nog niets is opgeslagen. MOETEN gelijk blijven aan
+    // PricingSettingsProvider, zodat het Instellingen-scherm exact dezelfde defaults
+    // toont als de prijsberekening gebruikt.
+    private const decimal DefaultUurloon = 45m;
+    private const decimal DefaultPrijsPerMeter = 0m;      // materiaalprijs hoort per lijst; geen verzonnen globale prijs
+    private const decimal DefaultWinstFactor = 2.5m;
+    private const decimal DefaultAfvalPercentage = 10m;
     private const string LastExportFolderKey = "LastExportFolder";
     private const string LastExportPresetKey = "LastExportPreset";
     private const string LastExportDatasetKey = "LastExportDataset";
@@ -27,7 +31,7 @@ public sealed class AppSettingsProvider : IAppSettingsProvider
     }
 
     public async Task<decimal> GetUurloon() =>
-        await ReadDecimalAsync("Uurloon", 60);
+        await ReadDecimalAsync("Uurloon", DefaultUurloon);
 
     public async Task<decimal> GetDefaultPrijsPerMeterAsync() =>
         await ReadDecimalAsync("DefaultPrijsPerMeter", DefaultPrijsPerMeter);
