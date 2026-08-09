@@ -320,10 +320,7 @@ public partial class App : Application
 
         try
         {
-            var config = new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-                .Build();
+            var config = BuildAppConfiguration();
 
             var cs = config.GetConnectionString("Default");
             if (!string.IsNullOrWhiteSpace(cs))
@@ -372,6 +369,22 @@ public partial class App : Application
         }
         Directory.CreateDirectory(dataDir);
         return dataDir;
+    }
+
+    /// <summary>
+    /// Laadt appsettings.json uit twee locaties, laatste wint:
+    ///   1. naast de exe (AppContext.BaseDirectory) — Windows / dev.
+    ///   2. de schrijfbare data-map (GetDataDirectory) — VERPLICHT op macOS, waar de exe binnen een
+    ///      genotariseerde .app-bundle zit; bestanden daar wijzigen breekt de Apple-handtekening.
+    /// De data-map overschrijft de exe-map wanneer beide een appsettings.json bevatten. Rooted paden
+    /// krijgen automatisch hun eigen PhysicalFileProvider, dus SetBasePath is niet nodig.
+    /// </summary>
+    private static IConfiguration BuildAppConfiguration()
+    {
+        return new ConfigurationBuilder()
+            .AddJsonFile(Path.Combine(AppContext.BaseDirectory, "appsettings.json"), optional: true, reloadOnChange: false)
+            .AddJsonFile(Path.Combine(GetDataDirectory(), "appsettings.json"), optional: true, reloadOnChange: false)
+            .Build();
     }
 
     /// <summary>
@@ -567,10 +580,7 @@ public partial class App : Application
     {
         try
         {
-            var config = new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-                .Build();
+            var config = BuildAppConfiguration();
             return config[key];
         }
         catch
@@ -601,10 +611,7 @@ public partial class App : Application
     {
         try
         {
-            var config = new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-                .Build();
+            var config = BuildAppConfiguration();
 
             var section = config.GetSection("Backup");
             return new Service.Backup.BackupOptions

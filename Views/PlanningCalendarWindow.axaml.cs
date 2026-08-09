@@ -24,8 +24,11 @@ public partial class PlanningCalendarWindow : Window
     }
 
     // ───────── DRAG & DROP (US-50: nieuwe Avalonia DataTransfer-API) ─────────
-    // MIME-achtige sleutel voor de gesleepte planregel; blijft binnen de app.
-    private const string PlanRegelFormat = "application/x-quadro-planregel";
+    // App-eigen formaat voor de gesleepte planregel; blijft binnen de app.
+    // Identifier mag alleen letters/cijfers/punt/streepje bevatten (geen '/').
+    // De waarde is de RegelId als string (DataFormat<string>).
+    private static readonly DataFormat<string> PlanRegelFormat =
+        DataFormat.CreateStringApplicationFormat("quadro.planregel");
 
     // Sleep-start op een regel (op het label, zodat de checkbox klikbaar blijft).
     private async void Regel_PointerPressed(object? sender, PointerPressedEventArgs e)
@@ -34,14 +37,13 @@ public partial class PlanningCalendarWindow : Window
         if (!e.GetCurrentPoint(c).Properties.IsLeftButtonPressed) return;
 
         var data = new DataTransfer();
-        data.Set(PlanRegelFormat, regel.RegelId);
-        // NB: de DataTransfer NIET disposen — de drag-source-infrastructuur doet dat zelf.
+        data.Add(DataTransferItem.Create(PlanRegelFormat, regel.RegelId.ToString()));
         await DragDrop.DoDragDropAsync(e, data, DragDropEffects.Move);
     }
 
     private void OnDragOver(object? sender, DragEventArgs e)
     {
-        e.DragEffects = e.DataTransfer.Get(PlanRegelFormat) is int
+        e.DragEffects = e.DataTransfer.TryGetValue(PlanRegelFormat) is not null
             ? DragDropEffects.Move
             : DragDropEffects.None;
     }
@@ -49,7 +51,8 @@ public partial class PlanningCalendarWindow : Window
     private async void OnDrop(object? sender, DragEventArgs e)
     {
         if (DataContext is not PlanningCalendarViewModel vm) return;
-        if (e.DataTransfer.Get(PlanRegelFormat) is not int regelId) return;
+        if (e.DataTransfer.TryGetValue(PlanRegelFormat) is not { } raw ||
+            !int.TryParse(raw, out var regelId)) return;
 
         var tile = (e.Source as Visual)?.GetSelfAndVisualAncestors()
             .OfType<Control>()
