@@ -77,14 +77,20 @@ public partial class App : Application
 
         var services = new ServiceCollection();
 
-        // 🔹 Logging (US-31): Serilog roterend bestand + console/debug voor dev.
+        // 🔹 Logging (US-31): Serilog roterend bestand. Console/Debug alleen in dev-builds.
         var serilog = Service.LoggingSetup.CreateLogger(GetDataDirectory(), GetConfigValue("Logging:MinimumLevel"));
         services.AddLogging(builder =>
         {
+            builder.AddSerilog(serilog, dispose: true);
+#if DEBUG
             builder.AddDebug();
             builder.AddConsole();
-            builder.AddSerilog(serilog, dispose: true);
-            builder.SetMinimumLevel(LogLevel.Debug); // Serilog filtert zelf op niveau
+#endif
+            // EF Core mag nooit op Debug loggen naar de console/debug-providers: dat
+            // overspoelt de output met query-compilatie-dumps én is duur om op te bouwen.
+            // De Serilog-bestandslog zet EF al op Warning; deze filter geldt voor álle providers.
+            builder.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
+            builder.SetMinimumLevel(LogLevel.Information);
         });
 
         // 🔹 Database — connection string comes from appsettings.json when present,
