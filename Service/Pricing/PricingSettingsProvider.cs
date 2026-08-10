@@ -9,11 +9,13 @@ namespace QuadroApp.Service.Pricing;
 
 public sealed class PricingSettingsProvider : IPricingSettingsProvider
 {
+    // Terugvalwaarden wanneer er nog niets is opgeslagen. MOETEN gelijk blijven aan
+    // AppSettingsProvider (het Instellingen-scherm), zodat scherm = berekening.
     private const decimal DefaultUurloon = 45m;
     private const decimal DefaultBtwPercent = 21m;
-    private const decimal DefaultPrijsPerMeter = 0m;
-    private const decimal DefaultWinstFactor = 0m;
-    private const decimal DefaultAfvalPercentage = 0m;
+    private const decimal DefaultPrijsPerMeter = 0m;      // materiaalprijs hoort per lijst
+    private const decimal DefaultWinstFactor = 2.5m;
+    private const decimal DefaultAfvalPercentage = 10m;
 
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
 
