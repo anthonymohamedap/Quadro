@@ -103,6 +103,41 @@ public class PricingEngineTests
     }
 
     [Fact]
+    public void CalculateAfwerkingsOptiePrijsExcl_matches_Calculate_for_single_afwerking_regel()
+    {
+        // US-59 — het prijsvoorbeeld in Instellingen (Afwerkingen) gebruikt dezelfde
+        // PricingEngine.CalculateAfwerkingsOptiePrijsExcl-helper als de echte
+        // offerteprijs-berekening. Deze test vergelijkt beide met dezelfde invoer,
+        // zodat de twee niet opnieuw uit sync kunnen raken (bug: €42,85 vs €24).
+        var glas = new AfwerkingsOptie
+        {
+            KostprijsPerM2 = 15m,
+            WinstMarge = 2.5m,
+            AfvalPercentage = 12m,
+            VasteKost = 4m,
+            WerkMinuten = 20
+        };
+        const decimal breedteCm = 30m;
+        const decimal hoogteCm = 40m;
+        const decimal uurloon = 60m;
+
+        var offerte = new Offerte
+        {
+            Regels =
+            [
+                new OfferteRegel { AantalStuks = 1, BreedteCm = breedteCm, HoogteCm = hoogteCm, Glas = glas }
+            ]
+        };
+
+        var result = _sut.Calculate(offerte, uurloon, 21m, 0m, 1m, 10m);
+
+        var m2 = (breedteCm * hoogteCm) / 10_000m;
+        var preview = PricingEngine.CalculateAfwerkingsOptiePrijsExcl(glas, m2, uurloon);
+
+        Assert.Equal(preview, Assert.Single(result.Regels).TotaalExcl);
+    }
+
+    [Fact]
     public void Calculate_AfgesprokenPrijs_OverridesCalculatedRegel()
     {
         var offerte = new Offerte

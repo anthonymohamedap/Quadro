@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Import;
 using QuadroApp.Service.Interfaces;
+using QuadroApp.Service.Pricing;
 using QuadroApp.Validation;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,11 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
     private readonly IDialogService _dialogs;
     private readonly ICrudValidator<AfwerkingsOptie> _validator;
     private readonly IToastService _toast;
+    private readonly IPricingSettingsProvider _pricingSettings;
+
+    // US-59 — zelfde uurloon-bron als PricingEngine.Calculate, geladen in LoadAsync zodat
+    // PreviewPrijsText (synchrone getter) er meteen bij kan zonder zelf async op te roepen.
+    private decimal _uurloon;
     public bool HeeftGeenSelectie => SelectedOptie is null;
     // ─────────────────────────────────────────────────────────────
     // Busy/Status
@@ -108,7 +114,8 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
         IDialogService dialogs,
         ICrudValidator<AfwerkingsOptie> validator,
     IToastService toast,
-        IAuthService auth)
+        IAuthService auth,
+        IPricingSettingsProvider pricingSettings)
         : base(toast)
     {
         _auth = auth;
@@ -118,6 +125,7 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
         _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
         _validator = validator;
         _toast = toast;
+        _pricingSettings = pricingSettings ?? throw new ArgumentNullException(nameof(pricingSettings));
 
         VariantBeheer = new AfwerkingVariantBeheer(() => HasChanges = true);
 
@@ -228,6 +236,11 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
             IsBusy = true;
             Status = "Laden…";
             Foutmelding = null;
+
+            // US-59 — zelfde uurloon-bron als PricingEngine.Calculate, zodat het prijsvoorbeeld
+            // hieronder exact aansluit bij de echte offerteprijs.
+            _uurloon = await _pricingSettings.GetUurloonAsync();
+            OnPropertyChanged(nameof(PreviewPrijsText));
 
             var groepen = await _service.GetGroepenAsync();
             var leveranciers = await _service.GetLeveranciersAsync();
@@ -348,15 +361,9 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
             var m2 = (PreviewBreedteCm * PreviewHoogteCm) / 10_000m;
             if (m2 <= 0) return "Afmetingen ongeldig.";
 
-            // guard tegen negatieve input uit DB
-            var kostprijsM2 = o.KostprijsPerM2 < 0 ? 0 : o.KostprijsPerM2;
-            var vasteKost = o.VasteKost < 0 ? 0 : o.VasteKost;
-            var afvalPct = o.AfvalPercentage < 0 ? 0 : o.AfvalPercentage;
-            var winstmarge = o.WinstMarge < 0 ? 0 : o.WinstMarge;
-
-            var kost = kostprijsM2 * m2 + vasteKost;
-            var afval = kost * (afvalPct / 100m);
-            var excl = (kost + afval) * (1m + winstmarge);
+            // US-59 — zelfde formule als PricingEngine.CalcOpt (wat effectief op de offerte komt),
+            // zodat dit voorbeeld nooit meer afwijkt van de echte prijsberekening.
+            var excl = PricingEngine.CalculateAfwerkingsOptiePrijsExcl(o, m2, _uurloon);
 
             return $"Voorbeeld: € {excl:F2} excl. btw (voor {PreviewBreedteCm}x{PreviewHoogteCm} cm)";
         }

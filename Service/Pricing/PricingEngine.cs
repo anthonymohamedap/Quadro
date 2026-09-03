@@ -21,17 +21,8 @@ public sealed class PricingEngine
                 return (bw * bh) / 10_000m;
             }
 
-            decimal CalcOpt(AfwerkingsOptie? opt)
-            {
-                if (opt is null) return 0m;
-
-                var m2 = SurfaceM2();
-                var kost = opt.KostprijsPerM2 * m2;
-                var afval = kost * (opt.AfvalPercentage / 100m);
-                var arbeid = (opt.WerkMinuten / 60m) * uurloon;
-
-                return Math.Round((kost * opt.WinstMarge) + afval + opt.VasteKost + arbeid, 2);
-            }
+            decimal CalcOpt(AfwerkingsOptie? opt) =>
+                CalculateAfwerkingsOptiePrijsExcl(opt, SurfaceM2(), uurloon);
 
             decimal lineEx;
             if (r.AfgesprokenPrijsExcl.HasValue)
@@ -109,6 +100,22 @@ public sealed class PricingEngine
 
         output.Regels.AddRange(regelResults);
         return output;
+    }
+
+    /// <summary>
+    /// US-59 — de prijsberekening voor één afwerkingsoptie (bv. Glas), losgetrokken uit
+    /// <see cref="Calculate"/> zodat AfwerkingenViewModel.PreviewPrijsText exact dezelfde formule
+    /// gebruikt als de echte offerteprijs — de twee mogen niet opnieuw uit sync raken.
+    /// </summary>
+    public static decimal CalculateAfwerkingsOptiePrijsExcl(AfwerkingsOptie? opt, decimal m2, decimal uurloon)
+    {
+        if (opt is null) return 0m;
+
+        var kost = opt.KostprijsPerM2 * m2;
+        var afval = kost * (opt.AfvalPercentage / 100m);
+        var arbeid = (opt.WerkMinuten / 60m) * uurloon;
+
+        return Math.Round((kost * opt.WinstMarge) + afval + opt.VasteKost + arbeid, 2);
     }
 
     public static decimal CalculateLijstPrijsExcl(
