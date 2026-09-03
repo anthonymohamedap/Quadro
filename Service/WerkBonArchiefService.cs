@@ -141,6 +141,7 @@ namespace QuadroApp.Service
             // ── Nieuwe offerte aanmaken op basis van snapshot ──────────
             var nieuweOfferte = new Offerte
             {
+                OfferteNummer   = await OfferteNummering.VolgendeAsync(db),
                 KlantId         = klantId,
                 Datum           = DateTime.Today,
                 Status          = OfferteStatus.Concept,

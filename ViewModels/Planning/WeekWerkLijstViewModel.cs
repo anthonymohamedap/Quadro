@@ -63,6 +63,8 @@ public partial class WeekWerkLijstViewModel : ObservableObject
             .Include(t => t.OfferteRegel)
                 .ThenInclude(r => r!.TypeLijst)
                     .ThenInclude(l => l!.Leverancier)
+            .Include(t => t.OfferteRegel)
+                .ThenInclude(r => r!.InlegTypeLijst)
             .Include(t => t.OfferteRegel).ThenInclude(r => r!.Glas)
             .Include(t => t.OfferteRegel).ThenInclude(r => r!.PassePartout1)
             .Include(t => t.OfferteRegel).ThenInclude(r => r!.PassePartout2)
@@ -185,6 +187,7 @@ public partial class WeekWerkItem : ObservableObject
     public string Lijst { get; init; } = "";  // TypeLijst.Artikelnummer
     public string Inleg1 { get; init; } = "";
     public string Inleg2 { get; init; } = "";
+    public string InlegNummer { get; init; } = "";  // US-53: artikelnr. van de inleg (kader/afstandshouder)
     public DateTime ProductieDatum { get; init; } // GeplandVan datum
 
     /// <summary>Klant-/regelopmerking van de offerteregel (los van de werktaak-omschrijving).</summary>
@@ -258,6 +261,7 @@ public partial class WeekWerkItem : ObservableObject
             Lijst = r?.TypeLijst?.Artikelnummer ?? "",
             Inleg1 = $"{r?.InlegBreedteCm}×{r?.InlegHoogteCm}",
             Inleg2 = "",
+            InlegNummer = r?.InlegTypeLijst?.Artikelnummer ?? "",
             ProductieDatum = t.GeplandVan.Date,
             RegelOpmerking = r?.Opmerking,
             GlasBeschrijving      = AfwLabel(r?.Glas, r?.GlasVariant),

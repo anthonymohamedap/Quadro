@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
+using QuadroApp.Service;
 using QuadroApp.Service.Import;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Validation;
@@ -127,6 +128,14 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     }
     public System.Collections.ObjectModel.ObservableCollection<TypeLijst> GefilterdeTypeLijsten
         => Regelbeheer.GefilterdeTypeLijsten;
+    // ── US-53: inleg-nummer picker facade ──
+    public string? InlegTypeLijstZoekterm
+    {
+        get => Regelbeheer.InlegTypeLijstZoekterm;
+        set => Regelbeheer.InlegTypeLijstZoekterm = value;
+    }
+    public System.Collections.ObjectModel.ObservableCollection<TypeLijst> GefilterdeInlegTypeLijsten
+        => Regelbeheer.GefilterdeInlegTypeLijsten;
     public System.Collections.ObjectModel.ObservableCollection<AfwerkingsOptie> GlasOpties
         => Regelbeheer.GlasOpties;
     public System.Collections.ObjectModel.ObservableCollection<AfwerkingsOptie> Passe1Opties
@@ -187,6 +196,13 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     {
         get => Regelbeheer.SelectedTypeLijst;
         set => Regelbeheer.SelectedTypeLijst = value;
+    }
+
+    // ── US-53: gekozen inleg-TypeLijst (kader/afstandshouder-nummer) ──
+    public TypeLijst? SelectedRegelInlegTypeLijst
+    {
+        get => Regelbeheer.SelectedInlegTypeLijst;
+        set => Regelbeheer.SelectedInlegTypeLijst = value;
     }
 
     // ── Overige regel-navigatie: dedicated single-segment properties voor afwerkingen. ──
@@ -706,6 +722,9 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                 case nameof(Regelbeheer.Regels):              OnPropertyChanged(nameof(Regels)); break;
                 case nameof(Regelbeheer.TypeLijstZoekterm):   OnPropertyChanged(nameof(TypeLijstZoekterm)); break;
                 case nameof(Regelbeheer.GefilterdeTypeLijsten): OnPropertyChanged(nameof(GefilterdeTypeLijsten)); break;
+                case nameof(Regelbeheer.SelectedInlegTypeLijst): OnPropertyChanged(nameof(SelectedRegelInlegTypeLijst)); break;
+                case nameof(Regelbeheer.InlegTypeLijstZoekterm): OnPropertyChanged(nameof(InlegTypeLijstZoekterm)); break;
+                case nameof(Regelbeheer.GefilterdeInlegTypeLijsten): OnPropertyChanged(nameof(GefilterdeInlegTypeLijsten)); break;
                 case nameof(Regelbeheer.GlasOpties):
                     OnPropertyChanged(nameof(GlasOpties));
                     RebuildNaamLijsten();
@@ -762,6 +781,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         // Sync GefilterdeTypeLijsten via diff (nooit Clear/replace) zodat de ComboBox
         // zijn SelectedItem niet verliest als de catalog wordt herladen.
         Regelbeheer.ApplyTypeLijstFilter(Regelbeheer.TypeLijstZoekterm);
+        Regelbeheer.ApplyInlegTypeLijstFilter(Regelbeheer.InlegTypeLijstZoekterm);
 
         var klanten = await db.Klanten.AsNoTracking()
             .OrderBy(k => k.Achternaam).ThenBy(k => k.Voornaam)
@@ -802,6 +822,8 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         {
             if (regel.TypeLijstId is int tid)
                 regel.TypeLijst = Regelbeheer.TypeLijsten.FirstOrDefault(t => t.Id == tid);
+            if (regel.InlegTypeLijstId is int itid)
+                regel.InlegTypeLijst = Regelbeheer.TypeLijsten.FirstOrDefault(t => t.Id == itid);
             if (regel.GlasId is int gid)
                 regel.Glas = Regelbeheer.GlasOpties.FirstOrDefault(g => g.Id == gid);
             if (regel.PassePartout1Id is int p1id)
@@ -819,6 +841,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         // Na het relinken van catalog-referenties, sync SelectedTypeLijst zodat
         // de ComboBox de nieuwe catalog-instantie toont.
         Regelbeheer.SyncTypeLijstFromSelectedRegel();
+        Regelbeheer.SyncInlegTypeLijstFromSelectedRegel();
     }
 
     // ── Load offerte ──
@@ -867,7 +890,8 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                         Id = dbRule.Id, OfferteId = dbRule.OfferteId,
                         AantalStuks = dbRule.AantalStuks, BreedteCm = dbRule.BreedteCm,
                         HoogteCm = dbRule.HoogteCm, InlegBreedteCm = dbRule.InlegBreedteCm,
-                        InlegHoogteCm = dbRule.InlegHoogteCm, Titel = dbRule.Titel,
+                        InlegHoogteCm = dbRule.InlegHoogteCm, InlegTypeLijstId = dbRule.InlegTypeLijstId,
+                        Titel = dbRule.Titel,
                         Opmerking = dbRule.Opmerking, TypeLijstId = dbRule.TypeLijstId,
                         GlasId = dbRule.GlasId, PassePartout1Id = dbRule.PassePartout1Id,
                         PassePartout2Id = dbRule.PassePartout2Id, DiepteKernId = dbRule.DiepteKernId,
@@ -886,6 +910,8 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                     // Gebruik dictionary lookups ipv LINQ FirstOrDefault (veel sneller)
                     if (rule.TypeLijstId.HasValue && typeLijstDict.TryGetValue(rule.TypeLijstId.Value, out var typeLijst))
                         rule.TypeLijst = typeLijst;
+                    if (rule.InlegTypeLijstId.HasValue && typeLijstDict.TryGetValue(rule.InlegTypeLijstId.Value, out var inlegTypeLijst))
+                        rule.InlegTypeLijst = inlegTypeLijst;
                     // Lokale helper: relink de gekozen variant uit de Varianten van de optie.
                     static AfwerkingsVariant? Variant(AfwerkingsOptie? optie, int? variantId) =>
                         optie is null || !variantId.HasValue
@@ -997,6 +1023,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
 
             if (Offerte.Id == 0)
             {
+                Offerte.OfferteNummer = await OfferteNummering.VolgendeAsync(db);
                 db.Offertes.Add(Offerte);
                 await db.SaveChangesAsync();
 
@@ -1145,6 +1172,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             InlegBreedteCm = r.InlegBreedteCm, InlegHoogteCm = r.InlegHoogteCm,
             Titel = r.Titel, Opmerking = r.Opmerking,
             TypeLijstId = r.TypeLijst?.Id ?? r.TypeLijstId,
+            InlegTypeLijstId = r.InlegTypeLijst?.Id ?? r.InlegTypeLijstId,
             GlasId = r.Glas?.Id ?? r.GlasId,
             PassePartout1Id = r.PassePartout1?.Id ?? r.PassePartout1Id,
             PassePartout2Id = r.PassePartout2?.Id ?? r.PassePartout2Id,
@@ -1156,6 +1184,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             TotaalExcl = r.TotaalExcl, SubtotaalExBtw = r.SubtotaalExBtw,
             BtwBedrag = r.BtwBedrag, TotaalInclBtw = r.TotaalInclBtw,
             TypeLijst  = includeNavigations ? r.TypeLijst  : null,
+            InlegTypeLijst = includeNavigations ? r.InlegTypeLijst : null,
             Glas       = includeNavigations ? r.Glas       : null,
             PassePartout1 = includeNavigations ? r.PassePartout1 : null,
             PassePartout2 = includeNavigations ? r.PassePartout2 : null,
@@ -1203,6 +1232,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
 
             // Force the ComboBox SelectedItem bindings to re-read from the re-linked regel.
             OnPropertyChanged(nameof(SelectedRegelTypeLijst));
+            OnPropertyChanged(nameof(SelectedRegelInlegTypeLijst));
             OnPropertyChanged(nameof(SelectedRegelGlas));
             OnPropertyChanged(nameof(SelectedRegelPasse1));
             OnPropertyChanged(nameof(SelectedRegelPasse2));
@@ -1323,7 +1353,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         OfferteId = offerteId, AantalStuks = vmRule.AantalStuks, BreedteCm = vmRule.BreedteCm,
         HoogteCm = vmRule.HoogteCm, InlegBreedteCm = vmRule.InlegBreedteCm,
         InlegHoogteCm = vmRule.InlegHoogteCm, Titel = vmRule.Titel, Opmerking = vmRule.Opmerking,
-        TypeLijstId = vmRule.TypeLijst?.Id, GlasId = vmRule.Glas?.Id,
+        TypeLijstId = vmRule.TypeLijst?.Id, InlegTypeLijstId = vmRule.InlegTypeLijst?.Id, GlasId = vmRule.Glas?.Id,
         PassePartout1Id = vmRule.PassePartout1?.Id, PassePartout2Id = vmRule.PassePartout2?.Id,
         DiepteKernId = vmRule.DiepteKern?.Id, OpklevenId = vmRule.Opkleven?.Id,
         RugId = vmRule.Rug?.Id, AfgesprokenPrijsExcl = vmRule.AfgesprokenPrijsExcl,
@@ -1342,6 +1372,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         dbRule.HoogteCm = vmRule.HoogteCm; dbRule.InlegBreedteCm = vmRule.InlegBreedteCm;
         dbRule.InlegHoogteCm = vmRule.InlegHoogteCm; dbRule.Titel = vmRule.Titel;
         dbRule.Opmerking = vmRule.Opmerking; dbRule.TypeLijstId = vmRule.TypeLijst?.Id;
+        dbRule.InlegTypeLijstId = vmRule.InlegTypeLijst?.Id;
         dbRule.GlasId = vmRule.Glas?.Id; dbRule.PassePartout1Id = vmRule.PassePartout1?.Id;
         dbRule.PassePartout2Id = vmRule.PassePartout2?.Id; dbRule.DiepteKernId = vmRule.DiepteKern?.Id;
         dbRule.OpklevenId = vmRule.Opkleven?.Id; dbRule.RugId = vmRule.Rug?.Id;
