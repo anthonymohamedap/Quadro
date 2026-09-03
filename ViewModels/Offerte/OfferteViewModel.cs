@@ -9,6 +9,8 @@ using QuadroApp.Service.Interfaces;
 using QuadroApp.Validation;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -1032,6 +1034,66 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
 
         Offerte.Status = nieuweStatus;
         await SaveCoreAsync(reloadAfterSave: true);
+    }
+
+    // ── Offerte afdrukken (US-57): klantvriendelijke PDF, geen productie-/facturatiegegevens ──
+    [RelayCommand]
+    private async Task OfferteAfdrukkenAsync()
+    {
+        if (Offerte is null || IsBusy) return;
+
+        if (Regelbeheer.Regels.Count == 0)
+        {
+            Toast.Warning("Voeg minstens één regel toe voor je de offerte afdrukt.");
+            return;
+        }
+
+        try
+        {
+            IsBusy = true;
+
+            var snapshot = BuildSnapshotForPrint();
+            var exporter = new PdfOfferteExporter();
+            var path = await Task.Run(() => exporter.Export(snapshot));
+
+            if (!File.Exists(path))
+            {
+                Toast.Error("PDF kon niet aangemaakt worden.");
+                return;
+            }
+
+            Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            var msg = ex.InnerException?.Message ?? ex.Message;
+            Toast.Error($"Afdrukken mislukt: {msg}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    // Werkt zowel voor een nieuwe (nog niet opgeslagen) als een bestaande offerte: bouwt de PDF
+    // rechtstreeks uit de reeds in-memory geladen regels (met hun navigaties), geen extra DB-call nodig.
+    private Offerte BuildSnapshotForPrint()
+    {
+        var source = Offerte ?? new Offerte();
+        return new Offerte
+        {
+            Id = source.Id,
+            OfferteNummer = source.OfferteNummer,
+            Datum = source.Datum == default ? DateTime.Today : source.Datum,
+            Opmerking = source.Opmerking,
+            KortingPct = source.KortingPct,
+            MeerPrijsIncl = source.MeerPrijsIncl,
+            SubtotaalExBtw = source.SubtotaalExBtw,
+            BtwBedrag = source.BtwBedrag,
+            TotaalInclBtw = source.TotaalInclBtw,
+            Klant = KlantSelectie.SelectedKlant,
+            Regels = Regelbeheer.Regels.ToList()
+        };
     }
 
     // ── Save ──
