@@ -76,8 +76,18 @@ public partial class OffertePrijsViewModel : AsyncViewModelBase
     {
         if (IsBusy) return;
 
-        var ok = await _runFullValidation(showFeedback);
-        if (!ok) return;
+        // De gedebouncte, stille herberekening (showFeedback: false) mag niet blokkeren op de
+        // volledige-offerte-validatie: tijdens het invullen van een 2e (of volgende) regel is die
+        // validatie heel normaal (nog) niet geldig, terwijl reeds complete regels wél live hun
+        // prijs moeten tonen. PricingEngine.Calculate rekent per regel onafhankelijk en verdraagt
+        // onvolledige regels probleemloos (levert dan gewoon 0/partieel resultaat op voor die regel).
+        // Bij een expliciete, door de gebruiker gevraagde berekening (showFeedback: true) blijft de
+        // volledige validatie wél gelden, zodat de gebruiker een duidelijke foutmelding krijgt.
+        if (showFeedback)
+        {
+            var ok = await _runFullValidation(showFeedback);
+            if (!ok) return;
+        }
 
         try
         {
