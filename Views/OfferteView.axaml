@@ -692,6 +692,12 @@
 								FontWeight="Bold"
 								Margin="0,0,12,6"/>
 
+						<!-- US-57: klantvriendelijke offerte-PDF, los van de bestelbon-/factuurpreview -->
+						<Button Content="Offerte afdrukken"
+								Command="{Binding OfferteAfdrukkenCommand}"
+								Classes="GhostBtn"
+								Margin="0,0,12,6"/>
+
 						<!-- Bevestigen: alleen zichtbaar als er nog GEEN werkbon is -->
 						<Button Content="Bevestigen → Bestelling"
 								Command="{Binding BevestigenCommand}"
