@@ -259,7 +259,7 @@ public partial class WeekWerkItem : ObservableObject
             Omschrijving = t.Omschrijving ?? "",
             Afw = r?.LegacyCode ?? "",
             Lijst = r?.TypeLijst?.Artikelnummer ?? "",
-            Inleg1 = $"{r?.InlegBreedteCm}×{r?.InlegHoogteCm}",
+            Inleg1 = r?.InlegLabel ?? "",
             Inleg2 = "",
             InlegNummer = r?.InlegTypeLijst?.Artikelnummer ?? "",
             ProductieDatum = t.GeplandVan.Date,
