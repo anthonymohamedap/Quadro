@@ -268,6 +268,74 @@ afdrukken" naast de bestaande workflow-knoppen (`FactuurCommand`, `OpenPlanningC
 
 ---
 
+## US-59 · Prijsvoorbeeld in Instellingen komt niet overeen met echte offerteprijs
+
+**Als:** gebruiker (Kurt)
+**Wil ik:** dat het prijsvoorbeeld bij een afwerkingsoptie (bv. Glas) in Instellingen exact hetzelfde
+bedrag toont als de werkelijke prijsberekening op een offerte
+**Zodat:** ik erop kan vertrouwen dat de prijzen die ik invoer ook effectief kloppen, zonder zelf te
+moeten uitrekenen welk van de twee cijfers juist is
+
+**Bron:** Kurt (WhatsApp, 03/09/2026) — "Heb net de prijzen voor glas ingevoerd, hij geeft een
+prijsvoorbeeld voor 30/40 cm prijs €42,85. Bij prijsberekening geeft hij €24. Waarom is dit niet
+hetzelfde? Welk is juist?"
+
+### Analyse (bevestigd)
+
+Bevestigde bug: er bestaan twee verschillende formules voor dezelfde berekening.
+
+`ViewModels/Afwerkingen/AfwerkingenViewModel.cs` (`PreviewPrijsText`, regels 338-361) — foutief:
+```csharp
+var kost  = kostprijsM2 * m2 + vasteKost;        // VasteKost zit al in kost
+var afval = kost * (afvalPct / 100m);
+var excl  = (kost + afval) * (1m + winstmarge);  // winstmarge als "1 + W"
+```
+
+`Service/Pricing/PricingEngine.cs` (`CalcOpt`, regels 24-34) — dit is wat effectief op de offerte
+komt:
+```csharp
+var kost   = opt.KostprijsPerM2 * m2;            // VasteKost zit hier niet in
+var afval  = kost * (opt.AfvalPercentage / 100m);
+var arbeid = (opt.WerkMinuten / 60m) * uurloon;
+return (kost * opt.WinstMarge) + afval + opt.VasteKost + arbeid;  // winstmarge als vermenigvuldiger
+```
+
+Drie afwijkingen, samen goed voor het verschil tussen €42,85 en €24:
+1. `WinstMarge` wordt in het voorbeeld als opslagpercentage (`1 + W`) toegepast, in de echte
+   berekening als vermenigvuldigfactor op de kostprijs (`kost × W`) — en dat laatste is de bedoelde
+   semantiek (`AfwerkingsOptie.WinstMarge` is `[Precision(6,3)]`, dus bv. `2,000`).
+2. `VasteKost` telt in het voorbeeld al mee vóór de winst-/afvalberekening; in de echte berekening
+   wordt die er pas na toegevoegd.
+3. Arbeidskost (`WerkMinuten × uurloon`) ontbreekt volledig in het voorbeeld.
+
+De echte offerteprijs (€24) is het juiste bedrag — dat is wat de klant betaalt. Het voorbeeld in
+Instellingen is fout en moet aangepast worden aan `PricingEngine.CalcOpt`.
+
+### Acceptatiecriteria
+
+- Het prijsvoorbeeld in Instellingen (Afwerkingen) geeft voor dezelfde afmetingen en dezelfde
+  afwerkingsoptie exact hetzelfde bedrag als de prijsberekening op een offerteregel.
+- `WinstMarge`, `VasteKost` en arbeidskost worden in het voorbeeld op identieke wijze toegepast als
+  in `PricingEngine.CalcOpt`.
+- Regressietest die beide berekeningen (voorbeeld en `PricingEngine`) met dezelfde invoerwaarden
+  vergelijkt, zodat deze twee niet opnieuw uit sync kunnen raken.
+
+### Technische uitwerking
+
+**Bestanden:** `ViewModels/Afwerkingen/AfwerkingenViewModel.cs` (`PreviewPrijsText`, regels
+338-361), `Service/Pricing/PricingEngine.cs` (`CalcOpt`, regels 24-34).
+
+Voorstel: maak de rekenlogica van `CalcOpt` herbruikbaar (bv. een `public static` helper op
+`PricingEngine` die een `AfwerkingsOptie` + afmetingen + uurloon neemt) en laat `PreviewPrijsText`
+die aanroepen in plaats van de formule te dupliceren — dat voorkomt dat beide plekken later opnieuw
+uit elkaar groeien. Vereist wel dat `AfwerkingenViewModel` een `uurloon`-waarde ter beschikking heeft
+(zelfde bron als waar `OffertePrijsViewModel`/`PricingEngine.Calculate` die vandaan haalt, vermoedelijk
+via de instellingen-provider).
+
+⏱ Schatting: 1-1,5 uur · Complexiteit: laag-gemiddeld
+
+---
+
 ## Samenvatting
 
 | # | Titel | Type | Schatting |
@@ -277,3 +345,4 @@ afdrukken" naast de bestaande workflow-knoppen (`FactuurCommand`, `OpenPlanningC
 | US-55 | Weeklijst-print toont overal "Inlijsten" i.p.v. echte omschrijving | Bug (bevestigd) | ~1,5 uur |
 | US-56 | Offerte-status manueel wijzigen | Ontbrekende functie | 1-2 uur |
 | US-57 | Offerte afdrukken/exporteren voor klant | Ontbrekende functie | 3-4 uur |
+| US-59 | Prijsvoorbeeld Instellingen komt niet overeen met echte offerteprijs | Bug (bevestigd) | 1-1,5 uur |

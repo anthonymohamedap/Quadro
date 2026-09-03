@@ -21,7 +21,10 @@
       "Bash(Select-String \"SyncPending\")",
       "Bash(dotnet tool *)",
       "Bash(sqlite3 *)",
-      "PowerShell(Get-Command *)"
+      "PowerShell(Get-Command *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "PowerShell(Get-ChildItem *)"
     ]
   }
 }
