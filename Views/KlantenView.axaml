@@ -15,7 +15,9 @@
 					<Button Content="📂 Details bekijken" Command="{Binding OpenKlantDetailCommand}" CommandParameter="{Binding SelectedKlant}" Classes="MainBtn" Margin="0,0,8,6"/>
 					<Button Content="🗑️ Verwijderen" Command="{Binding DeleteCommand}" Classes="MainBtn" Margin="0,0,8,6"/>
 					<Button Content="🔄 Ververs" Command="{Binding RefreshCommand}" Classes="MainBtn" Margin="0,0,8,6"/>
-					<Button Content="📥 Excel-import" Command="{Binding ImportExcelCommand}" Classes="MainBtn" Margin="0,0,0,6"/>
+					<Button Content="📥 Excel-import" Command="{Binding ImportExcelCommand}" Classes="MainBtn" Margin="0,0,8,6"/>
+					<Button Content="🖨️ Afdrukken" Command="{Binding AfdrukkenCommand}" Classes="MainBtn" Margin="0,0,0,6"
+							ToolTip.Tip="Print de huidige (gefilterde) lijst als PDF"/>
 				</WrapPanel>
 			</Grid>
 			<Border Grid.Row="2" Background="{DynamicResource WarningBg}" BorderBrush="{DynamicResource BrandYellow}" BorderThickness="1" CornerRadius="8" Padding="10">
