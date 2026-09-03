@@ -204,6 +204,10 @@ namespace QuadroApp.Data
 
             b.Entity<Offerte>(entity =>
             {
+                // Doorlopend zichtbaar offertenummer (zie OfferteNummering) — geen unique
+                // constraint (in tegenstelling tot Factuur.FactuurNummer), enkel voor snel opzoeken.
+                entity.HasIndex(o => o.OfferteNummer);
+
                 entity.Property(o => o.SubtotaalExBtw).HasColumnType("decimal(18,2)");
                 entity.Property(o => o.BtwBedrag).HasColumnType("decimal(18,2)");
                 entity.Property(o => o.TotaalInclBtw).HasColumnType("decimal(18,2)");
@@ -343,6 +347,12 @@ namespace QuadroApp.Data
                 entity.HasOne(r => r.TypeLijst)
                       .WithMany()
                       .HasForeignKey(r => r.TypeLijstId)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                // US-53: InlegTypeLijst (optioneel, geen cascade — zelfde patroon als TypeLijst)
+                entity.HasOne(r => r.InlegTypeLijst)
+                      .WithMany()
+                      .HasForeignKey(r => r.InlegTypeLijstId)
                       .OnDelete(DeleteBehavior.NoAction);
 
                 // 6× AfwerkingsOptie (allemaal NO ACTION om multiple cascade paths te vermijden)

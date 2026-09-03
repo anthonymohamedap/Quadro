@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using QuadroApp.Data;
@@ -11,9 +12,11 @@ using QuadroApp.Data;
 namespace QuadroApp.Migrations.Npgsql.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260818120000_AddOfferteNummer")]
+    partial class AddOfferteNummer
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -917,9 +920,6 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.Property<decimal?>("InlegHoogteCm")
                         .HasColumnType("numeric");
 
-                    b.Property<int?>("InlegTypeLijstId")
-                        .HasColumnType("integer");
-
                     b.Property<decimal>("Korting")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -986,8 +986,6 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.HasIndex("GlasId");
 
                     b.HasIndex("GlasVariantId");
-
-                    b.HasIndex("InlegTypeLijstId");
 
                     b.HasIndex("OfferteId");
 
@@ -1539,11 +1537,6 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                         .HasForeignKey("GlasVariantId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("QuadroApp.Model.DB.TypeLijst", "InlegTypeLijst")
-                        .WithMany()
-                        .HasForeignKey("InlegTypeLijstId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.HasOne("QuadroApp.Model.DB.Offerte", "Offerte")
                         .WithMany("Regels")
                         .HasForeignKey("OfferteId")
@@ -1602,8 +1595,6 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.Navigation("Glas");
 
                     b.Navigation("GlasVariant");
-
-                    b.Navigation("InlegTypeLijst");
 
                     b.Navigation("Offerte");
 

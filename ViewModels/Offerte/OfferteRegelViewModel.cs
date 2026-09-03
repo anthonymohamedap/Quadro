@@ -36,6 +36,14 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
     // en we SelectedTypeLijst syncen vanuit de regel.
     private bool _syncingTypeLijst;
 
+    // ── US-53: Inleg-TypeLijst zoeken + selectie (zelfde patroon als TypeLijst) ──
+    // Deelt dezelfde bron-catalogus (TypeLijsten) maar met een eigen filter + selectie,
+    // zodat het inleg-nummer los van de kaderkeuze gekozen kan worden.
+    [ObservableProperty] private ObservableCollection<TypeLijst> gefilterdeInlegTypeLijsten = new();
+    [ObservableProperty] private string? inlegTypeLijstZoekterm;
+    [ObservableProperty] private TypeLijst? selectedInlegTypeLijst;
+    private bool _syncingInlegTypeLijst;
+
     // ── Afwerking dropdowns ──
     [ObservableProperty] private ObservableCollection<AfwerkingsOptie> glasOpties = new();
     [ObservableProperty] private ObservableCollection<AfwerkingsOptie> passe1Opties = new();
@@ -58,6 +66,11 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
                 _syncingTypeLijst = true;
                 try { SelectedTypeLijst = value?.TypeLijst; }
                 finally { _syncingTypeLijst = false; }
+
+                // US-53: idem voor het inleg-nummer.
+                _syncingInlegTypeLijst = true;
+                try { SelectedInlegTypeLijst = value?.InlegTypeLijst; }
+                finally { _syncingInlegTypeLijst = false; }
 
                 RegelDuplicerenCommand.NotifyCanExecuteChanged();
                 ApplyLegacyCodeCommand.NotifyCanExecuteChanged();
@@ -90,6 +103,22 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
         _syncingTypeLijst = true;
         try { SelectedTypeLijst = SelectedRegel?.TypeLijst; }
         finally { _syncingTypeLijst = false; }
+    }
+
+    /// <summary>US-53 — schrijf de gekozen inleg-TypeLijst terug naar de huidige regel.</summary>
+    partial void OnSelectedInlegTypeLijstChanged(TypeLijst? value)
+    {
+        if (_syncingInlegTypeLijst || SelectedRegel is null) return;
+        SelectedRegel.InlegTypeLijst = value;
+        RegelChanged?.Invoke();
+    }
+
+    /// <summary>US-53 — synct SelectedInlegTypeLijst vanuit de huidige SelectedRegel.</summary>
+    public void SyncInlegTypeLijstFromSelectedRegel()
+    {
+        _syncingInlegTypeLijst = true;
+        try { SelectedInlegTypeLijst = SelectedRegel?.InlegTypeLijst; }
+        finally { _syncingInlegTypeLijst = false; }
     }
 
     // ── LegacyCode proxy ──
@@ -145,6 +174,47 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
         // remove items that shouldn't be there, add items that are missing.
         // The selected item is never momentarily absent → ComboBox keeps its selection.
         ApplyTypeLijstFilter(value);
+    }
+
+    partial void OnInlegTypeLijstZoektermChanged(string? value) => ApplyInlegTypeLijstFilter(value);
+
+    /// <summary>US-53 — filtert GefilterdeInlegTypeLijsten via diff (nooit Clear), zelfde
+    /// aanpak als ApplyTypeLijstFilter zodat de ComboBox zijn SelectedItem niet verliest.</summary>
+    public void ApplyInlegTypeLijstFilter(string? zoekterm)
+    {
+        System.Collections.Generic.List<TypeLijst> target;
+        if (string.IsNullOrWhiteSpace(zoekterm))
+        {
+            target = new System.Collections.Generic.List<TypeLijst>(TypeLijsten);
+        }
+        else
+        {
+            var z = zoekterm.Trim().ToLowerInvariant();
+            target = TypeLijsten
+                .Where(x => x.Artikelnummer != null &&
+                            x.Artikelnummer.ToLowerInvariant().Contains(z))
+                .ToList();
+        }
+
+        var targetSet = new System.Collections.Generic.HashSet<TypeLijst>(target);
+
+        for (int i = GefilterdeInlegTypeLijsten.Count - 1; i >= 0; i--)
+        {
+            if (!targetSet.Contains(GefilterdeInlegTypeLijsten[i]))
+                GefilterdeInlegTypeLijsten.RemoveAt(i);
+        }
+
+        var currentSet = new System.Collections.Generic.HashSet<TypeLijst>(GefilterdeInlegTypeLijsten);
+        int insertAt = 0;
+        foreach (var item in target)
+        {
+            if (!currentSet.Contains(item))
+            {
+                GefilterdeInlegTypeLijsten.Insert(insertAt, item);
+                currentSet.Add(item);
+            }
+            insertAt++;
+        }
     }
 
     /// <summary>
@@ -218,6 +288,7 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
         {
             AantalStuks = s.AantalStuks, BreedteCm = s.BreedteCm, HoogteCm = s.HoogteCm,
             InlegBreedteCm = s.InlegBreedteCm, InlegHoogteCm = s.InlegHoogteCm,
+            InlegTypeLijstId = s.InlegTypeLijst?.Id ?? s.InlegTypeLijstId, InlegTypeLijst = s.InlegTypeLijst,
             Titel = s.Titel, Opmerking = s.Opmerking,
             TypeLijstId = s.TypeLijst?.Id ?? s.TypeLijstId, TypeLijst = s.TypeLijst,
             GlasId = s.Glas?.Id ?? s.GlasId, Glas = s.Glas,

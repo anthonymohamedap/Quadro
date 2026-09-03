@@ -73,6 +73,7 @@ namespace QuadroApp.Service
             var archief = new OfferteArchief
             {
                 OrigineleOfferteId = offerte.Id,
+                OfferteNummer      = offerte.OfferteNummer,
                 KlantNaam          = klant is not null
                                        ? $"{klant.Voornaam} {klant.Achternaam}".Trim()
                                        : "(geen klant)",
@@ -155,6 +156,9 @@ namespace QuadroApp.Service
             // ── Nieuwe offerte ────────────────────────────────────────────────
             var nieuweOfferte = new Offerte
             {
+                // Zelfde offertenummer als vóór het archiveren — geen nieuw nummer trekken,
+                // zodat het nummer dat de klant al gezien heeft consistent blijft.
+                OfferteNummer      = archief.OfferteNummer,
                 KlantId            = klantId,
                 Datum              = DateTime.Today,
                 Status             = OfferteStatus.Concept,

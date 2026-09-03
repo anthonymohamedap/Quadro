@@ -303,7 +303,7 @@
 
 						<StackPanel Spacing="6">
 							<TextBlock Text="Afmetingen" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
-							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
+							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
 							<TextBlock Grid.Row="0" Grid.Column="0" Text="Breedte (cm)" VerticalAlignment="Center"/>
 							<NumericUpDown Grid.Row="0"
                                            Foreground="{DynamicResource TextPrimary}"
@@ -327,6 +327,24 @@
                                                Foreground="{DynamicResource TextPrimary}"
                                                Value="{Binding SelectedRegel.InlegHoogteCm, Mode=TwoWay}"/>
 							</Grid>
+
+							<!-- US-53: nummer van de inleg (kader/afstandshouder) uit dezelfde catalogus als de kadernummers -->
+							<TextBlock Grid.Row="3" Grid.Column="0" Text="Inleg nr." VerticalAlignment="Top" Margin="0,4,0,0"/>
+							<StackPanel Grid.Row="3" Grid.Column="1" Spacing="4">
+								<TextBox Watermark="Zoek artikelnummer…"
+									 Text="{Binding InlegTypeLijstZoekterm, UpdateSourceTrigger=PropertyChanged}"/>
+								<ComboBox ItemsSource="{Binding GefilterdeInlegTypeLijsten}"
+									  SelectedItem="{Binding SelectedRegelInlegTypeLijst, Mode=TwoWay}"
+									  HorizontalAlignment="Stretch"
+									  MaxDropDownHeight="300"
+									  PlaceholderText="Geen inleg-nummer">
+									<ComboBox.ItemTemplate>
+										<DataTemplate x:DataType="m:TypeLijst">
+											<TextBlock Text="{Binding Artikelnummer}" TextTrimming="CharacterEllipsis"/>
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+							</StackPanel>
 							</Grid>
 						</StackPanel>
 

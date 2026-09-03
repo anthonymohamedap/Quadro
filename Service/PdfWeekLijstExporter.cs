@@ -178,6 +178,9 @@ public sealed class PdfWeekLijstExporter
                         ? item.Inleg1 : "";
                     right.Item().Text($"inleg 1 : {inleg1}").FontSize(9);
                     right.Item().Text($"inleg 2 : {item.Inleg2}").FontSize(9);
+                    // US-53: nummer/artikel van de inleg (kader of afstandshouder), enkel indien gekozen.
+                    if (!string.IsNullOrWhiteSpace(item.InlegNummer))
+                        right.Item().Text($"inleg nr. : {item.InlegNummer}").FontSize(9);
                     right.Item().Text("artikel 1 :").FontSize(9);
                     right.Item().Text("artikel 2 :").FontSize(9);
 

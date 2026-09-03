@@ -150,11 +150,11 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
 
         var klantNaam = SelectedOfferte.Klant is { } k
             ? $"{k.Voornaam} {k.Achternaam}".Trim()
-            : $"offerte #{SelectedOfferte.Id}";
+            : $"offerte #{SelectedOfferte.OfferteNummer}";
 
         var ok = await _dialogs.ConfirmAsync(
             "Offerte naar archief",
-            $"'{klantNaam}' (#{SelectedOfferte.Id}) verplaatsen naar het archief? " +
+            $"'{klantNaam}' (#{SelectedOfferte.OfferteNummer}) verplaatsen naar het archief? " +
             $"De offerte verdwijnt uit de actieve lijst maar blijft volledig herstelbaar via Archief.");
         if (!ok) return;
 
@@ -162,7 +162,7 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
         try
         {
             await _archiefService.ArchiveerAsync(SelectedOfferte.Id);
-            _toast.Success($"Offerte #{SelectedOfferte.Id} gearchiveerd.");
+            _toast.Success($"Offerte #{SelectedOfferte.OfferteNummer} gearchiveerd.");
             await LoadAsync();
         }
         catch (Exception ex)
