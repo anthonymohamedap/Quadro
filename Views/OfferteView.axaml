@@ -716,6 +716,26 @@
 								   Foreground="White" FontWeight="SemiBold" FontSize="12"/>
 					</Border>
 
+					<!-- US-56: manueel de offerte-status wijzigen (enkel Concept/Verzonden/Goedgekeurd;
+					     voorbij Goedgekeurd blijft dit blokje verborgen). -->
+					<WrapPanel IsVisible="{Binding IsManueleStatusWijzigingZichtbaar}">
+						<Button Content="→ Verzonden" Classes="GhostBtn" FontSize="11" Padding="8,2"
+								Command="{Binding NaarVerzondenCommand}"
+								IsVisible="{Binding KanNaarVerzonden}"
+								Margin="0,0,6,0"/>
+						<Button Content="→ Goedgekeurd" Classes="GhostBtn" FontSize="11" Padding="8,2"
+								Command="{Binding NaarGoedgekeurdCommand}"
+								IsVisible="{Binding KanNaarGoedgekeurd}"
+								Margin="0,0,6,0"/>
+						<Button Content="↩ Concept" Classes="GhostBtn" FontSize="11" Padding="8,2"
+								Command="{Binding TerugNaarConceptCommand}"
+								IsVisible="{Binding KanTerugNaarConcept}"
+								Margin="0,0,6,0"/>
+						<Button Content="↩ Verzonden" Classes="GhostBtn" FontSize="11" Padding="8,2"
+								Command="{Binding TerugNaarVerzondenCommand}"
+								IsVisible="{Binding KanTerugNaarVerzonden}"/>
+					</WrapPanel>
+
 					<TextBlock Text="{Binding FactuurStatusText}"
 							   Classes="label"
 							   Foreground="{DynamicResource TextSecondary}"

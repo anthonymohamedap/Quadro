@@ -79,6 +79,11 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     {
         OnPropertyChanged(nameof(VoorschotBedragInput));
         OnPropertyChanged(nameof(AfhaalDatumInput));
+        OnPropertyChanged(nameof(KanNaarVerzonden));
+        OnPropertyChanged(nameof(KanNaarGoedgekeurd));
+        OnPropertyChanged(nameof(KanTerugNaarConcept));
+        OnPropertyChanged(nameof(KanTerugNaarVerzonden));
+        OnPropertyChanged(nameof(IsManueleStatusWijzigingZichtbaar));
         RefreshTotals();
     }
 
@@ -87,6 +92,18 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     public string FactuurStatusText       => Workflow.FactuurStatusText;
     public bool   IsBevestigenZichtbaar   => Workflow.IsBevestigenZichtbaar;
     public bool   IsPlanningZichtbaar     => Workflow.IsPlanningZichtbaar;
+
+    // ── Status (US-56): manueel wijzigen tussen Concept ↔ Verzonden ↔ Goedgekeurd ──
+    // Voorbij Goedgekeurd (InProductie e.v.) is dit blokje niet zichtbaar, dus een offerte
+    // die al in productie is kan hier nooit per ongeluk terug naar Concept gezet worden.
+    // De automatische propagatie (OfferteStatusPropagation) blijft hier volledig los van.
+    public bool KanNaarVerzonden      => Offerte?.Status == OfferteStatus.Concept;
+    public bool KanNaarGoedgekeurd    => Offerte?.Status == OfferteStatus.Verzonden;
+    public bool KanTerugNaarConcept   => Offerte?.Status is OfferteStatus.Verzonden or OfferteStatus.Goedgekeurd;
+    public bool KanTerugNaarVerzonden => Offerte?.Status == OfferteStatus.Goedgekeurd;
+    public bool IsManueleStatusWijzigingZichtbaar =>
+        Offerte is { Id: > 0 } &&
+        Offerte.Status is OfferteStatus.Concept or OfferteStatus.Verzonden or OfferteStatus.Goedgekeurd;
 
     // Commands (alle geforward vanuit sub-VMs)
     public IAsyncRelayCommand BerekenCommand      => Prijzen.BerekenCommand;
@@ -993,6 +1010,29 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
 
     [RelayCommand]
     private void RegelVerwijderen(OfferteRegel? regel) => Regelbeheer.RegelVerwijderen(regel);
+
+    // ── Status (US-56): manueel wijzigen, enkel de toegelaten overgangen ──
+    [RelayCommand] private Task NaarVerzondenAsync()      => ZetStatusAsync(OfferteStatus.Verzonden);
+    [RelayCommand] private Task NaarGoedgekeurdAsync()    => ZetStatusAsync(OfferteStatus.Goedgekeurd);
+    [RelayCommand] private Task TerugNaarConceptAsync()   => ZetStatusAsync(OfferteStatus.Concept);
+    [RelayCommand] private Task TerugNaarVerzondenAsync() => ZetStatusAsync(OfferteStatus.Verzonden);
+
+    private async Task ZetStatusAsync(OfferteStatus nieuweStatus)
+    {
+        if (Offerte is null || IsBusy) return;
+
+        var toegelaten = Offerte.Status switch
+        {
+            OfferteStatus.Concept     => nieuweStatus == OfferteStatus.Verzonden,
+            OfferteStatus.Verzonden   => nieuweStatus is OfferteStatus.Concept or OfferteStatus.Goedgekeurd,
+            OfferteStatus.Goedgekeurd => nieuweStatus is OfferteStatus.Concept or OfferteStatus.Verzonden,
+            _ => false
+        };
+        if (!toegelaten) return;
+
+        Offerte.Status = nieuweStatus;
+        await SaveCoreAsync(reloadAfterSave: true);
+    }
 
     // ── Save ──
     [RelayCommand]
