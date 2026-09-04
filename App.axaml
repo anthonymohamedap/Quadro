@@ -33,6 +33,10 @@
 			<views:LijstenView/>
 		</DataTemplate>
 
+		<DataTemplate DataType="{x:Type vm:KantKlaarKaderenViewModel}">
+			<views:KantKlaarKaderenView/>
+		</DataTemplate>
+
 		<DataTemplate DataType="{x:Type vm:LeveranciersViewModel}">
 			<views:LeveranciersView/>
 		</DataTemplate>

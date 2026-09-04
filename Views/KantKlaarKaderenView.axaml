@@ -1,0 +1,213 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:QuadroApp.Views.Controls"
+    xmlns:vm="using:QuadroApp.ViewModels"
+    xmlns:m="clr-namespace:QuadroApp.Model.DB;assembly=QuadroApp.Data"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:conv="using:QuadroApp.Converters"
+    x:Class="QuadroApp.Views.KantKlaarKaderenView"
+    x:DataType="vm:KantKlaarKaderenViewModel"
+    d:DataContext="{d:DesignInstance vm:KantKlaarKaderenViewModel, IsDesignTimeCreatable=True}"
+    Background="{DynamicResource SurfaceMuted}">
+
+    <UserControl.Resources>
+        <conv:BoolToThicknessConverter x:Key="BoolToThicknessSlide"
+                                       WhenTrue="0"
+                                       WhenFalse="0,0,420,0"/>
+        <conv:BoolToThicknessConverter x:Key="BoolToMainShift"
+                                       WhenTrue="0,0,440,0"
+                                       WhenFalse="0"/>
+        <conv:BoolToDoubleConverter x:Key="BoolToOpacity"
+                                    WhenTrue="1"
+                                    WhenFalse="0"/>
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <controls:QuadroHeader Title="KANT-EN-KLARE KADERS" BackCommand="{Binding GaTerugCommand}"/>
+
+        <Grid Grid.Row="1" Margin="24">
+
+            <Grid RowDefinitions="Auto,Auto,*,Auto"
+                  RowSpacing="12"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Stretch"
+                  MaxWidth="700">
+
+                <Grid.Transitions>
+                    <Transitions>
+                        <ThicknessTransition Property="Margin" Duration="0:0:0.25"/>
+                    </Transitions>
+                </Grid.Transitions>
+                <Grid.Margin>
+                    <Binding Path="IsDetailOpen" Converter="{StaticResource BoolToMainShift}"/>
+                </Grid.Margin>
+
+                <TextBlock Text="Kant-en-klare kaders" Classes="h1" TextTrimming="CharacterEllipsis"/>
+
+                <Grid Grid.Row="1"
+                      ColumnDefinitions="Auto,*"
+                      ColumnSpacing="10">
+
+                    <TextBox Grid.Column="0"
+                             MinWidth="220"
+                             Watermark="Zoek op naam..."
+                             Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                        <Button Content="➕ Nieuw" Command="{Binding NieuwCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
+                        <Button Content="🔄 Ververs" Command="{Binding RefreshCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
+                    </WrapPanel>
+                </Grid>
+
+                <Border Grid.Row="2"
+                        Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="0">
+
+                    <Grid RowDefinitions="Auto,*">
+                        <Border Background="{DynamicResource SurfaceHeader}"
+                                Padding="10,6"
+                                BorderBrush="{DynamicResource BorderSubtle}"
+                                BorderThickness="0,0,0,1">
+
+                            <Grid ColumnDefinitions="2*,1*,1*,1*"
+                                  ColumnSpacing="12">
+
+                                <TextBlock Text="Naam" Classes="label" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="1" Text="Breedte" Classes="label" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="2" Text="Hoogte" Classes="label" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="3" Text="Prijs/stuk" Classes="label" TextTrimming="CharacterEllipsis"/>
+                            </Grid>
+                        </Border>
+
+                        <ListBox Grid.Row="1"
+                                 ItemsSource="{Binding GefilterdeKaders}"
+                                 SelectedItem="{Binding GeselecteerdeKader, Mode=TwoWay}"
+                                 BorderThickness="0"
+                                 Background="Transparent"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="m:KantKlaarKader">
+
+                                    <Border Padding="10,6">
+                                        <Grid ColumnDefinitions="2*,1*,1*,1*"
+                                              ColumnSpacing="12">
+
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding Naam}"
+                                                       FontWeight="Bold"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip.Tip="{Binding Naam}"/>
+
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding BreedteCm, StringFormat='{}{0:0.#} cm'}"
+                                                       TextTrimming="CharacterEllipsis"/>
+
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding HoogteCm, StringFormat='{}{0:0.#} cm'}"
+                                                       TextTrimming="CharacterEllipsis"/>
+
+                                            <TextBlock Grid.Column="3"
+                                                       Text="{Binding PrijsPerStukExcl, StringFormat='{}€ {0:0.00}'}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </Grid>
+                                    </Border>
+
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+
+                        </ListBox>
+                    </Grid>
+
+                </Border>
+
+                <TextBlock Grid.Row="3"
+                           Text="{Binding AantalKaders, StringFormat='Aantal kaders: {0}'}"
+                           Classes="caption"
+                           HorizontalAlignment="Center"/>
+            </Grid>
+
+            <Border Width="400"
+                    Padding="24"
+                    Background="{DynamicResource Surface}"
+                    CornerRadius="10"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    IsHitTestVisible="{Binding IsDetailOpen}">
+
+                <Border.Transitions>
+                    <Transitions>
+                        <ThicknessTransition Property="Margin" Duration="0:0:0.2"/>
+                        <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+                    </Transitions>
+                </Border.Transitions>
+
+                <Border.Margin>
+                    <Binding Path="IsDetailOpen" Converter="{StaticResource BoolToThicknessSlide}"/>
+                </Border.Margin>
+                <Border.Opacity>
+                    <Binding Path="IsDetailOpen" Converter="{StaticResource BoolToOpacity}"/>
+                </Border.Opacity>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Kader details" Classes="h1" TextTrimming="CharacterEllipsis"/>
+
+                        <Border Background="{DynamicResource WarningBg}"
+                                CornerRadius="8"
+                                Padding="10"
+                                IsVisible="{Binding !IsDetailOpen}">
+                            <TextBlock Text="Selecteer links een kader om details te zien, of klik 'Nieuw'."
+                                       Foreground="{DynamicResource TextPrimary}"
+                                       TextWrapping="Wrap"/>
+                        </Border>
+
+                        <StackPanel x:DataType="vm:KantKlaarKaderenViewModel"
+                                    Spacing="18"
+                                    IsVisible="{Binding IsDetailOpen}">
+
+                            <Grid ColumnDefinitions="1*,2*"
+                                  RowDefinitions="Auto,Auto,Auto,Auto"
+                                  RowSpacing="10"
+                                  ColumnSpacing="15">
+
+                                <TextBlock Text="Naam" Grid.Row="0" Grid.Column="0" Classes="label" VerticalAlignment="Center"/>
+                                <TextBox Foreground="{DynamicResource TextPrimary}" Text="{Binding GeselecteerdeKader.Naam, Mode=TwoWay}" Grid.Row="0" Grid.Column="1"/>
+
+                                <TextBlock Text="Breedte (cm)" Grid.Row="1" Grid.Column="0" Classes="label" VerticalAlignment="Center"/>
+                                <NumericUpDown Foreground="{DynamicResource TextPrimary}" Value="{Binding GeselecteerdeKader.BreedteCm, Mode=TwoWay}" Grid.Row="1" Grid.Column="1"/>
+
+                                <TextBlock Text="Hoogte (cm)" Grid.Row="2" Grid.Column="0" Classes="label" VerticalAlignment="Center"/>
+                                <NumericUpDown Foreground="{DynamicResource TextPrimary}" Value="{Binding GeselecteerdeKader.HoogteCm, Mode=TwoWay}" Grid.Row="2" Grid.Column="1"/>
+
+                                <TextBlock Text="Prijs per stuk (excl. btw)" Grid.Row="3" Grid.Column="0" Classes="label" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                <NumericUpDown Foreground="{DynamicResource TextPrimary}" Value="{Binding GeselecteerdeKader.PrijsPerStukExcl, Mode=TwoWay}" Grid.Row="3" Grid.Column="1"/>
+
+                            </Grid>
+
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0" Spacing="8">
+                                <Button Content="Archiveren"
+                                        Command="{Binding DeleteCommand}"
+                                        Classes="MainBtn"
+                                        Padding="16,6"/>
+                                <Button Content="Opslaan"
+                                        Command="{Binding SaveCommand}"
+                                        Classes="MainBtn"
+                                        Padding="16,6"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+
+            </Border>
+
+        </Grid>
+    </Grid>
+</UserControl>

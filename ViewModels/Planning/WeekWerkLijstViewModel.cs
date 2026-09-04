@@ -65,6 +65,8 @@ public partial class WeekWerkLijstViewModel : ObservableObject
                     .ThenInclude(l => l!.Leverancier)
             .Include(t => t.OfferteRegel)
                 .ThenInclude(r => r!.InlegTypeLijst)
+            .Include(t => t.OfferteRegel)
+                .ThenInclude(r => r!.KantKlaarKader)
             .Include(t => t.OfferteRegel).ThenInclude(r => r!.Glas)
             .Include(t => t.OfferteRegel).ThenInclude(r => r!.PassePartout1)
             .Include(t => t.OfferteRegel).ThenInclude(r => r!.PassePartout2)
@@ -258,7 +260,7 @@ public partial class WeekWerkItem : ObservableObject
             Hoogte = r?.HoogteCm ?? 0,
             Omschrijving = t.Omschrijving ?? "",
             Afw = r?.LegacyCode ?? "",
-            Lijst = r?.TypeLijst?.Artikelnummer ?? "",
+            Lijst = r?.KantKlaarKader is { } kkk ? $"Kant-en-klaar: {kkk.Naam}" : r?.TypeLijst?.Artikelnummer ?? "",
             Inleg1 = r?.InlegLabel ?? "",
             Inleg2 = "",
             InlegNummer = r?.InlegTypeLijst?.Artikelnummer ?? "",

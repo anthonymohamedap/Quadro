@@ -59,6 +59,26 @@ namespace QuadroApp.Model.DB
         }
 
         // ========================
+        // US-58: KANT-EN-KLAAR KADER
+        // Alternatief voor TypeLijst: een reeds afgewerkt kader met vaste stukprijs, geen
+        // omtrek-/snijberekening. Een regel heeft óf TypeLijstId, óf KantKlaarKaderId, nooit beide.
+        // ========================
+
+        private KantKlaarKader? _kantKlaarKader;
+
+        public int? KantKlaarKaderId { get; set; }
+
+        public KantKlaarKader? KantKlaarKader
+        {
+            get => _kantKlaarKader;
+            set
+            {
+                _kantKlaarKader = value;
+                KantKlaarKaderId = value?.Id;
+            }
+        }
+
+        // ========================
         // TYPE LIJST
         // ========================
 

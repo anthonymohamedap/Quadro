@@ -551,6 +551,39 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.ToTable("Instellingen");
                 });
 
+            modelBuilder.Entity("QuadroApp.Model.DB.KantKlaarKader", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("BreedteCm")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("HoogteCm")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<bool>("IsGearchiveerd")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Naam")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<decimal>("PrijsPerStukExcl")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("KantKlaarKaders");
+                });
+
             modelBuilder.Entity("QuadroApp.Model.DB.Klant", b =>
                 {
                     b.Property<int>("Id")
@@ -920,6 +953,9 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.Property<int?>("InlegTypeLijstId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("KantKlaarKaderId")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("Korting")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -988,6 +1024,8 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.HasIndex("GlasVariantId");
 
                     b.HasIndex("InlegTypeLijstId");
+
+                    b.HasIndex("KantKlaarKaderId");
 
                     b.HasIndex("OfferteId");
 
@@ -1544,6 +1582,11 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                         .HasForeignKey("InlegTypeLijstId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("QuadroApp.Model.DB.KantKlaarKader", "KantKlaarKader")
+                        .WithMany()
+                        .HasForeignKey("KantKlaarKaderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("QuadroApp.Model.DB.Offerte", "Offerte")
                         .WithMany("Regels")
                         .HasForeignKey("OfferteId")
@@ -1604,6 +1647,8 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.Navigation("GlasVariant");
 
                     b.Navigation("InlegTypeLijst");
+
+                    b.Navigation("KantKlaarKader");
 
                     b.Navigation("Offerte");
 

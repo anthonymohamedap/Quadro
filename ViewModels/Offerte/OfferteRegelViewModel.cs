@@ -44,6 +44,17 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
     [ObservableProperty] private TypeLijst? selectedInlegTypeLijst;
     private bool _syncingInlegTypeLijst;
 
+    // ── US-58: kant-en-klaar kader zoeken + selectie (zelfde patroon als TypeLijst, maar
+    // zonder zoekterm/filter — de lijst is klein). Alternatief voor TypeLijst: bij keuze worden
+    // BreedteCm/HoogteCm van de regel automatisch overgenomen (de maat ligt vast). ──
+    [ObservableProperty] private ObservableCollection<KantKlaarKader> kantKlaarKaders = new();
+    [ObservableProperty] private KantKlaarKader? selectedKantKlaarKader;
+    private bool _syncingKantKlaarKader;
+
+    /// <summary>US-58 — true zodra de huidige regel een kant-en-klaar kader gebruikt: de UI zet
+    /// Breedte/Hoogte dan read-only, want de maat ligt vast.</summary>
+    public bool HasKantKlaarKader => SelectedRegel?.KantKlaarKaderId is not null;
+
     // ── Afwerking dropdowns ──
     [ObservableProperty] private ObservableCollection<AfwerkingsOptie> glasOpties = new();
     [ObservableProperty] private ObservableCollection<AfwerkingsOptie> passe1Opties = new();
@@ -71,6 +82,12 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
                 _syncingInlegTypeLijst = true;
                 try { SelectedInlegTypeLijst = value?.InlegTypeLijst; }
                 finally { _syncingInlegTypeLijst = false; }
+
+                // US-58: idem voor het kant-en-klaar kader.
+                _syncingKantKlaarKader = true;
+                try { SelectedKantKlaarKader = value?.KantKlaarKader; }
+                finally { _syncingKantKlaarKader = false; }
+                OnPropertyChanged(nameof(HasKantKlaarKader));
 
                 RegelDuplicerenCommand.NotifyCanExecuteChanged();
                 ApplyLegacyCodeCommand.NotifyCanExecuteChanged();
@@ -119,6 +136,32 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
         _syncingInlegTypeLijst = true;
         try { SelectedInlegTypeLijst = SelectedRegel?.InlegTypeLijst; }
         finally { _syncingInlegTypeLijst = false; }
+    }
+
+    /// <summary>US-58 — schrijf het gekozen kant-en-klaar kader terug naar de huidige regel en
+    /// neem meteen de vaste maat van het kader over (Breedte/Hoogte worden in de UI read-only
+    /// zodra <see cref="HasKantKlaarKader"/> true is).</summary>
+    partial void OnSelectedKantKlaarKaderChanged(KantKlaarKader? value)
+    {
+        if (_syncingKantKlaarKader || SelectedRegel is null) return;
+
+        SelectedRegel.KantKlaarKader = value;
+        if (value is not null)
+        {
+            SelectedRegel.BreedteCm = value.BreedteCm;
+            SelectedRegel.HoogteCm = value.HoogteCm;
+        }
+        OnPropertyChanged(nameof(HasKantKlaarKader));
+        RegelChanged?.Invoke();
+    }
+
+    /// <summary>US-58 — synct SelectedKantKlaarKader vanuit de huidige SelectedRegel.</summary>
+    public void SyncKantKlaarKaderFromSelectedRegel()
+    {
+        _syncingKantKlaarKader = true;
+        try { SelectedKantKlaarKader = SelectedRegel?.KantKlaarKader; }
+        finally { _syncingKantKlaarKader = false; }
+        OnPropertyChanged(nameof(HasKantKlaarKader));
     }
 
     // ── LegacyCode proxy ──
