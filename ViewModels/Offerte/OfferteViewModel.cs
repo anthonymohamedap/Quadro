@@ -3,11 +3,14 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
+using QuadroApp.Service;
 using QuadroApp.Service.Import;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Validation;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -78,6 +81,11 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     {
         OnPropertyChanged(nameof(VoorschotBedragInput));
         OnPropertyChanged(nameof(AfhaalDatumInput));
+        OnPropertyChanged(nameof(KanNaarVerzonden));
+        OnPropertyChanged(nameof(KanNaarGoedgekeurd));
+        OnPropertyChanged(nameof(KanTerugNaarConcept));
+        OnPropertyChanged(nameof(KanTerugNaarVerzonden));
+        OnPropertyChanged(nameof(IsManueleStatusWijzigingZichtbaar));
         RefreshTotals();
     }
 
@@ -86,6 +94,18 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     public string FactuurStatusText       => Workflow.FactuurStatusText;
     public bool   IsBevestigenZichtbaar   => Workflow.IsBevestigenZichtbaar;
     public bool   IsPlanningZichtbaar     => Workflow.IsPlanningZichtbaar;
+
+    // ── Status (US-56): manueel wijzigen tussen Concept ↔ Verzonden ↔ Goedgekeurd ──
+    // Voorbij Goedgekeurd (InProductie e.v.) is dit blokje niet zichtbaar, dus een offerte
+    // die al in productie is kan hier nooit per ongeluk terug naar Concept gezet worden.
+    // De automatische propagatie (OfferteStatusPropagation) blijft hier volledig los van.
+    public bool KanNaarVerzonden      => Offerte?.Status == OfferteStatus.Concept;
+    public bool KanNaarGoedgekeurd    => Offerte?.Status == OfferteStatus.Verzonden;
+    public bool KanTerugNaarConcept   => Offerte?.Status is OfferteStatus.Verzonden or OfferteStatus.Goedgekeurd;
+    public bool KanTerugNaarVerzonden => Offerte?.Status == OfferteStatus.Goedgekeurd;
+    public bool IsManueleStatusWijzigingZichtbaar =>
+        Offerte is { Id: > 0 } &&
+        Offerte.Status is OfferteStatus.Concept or OfferteStatus.Verzonden or OfferteStatus.Goedgekeurd;
 
     // Commands (alle geforward vanuit sub-VMs)
     public IAsyncRelayCommand BerekenCommand      => Prijzen.BerekenCommand;
@@ -127,6 +147,17 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     }
     public System.Collections.ObjectModel.ObservableCollection<TypeLijst> GefilterdeTypeLijsten
         => Regelbeheer.GefilterdeTypeLijsten;
+    // ── US-53: inleg-nummer picker facade ──
+    public string? InlegTypeLijstZoekterm
+    {
+        get => Regelbeheer.InlegTypeLijstZoekterm;
+        set => Regelbeheer.InlegTypeLijstZoekterm = value;
+    }
+    public System.Collections.ObjectModel.ObservableCollection<TypeLijst> GefilterdeInlegTypeLijsten
+        => Regelbeheer.GefilterdeInlegTypeLijsten;
+    // ── US-58: kant-en-klaar kader picker facade ──
+    public System.Collections.ObjectModel.ObservableCollection<KantKlaarKader> KantKlaarKaders
+        => Regelbeheer.KantKlaarKaders;
     public System.Collections.ObjectModel.ObservableCollection<AfwerkingsOptie> GlasOpties
         => Regelbeheer.GlasOpties;
     public System.Collections.ObjectModel.ObservableCollection<AfwerkingsOptie> Passe1Opties
@@ -188,6 +219,24 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         get => Regelbeheer.SelectedTypeLijst;
         set => Regelbeheer.SelectedTypeLijst = value;
     }
+
+    // ── US-53: gekozen inleg-TypeLijst (kader/afstandshouder-nummer) ──
+    public TypeLijst? SelectedRegelInlegTypeLijst
+    {
+        get => Regelbeheer.SelectedInlegTypeLijst;
+        set => Regelbeheer.SelectedInlegTypeLijst = value;
+    }
+
+    // ── US-58: gekozen kant-en-klaar kader (alternatief voor TypeLijst) ──
+    public KantKlaarKader? SelectedRegelKantKlaarKader
+    {
+        get => Regelbeheer.SelectedKantKlaarKader;
+        set => Regelbeheer.SelectedKantKlaarKader = value;
+    }
+
+    /// <summary>US-58 — true zodra de huidige regel een kant-en-klaar kader gebruikt: de UI zet
+    /// Breedte/Hoogte dan read-only.</summary>
+    public bool HasKantKlaarKader => Regelbeheer.HasKantKlaarKader;
 
     // ── Overige regel-navigatie: dedicated single-segment properties voor afwerkingen. ──
     public AfwerkingsOptie? SelectedRegelGlas
@@ -706,6 +755,12 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                 case nameof(Regelbeheer.Regels):              OnPropertyChanged(nameof(Regels)); break;
                 case nameof(Regelbeheer.TypeLijstZoekterm):   OnPropertyChanged(nameof(TypeLijstZoekterm)); break;
                 case nameof(Regelbeheer.GefilterdeTypeLijsten): OnPropertyChanged(nameof(GefilterdeTypeLijsten)); break;
+                case nameof(Regelbeheer.SelectedInlegTypeLijst): OnPropertyChanged(nameof(SelectedRegelInlegTypeLijst)); break;
+                case nameof(Regelbeheer.InlegTypeLijstZoekterm): OnPropertyChanged(nameof(InlegTypeLijstZoekterm)); break;
+                case nameof(Regelbeheer.GefilterdeInlegTypeLijsten): OnPropertyChanged(nameof(GefilterdeInlegTypeLijsten)); break;
+                case nameof(Regelbeheer.SelectedKantKlaarKader): OnPropertyChanged(nameof(SelectedRegelKantKlaarKader)); break;
+                case nameof(Regelbeheer.KantKlaarKaders): OnPropertyChanged(nameof(KantKlaarKaders)); break;
+                case nameof(Regelbeheer.HasKantKlaarKader): OnPropertyChanged(nameof(HasKantKlaarKader)); break;
                 case nameof(Regelbeheer.GlasOpties):
                     OnPropertyChanged(nameof(GlasOpties));
                     RebuildNaamLijsten();
@@ -762,6 +817,16 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         // Sync GefilterdeTypeLijsten via diff (nooit Clear/replace) zodat de ComboBox
         // zijn SelectedItem niet verliest als de catalog wordt herladen.
         Regelbeheer.ApplyTypeLijstFilter(Regelbeheer.TypeLijstZoekterm);
+        Regelbeheer.ApplyInlegTypeLijstFilter(Regelbeheer.InlegTypeLijstZoekterm);
+
+        // US-58: kant-en-klare kaders — kleine lijst, geen filter/diff nodig.
+        var kantKlaarKaders = await db.KantKlaarKaders.AsNoTracking()
+            .OrderBy(k => k.Naam)
+            .ToListAsync();
+
+        Regelbeheer.KantKlaarKaders.Clear();
+        foreach (var k in kantKlaarKaders)
+            Regelbeheer.KantKlaarKaders.Add(k);
 
         var klanten = await db.Klanten.AsNoTracking()
             .OrderBy(k => k.Achternaam).ThenBy(k => k.Voornaam)
@@ -802,6 +867,10 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         {
             if (regel.TypeLijstId is int tid)
                 regel.TypeLijst = Regelbeheer.TypeLijsten.FirstOrDefault(t => t.Id == tid);
+            if (regel.InlegTypeLijstId is int itid)
+                regel.InlegTypeLijst = Regelbeheer.TypeLijsten.FirstOrDefault(t => t.Id == itid);
+            if (regel.KantKlaarKaderId is int kkid)
+                regel.KantKlaarKader = Regelbeheer.KantKlaarKaders.FirstOrDefault(k => k.Id == kkid);
             if (regel.GlasId is int gid)
                 regel.Glas = Regelbeheer.GlasOpties.FirstOrDefault(g => g.Id == gid);
             if (regel.PassePartout1Id is int p1id)
@@ -819,6 +888,8 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         // Na het relinken van catalog-referenties, sync SelectedTypeLijst zodat
         // de ComboBox de nieuwe catalog-instantie toont.
         Regelbeheer.SyncTypeLijstFromSelectedRegel();
+        Regelbeheer.SyncInlegTypeLijstFromSelectedRegel();
+        Regelbeheer.SyncKantKlaarKaderFromSelectedRegel();
     }
 
     // ── Load offerte ──
@@ -852,6 +923,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
 
                 // Bouw lookup dictionaries voor snelle catalog matching (O(1) ipv O(n))
                 var typeLijstDict = Regelbeheer.TypeLijsten.ToDictionary(t => t.Id);
+                var kantKlaarKaderDict = Regelbeheer.KantKlaarKaders.ToDictionary(k => k.Id);
                 var glasDict = Regelbeheer.GlasOpties.ToDictionary(g => g.Id);
                 var passe1Dict = Regelbeheer.Passe1Opties.ToDictionary(p => p.Id);
                 var passe2Dict = Regelbeheer.Passe2Opties.ToDictionary(p => p.Id);
@@ -867,7 +939,9 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                         Id = dbRule.Id, OfferteId = dbRule.OfferteId,
                         AantalStuks = dbRule.AantalStuks, BreedteCm = dbRule.BreedteCm,
                         HoogteCm = dbRule.HoogteCm, InlegBreedteCm = dbRule.InlegBreedteCm,
-                        InlegHoogteCm = dbRule.InlegHoogteCm, Titel = dbRule.Titel,
+                        InlegHoogteCm = dbRule.InlegHoogteCm, InlegTypeLijstId = dbRule.InlegTypeLijstId,
+                        KantKlaarKaderId = dbRule.KantKlaarKaderId,
+                        Titel = dbRule.Titel,
                         Opmerking = dbRule.Opmerking, TypeLijstId = dbRule.TypeLijstId,
                         GlasId = dbRule.GlasId, PassePartout1Id = dbRule.PassePartout1Id,
                         PassePartout2Id = dbRule.PassePartout2Id, DiepteKernId = dbRule.DiepteKernId,
@@ -886,6 +960,10 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                     // Gebruik dictionary lookups ipv LINQ FirstOrDefault (veel sneller)
                     if (rule.TypeLijstId.HasValue && typeLijstDict.TryGetValue(rule.TypeLijstId.Value, out var typeLijst))
                         rule.TypeLijst = typeLijst;
+                    if (rule.InlegTypeLijstId.HasValue && typeLijstDict.TryGetValue(rule.InlegTypeLijstId.Value, out var inlegTypeLijst))
+                        rule.InlegTypeLijst = inlegTypeLijst;
+                    if (rule.KantKlaarKaderId.HasValue && kantKlaarKaderDict.TryGetValue(rule.KantKlaarKaderId.Value, out var kantKlaarKader))
+                        rule.KantKlaarKader = kantKlaarKader;
                     // Lokale helper: relink de gekozen variant uit de Varianten van de optie.
                     static AfwerkingsVariant? Variant(AfwerkingsOptie? optie, int? variantId) =>
                         optie is null || !variantId.HasValue
@@ -968,6 +1046,89 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     [RelayCommand]
     private void RegelVerwijderen(OfferteRegel? regel) => Regelbeheer.RegelVerwijderen(regel);
 
+    // ── Status (US-56): manueel wijzigen, enkel de toegelaten overgangen ──
+    [RelayCommand] private Task NaarVerzondenAsync()      => ZetStatusAsync(OfferteStatus.Verzonden);
+    [RelayCommand] private Task NaarGoedgekeurdAsync()    => ZetStatusAsync(OfferteStatus.Goedgekeurd);
+    [RelayCommand] private Task TerugNaarConceptAsync()   => ZetStatusAsync(OfferteStatus.Concept);
+    [RelayCommand] private Task TerugNaarVerzondenAsync() => ZetStatusAsync(OfferteStatus.Verzonden);
+
+    private async Task ZetStatusAsync(OfferteStatus nieuweStatus)
+    {
+        if (Offerte is null || IsBusy) return;
+
+        var toegelaten = Offerte.Status switch
+        {
+            OfferteStatus.Concept     => nieuweStatus == OfferteStatus.Verzonden,
+            OfferteStatus.Verzonden   => nieuweStatus is OfferteStatus.Concept or OfferteStatus.Goedgekeurd,
+            OfferteStatus.Goedgekeurd => nieuweStatus is OfferteStatus.Concept or OfferteStatus.Verzonden,
+            _ => false
+        };
+        if (!toegelaten) return;
+
+        Offerte.Status = nieuweStatus;
+        await SaveCoreAsync(reloadAfterSave: true);
+    }
+
+    // ── Offerte afdrukken (US-57): klantvriendelijke PDF, geen productie-/facturatiegegevens ──
+    [RelayCommand]
+    private async Task OfferteAfdrukkenAsync()
+    {
+        if (Offerte is null || IsBusy) return;
+
+        if (Regelbeheer.Regels.Count == 0)
+        {
+            Toast.Warning("Voeg minstens één regel toe voor je de offerte afdrukt.");
+            return;
+        }
+
+        try
+        {
+            IsBusy = true;
+
+            var snapshot = BuildSnapshotForPrint();
+            var exporter = new PdfOfferteExporter();
+            var path = await Task.Run(() => exporter.Export(snapshot));
+
+            if (!File.Exists(path))
+            {
+                Toast.Error("PDF kon niet aangemaakt worden.");
+                return;
+            }
+
+            Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            var msg = ex.InnerException?.Message ?? ex.Message;
+            Toast.Error($"Afdrukken mislukt: {msg}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    // Werkt zowel voor een nieuwe (nog niet opgeslagen) als een bestaande offerte: bouwt de PDF
+    // rechtstreeks uit de reeds in-memory geladen regels (met hun navigaties), geen extra DB-call nodig.
+    private Offerte BuildSnapshotForPrint()
+    {
+        var source = Offerte ?? new Offerte();
+        return new Offerte
+        {
+            Id = source.Id,
+            OfferteNummer = source.OfferteNummer,
+            Datum = source.Datum == default ? DateTime.Today : source.Datum,
+            Opmerking = source.Opmerking,
+            KortingPct = source.KortingPct,
+            MeerPrijsIncl = source.MeerPrijsIncl,
+            SubtotaalExBtw = source.SubtotaalExBtw,
+            BtwBedrag = source.BtwBedrag,
+            TotaalInclBtw = source.TotaalInclBtw,
+            Klant = KlantSelectie.SelectedKlant,
+            Regels = Regelbeheer.Regels.ToList()
+        };
+    }
+
     // ── Save ──
     [RelayCommand]
     private async Task SaveAsync() => await SaveCoreAsync(reloadAfterSave: true);
@@ -997,6 +1158,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
 
             if (Offerte.Id == 0)
             {
+                Offerte.OfferteNummer = await OfferteNummering.VolgendeAsync(db);
                 db.Offertes.Add(Offerte);
                 await db.SaveChangesAsync();
 
@@ -1145,6 +1307,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             InlegBreedteCm = r.InlegBreedteCm, InlegHoogteCm = r.InlegHoogteCm,
             Titel = r.Titel, Opmerking = r.Opmerking,
             TypeLijstId = r.TypeLijst?.Id ?? r.TypeLijstId,
+            InlegTypeLijstId = r.InlegTypeLijst?.Id ?? r.InlegTypeLijstId,
             GlasId = r.Glas?.Id ?? r.GlasId,
             PassePartout1Id = r.PassePartout1?.Id ?? r.PassePartout1Id,
             PassePartout2Id = r.PassePartout2?.Id ?? r.PassePartout2Id,
@@ -1156,6 +1319,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             TotaalExcl = r.TotaalExcl, SubtotaalExBtw = r.SubtotaalExBtw,
             BtwBedrag = r.BtwBedrag, TotaalInclBtw = r.TotaalInclBtw,
             TypeLijst  = includeNavigations ? r.TypeLijst  : null,
+            InlegTypeLijst = includeNavigations ? r.InlegTypeLijst : null,
             Glas       = includeNavigations ? r.Glas       : null,
             PassePartout1 = includeNavigations ? r.PassePartout1 : null,
             PassePartout2 = includeNavigations ? r.PassePartout2 : null,
@@ -1203,6 +1367,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
 
             // Force the ComboBox SelectedItem bindings to re-read from the re-linked regel.
             OnPropertyChanged(nameof(SelectedRegelTypeLijst));
+            OnPropertyChanged(nameof(SelectedRegelInlegTypeLijst));
             OnPropertyChanged(nameof(SelectedRegelGlas));
             OnPropertyChanged(nameof(SelectedRegelPasse1));
             OnPropertyChanged(nameof(SelectedRegelPasse2));
@@ -1323,7 +1488,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         OfferteId = offerteId, AantalStuks = vmRule.AantalStuks, BreedteCm = vmRule.BreedteCm,
         HoogteCm = vmRule.HoogteCm, InlegBreedteCm = vmRule.InlegBreedteCm,
         InlegHoogteCm = vmRule.InlegHoogteCm, Titel = vmRule.Titel, Opmerking = vmRule.Opmerking,
-        TypeLijstId = vmRule.TypeLijst?.Id, GlasId = vmRule.Glas?.Id,
+        TypeLijstId = vmRule.TypeLijst?.Id, InlegTypeLijstId = vmRule.InlegTypeLijst?.Id, GlasId = vmRule.Glas?.Id,
         PassePartout1Id = vmRule.PassePartout1?.Id, PassePartout2Id = vmRule.PassePartout2?.Id,
         DiepteKernId = vmRule.DiepteKern?.Id, OpklevenId = vmRule.Opkleven?.Id,
         RugId = vmRule.Rug?.Id, AfgesprokenPrijsExcl = vmRule.AfgesprokenPrijsExcl,
@@ -1342,6 +1507,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         dbRule.HoogteCm = vmRule.HoogteCm; dbRule.InlegBreedteCm = vmRule.InlegBreedteCm;
         dbRule.InlegHoogteCm = vmRule.InlegHoogteCm; dbRule.Titel = vmRule.Titel;
         dbRule.Opmerking = vmRule.Opmerking; dbRule.TypeLijstId = vmRule.TypeLijst?.Id;
+        dbRule.InlegTypeLijstId = vmRule.InlegTypeLijst?.Id;
         dbRule.GlasId = vmRule.Glas?.Id; dbRule.PassePartout1Id = vmRule.PassePartout1?.Id;
         dbRule.PassePartout2Id = vmRule.PassePartout2?.Id; dbRule.DiepteKernId = vmRule.DiepteKern?.Id;
         dbRule.OpklevenId = vmRule.Opkleven?.Id; dbRule.RugId = vmRule.Rug?.Id;

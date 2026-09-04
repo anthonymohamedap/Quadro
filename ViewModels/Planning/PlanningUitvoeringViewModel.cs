@@ -108,7 +108,7 @@ public partial class PlanningUitvoeringViewModel : ObservableObject
                     huidigeDag,
                     duur,
                     CapaciteitMinuten,
-                    "Inlijsten");
+                    r.Titel is { Length: > 0 } t ? t : "Inlijsten");
             }
         }
         catch (InvalidOperationException ex)
@@ -167,7 +167,8 @@ public partial class PlanningUitvoeringViewModel : ObservableObject
         try
         {
             await _workflow.PlanRegelMetDagCapaciteitAsync(
-                WerkBonId, regelId, datum.Date, duur, CapaciteitMinuten, "Inlijsten");
+                WerkBonId, regelId, datum.Date, duur, CapaciteitMinuten,
+                regel.Titel is { Length: > 0 } t ? t : "Inlijsten");
         }
         catch (InvalidOperationException ex)
         {
@@ -269,7 +270,7 @@ public partial class PlanningUitvoeringViewModel : ObservableObject
                     startDag.Date,
                     duur,
                     CapaciteitMinuten,
-                    "Inlijsten");
+                    r.Titel is { Length: > 0 } t ? t : "Inlijsten");
 
                 // Volgende regel standaard op dezelfde gekozen dag voorstellen.
                 standaardDag = startDag.Date;

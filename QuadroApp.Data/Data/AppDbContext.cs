@@ -10,6 +10,7 @@ namespace QuadroApp.Data
     public class AppDbContext : DbContext
     {
         public DbSet<TypeLijst> TypeLijsten => Set<TypeLijst>();
+        public DbSet<KantKlaarKader> KantKlaarKaders => Set<KantKlaarKader>();
         public DbSet<AfwerkingsGroep> AfwerkingsGroepen => Set<AfwerkingsGroep>();
         public DbSet<AfwerkingsOptie> AfwerkingsOpties => Set<AfwerkingsOptie>();
         public DbSet<AfwerkingsVariant> AfwerkingsVarianten => Set<AfwerkingsVariant>();
@@ -53,6 +54,7 @@ namespace QuadroApp.Data
             // Gebruik .IgnoreQueryFilters() als je gearchiveerde records wél nodig hebt.
             b.Entity<Klant>().HasQueryFilter(k => !k.IsGearchiveerd);
             b.Entity<TypeLijst>().HasQueryFilter(t => !t.IsGearchiveerd);
+            b.Entity<KantKlaarKader>().HasQueryFilter(k => !k.IsGearchiveerd);
             b.Entity<Leverancier>().HasQueryFilter(l => !l.IsGearchiveerd);
             b.Entity<AfwerkingsOptie>().HasQueryFilter(o => !o.IsGearchiveerd);
             b.Entity<AfwerkingsVariant>().HasQueryFilter(v => !v.IsGearchiveerd);
@@ -204,6 +206,10 @@ namespace QuadroApp.Data
 
             b.Entity<Offerte>(entity =>
             {
+                // Doorlopend zichtbaar offertenummer (zie OfferteNummering) — geen unique
+                // constraint (in tegenstelling tot Factuur.FactuurNummer), enkel voor snel opzoeken.
+                entity.HasIndex(o => o.OfferteNummer);
+
                 entity.Property(o => o.SubtotaalExBtw).HasColumnType("decimal(18,2)");
                 entity.Property(o => o.BtwBedrag).HasColumnType("decimal(18,2)");
                 entity.Property(o => o.TotaalInclBtw).HasColumnType("decimal(18,2)");
@@ -344,6 +350,20 @@ namespace QuadroApp.Data
                       .WithMany()
                       .HasForeignKey(r => r.TypeLijstId)
                       .OnDelete(DeleteBehavior.NoAction);
+
+                // US-53: InlegTypeLijst (optioneel, geen cascade — zelfde patroon als TypeLijst)
+                entity.HasOne(r => r.InlegTypeLijst)
+                      .WithMany()
+                      .HasForeignKey(r => r.InlegTypeLijstId)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                // US-58: KantKlaarKader (optioneel, alternatief voor TypeLijst) — Restrict i.p.v.
+                // NoAction zodat een kader nooit hard verwijderd kan worden zolang een offerte
+                // ernaar verwijst (vandaar ook IsGearchiveerd i.p.v. hard delete op KantKlaarKader).
+                entity.HasOne(r => r.KantKlaarKader)
+                      .WithMany()
+                      .HasForeignKey(r => r.KantKlaarKaderId)
+                      .OnDelete(DeleteBehavior.Restrict);
 
                 // 6× AfwerkingsOptie (allemaal NO ACTION om multiple cascade paths te vermijden)
                 entity.HasOne(r => r.Glas)

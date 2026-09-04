@@ -112,7 +112,7 @@
                                         <WrapPanel>
                                             <TextBlock Classes="caption" Margin="0,0,14,0">
                                                 <Run Text="Offerte #"/>
-                                                <Run Text="{Binding OrigineleOfferteId}"/>
+                                                <Run Text="{Binding OfferteNummer}"/>
                                             </TextBlock>
                                             <TextBlock Classes="caption" Margin="0,0,14,0"
                                                        IsVisible="{Binding HadWerkBon}">
@@ -234,7 +234,7 @@
                                 <TextBlock Text="OFFERTE" Classes="caption" FontWeight="Bold"/>
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="2">
                                     <TextBlock Grid.Row="0" Grid.Column="0" MinWidth="100" Text="Offerte #" Classes="caption"/>
-                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding GeselecteerdItem.OrigineleOfferteId}" Classes="caption" Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding GeselecteerdItem.OfferteNummer}" Classes="caption" Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold"/>
 
                                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Status:" Classes="caption"/>
                                     <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GeselecteerdItem.StatusOpMoment}" Classes="caption" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis"/>

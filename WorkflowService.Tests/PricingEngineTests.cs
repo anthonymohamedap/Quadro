@@ -103,6 +103,41 @@ public class PricingEngineTests
     }
 
     [Fact]
+    public void CalculateAfwerkingsOptiePrijsExcl_matches_Calculate_for_single_afwerking_regel()
+    {
+        // US-59 — het prijsvoorbeeld in Instellingen (Afwerkingen) gebruikt dezelfde
+        // PricingEngine.CalculateAfwerkingsOptiePrijsExcl-helper als de echte
+        // offerteprijs-berekening. Deze test vergelijkt beide met dezelfde invoer,
+        // zodat de twee niet opnieuw uit sync kunnen raken (bug: €42,85 vs €24).
+        var glas = new AfwerkingsOptie
+        {
+            KostprijsPerM2 = 15m,
+            WinstMarge = 2.5m,
+            AfvalPercentage = 12m,
+            VasteKost = 4m,
+            WerkMinuten = 20
+        };
+        const decimal breedteCm = 30m;
+        const decimal hoogteCm = 40m;
+        const decimal uurloon = 60m;
+
+        var offerte = new Offerte
+        {
+            Regels =
+            [
+                new OfferteRegel { AantalStuks = 1, BreedteCm = breedteCm, HoogteCm = hoogteCm, Glas = glas }
+            ]
+        };
+
+        var result = _sut.Calculate(offerte, uurloon, 21m, 0m, 1m, 10m);
+
+        var m2 = (breedteCm * hoogteCm) / 10_000m;
+        var preview = PricingEngine.CalculateAfwerkingsOptiePrijsExcl(glas, m2, uurloon);
+
+        Assert.Equal(preview, Assert.Single(result.Regels).TotaalExcl);
+    }
+
+    [Fact]
     public void Calculate_AfgesprokenPrijs_OverridesCalculatedRegel()
     {
         var offerte = new Offerte
@@ -186,6 +221,65 @@ public class PricingEngineTests
         Assert.Equal(100m, metAfgesproken);       // afgesproken prijs vervangt
         Assert.NotEqual(berekend, metAfgesproken);
         Assert.Equal(berekend, naWissen);         // wissen herstelt
+    }
+
+    [Fact]
+    public void Calculate_KantKlaarKader_UsesFixedStukprijs_NegatingOmtrekBerekening()
+    {
+        // US-58 — een kant-en-klaar kader heeft een vaste stukprijs, ongeacht BreedteCm/HoogteCm
+        // (die staan hier bewust hoog, zodat een per-ongeluk-gebruikte omtrekberekening meteen
+        // zou opvallen als de test faalt).
+        var offerte = new Offerte
+        {
+            Regels =
+            [
+                new OfferteRegel
+                {
+                    AantalStuks = 3,
+                    BreedteCm = 200m,
+                    HoogteCm = 200m,
+                    KantKlaarKader = new KantKlaarKader { Naam = "Zwart 40x50", PrijsPerStukExcl = 12.5m }
+                }
+            ]
+        };
+
+        var result = _sut.Calculate(offerte, 60m, 21m, 0m, 1m, 10m);
+
+        var regel = Assert.Single(result.Regels);
+        Assert.Equal(37.5m, regel.TotaalExcl); // 12,5 × 3 stuks, geen omtrek/arbeid/afval
+    }
+
+    [Fact]
+    public void Calculate_KantKlaarKader_NegeertAfwerking_KaderIsAlVolledigAfgewerkt()
+    {
+        // US-58 — een kant-en-klaar kader is al volledig afgewerkt: een (per ongeluk) ingestelde
+        // afwerking mag nooit bovenop de stukprijs meetellen, ook al staat de UI dit niet meer toe.
+        var offerte = new Offerte
+        {
+            Regels =
+            [
+                new OfferteRegel
+                {
+                    AantalStuks = 1,
+                    BreedteCm = 30m,
+                    HoogteCm = 40m,
+                    KantKlaarKader = new KantKlaarKader { Naam = "Zwart 30x40", PrijsPerStukExcl = 20m },
+                    Glas = new AfwerkingsOptie
+                    {
+                        KostprijsPerM2 = 10m,
+                        WinstMarge = 2m,
+                        AfvalPercentage = 20m,
+                        VasteKost = 3m,
+                        WerkMinuten = 30
+                    }
+                }
+            ]
+        };
+
+        var result = _sut.Calculate(offerte, 60m, 21m, 0m, 1m, 10m);
+
+        var regel = Assert.Single(result.Regels);
+        Assert.Equal(20m, regel.TotaalExcl); // enkel de stukprijs, glas wordt genegeerd
     }
 
     [Fact]

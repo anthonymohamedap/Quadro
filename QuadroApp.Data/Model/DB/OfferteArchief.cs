@@ -12,12 +12,20 @@ namespace QuadroApp.Model.DB
     [Index(nameof(Jaar))]
     [Index(nameof(OrigineleOfferteId))]
     [Index(nameof(GearchiveerdOp))]
+    [Index(nameof(OfferteNummer))]
     public class OfferteArchief
     {
         public int Id { get; set; }
 
         /// <summary>ID van de originele offerte (kan niet meer bestaan na archivering).</summary>
         public int OrigineleOfferteId { get; set; }
+
+        /// <summary>
+        /// Het doorlopende offertenummer (zie <see cref="Offerte.OfferteNummer"/>) zoals het was
+        /// op het moment van archiveren. Blijft hier zichtbaar zodat de gebruiker het nummer kan
+        /// terugvinden nadat de originele offerte-rij verwijderd is.
+        /// </summary>
+        public int OfferteNummer { get; set; }
 
         // ── Querybare gedenormaliseerde velden voor lijst-weergave ──────────
 

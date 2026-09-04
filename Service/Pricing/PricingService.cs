@@ -39,6 +39,7 @@ public sealed class PricingService : IPricingService
 
         var offerte = await db.Offertes
             .Include(x => x.Regels).ThenInclude(r => r.TypeLijst)
+            .Include(x => x.Regels).ThenInclude(r => r.KantKlaarKader)
             .Include(x => x.Regels).ThenInclude(r => r.Glas)
             .Include(x => x.Regels).ThenInclude(r => r.PassePartout1)
             .Include(x => x.Regels).ThenInclude(r => r.PassePartout2)

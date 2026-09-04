@@ -76,6 +76,7 @@ namespace QuadroApp.ViewModels
                 if (!string.IsNullOrWhiteSpace(zoek))
                     alle = alle.FindAll(a =>
                         a.KlantNaam.Contains(zoek, StringComparison.OrdinalIgnoreCase) ||
+                        a.OfferteNummer.ToString().Contains(zoek) ||
                         a.OrigineleOfferteId.ToString().Contains(zoek) ||
                         (a.Reden?.Contains(zoek, StringComparison.OrdinalIgnoreCase) ?? false));
 

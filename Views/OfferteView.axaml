@@ -301,9 +301,32 @@
 							</Grid>
 						</StackPanel>
 
+						<!-- US-58: kant-en-klaar kader — duidelijk gescheiden van de op-maat-lijst hierboven.
+						     Een kant-en-klaar kader is al volledig afgewerkt: geen afmeting, en de
+						     afwerkingen-kaart hieronder verdwijnt zodra dit gekozen is. -->
+						<StackPanel Spacing="6">
+							<TextBlock Text="Kant-en-klaar kader" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
+							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" RowSpacing="10" ColumnSpacing="12">
+							<TextBlock Grid.Row="0" Grid.Column="0" Text="Kader" VerticalAlignment="Center"/>
+							<ComboBox Grid.Row="0"
+									  Grid.Column="1"
+									  ItemsSource="{Binding KantKlaarKaders}"
+									  SelectedItem="{Binding SelectedRegelKantKlaarKader, Mode=TwoWay}"
+									  HorizontalAlignment="Stretch"
+									  MaxDropDownHeight="300"
+									  PlaceholderText="Geen kant-en-klaar kader (op-maat lijst hierboven gebruiken)">
+								<ComboBox.ItemTemplate>
+									<DataTemplate x:DataType="m:KantKlaarKader">
+										<TextBlock Text="{Binding Naam}" TextTrimming="CharacterEllipsis"/>
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
+							</Grid>
+						</StackPanel>
+
 						<StackPanel Spacing="6">
 							<TextBlock Text="Afmetingen" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
-							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
+							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
 							<TextBlock Grid.Row="0" Grid.Column="0" Text="Breedte (cm)" VerticalAlignment="Center"/>
 							<NumericUpDown Grid.Row="0"
                                            Foreground="{DynamicResource TextPrimary}"
@@ -327,6 +350,24 @@
                                                Foreground="{DynamicResource TextPrimary}"
                                                Value="{Binding SelectedRegel.InlegHoogteCm, Mode=TwoWay}"/>
 							</Grid>
+
+							<!-- US-53: nummer van de inleg (kader/afstandshouder) uit dezelfde catalogus als de kadernummers -->
+							<TextBlock Grid.Row="3" Grid.Column="0" Text="Inleg nr." VerticalAlignment="Top" Margin="0,4,0,0"/>
+							<StackPanel Grid.Row="3" Grid.Column="1" Spacing="4">
+								<TextBox Watermark="Zoek artikelnummer…"
+									 Text="{Binding InlegTypeLijstZoekterm, UpdateSourceTrigger=PropertyChanged}"/>
+								<ComboBox ItemsSource="{Binding GefilterdeInlegTypeLijsten}"
+									  SelectedItem="{Binding SelectedRegelInlegTypeLijst, Mode=TwoWay}"
+									  HorizontalAlignment="Stretch"
+									  MaxDropDownHeight="300"
+									  PlaceholderText="Geen inleg-nummer">
+									<ComboBox.ItemTemplate>
+										<DataTemplate x:DataType="m:TypeLijst">
+											<TextBlock Text="{Binding Artikelnummer}" TextTrimming="CharacterEllipsis"/>
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+							</StackPanel>
 							</Grid>
 						</StackPanel>
 
@@ -361,8 +402,9 @@
 					</StackPanel>
 					</Border>
 
-					<!-- AFWERKINGEN -->
-					<Border Classes="quadro-card">
+					<!-- AFWERKINGEN — niet van toepassing op een kant-en-klaar kader: dat is al
+					     volledig afgewerkt. -->
+					<Border Classes="quadro-card" IsVisible="{Binding !HasKantKlaarKader}">
 
 						<StackPanel Spacing="6">
 
@@ -674,6 +716,12 @@
 								FontWeight="Bold"
 								Margin="0,0,12,6"/>
 
+						<!-- US-57: klantvriendelijke offerte-PDF, los van de bestelbon-/factuurpreview -->
+						<Button Content="Offerte afdrukken"
+								Command="{Binding OfferteAfdrukkenCommand}"
+								Classes="GhostBtn"
+								Margin="0,0,12,6"/>
+
 						<!-- Bevestigen: alleen zichtbaar als er nog GEEN werkbon is -->
 						<Button Content="Bevestigen → Bestelling"
 								Command="{Binding BevestigenCommand}"
@@ -697,6 +745,26 @@
 						<TextBlock Text="{Binding Offerte.Status}"
 								   Foreground="White" FontWeight="SemiBold" FontSize="12"/>
 					</Border>
+
+					<!-- US-56: manueel de offerte-status wijzigen (enkel Concept/Verzonden/Goedgekeurd;
+					     voorbij Goedgekeurd blijft dit blokje verborgen). -->
+					<WrapPanel IsVisible="{Binding IsManueleStatusWijzigingZichtbaar}">
+						<Button Content="→ Verzonden" Classes="GhostBtn" FontSize="11" Padding="8,2"
+								Command="{Binding NaarVerzondenCommand}"
+								IsVisible="{Binding KanNaarVerzonden}"
+								Margin="0,0,6,0"/>
+						<Button Content="→ Goedgekeurd" Classes="GhostBtn" FontSize="11" Padding="8,2"
+								Command="{Binding NaarGoedgekeurdCommand}"
+								IsVisible="{Binding KanNaarGoedgekeurd}"
+								Margin="0,0,6,0"/>
+						<Button Content="↩ Concept" Classes="GhostBtn" FontSize="11" Padding="8,2"
+								Command="{Binding TerugNaarConceptCommand}"
+								IsVisible="{Binding KanTerugNaarConcept}"
+								Margin="0,0,6,0"/>
+						<Button Content="↩ Verzonden" Classes="GhostBtn" FontSize="11" Padding="8,2"
+								Command="{Binding TerugNaarVerzondenCommand}"
+								IsVisible="{Binding KanTerugNaarVerzonden}"/>
+					</WrapPanel>
 
 					<TextBlock Text="{Binding FactuurStatusText}"
 							   Classes="label"

@@ -26,8 +26,10 @@ public class PricingSettingsProviderTests
         }
 
         var sut = new PricingSettingsProvider(factory);
+        // Terugvalwaarden moeten gelijk zijn aan AppSettingsProvider (Instellingen-scherm).
+        Assert.Equal(45m, await sut.GetUurloonAsync());
         Assert.Equal(0m, await sut.GetDefaultPrijsPerMeterAsync());
-        Assert.Equal(0m, await sut.GetDefaultWinstFactorAsync());
-        Assert.Equal(0m, await sut.GetDefaultAfvalPercentageAsync());
+        Assert.Equal(2.5m, await sut.GetDefaultWinstFactorAsync());
+        Assert.Equal(10m, await sut.GetDefaultAfvalPercentageAsync());
     }
 }

@@ -10,6 +10,15 @@ namespace QuadroApp.Model.DB
         public int Id { get; set; }
 
         /// <summary>
+        /// Doorlopend, zichtbaar offertenummer. Toegekend bij aanmaak en NOOIT hergebruikt of
+        /// teruggedraaid — ook niet als deze offerte later gearchiveerd (= fysiek verwijderd uit
+        /// deze tabel) wordt. Dit is bewust losgekoppeld van <see cref="Id"/> (de databank-PK),
+        /// zodat archiveren geen gat laat vallen in de reeks die de gebruiker ziet.
+        /// Zie <see cref="QuadroApp.Service.OfferteNummering"/>.
+        /// </summary>
+        public int OfferteNummer { get; set; }
+
+        /// <summary>
         /// Optimistic concurrency token. EF Core updates this on every save.
         /// A <see cref="Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException"/>
         /// is thrown when two users save the same version simultaneously —

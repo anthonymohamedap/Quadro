@@ -522,6 +522,33 @@ namespace QuadroApp.Migrations
                     b.ToTable("Instellingen");
                 });
 
+            modelBuilder.Entity("QuadroApp.Model.DB.KantKlaarKader", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Beschrijving")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsGearchiveerd")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Naam")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("PrijsPerStukExcl")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("KantKlaarKaders");
+                });
+
             modelBuilder.Entity("QuadroApp.Model.DB.Klant", b =>
                 {
                     b.Property<int>("Id")
@@ -721,6 +748,9 @@ namespace QuadroApp.Migrations
                     b.Property<decimal>("MeerPrijsIncl")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("OfferteNummer")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Opmerking")
                         .HasColumnType("TEXT");
 
@@ -746,6 +776,8 @@ namespace QuadroApp.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("KlantId");
+
+                    b.HasIndex("OfferteNummer");
 
                     b.ToTable("Offertes");
                 });
@@ -782,6 +814,9 @@ namespace QuadroApp.Migrations
                     b.Property<DateTime>("OfferteDatum")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("OfferteNummer")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("OrigineleOfferteId")
                         .HasColumnType("INTEGER");
 
@@ -806,6 +841,8 @@ namespace QuadroApp.Migrations
                     b.HasIndex("GearchiveerdOp");
 
                     b.HasIndex("Jaar");
+
+                    b.HasIndex("OfferteNummer");
 
                     b.HasIndex("OrigineleOfferteId");
 
@@ -863,6 +900,12 @@ namespace QuadroApp.Migrations
 
                     b.Property<decimal?>("InlegHoogteCm")
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("InlegTypeLijstId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("KantKlaarKaderId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<decimal>("Korting")
                         .HasPrecision(18, 2)
@@ -930,6 +973,10 @@ namespace QuadroApp.Migrations
                     b.HasIndex("GlasId");
 
                     b.HasIndex("GlasVariantId");
+
+                    b.HasIndex("InlegTypeLijstId");
+
+                    b.HasIndex("KantKlaarKaderId");
 
                     b.HasIndex("OfferteId");
 
@@ -1461,6 +1508,16 @@ namespace QuadroApp.Migrations
                         .HasForeignKey("GlasVariantId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("QuadroApp.Model.DB.TypeLijst", "InlegTypeLijst")
+                        .WithMany()
+                        .HasForeignKey("InlegTypeLijstId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("QuadroApp.Model.DB.KantKlaarKader", "KantKlaarKader")
+                        .WithMany()
+                        .HasForeignKey("KantKlaarKaderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("QuadroApp.Model.DB.Offerte", "Offerte")
                         .WithMany("Regels")
                         .HasForeignKey("OfferteId")
@@ -1519,6 +1576,10 @@ namespace QuadroApp.Migrations
                     b.Navigation("Glas");
 
                     b.Navigation("GlasVariant");
+
+                    b.Navigation("InlegTypeLijst");
+
+                    b.Navigation("KantKlaarKader");
 
                     b.Navigation("Offerte");
 
