@@ -45,13 +45,17 @@ public sealed class PricingEngine
                             defaultAfvalPercentage)
                         : 0m;
 
-                var optiesEx =
-                    CalcOpt(r.Glas) +
-                    CalcOpt(r.PassePartout1) +
-                    CalcOpt(r.PassePartout2) +
-                    CalcOpt(r.DiepteKern) +
-                    CalcOpt(r.Opkleven) +
-                    CalcOpt(r.Rug);
+                // US-58: een kant-en-klaar kader is al volledig afgewerkt — afwerkingen
+                // (glas/passe-partout/...) tellen daar nooit bovenop mee, ook niet als er per
+                // ongeluk nog een afwerking op de regel staat.
+                var optiesEx = r.KantKlaarKaderId is not null
+                    ? 0m
+                    : CalcOpt(r.Glas) +
+                      CalcOpt(r.PassePartout1) +
+                      CalcOpt(r.PassePartout2) +
+                      CalcOpt(r.DiepteKern) +
+                      CalcOpt(r.Opkleven) +
+                      CalcOpt(r.Rug);
 
                 lineEx = lijstPrijs + optiesEx;
                 lineEx += (r.ExtraWerkMinuten / 60m) * uurloon;

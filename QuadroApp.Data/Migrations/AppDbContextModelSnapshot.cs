@@ -528,12 +528,8 @@ namespace QuadroApp.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal>("BreedteCm")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("HoogteCm")
-                        .HasPrecision(18, 2)
+                    b.Property<string>("Beschrijving")
+                        .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsGearchiveerd")

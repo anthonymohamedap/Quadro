@@ -250,8 +250,10 @@ public class PricingEngineTests
     }
 
     [Fact]
-    public void Calculate_KantKlaarKader_MetAfwerking_TeltAfwerkingBovenOpStukprijs()
+    public void Calculate_KantKlaarKader_NegeertAfwerking_KaderIsAlVolledigAfgewerkt()
     {
+        // US-58 — een kant-en-klaar kader is al volledig afgewerkt: een (per ongeluk) ingestelde
+        // afwerking mag nooit bovenop de stukprijs meetellen, ook al staat de UI dit niet meer toe.
         var offerte = new Offerte
         {
             Regels =
@@ -276,9 +278,8 @@ public class PricingEngineTests
 
         var result = _sut.Calculate(offerte, 60m, 21m, 0m, 1m, 10m);
 
-        // Glas-afwerking op 30×40cm (m2=0,12): kost=1,2 → (1,2×2)+0,24 afval+3 vast+30 arbeid = 35,64.
         var regel = Assert.Single(result.Regels);
-        Assert.Equal(55.64m, regel.TotaalExcl); // 20 (stukprijs) + 35,64 (glas)
+        Assert.Equal(20m, regel.TotaalExcl); // enkel de stukprijs, glas wordt genegeerd
     }
 
     [Fact]

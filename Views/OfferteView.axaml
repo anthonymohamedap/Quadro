@@ -302,7 +302,8 @@
 						</StackPanel>
 
 						<!-- US-58: kant-en-klaar kader — duidelijk gescheiden van de op-maat-lijst hierboven.
-						     Bij keuze worden Breedte/Hoogte hieronder automatisch overgenomen en read-only. -->
+						     Een kant-en-klaar kader is al volledig afgewerkt: geen afmeting, en de
+						     afwerkingen-kaart hieronder verdwijnt zodra dit gekozen is. -->
 						<StackPanel Spacing="6">
 							<TextBlock Text="Kant-en-klaar kader" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
 							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" RowSpacing="10" ColumnSpacing="12">
@@ -330,13 +331,11 @@
 							<NumericUpDown Grid.Row="0"
                                            Foreground="{DynamicResource TextPrimary}"
                                            Grid.Column="1"
-                                           IsEnabled="{Binding !HasKantKlaarKader}"
                                            Value="{Binding SelectedRegel.BreedteCm, Mode=TwoWay}"/>
 							<TextBlock Grid.Row="1" Grid.Column="0" Text="Hoogte (cm)" VerticalAlignment="Center"/>
 							<NumericUpDown Grid.Row="1"
                                            Foreground="{DynamicResource TextPrimary}"
                                            Grid.Column="1"
-                                           IsEnabled="{Binding !HasKantKlaarKader}"
                                            Value="{Binding SelectedRegel.HoogteCm, Mode=TwoWay}"/>
 							<TextBlock Grid.Row="2" Grid.Column="0" Text="Inleg (B × H) cm" VerticalAlignment="Center"/>
 							<Grid Grid.Row="2"
@@ -403,8 +402,9 @@
 					</StackPanel>
 					</Border>
 
-					<!-- AFWERKINGEN -->
-					<Border Classes="quadro-card">
+					<!-- AFWERKINGEN — niet van toepassing op een kant-en-klaar kader: dat is al
+					     volledig afgewerkt. -->
+					<Border Classes="quadro-card" IsVisible="{Binding !HasKantKlaarKader}">
 
 						<StackPanel Spacing="6">
 
