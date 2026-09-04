@@ -26,6 +26,7 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
     // US-59 — zelfde uurloon-bron als PricingEngine.Calculate, geladen in LoadAsync zodat
     // PreviewPrijsText (synchrone getter) er meteen bij kan zonder zelf async op te roepen.
     private decimal _uurloon;
+    private decimal _btwPercent;
     public bool HeeftGeenSelectie => SelectedOptie is null;
     // ─────────────────────────────────────────────────────────────
     // Busy/Status
@@ -240,6 +241,7 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
             // US-59 — zelfde uurloon-bron als PricingEngine.Calculate, zodat het prijsvoorbeeld
             // hieronder exact aansluit bij de echte offerteprijs.
             _uurloon = await _pricingSettings.GetUurloonAsync();
+            _btwPercent = await _pricingSettings.GetBtwPercentAsync();
             OnPropertyChanged(nameof(PreviewPrijsText));
 
             var groepen = await _service.GetGroepenAsync();
@@ -364,8 +366,11 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
             // US-59 — zelfde formule als PricingEngine.CalcOpt (wat effectief op de offerte komt),
             // zodat dit voorbeeld nooit meer afwijkt van de echte prijsberekening.
             var excl = PricingEngine.CalculateAfwerkingsOptiePrijsExcl(o, m2, _uurloon);
+            // Op verzoek van Kurt/Veerle: voorbeeld toont incl. btw (zelfde percentage als de
+            // offerte-berekening), zodat het meteen de prijs toont die de klant betaalt.
+            var incl = Math.Round(excl * (1m + _btwPercent / 100m), 2);
 
-            return $"Voorbeeld: € {excl:F2} excl. btw (voor {PreviewBreedteCm}x{PreviewHoogteCm} cm)";
+            return $"Voorbeeld: € {incl:F2} incl. btw (voor {PreviewBreedteCm}x{PreviewHoogteCm} cm)";
         }
     }
 
