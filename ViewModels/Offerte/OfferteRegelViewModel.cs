@@ -108,6 +108,17 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
         OpenTypeLijstCommand.NotifyCanExecuteChanged();
         if (_syncingTypeLijst || SelectedRegel is null) return;
         SelectedRegel.TypeLijst = value;
+
+        // Een regel heeft óf een op-maat lijst, óf een kant-en-klaar kader, nooit beide.
+        if (value is not null && SelectedRegel.KantKlaarKaderId is not null)
+        {
+            SelectedRegel.KantKlaarKader = null;
+            _syncingKantKlaarKader = true;
+            try { SelectedKantKlaarKader = null; }
+            finally { _syncingKantKlaarKader = false; }
+            OnPropertyChanged(nameof(HasKantKlaarKader));
+        }
+
         RegelChanged?.Invoke();
     }
 
@@ -148,8 +159,14 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
         SelectedRegel.KantKlaarKader = value;
         if (value is not null)
         {
-            SelectedRegel.BreedteCm = value.BreedteCm;
-            SelectedRegel.HoogteCm = value.HoogteCm;
+            // Het kader is al volledig afgewerkt — een eventueel eerder gekozen afwerking
+            // (glas/passe-partout/...) mag niet blijven hangen, ook al toont de UI die niet meer.
+            SelectedRegel.Glas = null;
+            SelectedRegel.PassePartout1 = null;
+            SelectedRegel.PassePartout2 = null;
+            SelectedRegel.DiepteKern = null;
+            SelectedRegel.Opkleven = null;
+            SelectedRegel.Rug = null;
         }
         OnPropertyChanged(nameof(HasKantKlaarKader));
         RegelChanged?.Invoke();
