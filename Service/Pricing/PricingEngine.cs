@@ -32,16 +32,18 @@ public sealed class PricingEngine
             }
             else
             {
-                var lijstPrijs = r.TypeLijst is not null
-                    ? CalculateLijstPrijsExcl(
-                        r.TypeLijst,
-                        r.BreedteCm,
-                        r.HoogteCm,
-                        uurloon,
-                        defaultPrijsPerMeter,
-                        defaultWinstFactor,
-                        defaultAfvalPercentage)
-                    : 0m;
+                var lijstPrijs = r.KantKlaarKaderId is not null
+                    ? r.KantKlaarKader?.PrijsPerStukExcl ?? 0m
+                    : r.TypeLijst is not null
+                        ? CalculateLijstPrijsExcl(
+                            r.TypeLijst,
+                            r.BreedteCm,
+                            r.HoogteCm,
+                            uurloon,
+                            defaultPrijsPerMeter,
+                            defaultWinstFactor,
+                            defaultAfvalPercentage)
+                        : 0m;
 
                 var optiesEx =
                     CalcOpt(r.Glas) +

@@ -1,6 +1,6 @@
 # US-58 · Kant-en-klare kaders in een offerte kunnen invoegen — PLAN
 
-> **Status: plan, ontwerp bevestigd door Anthony — klaar om gebouwd te worden.**
+> **Status: gebouwd (04/09/2026).**
 
 ---
 

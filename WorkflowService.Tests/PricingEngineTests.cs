@@ -224,6 +224,64 @@ public class PricingEngineTests
     }
 
     [Fact]
+    public void Calculate_KantKlaarKader_UsesFixedStukprijs_NegatingOmtrekBerekening()
+    {
+        // US-58 — een kant-en-klaar kader heeft een vaste stukprijs, ongeacht BreedteCm/HoogteCm
+        // (die staan hier bewust hoog, zodat een per-ongeluk-gebruikte omtrekberekening meteen
+        // zou opvallen als de test faalt).
+        var offerte = new Offerte
+        {
+            Regels =
+            [
+                new OfferteRegel
+                {
+                    AantalStuks = 3,
+                    BreedteCm = 200m,
+                    HoogteCm = 200m,
+                    KantKlaarKader = new KantKlaarKader { Naam = "Zwart 40x50", PrijsPerStukExcl = 12.5m }
+                }
+            ]
+        };
+
+        var result = _sut.Calculate(offerte, 60m, 21m, 0m, 1m, 10m);
+
+        var regel = Assert.Single(result.Regels);
+        Assert.Equal(37.5m, regel.TotaalExcl); // 12,5 × 3 stuks, geen omtrek/arbeid/afval
+    }
+
+    [Fact]
+    public void Calculate_KantKlaarKader_MetAfwerking_TeltAfwerkingBovenOpStukprijs()
+    {
+        var offerte = new Offerte
+        {
+            Regels =
+            [
+                new OfferteRegel
+                {
+                    AantalStuks = 1,
+                    BreedteCm = 30m,
+                    HoogteCm = 40m,
+                    KantKlaarKader = new KantKlaarKader { Naam = "Zwart 30x40", PrijsPerStukExcl = 20m },
+                    Glas = new AfwerkingsOptie
+                    {
+                        KostprijsPerM2 = 10m,
+                        WinstMarge = 2m,
+                        AfvalPercentage = 20m,
+                        VasteKost = 3m,
+                        WerkMinuten = 30
+                    }
+                }
+            ]
+        };
+
+        var result = _sut.Calculate(offerte, 60m, 21m, 0m, 1m, 10m);
+
+        // Glas-afwerking op 30×40cm (m2=0,12): kost=1,2 → (1,2×2)+0,24 afval+3 vast+30 arbeid = 35,64.
+        var regel = Assert.Single(result.Regels);
+        Assert.Equal(55.64m, regel.TotaalExcl); // 20 (stukprijs) + 35,64 (glas)
+    }
+
+    [Fact]
     public void Calculate_LijstWithoutPrijsPerMeter_FallsBackToDefaultPrijsPerMeter()
     {
         var offerte = new Offerte

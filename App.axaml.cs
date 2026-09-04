@@ -217,6 +217,7 @@ public partial class App : Application
         services.AddTransient<HomeViewModel>();
         services.AddTransient<KlantenViewModel>();
         services.AddTransient<LijstenViewModel>();
+        services.AddTransient<KantKlaarKaderenViewModel>();
         services.AddTransient<LeveranciersViewModel>();
         services.AddTransient<AfwerkingenViewModel>();
         services.AddTransient<OffertesLijstViewModel>();

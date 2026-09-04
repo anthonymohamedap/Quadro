@@ -301,6 +301,28 @@
 							</Grid>
 						</StackPanel>
 
+						<!-- US-58: kant-en-klaar kader — duidelijk gescheiden van de op-maat-lijst hierboven.
+						     Bij keuze worden Breedte/Hoogte hieronder automatisch overgenomen en read-only. -->
+						<StackPanel Spacing="6">
+							<TextBlock Text="Kant-en-klaar kader" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
+							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" RowSpacing="10" ColumnSpacing="12">
+							<TextBlock Grid.Row="0" Grid.Column="0" Text="Kader" VerticalAlignment="Center"/>
+							<ComboBox Grid.Row="0"
+									  Grid.Column="1"
+									  ItemsSource="{Binding KantKlaarKaders}"
+									  SelectedItem="{Binding SelectedRegelKantKlaarKader, Mode=TwoWay}"
+									  HorizontalAlignment="Stretch"
+									  MaxDropDownHeight="300"
+									  PlaceholderText="Geen kant-en-klaar kader (op-maat lijst hierboven gebruiken)">
+								<ComboBox.ItemTemplate>
+									<DataTemplate x:DataType="m:KantKlaarKader">
+										<TextBlock Text="{Binding Naam}" TextTrimming="CharacterEllipsis"/>
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
+							</Grid>
+						</StackPanel>
+
 						<StackPanel Spacing="6">
 							<TextBlock Text="Afmetingen" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
 							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
@@ -308,11 +330,13 @@
 							<NumericUpDown Grid.Row="0"
                                            Foreground="{DynamicResource TextPrimary}"
                                            Grid.Column="1"
+                                           IsEnabled="{Binding !HasKantKlaarKader}"
                                            Value="{Binding SelectedRegel.BreedteCm, Mode=TwoWay}"/>
 							<TextBlock Grid.Row="1" Grid.Column="0" Text="Hoogte (cm)" VerticalAlignment="Center"/>
 							<NumericUpDown Grid.Row="1"
                                            Foreground="{DynamicResource TextPrimary}"
                                            Grid.Column="1"
+                                           IsEnabled="{Binding !HasKantKlaarKader}"
                                            Value="{Binding SelectedRegel.HoogteCm, Mode=TwoWay}"/>
 							<TextBlock Grid.Row="2" Grid.Column="0" Text="Inleg (B × H) cm" VerticalAlignment="Center"/>
 							<Grid Grid.Row="2"

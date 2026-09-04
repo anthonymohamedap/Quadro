@@ -155,6 +155,9 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     }
     public System.Collections.ObjectModel.ObservableCollection<TypeLijst> GefilterdeInlegTypeLijsten
         => Regelbeheer.GefilterdeInlegTypeLijsten;
+    // ── US-58: kant-en-klaar kader picker facade ──
+    public System.Collections.ObjectModel.ObservableCollection<KantKlaarKader> KantKlaarKaders
+        => Regelbeheer.KantKlaarKaders;
     public System.Collections.ObjectModel.ObservableCollection<AfwerkingsOptie> GlasOpties
         => Regelbeheer.GlasOpties;
     public System.Collections.ObjectModel.ObservableCollection<AfwerkingsOptie> Passe1Opties
@@ -223,6 +226,17 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         get => Regelbeheer.SelectedInlegTypeLijst;
         set => Regelbeheer.SelectedInlegTypeLijst = value;
     }
+
+    // ── US-58: gekozen kant-en-klaar kader (alternatief voor TypeLijst) ──
+    public KantKlaarKader? SelectedRegelKantKlaarKader
+    {
+        get => Regelbeheer.SelectedKantKlaarKader;
+        set => Regelbeheer.SelectedKantKlaarKader = value;
+    }
+
+    /// <summary>US-58 — true zodra de huidige regel een kant-en-klaar kader gebruikt: de UI zet
+    /// Breedte/Hoogte dan read-only.</summary>
+    public bool HasKantKlaarKader => Regelbeheer.HasKantKlaarKader;
 
     // ── Overige regel-navigatie: dedicated single-segment properties voor afwerkingen. ──
     public AfwerkingsOptie? SelectedRegelGlas
@@ -744,6 +758,9 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                 case nameof(Regelbeheer.SelectedInlegTypeLijst): OnPropertyChanged(nameof(SelectedRegelInlegTypeLijst)); break;
                 case nameof(Regelbeheer.InlegTypeLijstZoekterm): OnPropertyChanged(nameof(InlegTypeLijstZoekterm)); break;
                 case nameof(Regelbeheer.GefilterdeInlegTypeLijsten): OnPropertyChanged(nameof(GefilterdeInlegTypeLijsten)); break;
+                case nameof(Regelbeheer.SelectedKantKlaarKader): OnPropertyChanged(nameof(SelectedRegelKantKlaarKader)); break;
+                case nameof(Regelbeheer.KantKlaarKaders): OnPropertyChanged(nameof(KantKlaarKaders)); break;
+                case nameof(Regelbeheer.HasKantKlaarKader): OnPropertyChanged(nameof(HasKantKlaarKader)); break;
                 case nameof(Regelbeheer.GlasOpties):
                     OnPropertyChanged(nameof(GlasOpties));
                     RebuildNaamLijsten();
@@ -802,6 +819,15 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         Regelbeheer.ApplyTypeLijstFilter(Regelbeheer.TypeLijstZoekterm);
         Regelbeheer.ApplyInlegTypeLijstFilter(Regelbeheer.InlegTypeLijstZoekterm);
 
+        // US-58: kant-en-klare kaders — kleine lijst, geen filter/diff nodig.
+        var kantKlaarKaders = await db.KantKlaarKaders.AsNoTracking()
+            .OrderBy(k => k.Naam)
+            .ToListAsync();
+
+        Regelbeheer.KantKlaarKaders.Clear();
+        foreach (var k in kantKlaarKaders)
+            Regelbeheer.KantKlaarKaders.Add(k);
+
         var klanten = await db.Klanten.AsNoTracking()
             .OrderBy(k => k.Achternaam).ThenBy(k => k.Voornaam)
             .ToListAsync();
@@ -843,6 +869,8 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                 regel.TypeLijst = Regelbeheer.TypeLijsten.FirstOrDefault(t => t.Id == tid);
             if (regel.InlegTypeLijstId is int itid)
                 regel.InlegTypeLijst = Regelbeheer.TypeLijsten.FirstOrDefault(t => t.Id == itid);
+            if (regel.KantKlaarKaderId is int kkid)
+                regel.KantKlaarKader = Regelbeheer.KantKlaarKaders.FirstOrDefault(k => k.Id == kkid);
             if (regel.GlasId is int gid)
                 regel.Glas = Regelbeheer.GlasOpties.FirstOrDefault(g => g.Id == gid);
             if (regel.PassePartout1Id is int p1id)
@@ -861,6 +889,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         // de ComboBox de nieuwe catalog-instantie toont.
         Regelbeheer.SyncTypeLijstFromSelectedRegel();
         Regelbeheer.SyncInlegTypeLijstFromSelectedRegel();
+        Regelbeheer.SyncKantKlaarKaderFromSelectedRegel();
     }
 
     // ── Load offerte ──
@@ -894,6 +923,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
 
                 // Bouw lookup dictionaries voor snelle catalog matching (O(1) ipv O(n))
                 var typeLijstDict = Regelbeheer.TypeLijsten.ToDictionary(t => t.Id);
+                var kantKlaarKaderDict = Regelbeheer.KantKlaarKaders.ToDictionary(k => k.Id);
                 var glasDict = Regelbeheer.GlasOpties.ToDictionary(g => g.Id);
                 var passe1Dict = Regelbeheer.Passe1Opties.ToDictionary(p => p.Id);
                 var passe2Dict = Regelbeheer.Passe2Opties.ToDictionary(p => p.Id);
@@ -910,6 +940,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                         AantalStuks = dbRule.AantalStuks, BreedteCm = dbRule.BreedteCm,
                         HoogteCm = dbRule.HoogteCm, InlegBreedteCm = dbRule.InlegBreedteCm,
                         InlegHoogteCm = dbRule.InlegHoogteCm, InlegTypeLijstId = dbRule.InlegTypeLijstId,
+                        KantKlaarKaderId = dbRule.KantKlaarKaderId,
                         Titel = dbRule.Titel,
                         Opmerking = dbRule.Opmerking, TypeLijstId = dbRule.TypeLijstId,
                         GlasId = dbRule.GlasId, PassePartout1Id = dbRule.PassePartout1Id,
@@ -931,6 +962,8 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                         rule.TypeLijst = typeLijst;
                     if (rule.InlegTypeLijstId.HasValue && typeLijstDict.TryGetValue(rule.InlegTypeLijstId.Value, out var inlegTypeLijst))
                         rule.InlegTypeLijst = inlegTypeLijst;
+                    if (rule.KantKlaarKaderId.HasValue && kantKlaarKaderDict.TryGetValue(rule.KantKlaarKaderId.Value, out var kantKlaarKader))
+                        rule.KantKlaarKader = kantKlaarKader;
                     // Lokale helper: relink de gekozen variant uit de Varianten van de optie.
                     static AfwerkingsVariant? Variant(AfwerkingsOptie? optie, int? variantId) =>
                         optie is null || !variantId.HasValue
