@@ -35,6 +35,9 @@
                 <TextBlock Text="Soort" Classes="label"/>
                 <TextBox Text="{Binding Soort}"/>
 
+                <TextBlock Text="Omschrijving / opmerking" Classes="label"/>
+                <TextBox Text="{Binding Opmerking}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"/>
+
                 <TextBlock Text="Voorraad" Classes="label"/>
                 <NumericUpDown Value="{Binding VoorraadMeter}" Increment="0.5"/>
 

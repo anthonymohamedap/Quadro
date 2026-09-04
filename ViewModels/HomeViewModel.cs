@@ -31,6 +31,7 @@ namespace QuadroApp.ViewModels
 
         public IAsyncRelayCommand OpenKlantenCommand { get; }
         public IAsyncRelayCommand OpenLijstenCommand { get; }
+        public IAsyncRelayCommand OpenKantKlaarKaderenCommand { get; }
         public IAsyncRelayCommand OpenPlanningCommand { get; }
         public IAsyncRelayCommand OpenOfferteCommand { get; }
         public IAsyncRelayCommand OpenOffertesLijstCommand { get; }
@@ -64,6 +65,7 @@ namespace QuadroApp.ViewModels
             OpenKlantenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<KlantenViewModel>());
             OpenAfwerkingsOptiesCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<AfwerkingenViewModel>());
             OpenLijstenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<LijstenViewModel>());
+            OpenKantKlaarKaderenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<KantKlaarKaderenViewModel>());
             OpenLeveranciersCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<LeveranciersViewModel>());
             OpenOfferteCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OfferteViewModel>());
             OpenOffertesLijstCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OffertesLijstViewModel>());

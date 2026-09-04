@@ -3,11 +3,14 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
+using QuadroApp.Service;
 using QuadroApp.Service.Import;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Validation;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 namespace QuadroApp.ViewModels;
@@ -254,6 +257,55 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
     {
         if (!CanRunAction()) return;
         await LoadAsync();
+    }
+
+    // ---------------- Afdrukken (PDF van de huidige, eventueel gefilterde lijst) ----------------
+
+    [RelayCommand(CanExecute = nameof(CanRunAction))]
+    private async Task AfdrukkenAsync()
+    {
+        if (!CanRunAction()) return;
+
+        if (FilteredKlanten.Count == 0)
+        {
+            _toast.Warning("Geen klanten om af te drukken.");
+            return;
+        }
+
+        try
+        {
+            IsBusy = true;
+
+            var filterOmschrijving = string.IsNullOrWhiteSpace(Zoekterm)
+                ? null
+                : $"zoekterm \"{Zoekterm}\"";
+
+            var exporter = new PdfKlantenlijstExporter();
+            var path = await Task.Run(() =>
+                exporter.Export(FilteredKlanten.ToList(), filterOmschrijving));
+
+            if (!File.Exists(path))
+            {
+                _toast.Error("PDF kon niet aangemaakt worden.");
+                return;
+            }
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = path,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            var msg = ex.InnerException?.Message ?? ex.Message;
+            _toast.Error($"Afdrukken mislukt: {msg}");
+        }
+        finally
+        {
+            IsBusy = false;
+            NotifyActionCommands();
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanRunAction))]

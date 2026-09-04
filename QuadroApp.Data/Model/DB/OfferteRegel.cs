@@ -38,6 +38,47 @@ namespace QuadroApp.Model.DB
         public decimal? InlegHoogteCm { get; set; }
 
         // ========================
+        // US-53: NUMMER VAN DE INLEG
+        // Verwijst naar dezelfde catalogus (TypeLijst) als de kaderkeuze, zodat de
+        // atelier-medewerker meteen weet welk kader/afstandshouder-nummer als inleg
+        // gebruikt moet worden. Optioneel: bestaande regels zonder inleg-nummer blijven geldig.
+        // ========================
+
+        private TypeLijst? _inlegTypeLijst;
+
+        public int? InlegTypeLijstId { get; set; }
+
+        public TypeLijst? InlegTypeLijst
+        {
+            get => _inlegTypeLijst;
+            set
+            {
+                _inlegTypeLijst = value;
+                InlegTypeLijstId = value?.Id;
+            }
+        }
+
+        // ========================
+        // US-58: KANT-EN-KLAAR KADER
+        // Alternatief voor TypeLijst: een reeds afgewerkt kader met vaste stukprijs, geen
+        // omtrek-/snijberekening. Een regel heeft óf TypeLijstId, óf KantKlaarKaderId, nooit beide.
+        // ========================
+
+        private KantKlaarKader? _kantKlaarKader;
+
+        public int? KantKlaarKaderId { get; set; }
+
+        public KantKlaarKader? KantKlaarKader
+        {
+            get => _kantKlaarKader;
+            set
+            {
+                _kantKlaarKader = value;
+                KantKlaarKaderId = value?.Id;
+            }
+        }
+
+        // ========================
         // TYPE LIJST
         // ========================
 
@@ -231,8 +272,22 @@ namespace QuadroApp.Model.DB
         [NotMapped]
         public bool HeeftInleg => InlegBreedteCm.HasValue && InlegHoogteCm.HasValue;
 
+        /// <summary>US-53 — artikelnummer van de gekozen inleg (kader/afstandshouder), indien gekozen.</summary>
         [NotMapped]
-        public string InlegLabel => HeeftInleg ? $"Inleg {InlegBreedteCm:0.#}×{InlegHoogteCm:0.#} cm" : "";
+        public string InlegNummer => InlegTypeLijst?.Artikelnummer ?? "";
+
+        [NotMapped]
+        public string InlegLabel
+        {
+            get
+            {
+                var maat = HeeftInleg ? $"{InlegBreedteCm:0.#}×{InlegHoogteCm:0.#} cm" : "";
+                var nr = string.IsNullOrEmpty(InlegNummer) ? "" : $"nr. {InlegNummer}";
+                if (maat.Length == 0 && nr.Length == 0) return "";
+                var kern = maat.Length > 0 && nr.Length > 0 ? $"{maat} · {nr}" : maat + nr;
+                return $"Inleg {kern}";
+            }
+        }
 
         [NotMapped]
         public string AfwerkingSamenvatting

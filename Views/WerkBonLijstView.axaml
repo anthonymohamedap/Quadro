@@ -118,7 +118,7 @@
 														   TextTrimming="CharacterEllipsis"
 														   ToolTip.Tip="{Binding Offerte.Klant.VolledigeNaam}"/>
 												<StackPanel Orientation="Horizontal" Spacing="6">
-													<TextBlock Text="{Binding OfferteId, StringFormat='Offerte #{0}'}"
+													<TextBlock Text="{Binding Offerte.OfferteNummer, StringFormat='Offerte #{0}'}"
 															   Foreground="{DynamicResource TextSecondary}" FontSize="12"/>
 													<TextBlock Text="·" Foreground="{DynamicResource TextSecondary}" FontSize="12"/>
 													<TextBlock Text="{Binding AantalTaken, StringFormat='{}{0} taken'}"

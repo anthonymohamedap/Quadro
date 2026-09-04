@@ -102,7 +102,7 @@
                                   ColumnSpacing="8">
 
                                 <TextBlock Grid.Column="0"
-                                           Text="{Binding Id}"
+                                           Text="{Binding OfferteNummer}"
                                            Classes="h3"
                                            VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis"/>

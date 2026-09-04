@@ -36,6 +36,25 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
     // en we SelectedTypeLijst syncen vanuit de regel.
     private bool _syncingTypeLijst;
 
+    // ── US-53: Inleg-TypeLijst zoeken + selectie (zelfde patroon als TypeLijst) ──
+    // Deelt dezelfde bron-catalogus (TypeLijsten) maar met een eigen filter + selectie,
+    // zodat het inleg-nummer los van de kaderkeuze gekozen kan worden.
+    [ObservableProperty] private ObservableCollection<TypeLijst> gefilterdeInlegTypeLijsten = new();
+    [ObservableProperty] private string? inlegTypeLijstZoekterm;
+    [ObservableProperty] private TypeLijst? selectedInlegTypeLijst;
+    private bool _syncingInlegTypeLijst;
+
+    // ── US-58: kant-en-klaar kader zoeken + selectie (zelfde patroon als TypeLijst, maar
+    // zonder zoekterm/filter — de lijst is klein). Alternatief voor TypeLijst: bij keuze worden
+    // BreedteCm/HoogteCm van de regel automatisch overgenomen (de maat ligt vast). ──
+    [ObservableProperty] private ObservableCollection<KantKlaarKader> kantKlaarKaders = new();
+    [ObservableProperty] private KantKlaarKader? selectedKantKlaarKader;
+    private bool _syncingKantKlaarKader;
+
+    /// <summary>US-58 — true zodra de huidige regel een kant-en-klaar kader gebruikt: de UI zet
+    /// Breedte/Hoogte dan read-only, want de maat ligt vast.</summary>
+    public bool HasKantKlaarKader => SelectedRegel?.KantKlaarKaderId is not null;
+
     // ── Afwerking dropdowns ──
     [ObservableProperty] private ObservableCollection<AfwerkingsOptie> glasOpties = new();
     [ObservableProperty] private ObservableCollection<AfwerkingsOptie> passe1Opties = new();
@@ -59,6 +78,17 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
                 try { SelectedTypeLijst = value?.TypeLijst; }
                 finally { _syncingTypeLijst = false; }
 
+                // US-53: idem voor het inleg-nummer.
+                _syncingInlegTypeLijst = true;
+                try { SelectedInlegTypeLijst = value?.InlegTypeLijst; }
+                finally { _syncingInlegTypeLijst = false; }
+
+                // US-58: idem voor het kant-en-klaar kader.
+                _syncingKantKlaarKader = true;
+                try { SelectedKantKlaarKader = value?.KantKlaarKader; }
+                finally { _syncingKantKlaarKader = false; }
+                OnPropertyChanged(nameof(HasKantKlaarKader));
+
                 RegelDuplicerenCommand.NotifyCanExecuteChanged();
                 ApplyLegacyCodeCommand.NotifyCanExecuteChanged();
                 GenerateLegacyCodeCommand.NotifyCanExecuteChanged();
@@ -78,6 +108,17 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
         OpenTypeLijstCommand.NotifyCanExecuteChanged();
         if (_syncingTypeLijst || SelectedRegel is null) return;
         SelectedRegel.TypeLijst = value;
+
+        // Een regel heeft óf een op-maat lijst, óf een kant-en-klaar kader, nooit beide.
+        if (value is not null && SelectedRegel.KantKlaarKaderId is not null)
+        {
+            SelectedRegel.KantKlaarKader = null;
+            _syncingKantKlaarKader = true;
+            try { SelectedKantKlaarKader = null; }
+            finally { _syncingKantKlaarKader = false; }
+            OnPropertyChanged(nameof(HasKantKlaarKader));
+        }
+
         RegelChanged?.Invoke();
     }
 
@@ -90,6 +131,54 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
         _syncingTypeLijst = true;
         try { SelectedTypeLijst = SelectedRegel?.TypeLijst; }
         finally { _syncingTypeLijst = false; }
+    }
+
+    /// <summary>US-53 — schrijf de gekozen inleg-TypeLijst terug naar de huidige regel.</summary>
+    partial void OnSelectedInlegTypeLijstChanged(TypeLijst? value)
+    {
+        if (_syncingInlegTypeLijst || SelectedRegel is null) return;
+        SelectedRegel.InlegTypeLijst = value;
+        RegelChanged?.Invoke();
+    }
+
+    /// <summary>US-53 — synct SelectedInlegTypeLijst vanuit de huidige SelectedRegel.</summary>
+    public void SyncInlegTypeLijstFromSelectedRegel()
+    {
+        _syncingInlegTypeLijst = true;
+        try { SelectedInlegTypeLijst = SelectedRegel?.InlegTypeLijst; }
+        finally { _syncingInlegTypeLijst = false; }
+    }
+
+    /// <summary>US-58 — schrijf het gekozen kant-en-klaar kader terug naar de huidige regel en
+    /// neem meteen de vaste maat van het kader over (Breedte/Hoogte worden in de UI read-only
+    /// zodra <see cref="HasKantKlaarKader"/> true is).</summary>
+    partial void OnSelectedKantKlaarKaderChanged(KantKlaarKader? value)
+    {
+        if (_syncingKantKlaarKader || SelectedRegel is null) return;
+
+        SelectedRegel.KantKlaarKader = value;
+        if (value is not null)
+        {
+            // Het kader is al volledig afgewerkt — een eventueel eerder gekozen afwerking
+            // (glas/passe-partout/...) mag niet blijven hangen, ook al toont de UI die niet meer.
+            SelectedRegel.Glas = null;
+            SelectedRegel.PassePartout1 = null;
+            SelectedRegel.PassePartout2 = null;
+            SelectedRegel.DiepteKern = null;
+            SelectedRegel.Opkleven = null;
+            SelectedRegel.Rug = null;
+        }
+        OnPropertyChanged(nameof(HasKantKlaarKader));
+        RegelChanged?.Invoke();
+    }
+
+    /// <summary>US-58 — synct SelectedKantKlaarKader vanuit de huidige SelectedRegel.</summary>
+    public void SyncKantKlaarKaderFromSelectedRegel()
+    {
+        _syncingKantKlaarKader = true;
+        try { SelectedKantKlaarKader = SelectedRegel?.KantKlaarKader; }
+        finally { _syncingKantKlaarKader = false; }
+        OnPropertyChanged(nameof(HasKantKlaarKader));
     }
 
     // ── LegacyCode proxy ──
@@ -145,6 +234,47 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
         // remove items that shouldn't be there, add items that are missing.
         // The selected item is never momentarily absent → ComboBox keeps its selection.
         ApplyTypeLijstFilter(value);
+    }
+
+    partial void OnInlegTypeLijstZoektermChanged(string? value) => ApplyInlegTypeLijstFilter(value);
+
+    /// <summary>US-53 — filtert GefilterdeInlegTypeLijsten via diff (nooit Clear), zelfde
+    /// aanpak als ApplyTypeLijstFilter zodat de ComboBox zijn SelectedItem niet verliest.</summary>
+    public void ApplyInlegTypeLijstFilter(string? zoekterm)
+    {
+        System.Collections.Generic.List<TypeLijst> target;
+        if (string.IsNullOrWhiteSpace(zoekterm))
+        {
+            target = new System.Collections.Generic.List<TypeLijst>(TypeLijsten);
+        }
+        else
+        {
+            var z = zoekterm.Trim().ToLowerInvariant();
+            target = TypeLijsten
+                .Where(x => x.Artikelnummer != null &&
+                            x.Artikelnummer.ToLowerInvariant().Contains(z))
+                .ToList();
+        }
+
+        var targetSet = new System.Collections.Generic.HashSet<TypeLijst>(target);
+
+        for (int i = GefilterdeInlegTypeLijsten.Count - 1; i >= 0; i--)
+        {
+            if (!targetSet.Contains(GefilterdeInlegTypeLijsten[i]))
+                GefilterdeInlegTypeLijsten.RemoveAt(i);
+        }
+
+        var currentSet = new System.Collections.Generic.HashSet<TypeLijst>(GefilterdeInlegTypeLijsten);
+        int insertAt = 0;
+        foreach (var item in target)
+        {
+            if (!currentSet.Contains(item))
+            {
+                GefilterdeInlegTypeLijsten.Insert(insertAt, item);
+                currentSet.Add(item);
+            }
+            insertAt++;
+        }
     }
 
     /// <summary>
@@ -218,6 +348,7 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
         {
             AantalStuks = s.AantalStuks, BreedteCm = s.BreedteCm, HoogteCm = s.HoogteCm,
             InlegBreedteCm = s.InlegBreedteCm, InlegHoogteCm = s.InlegHoogteCm,
+            InlegTypeLijstId = s.InlegTypeLijst?.Id ?? s.InlegTypeLijstId, InlegTypeLijst = s.InlegTypeLijst,
             Titel = s.Titel, Opmerking = s.Opmerking,
             TypeLijstId = s.TypeLijst?.Id ?? s.TypeLijstId, TypeLijst = s.TypeLijst,
             GlasId = s.Glas?.Id ?? s.GlasId, Glas = s.Glas,

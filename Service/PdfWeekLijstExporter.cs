@@ -174,12 +174,12 @@ public sealed class PdfWeekLijstExporter
                 row.ConstantItem(175).PaddingLeft(8).Column(right =>
                 {
                     right.Spacing(1);
-                    var inleg1 = (!string.IsNullOrWhiteSpace(item.Inleg1) && item.Inleg1 != "×")
-                        ? item.Inleg1 : "";
-                    right.Item().Text($"inleg 1 : {inleg1}").FontSize(9);
-                    right.Item().Text($"inleg 2 : {item.Inleg2}").FontSize(9);
-                    right.Item().Text("artikel 1 :").FontSize(9);
-                    right.Item().Text("artikel 2 :").FontSize(9);
+                    // US-53: Inleg1 is de zelfbeschrijvende InlegLabel ("Inleg 40×50 cm · nr. 123"),
+                    // bevat dus al maat + inleg-nummer.
+                    if (!string.IsNullOrWhiteSpace(item.Inleg1))
+                        right.Item().Text(item.Inleg1).FontSize(9);
+                    if (!string.IsNullOrWhiteSpace(item.Inleg2))
+                        right.Item().Text($"inleg 2 : {item.Inleg2}").FontSize(9);
 
                     // Afwerkingen
                     if (!string.IsNullOrWhiteSpace(item.GlasBeschrijving))
