@@ -1377,6 +1377,45 @@ namespace QuadroApp.Migrations
                     b.ToTable("WerkTaken");
                 });
 
+            modelBuilder.Entity("QuadroApp.Model.DB.WinkelVerkoop", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AangemaaktOp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Aantal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Betaalwijze")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("BtwPct")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Datum")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Omschrijving")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("PrijsInclBtw")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("WinkelVerkopen");
+                });
+
             modelBuilder.Entity("QuadroApp.Model.DB.AfwerkingsOptie", b =>
                 {
                     b.HasOne("QuadroApp.Model.DB.AfwerkingsGroep", "AfwerkingsGroep")
