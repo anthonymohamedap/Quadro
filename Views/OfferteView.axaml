@@ -354,6 +354,17 @@
 							<!-- US-53: nummer van de inleg (kader/afstandshouder) uit dezelfde catalogus als de kadernummers -->
 							<TextBlock Grid.Row="3" Grid.Column="0" Text="Inleg nr." VerticalAlignment="Top" Margin="0,4,0,0"/>
 							<StackPanel Grid.Row="3" Grid.Column="1" Spacing="4">
+								<!-- US-64: bevestigingsblok, zelfde stijl als de hoofdlijst-picker hierboven -->
+								<Border Background="{DynamicResource InfoBg}"
+										CornerRadius="6"
+										Padding="6">
+									<TextBlock FontWeight="SemiBold"
+											   Foreground="{DynamicResource InfoText}"
+											   TextTrimming="CharacterEllipsis"
+											   ToolTip.Tip="{Binding SelectedRegelInlegTypeLijst.Artikelnummer}"
+											   Text="{Binding SelectedRegelInlegTypeLijst.Artikelnummer,
+													  TargetNullValue='Geen inleg-nummer geselecteerd'}"/>
+								</Border>
 								<TextBox Watermark="Zoek artikelnummer…"
 									 Text="{Binding InlegTypeLijstZoekterm, UpdateSourceTrigger=PropertyChanged}"/>
 								<ComboBox ItemsSource="{Binding GefilterdeInlegTypeLijsten}"
