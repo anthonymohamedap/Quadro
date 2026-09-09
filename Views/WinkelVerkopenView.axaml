@@ -1,0 +1,260 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:QuadroApp.Views.Controls"
+    xmlns:vm="using:QuadroApp.ViewModels"
+    xmlns:m="clr-namespace:QuadroApp.Model.DB;assembly=QuadroApp.Data"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:conv="using:QuadroApp.Converters"
+    x:Class="QuadroApp.Views.WinkelVerkopenView"
+    x:DataType="vm:WinkelVerkopenViewModel"
+    d:DataContext="{d:DesignInstance vm:WinkelVerkopenViewModel, IsDesignTimeCreatable=True}"
+    Background="{DynamicResource SurfaceMuted}">
+
+    <UserControl.Resources>
+        <conv:BoolToThicknessConverter x:Key="BoolToThicknessSlide"
+                                       WhenTrue="0"
+                                       WhenFalse="0,0,420,0"/>
+        <conv:BoolToThicknessConverter x:Key="BoolToMainShift"
+                                       WhenTrue="0,0,440,0"
+                                       WhenFalse="0"/>
+        <conv:BoolToDoubleConverter x:Key="BoolToOpacity"
+                                    WhenTrue="1"
+                                    WhenFalse="0"/>
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <controls:QuadroHeader Title="WINKELVERKOPEN" BackCommand="{Binding GaTerugCommand}"/>
+
+        <Grid Grid.Row="1" Margin="24">
+
+            <Grid RowDefinitions="Auto,Auto,*,Auto"
+                  RowSpacing="12"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Stretch"
+                  MaxWidth="900">
+
+                <Grid.Transitions>
+                    <Transitions>
+                        <ThicknessTransition Property="Margin" Duration="0:0:0.25"/>
+                    </Transitions>
+                </Grid.Transitions>
+                <Grid.Margin>
+                    <Binding Path="IsDetailOpen" Converter="{StaticResource BoolToMainShift}"/>
+                </Grid.Margin>
+
+                <TextBlock Text="Winkelverkopen" Classes="h1" TextTrimming="CharacterEllipsis"/>
+
+                <Grid Grid.Row="1"
+                      ColumnDefinitions="Auto,Auto,Auto,*"
+                      ColumnSpacing="10">
+
+                    <TextBox Grid.Column="0"
+                             MinWidth="200"
+                             Watermark="Zoek op omschrijving..."
+                             Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <TextBlock Text="Van" Classes="label" VerticalAlignment="Center"/>
+                        <DatePicker SelectedDate="{Binding FilterVanaf, Mode=TwoWay}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <TextBlock Text="Tot" Classes="label" VerticalAlignment="Center"/>
+                        <DatePicker SelectedDate="{Binding FilterTot, Mode=TwoWay}"/>
+                    </StackPanel>
+
+                    <WrapPanel Grid.Column="3" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Content="➕ Nieuw" Command="{Binding NieuwCommand}" Classes="MainBtn" Margin="0,0,6,6" IsEnabled="{Binding MagBewerken}"/>
+                        <Button Content="🔄 Ververs" Command="{Binding RefreshCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
+                    </WrapPanel>
+                </Grid>
+
+                <Border Grid.Row="2"
+                        Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="0">
+
+                    <Grid RowDefinitions="Auto,*">
+                        <Border Background="{DynamicResource SurfaceHeader}"
+                                Padding="10,6"
+                                BorderBrush="{DynamicResource BorderSubtle}"
+                                BorderThickness="0,0,0,1">
+
+                            <Grid ColumnDefinitions="1*,3*,1*,1*,1*,1*,1*"
+                                  ColumnSpacing="12">
+
+                                <TextBlock Text="Datum" Classes="label" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="1" Text="Omschrijving" Classes="label" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="2" Text="Aantal" Classes="label" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="3" Text="Prijs incl." Classes="label" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="4" Text="Btw %" Classes="label" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="5" Text="Betaalwijze" Classes="label" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="6" Text="Totaal" Classes="label" TextTrimming="CharacterEllipsis"/>
+                            </Grid>
+                        </Border>
+
+                        <ListBox Grid.Row="1"
+                                 ItemsSource="{Binding GefilterdeVerkopen}"
+                                 SelectedItem="{Binding GeselecteerdeVerkoop, Mode=TwoWay}"
+                                 BorderThickness="0"
+                                 Background="Transparent"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="m:WinkelVerkoop">
+
+                                    <Border Padding="10,6">
+                                        <Grid ColumnDefinitions="1*,3*,1*,1*,1*,1*,1*"
+                                              ColumnSpacing="12">
+
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding Datum, StringFormat='{}{0:dd/MM/yyyy}'}"
+                                                       TextTrimming="CharacterEllipsis"/>
+
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding Omschrijving}"
+                                                       FontWeight="Bold"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip.Tip="{Binding Omschrijving}"/>
+
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding Aantal}"
+                                                       TextTrimming="CharacterEllipsis"/>
+
+                                            <TextBlock Grid.Column="3"
+                                                       Text="{Binding PrijsInclBtw, StringFormat='{}€ {0:0.00}'}"
+                                                       TextTrimming="CharacterEllipsis"/>
+
+                                            <TextBlock Grid.Column="4"
+                                                       Text="{Binding BtwPct, StringFormat='{}{0:0.00}%'}"
+                                                       TextTrimming="CharacterEllipsis"/>
+
+                                            <TextBlock Grid.Column="5"
+                                                       Text="{Binding Betaalwijze}"
+                                                       TextTrimming="CharacterEllipsis"/>
+
+                                            <TextBlock Grid.Column="6"
+                                                       Text="{Binding TotaalInclBtw, StringFormat='{}€ {0:0.00}'}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </Grid>
+                                    </Border>
+
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+
+                        </ListBox>
+                    </Grid>
+
+                </Border>
+
+                <Grid Grid.Row="3" ColumnDefinitions="*,Auto">
+                    <TextBlock Text="{Binding AantalVerkopen, StringFormat='Aantal verkopen: {0}'}"
+                               Classes="caption"
+                               HorizontalAlignment="Left"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding TotaalOmzetIncl, StringFormat='Totaal incl. btw: € {0:0.00}'}"
+                               Classes="caption"
+                               HorizontalAlignment="Right"/>
+                </Grid>
+            </Grid>
+
+            <Border Width="400"
+                    Padding="24"
+                    Background="{DynamicResource Surface}"
+                    CornerRadius="10"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    IsHitTestVisible="{Binding IsDetailOpen}">
+
+                <Border.Transitions>
+                    <Transitions>
+                        <ThicknessTransition Property="Margin" Duration="0:0:0.2"/>
+                        <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+                    </Transitions>
+                </Border.Transitions>
+
+                <Border.Margin>
+                    <Binding Path="IsDetailOpen" Converter="{StaticResource BoolToThicknessSlide}"/>
+                </Border.Margin>
+                <Border.Opacity>
+                    <Binding Path="IsDetailOpen" Converter="{StaticResource BoolToOpacity}"/>
+                </Border.Opacity>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Verkoop details" Classes="h1" TextTrimming="CharacterEllipsis"/>
+
+                        <Border Background="{DynamicResource WarningBg}"
+                                CornerRadius="8"
+                                Padding="10"
+                                IsVisible="{Binding !IsDetailOpen}">
+                            <TextBlock Text="Selecteer links een verkoop om details te zien, of klik 'Nieuw'."
+                                       Foreground="{DynamicResource TextPrimary}"
+                                       TextWrapping="Wrap"/>
+                        </Border>
+
+                        <StackPanel x:DataType="vm:WinkelVerkopenViewModel"
+                                    Spacing="18"
+                                    IsVisible="{Binding IsDetailOpen}"
+                                    IsEnabled="{Binding MagBewerken}">
+
+                            <Grid ColumnDefinitions="1*,2*"
+                                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                                  RowSpacing="10"
+                                  ColumnSpacing="15">
+
+                                <TextBlock Text="Datum" Grid.Row="0" Grid.Column="0" Classes="label" VerticalAlignment="Center"/>
+                                <DatePicker Grid.Row="0" Grid.Column="1" SelectedDate="{Binding VerkoopDatum, Mode=TwoWay}"/>
+
+                                <TextBlock Text="Omschrijving" Grid.Row="1" Grid.Column="0" Classes="label" VerticalAlignment="Top" Margin="0,4,0,0"/>
+                                <TextBox Grid.Row="1"
+                                         Grid.Column="1"
+                                         Foreground="{DynamicResource TextPrimary}"
+                                         Text="{Binding GeselecteerdeVerkoop.Omschrijving, Mode=TwoWay}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         MinHeight="50"/>
+
+                                <TextBlock Text="Aantal" Grid.Row="2" Grid.Column="0" Classes="label" VerticalAlignment="Center"/>
+                                <NumericUpDown Foreground="{DynamicResource TextPrimary}" Value="{Binding GeselecteerdeVerkoop.Aantal, Mode=TwoWay}" Grid.Row="2" Grid.Column="1"/>
+
+                                <TextBlock Text="Prijs (incl. btw)" Grid.Row="3" Grid.Column="0" Classes="label" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                <NumericUpDown Foreground="{DynamicResource TextPrimary}" Value="{Binding GeselecteerdeVerkoop.PrijsInclBtw, Mode=TwoWay}" Grid.Row="3" Grid.Column="1"/>
+
+                                <TextBlock Text="Btw %" Grid.Row="4" Grid.Column="0" Classes="label" VerticalAlignment="Center"/>
+                                <NumericUpDown Foreground="{DynamicResource TextPrimary}" Value="{Binding GeselecteerdeVerkoop.BtwPct, Mode=TwoWay}" Grid.Row="4" Grid.Column="1"/>
+
+                                <TextBlock Text="Betaalwijze" Grid.Row="5" Grid.Column="0" Classes="label" VerticalAlignment="Center"/>
+                                <ComboBox Grid.Row="5"
+                                          Grid.Column="1"
+                                          HorizontalAlignment="Stretch"
+                                          ItemsSource="{Binding BetaalwijzeOpties}"
+                                          SelectedItem="{Binding GeselecteerdeVerkoop.Betaalwijze, Mode=TwoWay}"/>
+
+                            </Grid>
+
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0" Spacing="8">
+                                <Button Content="Verwijderen"
+                                        Command="{Binding DeleteCommand}"
+                                        Classes="MainBtn"
+                                        Padding="16,6"/>
+                                <Button Content="Opslaan"
+                                        Command="{Binding SaveCommand}"
+                                        Classes="MainBtn"
+                                        Padding="16,6"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+
+            </Border>
+
+        </Grid>
+    </Grid>
+</UserControl>

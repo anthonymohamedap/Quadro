@@ -44,6 +44,14 @@
 						</StackPanel>
 					</Button>
 
+					<Button Command="{Binding OpenWinkelVerkopenCommand}" Classes="NavButton">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<Path Data="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.24-5.88c.09-.16.14-.35.14-.54 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"
+								  Fill="{Binding $parent[Button].Foreground}" Width="16" Height="16" Stretch="Uniform"/>
+							<TextBlock Text="Winkelverkopen" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
+
 					<Button Command="{Binding OpenLeveranciersCommand}" Classes="NavButton">
 						<StackPanel Orientation="Horizontal" Spacing="8">
 							<Path Data="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"
@@ -237,6 +245,21 @@
 							<StackPanel Spacing="3">
 								<TextBlock Text="Standaardkaders" Classes="h3" TextTrimming="CharacterEllipsis"/>
 								<TextBlock Text="Standaardkaders en prijzen" Classes="label" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+							</StackPanel>
+						</StackPanel>
+					</Button>
+
+					<!-- Winkelverkopen -->
+					<Button Classes="CardButton" Command="{Binding OpenWinkelVerkopenCommand}">
+						<StackPanel Spacing="10">
+							<Border Background="{DynamicResource IconEmeraldBg}" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
+								<Path Data="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.24-5.88c.09-.16.14-.35.14-.54 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"
+									  Fill="{DynamicResource IconEmerald}" Width="20" Height="20" Stretch="Uniform"
+									  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+							</Border>
+							<StackPanel Spacing="3">
+								<TextBlock Text="Winkelverkopen" Classes="h3" TextTrimming="CharacterEllipsis"/>
+								<TextBlock Text="Toonbankverkopen uitboeken" Classes="label" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
 							</StackPanel>
 						</StackPanel>
 					</Button>

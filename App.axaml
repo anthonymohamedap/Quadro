@@ -37,6 +37,10 @@
 			<views:KantKlaarKaderenView/>
 		</DataTemplate>
 
+		<DataTemplate DataType="{x:Type vm:WinkelVerkopenViewModel}">
+			<views:WinkelVerkopenView/>
+		</DataTemplate>
+
 		<DataTemplate DataType="{x:Type vm:LeveranciersViewModel}">
 			<views:LeveranciersView/>
 		</DataTemplate>
