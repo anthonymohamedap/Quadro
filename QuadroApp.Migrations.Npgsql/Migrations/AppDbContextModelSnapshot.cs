@@ -1442,6 +1442,47 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.ToTable("WerkTaken");
                 });
 
+            modelBuilder.Entity("QuadroApp.Model.DB.WinkelVerkoop", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AangemaaktOp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("Aantal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Betaalwijze")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<decimal>("BtwPct")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<DateTime>("Datum")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Omschrijving")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<decimal>("PrijsInclBtw")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("WinkelVerkopen");
+                });
+
             modelBuilder.Entity("QuadroApp.Model.DB.AfwerkingsOptie", b =>
                 {
                     b.HasOne("QuadroApp.Model.DB.AfwerkingsGroep", "AfwerkingsGroep")

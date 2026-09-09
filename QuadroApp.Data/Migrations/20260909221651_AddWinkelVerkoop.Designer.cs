@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QuadroApp.Data;
 
@@ -10,9 +11,11 @@ using QuadroApp.Data;
 namespace QuadroApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260909221651_AddWinkelVerkoop")]
+    partial class AddWinkelVerkoop
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
@@ -908,10 +911,6 @@ namespace QuadroApp.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("Korting")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("KortingPct")
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 

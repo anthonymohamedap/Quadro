@@ -11,6 +11,7 @@ namespace QuadroApp.Data
     {
         public DbSet<TypeLijst> TypeLijsten => Set<TypeLijst>();
         public DbSet<KantKlaarKader> KantKlaarKaders => Set<KantKlaarKader>();
+        public DbSet<WinkelVerkoop> WinkelVerkopen => Set<WinkelVerkoop>();
         public DbSet<AfwerkingsGroep> AfwerkingsGroepen => Set<AfwerkingsGroep>();
         public DbSet<AfwerkingsOptie> AfwerkingsOpties => Set<AfwerkingsOptie>();
         public DbSet<AfwerkingsVariant> AfwerkingsVarianten => Set<AfwerkingsVariant>();
@@ -314,6 +315,18 @@ namespace QuadroApp.Data
                 entity.Property(w => w.TotaalPrijsIncl).HasPrecision(10, 2);
 
                 // Index op OfferteId heb je al via [Index] attribuut. :contentReference[oaicite:5]{index=5}  
+            });
+
+            // ───────── WinkelVerkoop (US-66) ─────────
+            b.Entity<WinkelVerkoop>(entity =>
+            {
+                entity.Property(x => x.Omschrijving).HasMaxLength(300).IsRequired();
+                entity.Property(x => x.Aantal).HasPrecision(18, 2);
+                entity.Property(x => x.PrijsInclBtw).HasPrecision(18, 2);
+                entity.Property(x => x.BtwPct).HasPrecision(5, 2);
+                entity.Property(x => x.Betaalwijze).HasConversion<string>().HasMaxLength(20);
+                // Geen soft-delete-filter: niets anders verwijst naar WinkelVerkoop, dus hard
+                // delete is aanvaardbaar (blijft traceerbaar via AuditLog).
             });
 
             // ───────── WerkTaak ─────────
