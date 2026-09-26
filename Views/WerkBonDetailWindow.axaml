@@ -117,7 +117,7 @@
                                     <TextBlock Text="{Binding OfferteRegel.AfmetingLabel, StringFormat='Afmeting: {0}'}" Foreground="{DynamicResource TextSecondary}"/>
                                     <TextBlock Text="{Binding OfferteRegel.InlegLabel}"
                                                Foreground="{DynamicResource TextSecondary}"
-                                               IsVisible="{Binding OfferteRegel.HeeftInleg}"/>
+                                               IsVisible="{Binding OfferteRegel.InlegLabel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                                     <TextBlock Text="{Binding DuurMinuten, StringFormat='Duur: {0} min'}" Foreground="{DynamicResource TextSecondary}"/>
                                     <TextBlock Text="{Binding GeplandVan, StringFormat='Van: {0:dd/MM HH:mm}'}" Foreground="{DynamicResource TextSecondary}"/>
                                     <TextBlock Text="{Binding GeplandTot, StringFormat='Tot: {0:dd/MM HH:mm}'}" Foreground="{DynamicResource TextSecondary}"/>

@@ -46,7 +46,7 @@ namespace QuadroApp.Converters
             var artikel  = parts.ElementAtOrDefault(0);
             var afmeting = parts.ElementAtOrDefault(1);
 
-            string? titel = null, lijstOpm = null, regelOpm = null, afhaal = null, korting = null;
+            string? titel = null, lijstOpm = null, regelOpm = null, afhaal = null, korting = null, inleg = null;
             var afwerkingen = new List<string>();
             var overig = new List<string>();
 
@@ -71,6 +71,7 @@ namespace QuadroApp.Converters
                     case "lijst_opm:": lijstOpm = val; break;
                     case "opm:":       regelOpm = val; break;
                     case "korting:":   korting = val; break;   // US-63
+                    case "inleg:":     inleg = val; break;     // US-71
                     case "afhaal:":
                         afhaal = DateTime.TryParseExact(val, "yyyy-MM-dd", CultureInfo.InvariantCulture,
                                     DateTimeStyles.None, out var d)
@@ -95,6 +96,7 @@ namespace QuadroApp.Converters
                 kop += $"  ·  {afmeting}";
             lines.Add(kop);
 
+            if (!string.IsNullOrWhiteSpace(inleg)) lines.Add($"Inleg: {inleg}");
             lines.AddRange(afwerkingen);
             lines.AddRange(overig);
             if (!string.IsNullOrWhiteSpace(lijstOpm)) lines.Add($"Lijst: {lijstOpm}");
