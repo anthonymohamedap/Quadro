@@ -416,9 +416,10 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         string? lijstOpmerking = null;
         string? regelAfhaalOp = null;
         decimal? regelKortingPct = null;
+        string? regelInleg = null;
         var operations = new List<string>();
 
-        var knownTags = new[] { "titel:", "glas:", "pp1:", "pp2:", "diepte:", "opkleven:", "rug:", "lijst_opm:", "opm:", "afhaal:", "korting:" };
+        var knownTags = new[] { "titel:", "glas:", "pp1:", "pp2:", "diepte:", "opkleven:", "rug:", "lijst_opm:", "opm:", "afhaal:", "korting:", "inleg:" };
         var tagLabels = new Dictionary<string, string>
         {
             ["glas:"]     = "Glas",
@@ -445,6 +446,8 @@ public sealed class PdfFactuurExporter : IFactuurExporter
                     regelOpmerking = value;
                 else if (matchedTag == "lijst_opm:")
                     lijstOpmerking = value;
+                else if (matchedTag == "inleg:")
+                    regelInleg = value;   // US-71
                 else if (matchedTag == "korting:")
                 {
                     // US-63: korting in % op deze inlijsting
@@ -487,7 +490,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             HoogteCm: hoogte,
             AfwCode: null,
             LijstCode: artikelnummer,
-            Inleg1: null,
+            Inleg1: regelInleg,   // US-71
             Inleg2: null,
             OperationLines: operations,
             Afwerkingen: afwerkingen,
