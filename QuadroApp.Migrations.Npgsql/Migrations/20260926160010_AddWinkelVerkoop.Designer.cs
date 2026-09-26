@@ -12,7 +12,7 @@ using QuadroApp.Data;
 namespace QuadroApp.Migrations.Npgsql.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260909221705_AddWinkelVerkoop")]
+    [Migration("20260926160010_AddWinkelVerkoop")]
     partial class AddWinkelVerkoop
     {
         /// <inheritdoc />
@@ -956,6 +956,10 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("Korting")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("KortingPct")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
