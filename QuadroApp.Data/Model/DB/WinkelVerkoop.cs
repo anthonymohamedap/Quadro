@@ -27,8 +27,9 @@ namespace QuadroApp.Model.DB
         [Precision(18, 2)]
         public decimal PrijsInclBtw { get; set; }
 
+        /// <summary>Standaard 21 % (gewone Belgische btw) — aanpasbaar per verkoop.</summary>
         [Precision(5, 2)]
-        public decimal BtwPct { get; set; }
+        public decimal BtwPct { get; set; } = 21m;
 
         public Betaalwijze Betaalwijze { get; set; }
 

@@ -11,7 +11,7 @@ using QuadroApp.Data;
 namespace QuadroApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260909221651_AddWinkelVerkoop")]
+    [Migration("20260926160000_AddWinkelVerkoop")]
     partial class AddWinkelVerkoop
     {
         /// <inheritdoc />
@@ -911,6 +911,10 @@ namespace QuadroApp.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("Korting")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("KortingPct")
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
