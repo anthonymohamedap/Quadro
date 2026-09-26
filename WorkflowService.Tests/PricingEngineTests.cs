@@ -381,4 +381,84 @@ public class PricingEngineTests
         // Regels: 91.17 + 101.30 = 192.47; daarna 10% op het totaal → 173.223 → 173.22
         Assert.Equal(173.22m, result.SubtotaalExBtw);
     }
+
+    // ── US-65: inleg telt mee in de prijsberekening ────────────────────────────
+
+    private static TypeLijst HouLijst() => new()
+    {
+        BreedteCm = 5,
+        Soort = "HOU",
+        WinstFactor = 3.5m,
+        AfvalPercentage = 20m,
+        PrijsPerMeter = 10m,
+        VasteKost = 1m,
+        WerkMinuten = 30
+    };
+
+    [Fact]
+    public void Calculate_Inleg_MetEigenMaten_TeltMee()
+    {
+        var regel = HouRegel();
+        regel.InlegTypeLijst = HouLijst();
+        regel.InlegBreedteCm = 20m;
+        regel.InlegHoogteCm = 30m;
+
+        var result = _sut.Calculate(new Offerte { Regels = [regel] }, 60m, 21m, 0m, 1m, 10m);
+
+        // Hoofdkader 30×40 = 101.30; inleg 20×30 = 86.50 (zelfde lijstformule)
+        Assert.Equal(187.80m, Assert.Single(result.Regels).TotaalExcl);
+    }
+
+    [Fact]
+    public void Calculate_Inleg_ZonderMaten_ValtTerugOpBuitenmaat()
+    {
+        var regel = HouRegel();
+        regel.InlegTypeLijst = HouLijst();
+
+        var result = _sut.Calculate(new Offerte { Regels = [regel] }, 60m, 21m, 0m, 1m, 10m);
+
+        Assert.Equal(202.60m, Assert.Single(result.Regels).TotaalExcl);   // 2 × 101.30
+    }
+
+    [Fact]
+    public void Calculate_InlegMaten_ZonderInlegNummer_VerandertLijstprijsNiet()
+    {
+        var regel = HouRegel();
+        regel.InlegBreedteCm = 20m;
+        regel.InlegHoogteCm = 30m;
+
+        var result = _sut.Calculate(new Offerte { Regels = [regel] }, 60m, 21m, 0m, 1m, 10m);
+
+        Assert.Equal(101.30m, Assert.Single(result.Regels).TotaalExcl);
+    }
+
+    [Fact]
+    public void Calculate_Inleg_BijKantKlaarKader_TeltNietMee()
+    {
+        var regel = new OfferteRegel
+        {
+            AantalStuks = 1,
+            BreedteCm = 30m,
+            HoogteCm = 40m,
+            KantKlaarKader = new KantKlaarKader { PrijsPerStukExcl = 50m },
+            InlegTypeLijst = HouLijst()
+        };
+
+        var result = _sut.Calculate(new Offerte { Regels = [regel] }, 60m, 21m, 0m, 1m, 10m);
+
+        Assert.Equal(50m, Assert.Single(result.Regels).TotaalExcl);
+    }
+
+    [Fact]
+    public void Calculate_Inleg_EnRegelKorting_KortingOpHetGeheel()
+    {
+        var regel = HouRegel(kortingPct: 10m);
+        regel.InlegTypeLijst = HouLijst();
+        regel.InlegBreedteCm = 20m;
+        regel.InlegHoogteCm = 30m;
+
+        var result = _sut.Calculate(new Offerte { Regels = [regel] }, 60m, 21m, 0m, 1m, 10m);
+
+        Assert.Equal(169.02m, Assert.Single(result.Regels).TotaalExcl);   // 187.80 − 10%
+    }
 }
