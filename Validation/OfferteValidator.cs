@@ -149,6 +149,12 @@ public sealed class OfferteValidator : IOfferteValidator
             if (r.Korting < 0)
                 vr.Warn($"{prefix}.{nameof(OfferteRegel.Korting)}", "Korting is negatief (bedoel je toeslag?).");
 
+            // US-63: korting in % op deze inlijsting
+            if (r.KortingPct < 0m || r.KortingPct >= 100m)
+                vr.Error($"{prefix}.{nameof(OfferteRegel.KortingPct)}", "Korting op een inlijsting moet tussen 0 en 99 % liggen.");
+            else if (r.KortingPct > 0m && r.AfgesprokenPrijsExcl.HasValue)
+                vr.Warn($"{prefix}.{nameof(OfferteRegel.KortingPct)}", "Er is een afgesproken prijs ingevuld — de korting op deze inlijsting telt dan niet mee.");
+
             // LegacyCode (optioneel) – als ingevuld moet 6 tekens zijn
             if (!string.IsNullOrWhiteSpace(r.LegacyCode) && r.LegacyCode.Trim().Length != 6)
                 vr.Error($"{prefix}.{nameof(OfferteRegel.LegacyCode)}", "Legacy-code moet exact 6 tekens zijn.");

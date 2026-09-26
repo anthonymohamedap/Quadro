@@ -911,6 +911,10 @@ namespace QuadroApp.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal>("KortingPct")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LegacyCode")
                         .HasMaxLength(6)
                         .HasColumnType("TEXT");

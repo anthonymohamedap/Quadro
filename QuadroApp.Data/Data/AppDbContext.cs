@@ -335,6 +335,7 @@ namespace QuadroApp.Data
                 entity.Property(x => x.HoogteCm).HasPrecision(18, 2);
                 entity.Property(x => x.ExtraPrijs).HasPrecision(18, 2);
                 entity.Property(x => x.Korting).HasPrecision(18, 2);
+                entity.Property(x => x.KortingPct).HasPrecision(18, 2);   // US-63
                 entity.Property(x => x.SubtotaalExBtw).HasPrecision(18, 2);
                 entity.Property(x => x.BtwBedrag).HasPrecision(18, 2);
                 entity.Property(x => x.TotaalInclBtw).HasPrecision(18, 2);

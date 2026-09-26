@@ -319,6 +319,34 @@ public partial class App : Application
     /// </summary>
     private static string GetConnectionString()
     {
+        var cs = ResolveConfiguredConnectionString();
+
+        // Dev-vangnet: een Debug-build draait nooit op de echte PostgreSQL-database, ook niet als
+        // %LOCALAPPDATA%\QuadroApp\appsettings.json (gedeeld met de geïnstalleerde app) of
+        // QUADRO_CONNECTION_STRING daarnaar wijst. Bewust toch PG in dev: QUADRO_DEV_ALLOW_PG=1.
+#if DEBUG
+        const bool isDebugBuild = true;
+#else
+        const bool isDebugBuild = false;
+#endif
+        var dataDir = GetDataDirectory();
+        var result = DevDatabaseGuard.Apply(cs, isDebugBuild,
+            Environment.GetEnvironmentVariable(DevDatabaseGuard.AllowPgEnvVar), dataDir, out var redirected);
+
+        if (redirected)
+        {
+            var melding = $"[DEV] Debug-build: PostgreSQL-verbinding genegeerd, gebruikt lokale dev-database " +
+                          $"{System.IO.Path.Combine(dataDir, DevDatabaseGuard.DevDbFileName)}. " +
+                          $"Zet {DevDatabaseGuard.AllowPgEnvVar}=1 om bewust op PostgreSQL te testen.";
+            System.Diagnostics.Debug.WriteLine(melding);
+            try { File.AppendAllText(_crashLogPath, melding + "\n"); } catch { /* nooit laten crashen */ }
+        }
+
+        return result;
+    }
+
+    private static string ResolveConfiguredConnectionString()
+    {
         // US-33: full connection string may come from an environment variable
         // (highest priority, useful for testing and server deployments).
         var fromEnv = Environment.GetEnvironmentVariable("QUADRO_CONNECTION_STRING");

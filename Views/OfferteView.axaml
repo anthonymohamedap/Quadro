@@ -354,6 +354,17 @@
 							<!-- US-53: nummer van de inleg (kader/afstandshouder) uit dezelfde catalogus als de kadernummers -->
 							<TextBlock Grid.Row="3" Grid.Column="0" Text="Inleg nr." VerticalAlignment="Top" Margin="0,4,0,0"/>
 							<StackPanel Grid.Row="3" Grid.Column="1" Spacing="4">
+								<!-- US-64: bevestigingsblok, zelfde stijl als de hoofdlijst-picker hierboven -->
+								<Border Background="{DynamicResource InfoBg}"
+										CornerRadius="6"
+										Padding="6">
+									<TextBlock FontWeight="SemiBold"
+											   Foreground="{DynamicResource InfoText}"
+											   TextTrimming="CharacterEllipsis"
+											   ToolTip.Tip="{Binding SelectedRegelInlegTypeLijst.Artikelnummer}"
+											   Text="{Binding SelectedRegelInlegTypeLijst.Artikelnummer,
+													  TargetNullValue='Geen inleg-nummer geselecteerd'}"/>
+								</Border>
 								<TextBox Watermark="Zoek artikelnummer…"
 									 Text="{Binding InlegTypeLijstZoekterm, UpdateSourceTrigger=PropertyChanged}"/>
 								<ComboBox ItemsSource="{Binding GefilterdeInlegTypeLijsten}"
@@ -373,11 +384,23 @@
 
 						<StackPanel Spacing="6">
 							<TextBlock Text="Prijs" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
-							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" RowSpacing="10" ColumnSpacing="12">
+							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" RowSpacing="10" ColumnSpacing="12">
 							<TextBlock Grid.Row="0" Grid.Column="0" Text="Afgesproken prijs (incl. BTW)" VerticalAlignment="Center" MaxWidth="220" TextWrapping="Wrap"/>
 							<TextBox Grid.Row="0"
                                      Grid.Column="1"
                                      Text="{Binding SelectedRegelAfgesprokenPrijs, Mode=TwoWay}"/>
+							<!-- US-63: korting in % op DEZE inlijsting (los van de korting op het offertetotaal).
+							     Telt niet mee als er een afgesproken prijs is ingevuld. -->
+							<TextBlock Grid.Row="1" Grid.Column="0" Text="Korting op deze inlijsting (%)" VerticalAlignment="Center" MaxWidth="220" TextWrapping="Wrap"/>
+							<NumericUpDown Grid.Row="1"
+                                           Grid.Column="1"
+                                           Minimum="0"
+                                           Maximum="99"
+                                           Increment="5"
+                                           FormatString="0.##"
+                                           Foreground="{DynamicResource TextPrimary}"
+                                           ToolTip.Tip="Enkel op deze inlijsting. Niet van toepassing als er een afgesproken prijs is ingevuld."
+                                           Value="{Binding SelectedRegelKortingPct, Mode=TwoWay}"/>
 							</Grid>
 						</StackPanel>
 
@@ -653,7 +676,7 @@
 								  ColumnSpacing="12">
 
 								<!-- KORTING -->
-								<TextBlock Text="Korting (%)" VerticalAlignment="Center"/>
+								<TextBlock Text="Korting op totaal (%)" VerticalAlignment="Center"/>
 								<NumericUpDown Grid.Row="0"
 											   Grid.Column="1"
 											   Minimum="0"

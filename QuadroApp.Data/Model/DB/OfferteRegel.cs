@@ -233,6 +233,12 @@ namespace QuadroApp.Model.DB
         public decimal ExtraPrijs { get; set; } = 0m;
         public decimal Korting { get; set; } = 0m;
 
+        /// <summary>US-63 — korting in % op DEZE inlijsting (bv. 10 = 10%), los van de korting op
+        /// het offertetotaal (<see cref="Offerte.KortingPct"/>). Wordt toegepast na de absolute
+        /// <see cref="Korting"/> en genegeerd wanneer <see cref="AfgesprokenPrijsExcl"/> ingevuld is
+        /// (afgesproken prijs = volledige override). Verschijnt per inlijsting op de bestelbon.</summary>
+        public decimal KortingPct { get; set; } = 0m;
+
         [MaxLength(6)]
         public string? LegacyCode { get; set; }
 
