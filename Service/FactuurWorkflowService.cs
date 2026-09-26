@@ -231,6 +231,11 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             if (r.Rug is not null)
                 segments.Add($"rug:{AfwLabel(r.Rug, r.RugVariant)}");
 
+            // US-71: inleg (maat + nummer) — telt sinds US-65 mee in de prijs, dus hoort op de bestelbon.
+            var inleg = InlegOmschrijving(r);
+            if (inleg is not null)
+                segments.Add($"inleg:{inleg}");
+
             // TypeLijst opmerking (tagged)
             if (!string.IsNullOrWhiteSpace(r.TypeLijst?.Opmerking))
                 segments.Add($"lijst_opm:{r.TypeLijst!.Opmerking}");
@@ -267,6 +272,21 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         }
 
         return lijnen;
+    }
+
+    /// <summary>US-71 — "20×30 cm · nr. 1234", enkel de delen die ingevuld zijn; null als er geen inleg is.
+    /// Invariante notatie zodat de bestelbon niet afhangt van de landinstelling van de pc.</summary>
+    public static string? InlegOmschrijving(OfferteRegel r)
+    {
+        var maat = r.InlegBreedteCm.HasValue && r.InlegHoogteCm.HasValue
+            ? $"{r.InlegBreedteCm.Value.ToString("0.##", CultureInfo.InvariantCulture)}×{r.InlegHoogteCm.Value.ToString("0.##", CultureInfo.InvariantCulture)} cm"
+            : null;
+        var nr = string.IsNullOrWhiteSpace(r.InlegTypeLijst?.Artikelnummer)
+            ? null
+            : $"nr. {r.InlegTypeLijst!.Artikelnummer.Trim().Replace("|", "/")}";
+
+        if (maat is null && nr is null) return null;
+        return maat is not null && nr is not null ? $"{maat} · {nr}" : maat ?? nr;
     }
 
     /// <summary>
