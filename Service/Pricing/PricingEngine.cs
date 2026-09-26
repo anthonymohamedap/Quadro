@@ -62,6 +62,12 @@ public sealed class PricingEngine
                 lineEx += r.ExtraPrijs;
                 lineEx -= r.Korting;
                 lineEx = Math.Max(0m, lineEx);
+
+                // US-63: korting in % op deze inlijsting (na de absolute korting). Niet van
+                // toepassing op een afgesproken prijs (die tak hierboven is een volledige override).
+                var regelKortingPct = Math.Clamp(r.KortingPct, 0m, 100m);
+                if (regelKortingPct > 0m)
+                    lineEx -= lineEx * (regelKortingPct / 100m);
             }
 
             lineEx *= Math.Max(1, r.AantalStuks);

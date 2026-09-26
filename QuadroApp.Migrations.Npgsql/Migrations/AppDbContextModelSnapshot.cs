@@ -956,6 +956,10 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<decimal>("KortingPct")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<string>("LegacyCode")
                         .HasMaxLength(6)
                         .HasColumnType("character varying(6)");

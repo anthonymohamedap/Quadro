@@ -154,6 +154,19 @@ public sealed class PdfOfferteExporter
 
             if (!string.IsNullOrWhiteSpace(r.Opmerking))
                 block.Item().Text(r.Opmerking).FontSize(9).Italic();
+
+            // US-63: korting op deze inlijsting (regelprijs hierboven is al na korting).
+            if (!r.AfgesprokenPrijsExcl.HasValue && r.KortingPct is > 0m and < 100m)
+            {
+                var bruto = Math.Round(r.TotaalInclBtw * 100m / (100m - r.KortingPct), 2);
+                block.Item().Row(row =>
+                {
+                    row.RelativeItem().Text($"korting {r.KortingPct.ToString("0.##", CultureInfo.InvariantCulture)}% (van {Eur(bruto)})")
+                        .FontSize(9).FontColor(Colors.Red.Darken2);
+                    row.ConstantItem(90).AlignRight().Text($"- {Eur(bruto - r.TotaalInclBtw)}")
+                        .FontSize(9).FontColor(Colors.Red.Darken2);
+                });
+            }
         });
 
         col.Item().PaddingBottom(3);

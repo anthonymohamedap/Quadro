@@ -247,6 +247,27 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             if (!string.IsNullOrWhiteSpace(item.AfhalenOp))
                 block.Item().Text($"afhalen op: {item.AfhalenOp}").SemiBold().FontSize(10);
 
+            // US-63: korting op deze inlijsting — bruto prijs + kortingregel, daarna de nettoprijs.
+            // ItemTotal is al NA korting; het bruto-bedrag wordt teruggerekend uit het %.
+            if (item.KortingPct is > 0m and < 100m)
+            {
+                var bruto = Math.Round(item.ItemTotal * 100m / (100m - item.KortingPct.Value), 2);
+                var korting = bruto - item.ItemTotal;
+                block.Item().PaddingTop(2).Row(r =>
+                {
+                    r.RelativeItem().AlignRight().Text("prijs").FontSize(10);
+                    r.ConstantItem(130).AlignRight().Text(Eur(bruto)).FontSize(10);
+                });
+                block.Item().Row(r =>
+                {
+                    r.RelativeItem().AlignRight()
+                        .Text($"korting {item.KortingPct.Value.ToString("0.##", CultureInfo.InvariantCulture)}%")
+                        .FontSize(10).FontColor(Colors.Red.Darken2);
+                    r.ConstantItem(130).AlignRight().Text($"- {Eur(korting)}")
+                        .FontSize(10).FontColor(Colors.Red.Darken2);
+                });
+            }
+
             // Prijs rechts
             block.Item().PaddingTop(2).Row(r =>
             {
@@ -394,9 +415,10 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         string? regelOpmerking = null;
         string? lijstOpmerking = null;
         string? regelAfhaalOp = null;
+        decimal? regelKortingPct = null;
         var operations = new List<string>();
 
-        var knownTags = new[] { "titel:", "glas:", "pp1:", "pp2:", "diepte:", "opkleven:", "rug:", "lijst_opm:", "opm:", "afhaal:" };
+        var knownTags = new[] { "titel:", "glas:", "pp1:", "pp2:", "diepte:", "opkleven:", "rug:", "lijst_opm:", "opm:", "afhaal:", "korting:" };
         var tagLabels = new Dictionary<string, string>
         {
             ["glas:"]     = "Glas",
@@ -423,6 +445,12 @@ public sealed class PdfFactuurExporter : IFactuurExporter
                     regelOpmerking = value;
                 else if (matchedTag == "lijst_opm:")
                     lijstOpmerking = value;
+                else if (matchedTag == "korting:")
+                {
+                    // US-63: korting in % op deze inlijsting
+                    if (decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var pct) && pct > 0m)
+                        regelKortingPct = pct;
+                }
                 else if (matchedTag == "afhaal:")
                 {
                     // Parse ISO date yyyy-MM-dd → dd/MM/yyyy display
@@ -467,7 +495,8 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             LijstOpmerking: lijstOpmerking,
             Titel: titel,
             AfhalenOp: effectiefAfhalen,
-            ItemTotal: lijn.TotaalIncl);
+            ItemTotal: lijn.TotaalIncl,
+            KortingPct: regelKortingPct);
     }
 
     // ═══════════════════ Helpers ═══════════════════
@@ -517,5 +546,6 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         string? LijstOpmerking,
         string? Titel,
         string? AfhalenOp,
-        decimal ItemTotal);
+        decimal ItemTotal,
+        decimal? KortingPct = null);
 }
