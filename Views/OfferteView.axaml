@@ -287,15 +287,24 @@
 								<TextBox Watermark="Zoek artikelnummer…"
                                          Text="{Binding TypeLijstZoekterm, UpdateSourceTrigger=PropertyChanged}"/>
 
-								<ComboBox ItemsSource="{Binding GefilterdeTypeLijsten}"
-                                          SelectedItem="{Binding SelectedRegelTypeLijst, Mode=TwoWay}"
-                                          MaxDropDownHeight="300">
-									<ComboBox.ItemTemplate>
-										<DataTemplate x:DataType="m:TypeLijst">
-											<TextBlock Text="{Binding Artikelnummer}" TextTrimming="CharacterEllipsis"/>
-										</DataTemplate>
-									</ComboBox.ItemTemplate>
-								</ComboBox>
+								<!-- US-65: ✕ om de keuze te wissen -->
+								<Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+									<ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding GefilterdeTypeLijsten}"
+	                                          SelectedItem="{Binding SelectedRegelTypeLijst, Mode=TwoWay}"
+	                                          MaxDropDownHeight="300">
+										<ComboBox.ItemTemplate>
+											<DataTemplate x:DataType="m:TypeLijst">
+												<TextBlock Text="{Binding Artikelnummer}" TextTrimming="CharacterEllipsis"/>
+											</DataTemplate>
+										</ComboBox.ItemTemplate>
+									</ComboBox>
+									<Button Grid.Column="1" Content="&#x2715;" Width="28" Height="24" Padding="0"
+									        VerticalAlignment="Center" HorizontalContentAlignment="Center"
+									        Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
+									        ToolTip.Tip="Keuze wissen"
+									        Command="{Binding WisKeuzeCommand}" CommandParameter="TypeLijst"
+									        IsVisible="{Binding SelectedRegelTypeLijst, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+								</Grid>
 
 							</StackPanel>
 							</Grid>
@@ -308,19 +317,27 @@
 							<TextBlock Text="Kant-en-klaar kader" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
 							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" RowSpacing="10" ColumnSpacing="12">
 							<TextBlock Grid.Row="0" Grid.Column="0" Text="Kader" VerticalAlignment="Center"/>
-							<ComboBox Grid.Row="0"
-									  Grid.Column="1"
-									  ItemsSource="{Binding KantKlaarKaders}"
-									  SelectedItem="{Binding SelectedRegelKantKlaarKader, Mode=TwoWay}"
-									  HorizontalAlignment="Stretch"
-									  MaxDropDownHeight="300"
-									  PlaceholderText="Geen kant-en-klaar kader (op-maat lijst hierboven gebruiken)">
-								<ComboBox.ItemTemplate>
-									<DataTemplate x:DataType="m:KantKlaarKader">
-										<TextBlock Text="{Binding Naam}" TextTrimming="CharacterEllipsis"/>
-									</DataTemplate>
-								</ComboBox.ItemTemplate>
-							</ComboBox>
+							<!-- US-65: ✕ om de keuze te wissen -->
+							<Grid ColumnDefinitions="*,Auto" ColumnSpacing="4" Grid.Row="0" Grid.Column="1">
+								<ComboBox
+										  ItemsSource="{Binding KantKlaarKaders}"
+										  SelectedItem="{Binding SelectedRegelKantKlaarKader, Mode=TwoWay}"
+										  HorizontalAlignment="Stretch"
+										  MaxDropDownHeight="300"
+										  PlaceholderText="Geen kant-en-klaar kader (op-maat lijst hierboven gebruiken)">
+									<ComboBox.ItemTemplate>
+										<DataTemplate x:DataType="m:KantKlaarKader">
+											<TextBlock Text="{Binding Naam}" TextTrimming="CharacterEllipsis"/>
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+								<Button Grid.Column="1" Content="&#x2715;" Width="28" Height="24" Padding="0"
+								        VerticalAlignment="Center" HorizontalContentAlignment="Center"
+								        Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
+								        ToolTip.Tip="Keuze wissen"
+								        Command="{Binding WisKeuzeCommand}" CommandParameter="KantKlaar"
+								        IsVisible="{Binding SelectedRegelKantKlaarKader, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+							</Grid>
 							</Grid>
 						</StackPanel>
 
@@ -331,24 +348,24 @@
 							<NumericUpDown Grid.Row="0"
                                            Foreground="{DynamicResource TextPrimary}"
                                            Grid.Column="1"
-                                           Value="{Binding SelectedRegel.BreedteCm, Mode=TwoWay}"/>
+                                           Value="{Binding SelectedRegelBreedteCm, Mode=TwoWay}"/>
 							<TextBlock Grid.Row="1" Grid.Column="0" Text="Hoogte (cm)" VerticalAlignment="Center"/>
 							<NumericUpDown Grid.Row="1"
                                            Foreground="{DynamicResource TextPrimary}"
                                            Grid.Column="1"
-                                           Value="{Binding SelectedRegel.HoogteCm, Mode=TwoWay}"/>
+                                           Value="{Binding SelectedRegelHoogteCm, Mode=TwoWay}"/>
 							<TextBlock Grid.Row="2" Grid.Column="0" Text="Inleg (B × H) cm" VerticalAlignment="Center"/>
 							<Grid Grid.Row="2"
                                   Grid.Column="1"
                                   ColumnDefinitions="*,8,*">
-								<NumericUpDown Value="{Binding SelectedRegel.InlegBreedteCm, Mode=TwoWay}"
+								<NumericUpDown Value="{Binding SelectedRegelInlegBreedteCm, Mode=TwoWay}"
                                                Foreground="{DynamicResource TextPrimary}"/>
 								<TextBlock Grid.Column="1"
                                            Text="×"
                                            HorizontalAlignment="Center"/>
 								<NumericUpDown Grid.Column="2"
                                                Foreground="{DynamicResource TextPrimary}"
-                                               Value="{Binding SelectedRegel.InlegHoogteCm, Mode=TwoWay}"/>
+                                               Value="{Binding SelectedRegelInlegHoogteCm, Mode=TwoWay}"/>
 							</Grid>
 
 							<!-- US-53: nummer van de inleg (kader/afstandshouder) uit dezelfde catalogus als de kadernummers -->
@@ -367,17 +384,26 @@
 								</Border>
 								<TextBox Watermark="Zoek artikelnummer…"
 									 Text="{Binding InlegTypeLijstZoekterm, UpdateSourceTrigger=PropertyChanged}"/>
-								<ComboBox ItemsSource="{Binding GefilterdeInlegTypeLijsten}"
-									  SelectedItem="{Binding SelectedRegelInlegTypeLijst, Mode=TwoWay}"
-									  HorizontalAlignment="Stretch"
-									  MaxDropDownHeight="300"
-									  PlaceholderText="Geen inleg-nummer">
-									<ComboBox.ItemTemplate>
-										<DataTemplate x:DataType="m:TypeLijst">
-											<TextBlock Text="{Binding Artikelnummer}" TextTrimming="CharacterEllipsis"/>
-										</DataTemplate>
-									</ComboBox.ItemTemplate>
-								</ComboBox>
+								<!-- US-65: ✕ om de keuze te wissen -->
+								<Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+									<ComboBox ItemsSource="{Binding GefilterdeInlegTypeLijsten}"
+										  SelectedItem="{Binding SelectedRegelInlegTypeLijst, Mode=TwoWay}"
+										  HorizontalAlignment="Stretch"
+										  MaxDropDownHeight="300"
+										  PlaceholderText="Geen inleg-nummer">
+										<ComboBox.ItemTemplate>
+											<DataTemplate x:DataType="m:TypeLijst">
+												<TextBlock Text="{Binding Artikelnummer}" TextTrimming="CharacterEllipsis"/>
+											</DataTemplate>
+										</ComboBox.ItemTemplate>
+									</ComboBox>
+									<Button Grid.Column="1" Content="&#x2715;" Width="28" Height="24" Padding="0"
+									        VerticalAlignment="Center" HorizontalContentAlignment="Center"
+									        Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
+									        ToolTip.Tip="Keuze wissen"
+									        Command="{Binding WisKeuzeCommand}" CommandParameter="Inleg"
+									        IsVisible="{Binding SelectedRegelInlegTypeLijst, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+								</Grid>
 							</StackPanel>
 							</Grid>
 						</StackPanel>
@@ -439,200 +465,302 @@
 
 						<Expander Header="Glas (G)" IsExpanded="True" Margin="0,0,0,6">
 							<StackPanel Spacing="4">
-								<ComboBox ItemsSource="{Binding GlasNamen}"
-										  SelectedItem="{Binding SelectedGlasNaam, Mode=TwoWay}"
-										  HorizontalAlignment="Stretch"
-										  PlaceholderText="Glas type...">
-									<ComboBox.ItemTemplate>
-										<DataTemplate>
-											<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
-										</DataTemplate>
-									</ComboBox.ItemTemplate>
-								</ComboBox>
-								<ComboBox x:Name="GlasBox"
-										  ItemsSource="{Binding GlasVarianten}"
-										  SelectedItem="{Binding SelectedRegelGlasVariant, Mode=TwoWay}"
-										  HorizontalAlignment="Stretch"
-										  PlaceholderText="Variant..."
-										  IsVisible="{Binding SelectedGlasNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-									<ComboBox.ItemTemplate>
-										<DataTemplate x:DataType="m:AfwerkingsVariant">
-											<StackPanel Orientation="Horizontal" Spacing="8">
-												<Border Width="14" Height="14" CornerRadius="3"
-												        VerticalAlignment="Center"
-												        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
-												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
-												<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-											</StackPanel>
-										</DataTemplate>
-									</ComboBox.ItemTemplate>
-								</ComboBox>
+								<!-- US-65: ✕ om de keuze te wissen -->
+								<Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+									<ComboBox ItemsSource="{Binding GlasNamen}"
+											  SelectedItem="{Binding SelectedGlasNaam, Mode=TwoWay}"
+											  HorizontalAlignment="Stretch"
+											  PlaceholderText="Glas type...">
+										<ComboBox.ItemTemplate>
+											<DataTemplate>
+												<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
+											</DataTemplate>
+										</ComboBox.ItemTemplate>
+									</ComboBox>
+									<Button Grid.Column="1" Content="&#x2715;" Width="28" Height="24" Padding="0"
+									        VerticalAlignment="Center" HorizontalContentAlignment="Center"
+									        Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
+									        ToolTip.Tip="Keuze wissen"
+									        Command="{Binding WisKeuzeCommand}" CommandParameter="Glas"
+									        IsVisible="{Binding SelectedGlasNaam, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+								</Grid>
+								<!-- US-65: ✕ om de keuze te wissen -->
+								<Grid ColumnDefinitions="*,Auto" ColumnSpacing="4" IsVisible="{Binding SelectedGlasNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+									<ComboBox x:Name="GlasBox"
+											  ItemsSource="{Binding GlasVarianten}"
+											  SelectedItem="{Binding SelectedRegelGlasVariant, Mode=TwoWay}"
+											  HorizontalAlignment="Stretch"
+											  PlaceholderText="Variant...">
+										<ComboBox.ItemTemplate>
+											<DataTemplate x:DataType="m:AfwerkingsVariant">
+												<StackPanel Orientation="Horizontal" Spacing="8">
+													<Border Width="14" Height="14" CornerRadius="3"
+													        VerticalAlignment="Center"
+													        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
+													        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
+													<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+												</StackPanel>
+											</DataTemplate>
+										</ComboBox.ItemTemplate>
+									</ComboBox>
+									<Button Grid.Column="1" Content="&#x2715;" Width="28" Height="24" Padding="0"
+									        VerticalAlignment="Center" HorizontalContentAlignment="Center"
+									        Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
+									        ToolTip.Tip="Keuze wissen"
+									        Command="{Binding WisKeuzeCommand}" CommandParameter="GlasVariant"
+									        IsVisible="{Binding SelectedRegelGlasVariant, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+								</Grid>
 							</StackPanel>
 						</Expander>
 
 						<Expander Header="Passe-partout 1 (P)" IsExpanded="True" Margin="0,0,0,6">
 							<StackPanel Spacing="4">
-								<ComboBox ItemsSource="{Binding Passe1Namen}"
-										  SelectedItem="{Binding SelectedPasse1Naam, Mode=TwoWay}"
-										  HorizontalAlignment="Stretch"
-										  PlaceholderText="Passe-partout type...">
-									<ComboBox.ItemTemplate>
-										<DataTemplate>
-											<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
-										</DataTemplate>
-									</ComboBox.ItemTemplate>
-								</ComboBox>
-								<ComboBox x:Name="Passe1Box"
-										  ItemsSource="{Binding Passe1VariantLijst}"
-										  SelectedItem="{Binding SelectedRegelPasse1Variant, Mode=TwoWay}"
-										  HorizontalAlignment="Stretch"
-										  PlaceholderText="Variant..."
-										  Foreground="{DynamicResource TextPrimary}"
-										  IsVisible="{Binding SelectedPasse1Naam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-									<ComboBox.ItemTemplate>
-										<DataTemplate x:DataType="m:AfwerkingsVariant">
-											<StackPanel Orientation="Horizontal" Spacing="8">
-												<Border Width="14" Height="14" CornerRadius="3"
-												        VerticalAlignment="Center"
-												        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
-												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
-												<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-											</StackPanel>
-										</DataTemplate>
-									</ComboBox.ItemTemplate>
-								</ComboBox>
+								<!-- US-65: ✕ om de keuze te wissen -->
+								<Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+									<ComboBox ItemsSource="{Binding Passe1Namen}"
+											  SelectedItem="{Binding SelectedPasse1Naam, Mode=TwoWay}"
+											  HorizontalAlignment="Stretch"
+											  PlaceholderText="Passe-partout type...">
+										<ComboBox.ItemTemplate>
+											<DataTemplate>
+												<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
+											</DataTemplate>
+										</ComboBox.ItemTemplate>
+									</ComboBox>
+									<Button Grid.Column="1" Content="&#x2715;" Width="28" Height="24" Padding="0"
+									        VerticalAlignment="Center" HorizontalContentAlignment="Center"
+									        Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
+									        ToolTip.Tip="Keuze wissen"
+									        Command="{Binding WisKeuzeCommand}" CommandParameter="Passe1"
+									        IsVisible="{Binding SelectedPasse1Naam, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+								</Grid>
+								<!-- US-65: ✕ om de keuze te wissen -->
+								<Grid ColumnDefinitions="*,Auto" ColumnSpacing="4" IsVisible="{Binding SelectedPasse1Naam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+									<ComboBox x:Name="Passe1Box"
+											  ItemsSource="{Binding Passe1VariantLijst}"
+											  SelectedItem="{Binding SelectedRegelPasse1Variant, Mode=TwoWay}"
+											  HorizontalAlignment="Stretch"
+											  PlaceholderText="Variant..."
+											  Foreground="{DynamicResource TextPrimary}">
+										<ComboBox.ItemTemplate>
+											<DataTemplate x:DataType="m:AfwerkingsVariant">
+												<StackPanel Orientation="Horizontal" Spacing="8">
+													<Border Width="14" Height="14" CornerRadius="3"
+													        VerticalAlignment="Center"
+													        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
+													        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
+													<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+												</StackPanel>
+											</DataTemplate>
+										</ComboBox.ItemTemplate>
+									</ComboBox>
+									<Button Grid.Column="1" Content="&#x2715;" Width="28" Height="24" Padding="0"
+									        VerticalAlignment="Center" HorizontalContentAlignment="Center"
+									        Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
+									        ToolTip.Tip="Keuze wissen"
+									        Command="{Binding WisKeuzeCommand}" CommandParameter="Passe1Variant"
+									        IsVisible="{Binding SelectedRegelPasse1Variant, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+								</Grid>
 							</StackPanel>
 						</Expander>
 
 						<Expander Header="Passe-partout 2 (P)" IsExpanded="True" Margin="0,0,0,6">
 							<StackPanel Spacing="4">
-								<ComboBox ItemsSource="{Binding Passe2Namen}"
-										  SelectedItem="{Binding SelectedPasse2Naam, Mode=TwoWay}"
-										  HorizontalAlignment="Stretch"
-										  PlaceholderText="Passe-partout type...">
-									<ComboBox.ItemTemplate>
-										<DataTemplate>
-											<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
-										</DataTemplate>
-									</ComboBox.ItemTemplate>
-								</ComboBox>
-								<ComboBox x:Name="Passe2Box"
-										  ItemsSource="{Binding Passe2VariantLijst}"
-										  SelectedItem="{Binding SelectedRegelPasse2Variant, Mode=TwoWay}"
-										  HorizontalAlignment="Stretch"
-										  PlaceholderText="Variant..."
-										  IsVisible="{Binding SelectedPasse2Naam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-									<ComboBox.ItemTemplate>
-										<DataTemplate x:DataType="m:AfwerkingsVariant">
-											<StackPanel Orientation="Horizontal" Spacing="8">
-												<Border Width="14" Height="14" CornerRadius="3"
-												        VerticalAlignment="Center"
-												        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
-												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
-												<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-											</StackPanel>
-										</DataTemplate>
-									</ComboBox.ItemTemplate>
-								</ComboBox>
+								<!-- US-65: ✕ om de keuze te wissen -->
+								<Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+									<ComboBox ItemsSource="{Binding Passe2Namen}"
+											  SelectedItem="{Binding SelectedPasse2Naam, Mode=TwoWay}"
+											  HorizontalAlignment="Stretch"
+											  PlaceholderText="Passe-partout type...">
+										<ComboBox.ItemTemplate>
+											<DataTemplate>
+												<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
+											</DataTemplate>
+										</ComboBox.ItemTemplate>
+									</ComboBox>
+									<Button Grid.Column="1" Content="&#x2715;" Width="28" Height="24" Padding="0"
+									        VerticalAlignment="Center" HorizontalContentAlignment="Center"
+									        Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
+									        ToolTip.Tip="Keuze wissen"
+									        Command="{Binding WisKeuzeCommand}" CommandParameter="Passe2"
+									        IsVisible="{Binding SelectedPasse2Naam, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+								</Grid>
+								<!-- US-65: ✕ om de keuze te wissen -->
+								<Grid ColumnDefinitions="*,Auto" ColumnSpacing="4" IsVisible="{Binding SelectedPasse2Naam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+									<ComboBox x:Name="Passe2Box"
+											  ItemsSource="{Binding Passe2VariantLijst}"
+											  SelectedItem="{Binding SelectedRegelPasse2Variant, Mode=TwoWay}"
+											  HorizontalAlignment="Stretch"
+											  PlaceholderText="Variant...">
+										<ComboBox.ItemTemplate>
+											<DataTemplate x:DataType="m:AfwerkingsVariant">
+												<StackPanel Orientation="Horizontal" Spacing="8">
+													<Border Width="14" Height="14" CornerRadius="3"
+													        VerticalAlignment="Center"
+													        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
+													        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
+													<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+												</StackPanel>
+											</DataTemplate>
+										</ComboBox.ItemTemplate>
+									</ComboBox>
+									<Button Grid.Column="1" Content="&#x2715;" Width="28" Height="24" Padding="0"
+									        VerticalAlignment="Center" HorizontalContentAlignment="Center"
+									        Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
+									        ToolTip.Tip="Keuze wissen"
+									        Command="{Binding WisKeuzeCommand}" CommandParameter="Passe2Variant"
+									        IsVisible="{Binding SelectedRegelPasse2Variant, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+								</Grid>
 							</StackPanel>
 						</Expander>
 
 						<Expander Header="Diepte (D)" IsExpanded="True" Margin="0,0,0,6">
 							<StackPanel Spacing="4">
-								<ComboBox ItemsSource="{Binding DiepteNamen}"
-										  SelectedItem="{Binding SelectedDiepteNaam, Mode=TwoWay}"
-										  HorizontalAlignment="Stretch"
-										  PlaceholderText="Diepte type...">
-									<ComboBox.ItemTemplate>
-										<DataTemplate>
-											<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
-										</DataTemplate>
-									</ComboBox.ItemTemplate>
-								</ComboBox>
-								<ComboBox x:Name="DiepteBox"
-										  ItemsSource="{Binding DiepteVariantLijst}"
-										  SelectedItem="{Binding SelectedRegelDiepteVariant, Mode=TwoWay}"
-										  HorizontalAlignment="Stretch"
-										  PlaceholderText="Variant..."
-										  IsVisible="{Binding SelectedDiepteNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-									<ComboBox.ItemTemplate>
-										<DataTemplate x:DataType="m:AfwerkingsVariant">
-											<StackPanel Orientation="Horizontal" Spacing="8">
-												<Border Width="14" Height="14" CornerRadius="3"
-												        VerticalAlignment="Center"
-												        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
-												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
-												<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-											</StackPanel>
-										</DataTemplate>
-									</ComboBox.ItemTemplate>
-								</ComboBox>
+								<!-- US-65: ✕ om de keuze te wissen -->
+								<Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+									<ComboBox ItemsSource="{Binding DiepteNamen}"
+											  SelectedItem="{Binding SelectedDiepteNaam, Mode=TwoWay}"
+											  HorizontalAlignment="Stretch"
+											  PlaceholderText="Diepte type...">
+										<ComboBox.ItemTemplate>
+											<DataTemplate>
+												<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
+											</DataTemplate>
+										</ComboBox.ItemTemplate>
+									</ComboBox>
+									<Button Grid.Column="1" Content="&#x2715;" Width="28" Height="24" Padding="0"
+									        VerticalAlignment="Center" HorizontalContentAlignment="Center"
+									        Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
+									        ToolTip.Tip="Keuze wissen"
+									        Command="{Binding WisKeuzeCommand}" CommandParameter="Diepte"
+									        IsVisible="{Binding SelectedDiepteNaam, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+								</Grid>
+								<!-- US-65: ✕ om de keuze te wissen -->
+								<Grid ColumnDefinitions="*,Auto" ColumnSpacing="4" IsVisible="{Binding SelectedDiepteNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+									<ComboBox x:Name="DiepteBox"
+											  ItemsSource="{Binding DiepteVariantLijst}"
+											  SelectedItem="{Binding SelectedRegelDiepteVariant, Mode=TwoWay}"
+											  HorizontalAlignment="Stretch"
+											  PlaceholderText="Variant...">
+										<ComboBox.ItemTemplate>
+											<DataTemplate x:DataType="m:AfwerkingsVariant">
+												<StackPanel Orientation="Horizontal" Spacing="8">
+													<Border Width="14" Height="14" CornerRadius="3"
+													        VerticalAlignment="Center"
+													        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
+													        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
+													<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+												</StackPanel>
+											</DataTemplate>
+										</ComboBox.ItemTemplate>
+									</ComboBox>
+									<Button Grid.Column="1" Content="&#x2715;" Width="28" Height="24" Padding="0"
+									        VerticalAlignment="Center" HorizontalContentAlignment="Center"
+									        Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
+									        ToolTip.Tip="Keuze wissen"
+									        Command="{Binding WisKeuzeCommand}" CommandParameter="DiepteVariant"
+									        IsVisible="{Binding SelectedRegelDiepteVariant, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+								</Grid>
 							</StackPanel>
 						</Expander>
 
 						<Expander Header="Opkleven (O)" IsExpanded="True" Margin="0,0,0,6">
 							<StackPanel Spacing="4">
-								<ComboBox ItemsSource="{Binding OpklevenNamen}"
-										  SelectedItem="{Binding SelectedOpklevenNaam, Mode=TwoWay}"
-										  HorizontalAlignment="Stretch"
-										  PlaceholderText="Opkleven type...">
-									<ComboBox.ItemTemplate>
-										<DataTemplate>
-											<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
-										</DataTemplate>
-									</ComboBox.ItemTemplate>
-								</ComboBox>
-								<ComboBox x:Name="OpklevenBox"
-										  ItemsSource="{Binding OpklevenVariantLijst}"
-										  SelectedItem="{Binding SelectedRegelOpklevenVariant, Mode=TwoWay}"
-										  HorizontalAlignment="Stretch"
-										  PlaceholderText="Variant..."
-										  IsVisible="{Binding SelectedOpklevenNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-									<ComboBox.ItemTemplate>
-										<DataTemplate x:DataType="m:AfwerkingsVariant">
-											<StackPanel Orientation="Horizontal" Spacing="8">
-												<Border Width="14" Height="14" CornerRadius="3"
-												        VerticalAlignment="Center"
-												        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
-												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
-												<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-											</StackPanel>
-										</DataTemplate>
-									</ComboBox.ItemTemplate>
-								</ComboBox>
+								<!-- US-65: ✕ om de keuze te wissen -->
+								<Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+									<ComboBox ItemsSource="{Binding OpklevenNamen}"
+											  SelectedItem="{Binding SelectedOpklevenNaam, Mode=TwoWay}"
+											  HorizontalAlignment="Stretch"
+											  PlaceholderText="Opkleven type...">
+										<ComboBox.ItemTemplate>
+											<DataTemplate>
+												<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
+											</DataTemplate>
+										</ComboBox.ItemTemplate>
+									</ComboBox>
+									<Button Grid.Column="1" Content="&#x2715;" Width="28" Height="24" Padding="0"
+									        VerticalAlignment="Center" HorizontalContentAlignment="Center"
+									        Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
+									        ToolTip.Tip="Keuze wissen"
+									        Command="{Binding WisKeuzeCommand}" CommandParameter="Opkleven"
+									        IsVisible="{Binding SelectedOpklevenNaam, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+								</Grid>
+								<!-- US-65: ✕ om de keuze te wissen -->
+								<Grid ColumnDefinitions="*,Auto" ColumnSpacing="4" IsVisible="{Binding SelectedOpklevenNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+									<ComboBox x:Name="OpklevenBox"
+											  ItemsSource="{Binding OpklevenVariantLijst}"
+											  SelectedItem="{Binding SelectedRegelOpklevenVariant, Mode=TwoWay}"
+											  HorizontalAlignment="Stretch"
+											  PlaceholderText="Variant...">
+										<ComboBox.ItemTemplate>
+											<DataTemplate x:DataType="m:AfwerkingsVariant">
+												<StackPanel Orientation="Horizontal" Spacing="8">
+													<Border Width="14" Height="14" CornerRadius="3"
+													        VerticalAlignment="Center"
+													        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
+													        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
+													<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+												</StackPanel>
+											</DataTemplate>
+										</ComboBox.ItemTemplate>
+									</ComboBox>
+									<Button Grid.Column="1" Content="&#x2715;" Width="28" Height="24" Padding="0"
+									        VerticalAlignment="Center" HorizontalContentAlignment="Center"
+									        Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
+									        ToolTip.Tip="Keuze wissen"
+									        Command="{Binding WisKeuzeCommand}" CommandParameter="OpklevenVariant"
+									        IsVisible="{Binding SelectedRegelOpklevenVariant, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+								</Grid>
 							</StackPanel>
 						</Expander>
 
 						<Expander Header="Rug (R)" IsExpanded="True" Margin="0,0,0,6">
 							<StackPanel Spacing="4">
-								<ComboBox ItemsSource="{Binding RugNamen}"
-										  SelectedItem="{Binding SelectedRugNaam, Mode=TwoWay}"
-										  HorizontalAlignment="Stretch"
-										  PlaceholderText="Rug type...">
-									<ComboBox.ItemTemplate>
-										<DataTemplate>
-											<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
-										</DataTemplate>
-									</ComboBox.ItemTemplate>
-								</ComboBox>
-								<ComboBox x:Name="RugBox"
-										  ItemsSource="{Binding RugVariantLijst}"
-										  SelectedItem="{Binding SelectedRegelRugVariant, Mode=TwoWay}"
-										  HorizontalAlignment="Stretch"
-										  PlaceholderText="Variant..."
-										  IsVisible="{Binding SelectedRugNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-									<ComboBox.ItemTemplate>
-										<DataTemplate x:DataType="m:AfwerkingsVariant">
-											<StackPanel Orientation="Horizontal" Spacing="8">
-												<Border Width="14" Height="14" CornerRadius="3"
-												        VerticalAlignment="Center"
-												        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
-												        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
-												<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-											</StackPanel>
-										</DataTemplate>
-									</ComboBox.ItemTemplate>
-								</ComboBox>
+								<!-- US-65: ✕ om de keuze te wissen -->
+								<Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+									<ComboBox ItemsSource="{Binding RugNamen}"
+											  SelectedItem="{Binding SelectedRugNaam, Mode=TwoWay}"
+											  HorizontalAlignment="Stretch"
+											  PlaceholderText="Rug type...">
+										<ComboBox.ItemTemplate>
+											<DataTemplate>
+												<TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
+											</DataTemplate>
+										</ComboBox.ItemTemplate>
+									</ComboBox>
+									<Button Grid.Column="1" Content="&#x2715;" Width="28" Height="24" Padding="0"
+									        VerticalAlignment="Center" HorizontalContentAlignment="Center"
+									        Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
+									        ToolTip.Tip="Keuze wissen"
+									        Command="{Binding WisKeuzeCommand}" CommandParameter="Rug"
+									        IsVisible="{Binding SelectedRugNaam, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+								</Grid>
+								<!-- US-65: ✕ om de keuze te wissen -->
+								<Grid ColumnDefinitions="*,Auto" ColumnSpacing="4" IsVisible="{Binding SelectedRugNaam, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+									<ComboBox x:Name="RugBox"
+											  ItemsSource="{Binding RugVariantLijst}"
+											  SelectedItem="{Binding SelectedRegelRugVariant, Mode=TwoWay}"
+											  HorizontalAlignment="Stretch"
+											  PlaceholderText="Variant...">
+										<ComboBox.ItemTemplate>
+											<DataTemplate x:DataType="m:AfwerkingsVariant">
+												<StackPanel Orientation="Horizontal" Spacing="8">
+													<Border Width="14" Height="14" CornerRadius="3"
+													        VerticalAlignment="Center"
+													        BorderBrush="{DynamicResource TextSecondary}" BorderThickness="1"
+													        Background="{Binding Kleur, Converter={x:Static conv:BooleanConverters.HexToBrush}}"/>
+													<TextBlock Text="{Binding Beschrijving}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+												</StackPanel>
+											</DataTemplate>
+										</ComboBox.ItemTemplate>
+									</ComboBox>
+									<Button Grid.Column="1" Content="&#x2715;" Width="28" Height="24" Padding="0"
+									        VerticalAlignment="Center" HorizontalContentAlignment="Center"
+									        Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
+									        ToolTip.Tip="Keuze wissen"
+									        Command="{Binding WisKeuzeCommand}" CommandParameter="RugVariant"
+									        IsVisible="{Binding SelectedRegelRugVariant, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+								</Grid>
 							</StackPanel>
 						</Expander>
 						</StackPanel>

@@ -228,6 +228,65 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         }
     }
 
+    /// <summary>US-65 — afmetingen van de geselecteerde regel via de VM, zodat een wijziging
+    /// (ook van de inlegmaat, die nu de inlegprijs bepaalt) meteen een herberekening triggert.
+    /// Voorheen schreef de NumericUpDown rechtstreeks naar het model zonder recalc.</summary>
+    public decimal? SelectedRegelBreedteCm
+    {
+        get => Regelbeheer.SelectedRegel?.BreedteCm;
+        set
+        {
+            if (Regelbeheer.SelectedRegel is null) return;
+            var nieuw = value ?? 0m;
+            if (Regelbeheer.SelectedRegel.BreedteCm == nieuw) return;
+            Regelbeheer.SelectedRegel.BreedteCm = nieuw;
+            OnPropertyChanged();
+            if (!_suppressRecalc) Prijzen.TriggerRecalc();
+        }
+    }
+
+    public decimal? SelectedRegelHoogteCm
+    {
+        get => Regelbeheer.SelectedRegel?.HoogteCm;
+        set
+        {
+            if (Regelbeheer.SelectedRegel is null) return;
+            var nieuw = value ?? 0m;
+            if (Regelbeheer.SelectedRegel.HoogteCm == nieuw) return;
+            Regelbeheer.SelectedRegel.HoogteCm = nieuw;
+            OnPropertyChanged();
+            if (!_suppressRecalc) Prijzen.TriggerRecalc();
+        }
+    }
+
+    public decimal? SelectedRegelInlegBreedteCm
+    {
+        get => Regelbeheer.SelectedRegel?.InlegBreedteCm;
+        set
+        {
+            if (Regelbeheer.SelectedRegel is null) return;
+            var nieuw = value;
+            if (Regelbeheer.SelectedRegel.InlegBreedteCm == nieuw) return;
+            Regelbeheer.SelectedRegel.InlegBreedteCm = nieuw;
+            OnPropertyChanged();
+            if (!_suppressRecalc) Prijzen.TriggerRecalc();
+        }
+    }
+
+    public decimal? SelectedRegelInlegHoogteCm
+    {
+        get => Regelbeheer.SelectedRegel?.InlegHoogteCm;
+        set
+        {
+            if (Regelbeheer.SelectedRegel is null) return;
+            var nieuw = value;
+            if (Regelbeheer.SelectedRegel.InlegHoogteCm == nieuw) return;
+            Regelbeheer.SelectedRegel.InlegHoogteCm = nieuw;
+            OnPropertyChanged();
+            if (!_suppressRecalc) Prijzen.TriggerRecalc();
+        }
+    }
+
     // ── TypeLijst selectie: zelfde patroon als SelectedKlant in KlantSelectieViewModel.
     //    SelectedTypeLijst is een echte [ObservableProperty] op Regelbeheer, dus Avalonia
     //    kan het betrouwbaar tracken zonder multi-segment path binding issues. ──
@@ -671,6 +730,10 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             OnPropertyChanged(nameof(SelectedRegelAfhaalDatum));
             OnPropertyChanged(nameof(SelectedRegelAfgesprokenPrijs));   // US-22
             OnPropertyChanged(nameof(SelectedRegelKortingPct));         // US-63
+            OnPropertyChanged(nameof(SelectedRegelBreedteCm));          // US-65
+            OnPropertyChanged(nameof(SelectedRegelHoogteCm));
+            OnPropertyChanged(nameof(SelectedRegelInlegBreedteCm));
+            OnPropertyChanged(nameof(SelectedRegelInlegHoogteCm));
             RefreshAlleVarianten();   // variant-keuzelijsten + selecties bijwerken
         }
     }
@@ -1087,6 +1150,40 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         await SaveCoreAsync(reloadAfterSave: true);
     }
 
+    /// <summary>US-65 — wist één keuze op de geselecteerde regel (het ✕-knopje naast een
+    /// keuzelijst). Loopt via dezelfde properties als de keuzelijsten zelf, zodat navigatie,
+    /// varianten en de live prijs correct mee bijwerken. Een afwerking wissen wist ook haar variant.</summary>
+    [RelayCommand]
+    private void WisKeuze(string? wat)
+    {
+        if (Regelbeheer.SelectedRegel is null) return;
+
+        switch (wat)
+        {
+            case "TypeLijst":
+                SelectedRegelTypeLijst = null;
+                TypeLijstZoekterm = null;
+                break;
+            case "Inleg":
+                SelectedRegelInlegTypeLijst = null;
+                InlegTypeLijstZoekterm = null;
+                break;
+            case "KantKlaar":     SelectedRegelKantKlaarKader = null; break;
+            case "Glas":          SelectedRegelGlas = null; break;
+            case "Passe1":        SelectedRegelPasse1 = null; break;
+            case "Passe2":        SelectedRegelPasse2 = null; break;
+            case "Diepte":        SelectedRegelDiepte = null; break;
+            case "Opkleven":      SelectedRegelOpkleven = null; break;
+            case "Rug":           SelectedRegelRug = null; break;
+            case "GlasVariant":     SelectedRegelGlasVariant = null; break;
+            case "Passe1Variant":   SelectedRegelPasse1Variant = null; break;
+            case "Passe2Variant":   SelectedRegelPasse2Variant = null; break;
+            case "DiepteVariant":   SelectedRegelDiepteVariant = null; break;
+            case "OpklevenVariant": SelectedRegelOpklevenVariant = null; break;
+            case "RugVariant":      SelectedRegelRugVariant = null; break;
+        }
+    }
+
     // ── Offerte afdrukken (US-57): klantvriendelijke PDF, geen productie-/facturatiegegevens ──
     [RelayCommand]
     private async Task OfferteAfdrukkenAsync()
@@ -1326,6 +1423,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             Titel = r.Titel, Opmerking = r.Opmerking,
             TypeLijstId = r.TypeLijst?.Id ?? r.TypeLijstId,
             InlegTypeLijstId = r.InlegTypeLijst?.Id ?? r.InlegTypeLijstId,
+            KantKlaarKaderId = r.KantKlaarKader?.Id ?? r.KantKlaarKaderId,   // US-65: engine moet kant-en-klaar herkennen
             GlasId = r.Glas?.Id ?? r.GlasId,
             PassePartout1Id = r.PassePartout1?.Id ?? r.PassePartout1Id,
             PassePartout2Id = r.PassePartout2?.Id ?? r.PassePartout2Id,
@@ -1338,6 +1436,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             BtwBedrag = r.BtwBedrag, TotaalInclBtw = r.TotaalInclBtw,
             TypeLijst  = includeNavigations ? r.TypeLijst  : null,
             InlegTypeLijst = includeNavigations ? r.InlegTypeLijst : null,
+            KantKlaarKader = includeNavigations ? r.KantKlaarKader : null,
             Glas       = includeNavigations ? r.Glas       : null,
             PassePartout1 = includeNavigations ? r.PassePartout1 : null,
             PassePartout2 = includeNavigations ? r.PassePartout2 : null,
@@ -1407,7 +1506,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         await using var db = await _dbFactory.CreateDbContextAsync();
 
         var lijstIds = Regelbeheer.Regels
-            .Select(r => r.TypeLijst?.Id ?? r.TypeLijstId)
+            .SelectMany(r => new[] { r.TypeLijst?.Id ?? r.TypeLijstId, r.InlegTypeLijst?.Id ?? r.InlegTypeLijstId })   // US-65: ook inleg
             .Where(id => id.HasValue).Select(id => id!.Value).Distinct().ToList();
 
         var optieIds = Regelbeheer.Regels
@@ -1433,6 +1532,11 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             {
                 var fresh = freshLijsten.FirstOrDefault(l => l.Id == regel.TypeLijst.Id);
                 if (fresh is not null) regel.TypeLijst = fresh;
+            }
+            if (regel.InlegTypeLijst is not null)   // US-65: inleg telt mee in de prijs
+            {
+                var fresh = freshLijsten.FirstOrDefault(l => l.Id == regel.InlegTypeLijst.Id);
+                if (fresh is not null) regel.InlegTypeLijst = fresh;
             }
             if (regel.Glas is not null)
             {

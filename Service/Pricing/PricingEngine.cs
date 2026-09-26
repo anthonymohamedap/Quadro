@@ -45,6 +45,20 @@ public sealed class PricingEngine
                             defaultAfvalPercentage)
                         : 0m;
 
+                // US-65: de inleg (tweede kader/afstandshouder uit dezelfde lijstencatalogus) wordt
+                // met dezelfde lijstformule berekend als het hoofdkader, op de inlegmaat (valt terug
+                // op de buitenmaat als er geen inlegmaat is). Niet bij een kant-en-klaar kader.
+                var inlegPrijs = r.KantKlaarKaderId is null && r.InlegTypeLijst is not null
+                    ? CalculateLijstPrijsExcl(
+                        r.InlegTypeLijst,
+                        r.InlegBreedteCm ?? r.BreedteCm,
+                        r.InlegHoogteCm ?? r.HoogteCm,
+                        uurloon,
+                        defaultPrijsPerMeter,
+                        defaultWinstFactor,
+                        defaultAfvalPercentage)
+                    : 0m;
+
                 // US-58: een kant-en-klaar kader is al volledig afgewerkt — afwerkingen
                 // (glas/passe-partout/...) tellen daar nooit bovenop mee, ook niet als er per
                 // ongeluk nog een afwerking op de regel staat.
@@ -57,7 +71,7 @@ public sealed class PricingEngine
                       CalcOpt(r.Opkleven) +
                       CalcOpt(r.Rug);
 
-                lineEx = lijstPrijs + optiesEx;
+                lineEx = lijstPrijs + inlegPrijs + optiesEx;
                 lineEx += (r.ExtraWerkMinuten / 60m) * uurloon;
                 lineEx += r.ExtraPrijs;
                 lineEx -= r.Korting;

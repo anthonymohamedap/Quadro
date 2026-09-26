@@ -40,6 +40,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         var werkbon = await db.WerkBonnen
             .Include(w => w.Offerte).ThenInclude(o => o!.Klant)
             .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.TypeLijst)
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.InlegTypeLijst)   // US-65
             .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.Glas)
             .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.PassePartout1)
             .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.PassePartout2)
@@ -378,6 +379,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         var offerte = await db.Offertes
             .Include(o => o.Klant)
             .Include(o => o.Regels).ThenInclude(r => r.TypeLijst)
+            .Include(o => o.Regels).ThenInclude(r => r.InlegTypeLijst)   // US-65: nodig voor herberekening
             .Include(o => o.Regels).ThenInclude(r => r.Glas)
             .Include(o => o.Regels).ThenInclude(r => r.PassePartout1)
             .Include(o => o.Regels).ThenInclude(r => r.PassePartout2)
