@@ -203,6 +203,7 @@ namespace QuadroApp.Service
                     ExtraWerkMinuten    = r.ExtraWerkMinuten,
                     ExtraPrijs          = r.ExtraPrijs,
                     Korting             = r.Korting,
+                    KortingPct          = r.KortingPct,
                     AfgesprokenPrijsExcl= r.AfgesprokenPrijsExcl,
                     LegacyCode          = r.LegacyCode,
                     TotaalExcl          = r.TotaalExcl,
@@ -366,6 +367,7 @@ namespace QuadroApp.Service
                     TotaalInclBtw         = r.TotaalInclBtw,
                     ExtraPrijs            = r.ExtraPrijs,
                     Korting               = r.Korting,
+                    KortingPct            = r.KortingPct,
                     AfgesprokenPrijsExcl  = r.AfgesprokenPrijsExcl,
                     ExtraWerkMinuten      = r.ExtraWerkMinuten,
                     LegacyCode            = r.LegacyCode
