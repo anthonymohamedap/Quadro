@@ -124,8 +124,9 @@
 
 														<!-- Rechter kolom: inleg/artikel -->
 														<StackPanel Grid.Column="1" Spacing="4">
-															<TextBlock Text="{Binding Inleg1, StringFormat='inleg 1 : {0}'}" Foreground="{DynamicResource TextPrimary}"/>
-															<TextBlock Text="{Binding Inleg2, StringFormat='inleg 2 : {0}'}" Foreground="{DynamicResource TextPrimary}"/>
+															<!-- US-71: Inleg1 is al zelfbeschrijvend ("Inleg 20×30 cm · nr. 1234"); enkel tonen als er een inleg is -->
+															<TextBlock Text="{Binding Inleg1}" Foreground="{DynamicResource TextPrimary}"
+															           IsVisible="{Binding Inleg1, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 															<TextBlock Text="Afwerkingen:" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Margin="0,4,0,0"/>
 															<TextBlock Text="{Binding GlasBeschrijving, StringFormat='Glas: {0}'}" Foreground="{DynamicResource TextPrimary}" IsVisible="{Binding GlasBeschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 															<TextBlock Text="{Binding Passe1Beschrijving, StringFormat='PP1: {0}'}" Foreground="{DynamicResource TextPrimary}" IsVisible="{Binding Passe1Beschrijving, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>

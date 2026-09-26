@@ -72,6 +72,7 @@ namespace QuadroApp.ViewModels
             var wb = await db.WerkBonnen
                 .Include(w => w.Offerte).ThenInclude(o => o.Klant)
                 .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.TypeLijst)
+                .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.InlegTypeLijst)   // US-71: inleg-nummer tonen
                 .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.Glas)
                 .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.PassePartout1)
                 .Include(w => w.Taken).ThenInclude(t => t.OfferteRegel).ThenInclude(r => r!.PassePartout2)
