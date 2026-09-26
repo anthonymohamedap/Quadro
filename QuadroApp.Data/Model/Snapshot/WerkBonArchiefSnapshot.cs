@@ -103,6 +103,8 @@ namespace QuadroApp.Model.Snapshot
         public decimal TotaalInclBtw { get; set; }
         public decimal ExtraPrijs { get; set; }
         public decimal Korting { get; set; }
+        /// <summary>US-63 — korting in % op deze inlijsting (ontbreekt in oudere snapshots → 0).</summary>
+        public decimal KortingPct { get; set; }
         public decimal? AfgesprokenPrijsExcl { get; set; }
         public int ExtraWerkMinuten { get; set; }
         public string? LegacyCode { get; set; }

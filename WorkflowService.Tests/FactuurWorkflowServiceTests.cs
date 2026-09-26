@@ -107,6 +107,22 @@ public class FactuurWorkflowServiceTests
         Assert.Equal(totaalVanZichtbareLijnen + meerprijsLijn!.TotaalIncl, factuur.TotaalInclBtw);
     }
 
+    [Fact]
+    public async Task RegelKorting_staat_als_tag_op_de_bestellijn_US63()
+    {
+        await using var dbScope = await DbFactoryBuilder.CreateSqliteAsync();
+        var factory = dbScope.Factory;
+        var offerteId = await SeedOfferteAsync(factory, extraRegelKortingPct: 10m);
+        var sut = CreateSut(factory);
+
+        var factuur = await sut.MaakFactuurVanOfferteAsync(offerteId);
+
+        // De regel met korting draagt de tag; de afgesproken-prijs-regel niet.
+        var metKorting = factuur.Lijnen.Where(l => l.Omschrijving.Contains("korting:10")).ToList();
+        Assert.Single(metKorting);
+        Assert.Equal(90m, metKorting[0].TotaalExcl);   // lijnbedrag is al NA korting
+    }
+
     private static FactuurWorkflowService CreateSut(IDbContextFactory<AppDbContext> factory)
     {
         var pricing = new PricingService(
@@ -118,7 +134,7 @@ public class FactuurWorkflowServiceTests
         return new FactuurWorkflowService(factory, pricing, new TestAuthService());
     }
 
-    private static async Task<int> SeedOfferteAsync(IDbContextFactory<AppDbContext> factory, bool createWerkBon = false, bool zeroOutTotals = false, decimal meerPrijsIncl = 0m)
+    private static async Task<int> SeedOfferteAsync(IDbContextFactory<AppDbContext> factory, bool createWerkBon = false, bool zeroOutTotals = false, decimal meerPrijsIncl = 0m, decimal? extraRegelKortingPct = null)
     {
         await using var db = await factory.CreateDbContextAsync();
 
@@ -157,6 +173,22 @@ public class FactuurWorkflowServiceTests
                 }
             }
         };
+
+        if (extraRegelKortingPct is decimal pct)
+        {
+            // US-63: een tweede, berekende regel (geen afgesproken prijs) met korting in %.
+            offerte.Regels.Add(new OfferteRegel
+            {
+                AantalStuks = 1,
+                BreedteCm = 30,
+                HoogteCm = 40,
+                KortingPct = pct,
+                TotaalExcl = 90m,
+                SubtotaalExBtw = 90m,
+                BtwBedrag = 18.90m,
+                TotaalInclBtw = 108.90m
+            });
+        }
 
         if (zeroOutTotals)
         {

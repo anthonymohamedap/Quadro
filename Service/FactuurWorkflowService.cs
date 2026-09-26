@@ -242,6 +242,12 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             if (r.AfhaalDatum.HasValue)
                 segments.Add($"afhaal:{r.AfhaalDatum.Value:yyyy-MM-dd}");
 
+            // US-63: korting in % op deze inlijsting (tagged). De lijnprijs is al NA korting
+            // (PricingEngine); de PDF rekent het kortingbedrag terug uit het %. Niet bij een
+            // afgesproken prijs — die vervangt de volledige berekening, korting incluis.
+            if (!r.AfgesprokenPrijsExcl.HasValue && r.KortingPct > 0m && r.KortingPct < 100m)
+                segments.Add($"korting:{r.KortingPct.ToString("0.##", CultureInfo.InvariantCulture)}");
+
             var omschrijving = string.Join(" | ", segments.Where(x => !string.IsNullOrWhiteSpace(x)));
 
             lijnen.Add(CreateLijn(omschrijving, qty, "st", unitEx, effectiefBtw, sort++));

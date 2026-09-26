@@ -313,4 +313,72 @@ public class PricingEngineTests
         var regel = Assert.Single(result.Regels);
         Assert.Equal(51.90m, regel.TotaalExcl);
     }
+
+    // ── US-63: korting in % per offerteregel ──────────────────────────────────
+
+    private static OfferteRegel HouRegel(decimal kortingPct = 0m, decimal korting = 0m, decimal? afgesproken = null) => new()
+    {
+        AantalStuks = 1,
+        BreedteCm = 30m,
+        HoogteCm = 40m,
+        KortingPct = kortingPct,
+        Korting = korting,
+        AfgesprokenPrijsExcl = afgesproken,
+        TypeLijst = new TypeLijst
+        {
+            BreedteCm = 5,
+            Soort = "HOU",
+            WinstFactor = 3.5m,
+            AfvalPercentage = 20m,
+            PrijsPerMeter = 10m,
+            VasteKost = 1m,
+            WerkMinuten = 30
+        }
+    };
+
+    [Fact]
+    public void Calculate_KortingPct_GeldtEnkelVoorDieRegel()
+    {
+        // Zelfde lijst als Calculate_LijstWithOwnPricing_UsesLijstValues (101.30 excl).
+        var offerte = new Offerte { Regels = [HouRegel(kortingPct: 10m), HouRegel()] };
+
+        var result = _sut.Calculate(offerte, 60m, 21m, 0m, 1m, 10m);
+
+        Assert.Equal(91.17m, result.Regels[0].TotaalExcl);   // 101.30 − 10%
+        Assert.Equal(101.30m, result.Regels[1].TotaalExcl);  // ongewijzigd
+        Assert.Equal(192.47m, result.SubtotaalExBtw);
+    }
+
+    [Fact]
+    public void Calculate_KortingPct_NaAbsoluteKorting()
+    {
+        var offerte = new Offerte { Regels = [HouRegel(kortingPct: 10m, korting: 1.30m)] };
+
+        var result = _sut.Calculate(offerte, 60m, 21m, 0m, 1m, 10m);
+
+        // (101.30 − 1.30) − 10% = 90.00
+        Assert.Equal(90.00m, Assert.Single(result.Regels).TotaalExcl);
+    }
+
+    [Fact]
+    public void Calculate_KortingPct_TeltNietBijAfgesprokenPrijs()
+    {
+        var offerte = new Offerte { Regels = [HouRegel(kortingPct: 50m, afgesproken: 121m)] };
+
+        var result = _sut.Calculate(offerte, 60m, 21m, 0m, 1m, 10m);
+
+        // Afgesproken prijs 121 incl → 100 excl, korting % genegeerd.
+        Assert.Equal(100m, Assert.Single(result.Regels).TotaalExcl);
+    }
+
+    [Fact]
+    public void Calculate_KortingPct_EnOfferteKorting_Stapelen()
+    {
+        var offerte = new Offerte { KortingPct = 10m, Regels = [HouRegel(kortingPct: 10m), HouRegel()] };
+
+        var result = _sut.Calculate(offerte, 60m, 21m, 0m, 1m, 10m);
+
+        // Regels: 91.17 + 101.30 = 192.47; daarna 10% op het totaal → 173.223 → 173.22
+        Assert.Equal(173.22m, result.SubtotaalExBtw);
+    }
 }

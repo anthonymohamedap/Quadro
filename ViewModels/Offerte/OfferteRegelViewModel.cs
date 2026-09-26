@@ -358,7 +358,7 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
             OpklevenId = s.Opkleven?.Id ?? s.OpklevenId, Opkleven = s.Opkleven,
             RugId = s.Rug?.Id ?? s.RugId, Rug = s.Rug,
             AfgesprokenPrijsExcl = s.AfgesprokenPrijsExcl, ExtraWerkMinuten = s.ExtraWerkMinuten,
-            ExtraPrijs = s.ExtraPrijs, Korting = s.Korting, LegacyCode = s.LegacyCode,
+            ExtraPrijs = s.ExtraPrijs, Korting = s.Korting, KortingPct = s.KortingPct, LegacyCode = s.LegacyCode,
             TotaalExcl = s.TotaalExcl, SubtotaalExBtw = s.SubtotaalExBtw,
             BtwBedrag = s.BtwBedrag, TotaalInclBtw = s.TotaalInclBtw
         };

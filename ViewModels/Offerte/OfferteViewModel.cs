@@ -211,6 +211,23 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         }
     }
 
+    /// <summary>US-63 — korting in % op de geselecteerde inlijsting. Zelfde patroon als
+    /// <see cref="SelectedRegelAfgesprokenPrijs"/>: schrijft naar het model en triggert een
+    /// herberekening, zodat regelprijs en offertetotaal live meebewegen.</summary>
+    public decimal? SelectedRegelKortingPct
+    {
+        get => Regelbeheer.SelectedRegel?.KortingPct;
+        set
+        {
+            if (Regelbeheer.SelectedRegel is null) return;
+            var nieuw = Math.Clamp(value ?? 0m, 0m, 100m);
+            if (Regelbeheer.SelectedRegel.KortingPct == nieuw) return;
+            Regelbeheer.SelectedRegel.KortingPct = nieuw;
+            OnPropertyChanged();
+            if (!_suppressRecalc) Prijzen.TriggerRecalc();
+        }
+    }
+
     // ── TypeLijst selectie: zelfde patroon als SelectedKlant in KlantSelectieViewModel.
     //    SelectedTypeLijst is een echte [ObservableProperty] op Regelbeheer, dus Avalonia
     //    kan het betrouwbaar tracken zonder multi-segment path binding issues. ──
@@ -653,6 +670,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             OnPropertyChanged(nameof(SelectedRegelRug));
             OnPropertyChanged(nameof(SelectedRegelAfhaalDatum));
             OnPropertyChanged(nameof(SelectedRegelAfgesprokenPrijs));   // US-22
+            OnPropertyChanged(nameof(SelectedRegelKortingPct));         // US-63
             RefreshAlleVarianten();   // variant-keuzelijsten + selecties bijwerken
         }
     }
@@ -950,7 +968,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                         PassePartout2VariantId = dbRule.PassePartout2VariantId, DiepteKernVariantId = dbRule.DiepteKernVariantId,
                         OpklevenVariantId = dbRule.OpklevenVariantId, RugVariantId = dbRule.RugVariantId,
                         ExtraWerkMinuten = dbRule.ExtraWerkMinuten, ExtraPrijs = dbRule.ExtraPrijs,
-                        Korting = dbRule.Korting, LegacyCode = dbRule.LegacyCode,
+                        Korting = dbRule.Korting, KortingPct = dbRule.KortingPct, LegacyCode = dbRule.LegacyCode,
                         AfgesprokenPrijsExcl = dbRule.AfgesprokenPrijsExcl,
                         TotaalExcl = dbRule.TotaalExcl, SubtotaalExBtw = dbRule.SubtotaalExBtw,
                         BtwBedrag = dbRule.BtwBedrag, TotaalInclBtw = dbRule.TotaalInclBtw,
@@ -1315,7 +1333,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             OpklevenId = r.Opkleven?.Id ?? r.OpklevenId,
             RugId = r.Rug?.Id ?? r.RugId,
             AfgesprokenPrijsExcl = r.AfgesprokenPrijsExcl, ExtraWerkMinuten = r.ExtraWerkMinuten,
-            ExtraPrijs = r.ExtraPrijs, Korting = r.Korting, LegacyCode = r.LegacyCode,
+            ExtraPrijs = r.ExtraPrijs, Korting = r.Korting, KortingPct = r.KortingPct, LegacyCode = r.LegacyCode,
             TotaalExcl = r.TotaalExcl, SubtotaalExBtw = r.SubtotaalExBtw,
             BtwBedrag = r.BtwBedrag, TotaalInclBtw = r.TotaalInclBtw,
             TypeLijst  = includeNavigations ? r.TypeLijst  : null,
@@ -1496,7 +1514,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         PassePartout2VariantId = vmRule.PassePartout2Variant?.Id, DiepteKernVariantId = vmRule.DiepteKernVariant?.Id,
         OpklevenVariantId = vmRule.OpklevenVariant?.Id, RugVariantId = vmRule.RugVariant?.Id,
         ExtraWerkMinuten = vmRule.ExtraWerkMinuten, ExtraPrijs = vmRule.ExtraPrijs,
-        Korting = vmRule.Korting, LegacyCode = vmRule.LegacyCode, TotaalExcl = vmRule.TotaalExcl,
+        Korting = vmRule.Korting, KortingPct = vmRule.KortingPct, LegacyCode = vmRule.LegacyCode, TotaalExcl = vmRule.TotaalExcl,
         SubtotaalExBtw = vmRule.SubtotaalExBtw, BtwBedrag = vmRule.BtwBedrag,
         TotaalInclBtw = vmRule.TotaalInclBtw, AfhaalDatum = vmRule.AfhaalDatum
     };
@@ -1519,7 +1537,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         dbRule.RugVariantId = vmRule.RugVariant?.Id;
         dbRule.AfgesprokenPrijsExcl = vmRule.AfgesprokenPrijsExcl;
         dbRule.ExtraWerkMinuten = vmRule.ExtraWerkMinuten; dbRule.ExtraPrijs = vmRule.ExtraPrijs;
-        dbRule.Korting = vmRule.Korting; dbRule.LegacyCode = vmRule.LegacyCode;
+        dbRule.Korting = vmRule.Korting; dbRule.KortingPct = vmRule.KortingPct; dbRule.LegacyCode = vmRule.LegacyCode;
         dbRule.TotaalExcl = vmRule.TotaalExcl; dbRule.SubtotaalExBtw = vmRule.SubtotaalExBtw;
         dbRule.BtwBedrag = vmRule.BtwBedrag; dbRule.TotaalInclBtw = vmRule.TotaalInclBtw;
         dbRule.AfhaalDatum = vmRule.AfhaalDatum;
