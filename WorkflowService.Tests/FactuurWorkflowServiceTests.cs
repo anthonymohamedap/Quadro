@@ -123,6 +123,37 @@ public class FactuurWorkflowServiceTests
         Assert.Equal(90m, metKorting[0].TotaalExcl);   // lijnbedrag is al NA korting
     }
 
+    [Fact]
+    public async Task Inleg_staat_als_tag_op_de_bestellijn_US71()
+    {
+        await using var dbScope = await DbFactoryBuilder.CreateSqliteAsync();
+        var factory = dbScope.Factory;
+        var offerteId = await SeedOfferteAsync(factory, metInleg: true);
+        var sut = CreateSut(factory);
+
+        var factuur = await sut.MaakFactuurVanOfferteAsync(offerteId);
+
+        Assert.Single(factuur.Lijnen, l => l.Omschrijving.Contains("inleg:20×30 cm · nr. INL-7"));
+    }
+
+    [Theory]
+    [InlineData(20.0, 30.0, "INL-7", "20×30 cm · nr. INL-7")]
+    [InlineData(20.5, 30.0, null, "20.5×30 cm")]
+    [InlineData(null, null, "INL-7", "nr. INL-7")]
+    [InlineData(null, null, null, null)]
+    [InlineData(20.0, null, null, null)]   // halve maat telt niet als inlegmaat
+    public void InlegOmschrijving_toont_enkel_ingevulde_delen_US71(double? b, double? h, string? nr, string? verwacht)
+    {
+        var regel = new OfferteRegel
+        {
+            InlegBreedteCm = b is null ? null : (decimal)b,
+            InlegHoogteCm = h is null ? null : (decimal)h,
+            InlegTypeLijst = nr is null ? null : new TypeLijst { Artikelnummer = nr, Levcode = "TST" }
+        };
+
+        Assert.Equal(verwacht, FactuurWorkflowService.InlegOmschrijving(regel));
+    }
+
     private static FactuurWorkflowService CreateSut(IDbContextFactory<AppDbContext> factory)
     {
         var pricing = new PricingService(
@@ -134,7 +165,7 @@ public class FactuurWorkflowServiceTests
         return new FactuurWorkflowService(factory, pricing, new TestAuthService());
     }
 
-    private static async Task<int> SeedOfferteAsync(IDbContextFactory<AppDbContext> factory, bool createWerkBon = false, bool zeroOutTotals = false, decimal meerPrijsIncl = 0m, decimal? extraRegelKortingPct = null)
+    private static async Task<int> SeedOfferteAsync(IDbContextFactory<AppDbContext> factory, bool createWerkBon = false, bool zeroOutTotals = false, decimal meerPrijsIncl = 0m, decimal? extraRegelKortingPct = null, bool metInleg = false)
     {
         await using var db = await factory.CreateDbContextAsync();
 
@@ -187,6 +218,24 @@ public class FactuurWorkflowServiceTests
                 SubtotaalExBtw = 90m,
                 BtwBedrag = 18.90m,
                 TotaalInclBtw = 108.90m
+            });
+        }
+
+        if (metInleg)
+        {
+            // US-71: een berekende regel met inlegmaat + inleg-nummer uit de lijstencatalogus.
+            offerte.Regels.Add(new OfferteRegel
+            {
+                AantalStuks = 1,
+                BreedteCm = 30,
+                HoogteCm = 40,
+                InlegBreedteCm = 20,
+                InlegHoogteCm = 30,
+                InlegTypeLijst = new TypeLijst { Artikelnummer = "INL-7", Levcode = "TST", BreedteCm = 2, Soort = "HOU" },
+                TotaalExcl = 150m,
+                SubtotaalExBtw = 150m,
+                BtwBedrag = 31.50m,
+                TotaalInclBtw = 181.50m
             });
         }
 
