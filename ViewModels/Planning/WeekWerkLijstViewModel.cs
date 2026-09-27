@@ -260,7 +260,7 @@ public partial class WeekWerkItem : ObservableObject
             Hoogte = r?.HoogteCm ?? 0,
             Omschrijving = t.Omschrijving ?? "",
             Afw = r?.LegacyCode ?? "",
-            Lijst = r?.KantKlaarKader is { } kkk ? $"Kant-en-klaar: {kkk.Naam}" : r?.TypeLijst?.Artikelnummer ?? "",
+            Lijst = r?.KantKlaarKader is { } kkk ? $"Standaardkader: {kkk.Naam}" : r?.TypeLijst?.Artikelnummer ?? "",
             Inleg1 = r?.InlegLabel ?? "",
             Inleg2 = "",
             InlegNummer = r?.InlegTypeLijst?.Artikelnummer ?? "",

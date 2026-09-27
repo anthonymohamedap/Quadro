@@ -136,6 +136,36 @@ public class FactuurWorkflowServiceTests
         Assert.Single(factuur.Lijnen, l => l.Omschrijving.Contains("inleg:20×30 cm · nr. INL-7"));
     }
 
+    [Fact]
+    public async Task Standaardkader_staat_met_naam_op_de_bestelbon_US68()
+    {
+        await using var dbScope = await DbFactoryBuilder.CreateSqliteAsync();
+        var factory = dbScope.Factory;
+        var offerteId = await SeedOfferteAsync(factory, metStandaardkader: true);
+        var sut = CreateSut(factory);
+
+        var factuur = await sut.MaakFactuurVanOfferteAsync(offerteId);
+
+        var lijn = Assert.Single(factuur.Lijnen, l => l.Omschrijving.StartsWith("Classic A4 zwart | standaardkader"));
+        Assert.DoesNotContain("Lijstwerk", lijn.Omschrijving);
+    }
+
+    [Fact]
+    public async Task Standaardkader_behoudt_stukprijs_bij_herberekening_US68()
+    {
+        await using var dbScope = await DbFactoryBuilder.CreateSqliteAsync();
+        var factory = dbScope.Factory;
+        // Totalen op 0 → MaakFactuurVanOfferteAsync herberekent vanuit de DB; zonder Include van
+        // KantKlaarKader zou de stukprijs wegvallen (lijnprijs 0).
+        var offerteId = await SeedOfferteAsync(factory, zeroOutTotals: true, metStandaardkader: true);
+        var sut = CreateSut(factory);
+
+        var factuur = await sut.MaakFactuurVanOfferteAsync(offerteId);
+
+        var lijn = Assert.Single(factuur.Lijnen, l => l.Omschrijving.Contains("standaardkader"));
+        Assert.Equal(20m, lijn.TotaalExcl);
+    }
+
     [Theory]
     [InlineData(20.0, 30.0, "INL-7", "20×30 cm · nr. INL-7")]
     [InlineData(20.5, 30.0, null, "20.5×30 cm")]
@@ -165,7 +195,7 @@ public class FactuurWorkflowServiceTests
         return new FactuurWorkflowService(factory, pricing, new TestAuthService());
     }
 
-    private static async Task<int> SeedOfferteAsync(IDbContextFactory<AppDbContext> factory, bool createWerkBon = false, bool zeroOutTotals = false, decimal meerPrijsIncl = 0m, decimal? extraRegelKortingPct = null, bool metInleg = false)
+    private static async Task<int> SeedOfferteAsync(IDbContextFactory<AppDbContext> factory, bool createWerkBon = false, bool zeroOutTotals = false, decimal meerPrijsIncl = 0m, decimal? extraRegelKortingPct = null, bool metInleg = false, bool metStandaardkader = false)
     {
         await using var db = await factory.CreateDbContextAsync();
 
@@ -218,6 +248,20 @@ public class FactuurWorkflowServiceTests
                 SubtotaalExBtw = 90m,
                 BtwBedrag = 18.90m,
                 TotaalInclBtw = 108.90m
+            });
+        }
+
+        if (metStandaardkader)
+        {
+            // US-68: standaardkader-regel (artikel met vaste stukprijs, geen maat/afwerking).
+            offerte.Regels.Add(new OfferteRegel
+            {
+                AantalStuks = 1,
+                KantKlaarKader = new KantKlaarKader { Naam = "Classic A4 zwart", PrijsPerStukExcl = 20m },
+                TotaalExcl = zeroOutTotals ? 0m : 20m,
+                SubtotaalExBtw = zeroOutTotals ? 0m : 20m,
+                BtwBedrag = zeroOutTotals ? 0m : 4.20m,
+                TotaalInclBtw = zeroOutTotals ? 0m : 24.20m
             });
         }
 

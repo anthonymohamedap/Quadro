@@ -25,7 +25,7 @@
 
     <Grid RowDefinitions="Auto,*">
 
-        <controls:QuadroHeader Title="KANT-EN-KLARE KADERS" BackCommand="{Binding GaTerugCommand}"/>
+        <controls:QuadroHeader Title="STANDAARDKADERS" BackCommand="{Binding GaTerugCommand}"/>
 
         <Grid Grid.Row="1" Margin="24">
 
@@ -44,7 +44,7 @@
                     <Binding Path="IsDetailOpen" Converter="{StaticResource BoolToMainShift}"/>
                 </Grid.Margin>
 
-                <TextBlock Text="Kant-en-klare kaders" Classes="h1" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="Standaardkaders" Classes="h1" TextTrimming="CharacterEllipsis"/>
 
                 <Grid Grid.Row="1"
                       ColumnDefinitions="Auto,*"
@@ -123,7 +123,7 @@
                 </Border>
 
                 <TextBlock Grid.Row="3"
-                           Text="{Binding AantalKaders, StringFormat='Aantal kaders: {0}'}"
+                           Text="{Binding AantalKaders, StringFormat='Aantal standaardkaders: {0}'}"
                            Classes="caption"
                            HorizontalAlignment="Center"/>
             </Grid>

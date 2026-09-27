@@ -125,9 +125,11 @@ public sealed class PdfOfferteExporter
     {
         var titel = !string.IsNullOrWhiteSpace(r.Titel)
             ? r.Titel
-            : !string.IsNullOrWhiteSpace(r.TypeLijst?.Artikelnummer)
-                ? r.TypeLijst!.Artikelnummer
-                : $"Werkstuk {index}";
+            : r.KantKlaarKader is { } standaard
+                ? $"Standaardkader {standaard.Naam}"   // US-68
+                : !string.IsNullOrWhiteSpace(r.TypeLijst?.Artikelnummer)
+                    ? r.TypeLijst!.Artikelnummer
+                    : $"Werkstuk {index}";
 
         col.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(8).Column(block =>
         {
@@ -140,7 +142,7 @@ public sealed class PdfOfferteExporter
             });
 
             var metaParts = new List<string>();
-            if (r.BreedteCm > 0 && r.HoogteCm > 0)
+            if (r.KantKlaarKader is null && r.BreedteCm > 0 && r.HoogteCm > 0)   // standaardkader: geen maat (US-68)
                 metaParts.Add($"{r.BreedteCm:0.##} × {r.HoogteCm:0.##} cm");
             if (!string.IsNullOrWhiteSpace(r.TypeLijst?.Artikelnummer) && !string.IsNullOrWhiteSpace(r.Titel))
                 metaParts.Add($"lijst: {r.TypeLijst!.Artikelnummer}");

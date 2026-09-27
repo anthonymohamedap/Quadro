@@ -41,6 +41,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             .Include(w => w.Offerte).ThenInclude(o => o!.Klant)
             .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.TypeLijst)
             .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.InlegTypeLijst)   // US-65
+            .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.KantKlaarKader)   // US-68
             .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.Glas)
             .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.PassePartout1)
             .Include(w => w.Offerte).ThenInclude(o => o!.Regels).ThenInclude(r => r.PassePartout2)
@@ -207,11 +208,15 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             }
 
             // Bouw verrijkte pipe-string met tagged segmenten
-            var segments = new List<string>
-            {
-                r.TypeLijst?.Artikelnummer ?? "Lijstwerk",
-                $"{r.BreedteCm.ToString("0.##", CultureInfo.InvariantCulture)}x{r.HoogteCm.ToString("0.##", CultureInfo.InvariantCulture)} cm"
-            };
+            // US-68: een standaardkader is een artikel zonder maat — naam i.p.v. "Lijstwerk", en op de
+            // plaats van de afmeting de vaste markering "standaardkader" (PDF + preview herkennen die).
+            var segments = r.KantKlaarKader is { } standaard
+                ? new List<string> { standaard.Naam.Replace("|", "/"), StandaardkaderMarker }
+                : new List<string>
+                {
+                    r.TypeLijst?.Artikelnummer ?? "Lijstwerk",
+                    $"{r.BreedteCm.ToString("0.##", CultureInfo.InvariantCulture)}x{r.HoogteCm.ToString("0.##", CultureInfo.InvariantCulture)} cm"
+                };
 
             // Titel (tagged)
             if (!string.IsNullOrWhiteSpace(r.Titel))
@@ -276,6 +281,9 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
 
     /// <summary>US-71 — "20×30 cm · nr. 1234", enkel de delen die ingevuld zijn; null als er geen inleg is.
     /// Invariante notatie zodat de bestelbon niet afhangt van de landinstelling van de pc.</summary>
+    /// <summary>US-68 — markering op de plaats van de afmeting voor een standaardkader-lijn.</summary>
+    public const string StandaardkaderMarker = "standaardkader";
+
     public static string? InlegOmschrijving(OfferteRegel r)
     {
         var maat = r.InlegBreedteCm.HasValue && r.InlegHoogteCm.HasValue
@@ -400,6 +408,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             .Include(o => o.Klant)
             .Include(o => o.Regels).ThenInclude(r => r.TypeLijst)
             .Include(o => o.Regels).ThenInclude(r => r.InlegTypeLijst)   // US-65: nodig voor herberekening
+            .Include(o => o.Regels).ThenInclude(r => r.KantKlaarKader)   // US-68: standaardkader (naam + stukprijs bij herberekening)
             .Include(o => o.Regels).ThenInclude(r => r.Glas)
             .Include(o => o.Regels).ThenInclude(r => r.PassePartout1)
             .Include(o => o.Regels).ThenInclude(r => r.PassePartout2)
