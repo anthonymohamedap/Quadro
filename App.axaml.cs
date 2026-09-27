@@ -162,6 +162,7 @@ public partial class App : Application
         services.AddScoped<IOfferteWorkflowService, OfferteWorkflowService>();
         services.AddScoped<IWerkBonWorkflowService, WerkBonWorkflowService>();
         services.AddScoped<IFactuurWorkflowService, FactuurWorkflowService>();
+        services.AddScoped<IOntvangstService, OntvangstService>();   // US-69/US-70
         services.AddScoped<IFactuurExportService, FactuurExportService>();
         services.AddScoped<ICentralExcelExportService, CentralExcelExportService>();
         services.AddScoped<IFactuurExporter, PdfFactuurExporter>();
