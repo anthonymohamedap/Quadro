@@ -40,7 +40,7 @@
 						<StackPanel Orientation="Horizontal" Spacing="8">
 							<Path Data="M3 3v18h18V3H3zm16 16H5V5h14v14z"
 								  Fill="{Binding $parent[Button].Foreground}" Width="16" Height="16" Stretch="Uniform"/>
-							<TextBlock Text="Kant-en-klaar" VerticalAlignment="Center"/>
+							<TextBlock Text="Standaardkaders" VerticalAlignment="Center"/>
 						</StackPanel>
 					</Button>
 
@@ -226,7 +226,7 @@
 						</StackPanel>
 					</Button>
 
-					<!-- Kant-en-klare kaders -->
+					<!-- Standaardkaders (US-68, voorheen "kant-en-klare kaders") -->
 					<Button Classes="CardButton" Command="{Binding OpenKantKlaarKaderenCommand}">
 						<StackPanel Spacing="10">
 							<Border Background="{DynamicResource IconSlateBg}" CornerRadius="8" Width="40" Height="40" HorizontalAlignment="Left">
@@ -235,8 +235,8 @@
 									  HorizontalAlignment="Center" VerticalAlignment="Center"/>
 							</Border>
 							<StackPanel Spacing="3">
-								<TextBlock Text="Kant-en-klaar" Classes="h3" TextTrimming="CharacterEllipsis"/>
-								<TextBlock Text="Kant-en-klare kaders en prijzen" Classes="label" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+								<TextBlock Text="Standaardkaders" Classes="h3" TextTrimming="CharacterEllipsis"/>
+								<TextBlock Text="Standaardkaders en prijzen" Classes="label" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
 							</StackPanel>
 						</StackPanel>
 					</Button>

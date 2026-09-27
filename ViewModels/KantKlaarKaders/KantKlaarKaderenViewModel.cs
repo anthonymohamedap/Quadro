@@ -86,7 +86,7 @@ public partial class KantKlaarKaderenViewModel : ObservableObject, IAsyncInitial
         }
         catch (Exception ex)
         {
-            Foutmelding = $"Fout bij laden kant-en-klare kaders: {ex.Message}";
+            Foutmelding = $"Fout bij laden standaardkaders: {ex.Message}";
             await _dialogs.ShowErrorAsync("Laden mislukt", Foutmelding);
         }
         finally
@@ -142,7 +142,7 @@ public partial class KantKlaarKaderenViewModel : ObservableObject, IAsyncInitial
 
             await db.SaveChangesAsync();
 
-            _toast.Success("Kant-en-klaar kader opgeslagen.");
+            _toast.Success("Standaardkader opgeslagen.");
             await LoadAsync();
 
             IsDetailOpen = false;
@@ -168,9 +168,9 @@ public partial class KantKlaarKaderenViewModel : ObservableObject, IAsyncInitial
         if (GeselecteerdeKader is null) return;
 
         var ok = await _dialogs.ConfirmAsync(
-            "Kant-en-klaar kader archiveren",
+            "Standaardkader archiveren",
             $"Ben je zeker dat je '{GeselecteerdeKader.Naam}' wil archiveren?\n\n" +
-            "Het kader wordt verborgen maar bestaande offerteregels blijven intact.");
+            "Het standaardkader wordt verborgen maar bestaande offerteregels blijven intact.");
 
         if (!ok) return;
 
