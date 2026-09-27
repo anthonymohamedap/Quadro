@@ -1,0 +1,151 @@
+﻿<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:QuadroApp.Views.Controls"
+    xmlns:vm="using:QuadroApp.ViewModels"
+    xmlns:si="using:QuadroApp.Service.Interfaces"
+    x:Class="QuadroApp.Views.OverzichtBetalingenView"
+    x:DataType="vm:OverzichtBetalingenViewModel"
+    Background="{DynamicResource SurfaceMuted}">
+
+    <!-- US-67 — overzicht betalingen: per dag × betaalwijze, met detail van de gekozen dag. -->
+    <Grid RowDefinitions="Auto,*">
+
+        <controls:QuadroHeader Title="OVERZICHT BETALINGEN" BackCommand="{Binding GaTerugCommand}"/>
+
+        <Grid Grid.Row="1" Margin="24"
+              RowDefinitions="Auto,Auto,*,Auto,Auto"
+              RowSpacing="12"
+              MaxWidth="1100">
+
+            <StackPanel Spacing="2">
+                <TextBlock Text="Overzicht betalingen" Classes="h1"/>
+                <TextBlock Text="{Binding PeriodeTekst}" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+            </StackPanel>
+
+            <!-- Periode + afdrukken -->
+            <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,*" ColumnSpacing="10">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <TextBlock Text="Van" Classes="label" VerticalAlignment="Center"/>
+                    <DatePicker SelectedDate="{Binding Van, Mode=TwoWay}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <TextBlock Text="Tot" Classes="label" VerticalAlignment="Center"/>
+                    <DatePicker SelectedDate="{Binding Tot, Mode=TwoWay}"/>
+                </StackPanel>
+                <WrapPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="Vandaag" Command="{Binding VandaagCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
+                    <Button Content="Deze maand" Command="{Binding DezeMaandCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
+                    <Button Content="Vorige maand" Command="{Binding VorigeMaandCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
+                    <Button Content="🔄 Ververs" Command="{Binding LaadCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
+                    <Button Content="🖨 Per dag (detail)" Command="{Binding AfdrukkenDetailCommand}" Classes="MainBtn" Margin="0,0,6,6"
+                            ToolTip.Tip="Elke ontvangst met bonnummer, per dag een totaal"/>
+                    <Button Content="🖨 Dagtotalen" Command="{Binding AfdrukkenDagtotalenCommand}" Classes="MainBtn" Margin="0,0,6,6"
+                            ToolTip.Tip="Eén regel per dag met de totalen per betaalwijze"/>
+                </WrapPanel>
+            </Grid>
+
+            <!-- Tabel per dag -->
+            <Border Grid.Row="2"
+                    Background="{DynamicResource Surface}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <Border Background="{DynamicResource SurfaceHeader}" Padding="10,6"
+                            BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="1.2*,0.6*,1*,1*,1*,1*,1*,1*,1.2*" ColumnSpacing="10">
+                            <TextBlock Text="Datum" Classes="label"/>
+                            <TextBlock Grid.Column="1" Text="Dag" Classes="label"/>
+                            <TextBlock Grid.Column="2" Text="Kontant" Classes="label" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="3" Text="Cheque" Classes="label" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="4" Text="Visa" Classes="label" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="5" Text="Bancontact" Classes="label" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="6" Text="Proton" Classes="label" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="7" Text="Storting" Classes="label" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="8" Text="Totaal" Classes="label" HorizontalAlignment="Right"/>
+                        </Grid>
+                    </Border>
+
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding Dagen}"
+                             SelectedItem="{Binding GeselecteerdeDag, Mode=TwoWay}"
+                             BorderThickness="0"
+                             Background="Transparent"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="si:BetalingsOverzichtDag">
+                                <Grid ColumnDefinitions="1.2*,0.6*,1*,1*,1*,1*,1*,1*,1.2*" ColumnSpacing="10" Margin="0,2">
+                                    <TextBlock Text="{Binding Datum, StringFormat='{}{0:dd/MM/yyyy}'}"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding DagNaam}"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding Kontant, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="3" Text="{Binding Cheque, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="4" Text="{Binding Visa, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="5" Text="{Binding Bancontact, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="6" Text="{Binding Proton, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="7" Text="{Binding Storting, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="8" Text="{Binding Totaal, StringFormat='{}€ {0:#,##0.00}'}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Totalen van de periode -->
+                    <Border Grid.Row="2" Background="{DynamicResource SurfaceHeader}" Padding="10,8"
+                            BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="0,1,0,0">
+                        <Grid ColumnDefinitions="1.2*,0.6*,1*,1*,1*,1*,1*,1*,1.2*" ColumnSpacing="10">
+                            <TextBlock Text="Totaal" FontWeight="Bold"/>
+                            <TextBlock Grid.Column="2" Text="{Binding Overzicht.Kontant, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="3" Text="{Binding Overzicht.Cheque, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="4" Text="{Binding Overzicht.Visa, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="5" Text="{Binding Overzicht.Bancontact, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="6" Text="{Binding Overzicht.Proton, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="7" Text="{Binding Overzicht.Storting, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="8" Text="{Binding Overzicht.Totaal, StringFormat='{}€ {0:#,##0.00}', FallbackValue=''}" FontWeight="Bold" HorizontalAlignment="Right"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Detail van de gekozen dag -->
+            <Border Grid.Row="3"
+                    Background="{DynamicResource Surface}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="10"
+                    MaxHeight="260"
+                    IsVisible="{Binding HeeftGeselecteerdeDag}">
+                <Grid RowDefinitions="Auto,Auto,*" RowSpacing="6">
+                    <TextBlock Text="{Binding GeselecteerdeDag.Datum, StringFormat='Detail van {0:dddd dd/MM/yyyy}', FallbackValue=''}" Classes="h3"/>
+                    <Grid Grid.Row="1" ColumnDefinitions="1*,1.2*,2.5*,1.2*,1*" ColumnSpacing="10">
+                        <TextBlock Text="Bon" Classes="label"/>
+                        <TextBlock Grid.Column="1" Text="Soort" Classes="label"/>
+                        <TextBlock Grid.Column="2" Text="Omschrijving" Classes="label"/>
+                        <TextBlock Grid.Column="3" Text="Betaalwijze" Classes="label"/>
+                        <TextBlock Grid.Column="4" Text="Bedrag" Classes="label" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding DetailRegels}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="si:BetalingsOverzichtRegel">
+                                    <Grid ColumnDefinitions="1*,1.2*,2.5*,1.2*,1*" ColumnSpacing="10" Margin="0,2">
+                                        <TextBlock Text="{Binding Bon}" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding SoortLabel}"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Omschrijving}" TextTrimming="CharacterEllipsis"
+                                                   ToolTip.Tip="{Binding Omschrijving}"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding Betaalwijze}"/>
+                                        <TextBlock Grid.Column="4" Text="{Binding Bedrag, StringFormat='{}€ {0:#,##0.00}'}" HorizontalAlignment="Right"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <TextBlock Grid.Row="4" Text="{Binding Foutmelding}" Foreground="{DynamicResource Danger}"
+                       IsVisible="{Binding Foutmelding, Converter={x:Static ObjectConverters.IsNotNull}}" TextWrapping="Wrap"/>
+        </Grid>
+    </Grid>
+</UserControl>
