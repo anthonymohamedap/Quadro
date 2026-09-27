@@ -1442,13 +1442,17 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.ToTable("WerkTaken");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.DB.WinkelVerkoop", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.Ontvangst", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AangemaaktDoor")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<DateTime>("AangemaaktOp")
                         .HasColumnType("timestamp with time zone");
@@ -1457,30 +1461,50 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<decimal>("BedragIncl")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<string>("Betaalwijze")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<decimal>("BtwPct")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
-
                     b.Property<DateTime>("Datum")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("FactuurId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("KortingPct")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<int?>("OfferteId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Omschrijving")
-                        .IsRequired()
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
 
-                    b.Property<decimal>("PrijsInclBtw")
+                    b.Property<decimal>("PrijsPerStukIncl")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<string>("Soort")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.HasKey("Id");
 
-                    b.ToTable("WinkelVerkopen");
+                    b.HasIndex("Datum");
+
+                    b.HasIndex("FactuurId");
+
+                    b.HasIndex("OfferteId");
+
+                    b.ToTable("Ontvangsten");
                 });
 
             modelBuilder.Entity("QuadroApp.Model.DB.AfwerkingsOptie", b =>
@@ -1527,6 +1551,23 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.Navigation("Offerte");
 
                     b.Navigation("WerkBon");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.Ontvangst", b =>
+                {
+                    b.HasOne("QuadroApp.Model.DB.Factuur", "Factuur")
+                        .WithMany()
+                        .HasForeignKey("FactuurId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("QuadroApp.Model.DB.Offerte", "Offerte")
+                        .WithMany()
+                        .HasForeignKey("OfferteId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Factuur");
+
+                    b.Navigation("Offerte");
                 });
 
             modelBuilder.Entity("QuadroApp.Model.DB.FactuurLijn", b =>
