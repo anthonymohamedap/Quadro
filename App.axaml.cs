@@ -163,6 +163,7 @@ public partial class App : Application
         services.AddScoped<IWerkBonWorkflowService, WerkBonWorkflowService>();
         services.AddScoped<IFactuurWorkflowService, FactuurWorkflowService>();
         services.AddScoped<IOntvangstService, OntvangstService>();   // US-69/US-70
+        services.AddScoped<IBetalingsOverzichtService, BetalingsOverzichtService>();   // US-67
         services.AddScoped<IFactuurExportService, FactuurExportService>();
         services.AddScoped<ICentralExcelExportService, CentralExcelExportService>();
         services.AddScoped<IFactuurExporter, PdfFactuurExporter>();
@@ -220,6 +221,7 @@ public partial class App : Application
         services.AddTransient<LijstenViewModel>();
         services.AddTransient<KantKlaarKaderenViewModel>();
         services.AddTransient<WinkelVerkopenViewModel>();
+        services.AddTransient<OverzichtBetalingenViewModel>();
         services.AddTransient<LeveranciersViewModel>();
         services.AddTransient<AfwerkingenViewModel>();
         services.AddTransient<OffertesLijstViewModel>();
