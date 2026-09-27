@@ -1377,11 +1377,15 @@ namespace QuadroApp.Migrations
                     b.ToTable("WerkTaken");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.DB.WinkelVerkoop", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.Ontvangst", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("AangemaaktDoor")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("AangemaaktOp")
                         .HasColumnType("TEXT");
@@ -1390,30 +1394,50 @@ namespace QuadroApp.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal>("BedragIncl")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Betaalwijze")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal>("BtwPct")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("Datum")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("FactuurId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("KortingPct")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("OfferteId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Omschrijving")
-                        .IsRequired()
                         .HasMaxLength(300)
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal>("PrijsInclBtw")
+                    b.Property<decimal>("PrijsPerStukIncl")
                         .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Soort")
+                        .IsRequired()
+                        .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.ToTable("WinkelVerkopen");
+                    b.HasIndex("Datum");
+
+                    b.HasIndex("FactuurId");
+
+                    b.HasIndex("OfferteId");
+
+                    b.ToTable("Ontvangsten");
                 });
 
             modelBuilder.Entity("QuadroApp.Model.DB.AfwerkingsOptie", b =>
@@ -1460,6 +1484,23 @@ namespace QuadroApp.Migrations
                     b.Navigation("Offerte");
 
                     b.Navigation("WerkBon");
+                });
+
+            modelBuilder.Entity("QuadroApp.Model.DB.Ontvangst", b =>
+                {
+                    b.HasOne("QuadroApp.Model.DB.Factuur", "Factuur")
+                        .WithMany()
+                        .HasForeignKey("FactuurId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("QuadroApp.Model.DB.Offerte", "Offerte")
+                        .WithMany()
+                        .HasForeignKey("OfferteId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Factuur");
+
+                    b.Navigation("Offerte");
                 });
 
             modelBuilder.Entity("QuadroApp.Model.DB.FactuurLijn", b =>

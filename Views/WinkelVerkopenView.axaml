@@ -66,6 +66,9 @@
                     </StackPanel>
 
                     <WrapPanel Grid.Column="3" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Content="Deze maand" Command="{Binding DezeMaandCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
+                        <Button Content="Vorige maand" Command="{Binding VorigeMaandCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
+                        <Button Content="Alles" Command="{Binding AllePeriodesCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
                         <Button Content="➕ Nieuw" Command="{Binding NieuwCommand}" Classes="MainBtn" Margin="0,0,6,6" IsEnabled="{Binding MagBewerken}"/>
                         <Button Content="🔄 Ververs" Command="{Binding RefreshCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
                     </WrapPanel>
@@ -91,7 +94,7 @@
                                 <TextBlock Grid.Column="1" Text="Omschrijving" Classes="label" TextTrimming="CharacterEllipsis"/>
                                 <TextBlock Grid.Column="2" Text="Aantal" Classes="label" TextTrimming="CharacterEllipsis"/>
                                 <TextBlock Grid.Column="3" Text="Prijs incl." Classes="label" TextTrimming="CharacterEllipsis"/>
-                                <TextBlock Grid.Column="4" Text="Btw %" Classes="label" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="4" Text="Korting %" Classes="label" TextTrimming="CharacterEllipsis"/>
                                 <TextBlock Grid.Column="5" Text="Betaalwijze" Classes="label" TextTrimming="CharacterEllipsis"/>
                                 <TextBlock Grid.Column="6" Text="Totaal" Classes="label" TextTrimming="CharacterEllipsis"/>
                             </Grid>
@@ -105,7 +108,7 @@
                                  ScrollViewer.VerticalScrollBarVisibility="Auto">
 
                             <ListBox.ItemTemplate>
-                                <DataTemplate x:DataType="m:WinkelVerkoop">
+                                <DataTemplate x:DataType="m:Ontvangst">
 
                                     <Border Padding="10,6">
                                         <Grid ColumnDefinitions="1*,3*,1*,1*,1*,1*,1*"
@@ -126,11 +129,11 @@
                                                        TextTrimming="CharacterEllipsis"/>
 
                                             <TextBlock Grid.Column="3"
-                                                       Text="{Binding PrijsInclBtw, StringFormat='{}€ {0:0.00}'}"
+                                                       Text="{Binding PrijsPerStukIncl, StringFormat='{}€ {0:0.00}'}"
                                                        TextTrimming="CharacterEllipsis"/>
 
                                             <TextBlock Grid.Column="4"
-                                                       Text="{Binding BtwPct, StringFormat='{}{0:0.00}%'}"
+                                                       Text="{Binding KortingPct, StringFormat='{}{0:0.##}%'}"
                                                        TextTrimming="CharacterEllipsis"/>
 
                                             <TextBlock Grid.Column="5"
@@ -138,7 +141,7 @@
                                                        TextTrimming="CharacterEllipsis"/>
 
                                             <TextBlock Grid.Column="6"
-                                                       Text="{Binding TotaalInclBtw, StringFormat='{}€ {0:0.00}'}"
+                                                       Text="{Binding BedragIncl, StringFormat='{}€ {0:0.00}'}"
                                                        TextTrimming="CharacterEllipsis"/>
                                         </Grid>
                                     </Border>
@@ -205,7 +208,7 @@
                                     IsEnabled="{Binding MagBewerken}">
 
                             <Grid ColumnDefinitions="1*,2*"
-                                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                                   RowSpacing="10"
                                   ColumnSpacing="15">
 
@@ -222,13 +225,13 @@
                                          MinHeight="50"/>
 
                                 <TextBlock Text="Aantal" Grid.Row="2" Grid.Column="0" Classes="label" VerticalAlignment="Center"/>
-                                <NumericUpDown Foreground="{DynamicResource TextPrimary}" Value="{Binding GeselecteerdeVerkoop.Aantal, Mode=TwoWay}" Grid.Row="2" Grid.Column="1"/>
+                                <NumericUpDown Foreground="{DynamicResource TextPrimary}" Minimum="0" FormatString="0.##" Value="{Binding VerkoopAantal, Mode=TwoWay}" Grid.Row="2" Grid.Column="1"/>
 
                                 <TextBlock Text="Prijs (incl. btw)" Grid.Row="3" Grid.Column="0" Classes="label" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                                <NumericUpDown Foreground="{DynamicResource TextPrimary}" Value="{Binding GeselecteerdeVerkoop.PrijsInclBtw, Mode=TwoWay}" Grid.Row="3" Grid.Column="1"/>
+                                <NumericUpDown Foreground="{DynamicResource TextPrimary}" Minimum="0" FormatString="'€ '0.00" Value="{Binding VerkoopPrijs, Mode=TwoWay}" Grid.Row="3" Grid.Column="1"/>
 
-                                <TextBlock Text="Btw %" Grid.Row="4" Grid.Column="0" Classes="label" VerticalAlignment="Center"/>
-                                <NumericUpDown Foreground="{DynamicResource TextPrimary}" Value="{Binding GeselecteerdeVerkoop.BtwPct, Mode=TwoWay}" Grid.Row="4" Grid.Column="1"/>
+                                <TextBlock Text="Korting %" Grid.Row="4" Grid.Column="0" Classes="label" VerticalAlignment="Center"/>
+                                <NumericUpDown Foreground="{DynamicResource TextPrimary}" Minimum="0" Maximum="100" FormatString="0.##" Value="{Binding VerkoopKortingPct, Mode=TwoWay}" Grid.Row="4" Grid.Column="1"/>
 
                                 <TextBlock Text="Betaalwijze" Grid.Row="5" Grid.Column="0" Classes="label" VerticalAlignment="Center"/>
                                 <ComboBox Grid.Row="5"
@@ -236,6 +239,10 @@
                                           HorizontalAlignment="Stretch"
                                           ItemsSource="{Binding BetaalwijzeOpties}"
                                           SelectedItem="{Binding GeselecteerdeVerkoop.Betaalwijze, Mode=TwoWay}"/>
+
+                                <TextBlock Text="Totaal (incl. 21 % btw)" Grid.Row="6" Grid.Column="0" Classes="label" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                <TextBlock Grid.Row="6" Grid.Column="1" FontWeight="SemiBold" VerticalAlignment="Center"
+                                           Text="{Binding VerkoopTotaal, StringFormat='€ {0:0.00}'}"/>
 
                             </Grid>
 

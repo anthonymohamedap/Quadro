@@ -13,12 +13,12 @@ using System.Threading.Tasks;
 
 namespace QuadroApp.ViewModels;
 
-/// <summary>US-66 — los register voor winkelverkopen (toonbankverkopen los van offerte/factuur).
-/// 1-op-1 naar het patroon van <see cref="KantKlaarKaderenViewModel"/> (Load/Save/Delete/Filter),
-/// met een extra ComboBox voor <see cref="Betaalwijze"/> en een datumfilter i.p.v. enkel
-/// naam-filter. Hergebruikt <see cref="Permissie.Factureren"/> — geen nieuwe permissie nodig.
-/// Hard delete is hier aanvaardbaar (geen soft-delete-filter), in tegenstelling tot
-/// <see cref="KantKlaarKader"/> waar OfferteRegel naar verwijst.</summary>
+/// <summary>US-66 — winkelverkopen (kassa-verkopen): toonbankverkopen zonder offerte/bestelbon.
+/// Schrijft naar het centrale ontvangstenregister (<see cref="Ontvangst"/> met
+/// <see cref="OntvangstSoort.Winkelverkoop"/>), zodat ze mee in het "overzicht betalingen" komen.
+/// Naar het voorbeeld van de kassa-verkopen van Quadro: datum, omschrijving, aantal, prijs incl.,
+/// korting %, betaalwijze; btw altijd 21 %; wordt altijd meteen volledig betaald.
+/// Hergebruikt <see cref="Permissie.Factureren"/>.</summary>
 public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializable
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
@@ -27,12 +27,12 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
     private readonly IToastService _toast;
     private readonly IAuthService _auth;
 
-    [ObservableProperty] private ObservableCollection<WinkelVerkoop> verkopen = new();
-    [ObservableProperty] private ObservableCollection<WinkelVerkoop> gefilterdeVerkopen = new();
+    [ObservableProperty] private ObservableCollection<Ontvangst> verkopen = new();
+    [ObservableProperty] private ObservableCollection<Ontvangst> gefilterdeVerkopen = new();
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(DeleteCommand))]
-    private WinkelVerkoop? geselecteerdeVerkoop;
+    private Ontvangst? geselecteerdeVerkoop;
 
     [ObservableProperty] private bool isDetailOpen;
     [ObservableProperty] private string zoekterm = string.Empty;
@@ -47,7 +47,7 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
     public IReadOnlyList<Betaalwijze> BetaalwijzeOpties { get; } = Enum.GetValues<Betaalwijze>();
 
     public int AantalVerkopen => GefilterdeVerkopen?.Count ?? 0;
-    public decimal TotaalOmzetIncl => GefilterdeVerkopen?.Sum(v => v.TotaalInclBtw) ?? 0m;
+    public decimal TotaalOmzetIncl => GefilterdeVerkopen?.Sum(v => v.BedragIncl) ?? 0m;
 
     public Action? OnTerug { get; set; }
 
@@ -86,10 +86,56 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
     partial void OnFilterVanafChanged(DateTimeOffset? value) => ApplyFilter();
     partial void OnFilterTotChanged(DateTimeOffset? value) => ApplyFilter();
 
-    partial void OnGeselecteerdeVerkoopChanged(WinkelVerkoop? value)
+    partial void OnGeselecteerdeVerkoopChanged(Ontvangst? value)
     {
         IsDetailOpen = value is not null;
         OnPropertyChanged(nameof(VerkoopDatum));
+        OnPropertyChanged(nameof(VerkoopAantal));
+        OnPropertyChanged(nameof(VerkoopPrijs));
+        OnPropertyChanged(nameof(VerkoopKortingPct));
+        OnPropertyChanged(nameof(VerkoopTotaal));
+    }
+
+    // ── Proxies zodat het totaal live meebeweegt (Ontvangst is een POCO zonder INotifyPropertyChanged) ──
+    public decimal? VerkoopAantal
+    {
+        get => GeselecteerdeVerkoop?.Aantal;
+        set { if (GeselecteerdeVerkoop is null) return; GeselecteerdeVerkoop.Aantal = value ?? 0m; OnPropertyChanged(); OnPropertyChanged(nameof(VerkoopTotaal)); }
+    }
+
+    public decimal? VerkoopPrijs
+    {
+        get => GeselecteerdeVerkoop?.PrijsPerStukIncl;
+        set { if (GeselecteerdeVerkoop is null) return; GeselecteerdeVerkoop.PrijsPerStukIncl = value ?? 0m; OnPropertyChanged(); OnPropertyChanged(nameof(VerkoopTotaal)); }
+    }
+
+    public decimal? VerkoopKortingPct
+    {
+        get => GeselecteerdeVerkoop?.KortingPct;
+        set { if (GeselecteerdeVerkoop is null) return; GeselecteerdeVerkoop.KortingPct = Math.Clamp(value ?? 0m, 0m, 100m); OnPropertyChanged(); OnPropertyChanged(nameof(VerkoopTotaal)); }
+    }
+
+    public decimal VerkoopTotaal => GeselecteerdeVerkoop?.TotaalIncl ?? 0m;
+
+    // ── Snelle maandfilter (zoals de maand-tabbladen in de kassa) ──
+    [RelayCommand]
+    private void DezeMaand() => ZetMaand(DateTime.Today);
+
+    [RelayCommand]
+    private void VorigeMaand() => ZetMaand(DateTime.Today.AddMonths(-1));
+
+    [RelayCommand]
+    private void AllePeriodes()
+    {
+        FilterVanaf = null;
+        FilterTot = null;
+    }
+
+    private void ZetMaand(DateTime dag)
+    {
+        var eerste = new DateTime(dag.Year, dag.Month, 1);
+        FilterVanaf = new DateTimeOffset(eerste);
+        FilterTot = new DateTimeOffset(eerste.AddMonths(1).AddDays(-1));
     }
 
     [RelayCommand]
@@ -113,13 +159,14 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
 
             await using var db = await _dbFactory.CreateDbContextAsync();
 
-            var data = await db.WinkelVerkopen
+            var data = await db.Ontvangsten
                 .AsNoTracking()
+                .Where(v => v.Soort == OntvangstSoort.Winkelverkoop)
                 .OrderByDescending(v => v.Datum)
                 .ThenByDescending(v => v.Id)
                 .ToListAsync();
 
-            Verkopen = new ObservableCollection<WinkelVerkoop>(data);
+            Verkopen = new ObservableCollection<Ontvangst>(data);
             ApplyFilter();
         }
         catch (Exception ex)
@@ -145,7 +192,7 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
             return;
         }
 
-        GeselecteerdeVerkoop = new WinkelVerkoop();
+        GeselecteerdeVerkoop = new Ontvangst { Soort = OntvangstSoort.Winkelverkoop, Datum = DateTime.Today };
         IsDetailOpen = true;
     }
 
@@ -172,16 +219,24 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
             _toast.Error("Aantal moet groter zijn dan 0.");
             return;
         }
-        if (GeselecteerdeVerkoop.PrijsInclBtw < 0m)
+        if (GeselecteerdeVerkoop.PrijsPerStukIncl < 0m)
         {
             _toast.Error("Prijs (incl. btw) kan niet negatief zijn.");
             return;
         }
-        if (GeselecteerdeVerkoop.BtwPct < 0m)
+        if (GeselecteerdeVerkoop.KortingPct is < 0m or > 100m)
         {
-            _toast.Error("Btw-percentage kan niet negatief zijn.");
+            _toast.Error("Korting moet tussen 0 en 100 % liggen.");
             return;
         }
+
+        // Winkelverkoop = altijd meteen volledig betaald (Veerle, 27/09): ontvangen bedrag = totaal.
+        GeselecteerdeVerkoop.Soort = OntvangstSoort.Winkelverkoop;
+        GeselecteerdeVerkoop.OfferteId = null;
+        GeselecteerdeVerkoop.FactuurId = null;
+        GeselecteerdeVerkoop.BedragIncl = GeselecteerdeVerkoop.TotaalIncl;
+        if (GeselecteerdeVerkoop.Id == 0)
+            GeselecteerdeVerkoop.AangemaaktDoor = _auth.CurrentUser?.GebruikersNaam;
 
         try
         {
@@ -192,11 +247,11 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
 
             if (GeselecteerdeVerkoop.Id == 0)
             {
-                db.WinkelVerkopen.Add(GeselecteerdeVerkoop);
+                db.Ontvangsten.Add(GeselecteerdeVerkoop);
             }
             else
             {
-                db.WinkelVerkopen.Attach(GeselecteerdeVerkoop);
+                db.Ontvangsten.Attach(GeselecteerdeVerkoop);
                 db.Entry(GeselecteerdeVerkoop).State = EntityState.Modified;
             }
 
@@ -248,10 +303,10 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
 
             await using var db = await _dbFactory.CreateDbContextAsync();
 
-            var dbVerkoop = await db.WinkelVerkopen.FindAsync(GeselecteerdeVerkoop.Id);
+            var dbVerkoop = await db.Ontvangsten.FindAsync(GeselecteerdeVerkoop.Id);
             if (dbVerkoop is null) return;
 
-            db.WinkelVerkopen.Remove(dbVerkoop);
+            db.Ontvangsten.Remove(dbVerkoop);
             await db.SaveChangesAsync();
 
             await LoadAsync();
@@ -274,12 +329,12 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
     {
         if (Verkopen.Count == 0)
         {
-            GefilterdeVerkopen = new ObservableCollection<WinkelVerkoop>();
+            GefilterdeVerkopen = new ObservableCollection<Ontvangst>();
             RaiseAggregatesChanged();
             return;
         }
 
-        IEnumerable<WinkelVerkoop> filtered = Verkopen;
+        IEnumerable<Ontvangst> filtered = Verkopen;
 
         if (!string.IsNullOrWhiteSpace(Zoekterm))
         {
@@ -302,7 +357,7 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
         // FilterVanaf/FilterTot zijn DateTimeOffset? (DatePicker-binding); .Date werkt ook op
         // DateTimeOffset en levert de lokale datumcomponent op voor de vergelijking.
 
-        GefilterdeVerkopen = new ObservableCollection<WinkelVerkoop>(filtered);
+        GefilterdeVerkopen = new ObservableCollection<Ontvangst>(filtered);
         RaiseAggregatesChanged();
     }
 

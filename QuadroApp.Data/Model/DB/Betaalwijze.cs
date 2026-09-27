@@ -1,8 +1,7 @@
 namespace QuadroApp.Model.DB
 {
-    /// <summary>US-66 — betaalwijzes voor losse winkelverkopen. Bewust top-level (niet genest in
-    /// <see cref="WinkelVerkoop"/>) zodat een latere story dit kan hergebruiken op
-    /// <see cref="Factuur"/>/<see cref="Offerte"/>.</summary>
+    /// <summary>US-66 — betaalwijzes van het ontvangstenregister (<see cref="Ontvangst"/>), zelfde
+    /// lijst als de kassa van Quadro: kontant, cheque, visa, bancontact, proton, storting.</summary>
     public enum Betaalwijze
     {
         Kontant,
