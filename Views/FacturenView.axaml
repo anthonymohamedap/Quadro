@@ -3,6 +3,7 @@
              xmlns:controls="clr-namespace:QuadroApp.Views.Controls"
              xmlns:vm="using:QuadroApp.ViewModels"
              xmlns:conv="clr-namespace:QuadroApp.Converters"
+             xmlns:m="clr-namespace:QuadroApp.Model.DB;assembly=QuadroApp.Data"
              x:Class="QuadroApp.Views.FacturenView"
              x:DataType="vm:FacturenViewModel"
              Background="{DynamicResource SurfaceMutedAlt}"
@@ -43,7 +44,7 @@
               BorderThickness="1"
               CornerRadius="8"
               Padding="16">
-        <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="12">
+        <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="12">
           <TextBlock Text="Bestelbon details" Classes="h2" TextTrimming="CharacterEllipsis"/>
 
           <Grid Grid.Row="1" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
@@ -82,11 +83,63 @@
             </ListBox>
           </Border>
 
-          <WrapPanel Grid.Row="3">
+          <!-- US-70: betalingen (vooraf / bij afhalen / achteraf; meerdere mogelijk, bv. cash + kaart) -->
+          <Border Grid.Row="3"
+                  BorderBrush="{DynamicResource BorderSubtle}"
+                  BorderThickness="1"
+                  CornerRadius="8"
+                  Padding="10"
+                  IsVisible="{Binding GeselecteerdeFactuur, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <StackPanel Spacing="8">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="Betalingen" Classes="h3"/>
+                <TextBlock Grid.Column="1" VerticalAlignment="Center">
+                  <Run Text="Totaal"/>
+                  <Run Text="{Binding StandTotaal, StringFormat='€ {0:0.00}'}" FontWeight="SemiBold"/>
+                  <Run Text="  ·  voorschot"/>
+                  <Run Text="{Binding StandVoorschot, StringFormat='€ {0:0.00}'}"/>
+                  <Run Text="  ·  betaald"/>
+                  <Run Text="{Binding StandBetaald, StringFormat='€ {0:0.00}'}"/>
+                  <Run Text="  ·  nog te betalen"/>
+                  <Run Text="{Binding StandRest, StringFormat='€ {0:0.00}'}" FontWeight="Bold"/>
+                </TextBlock>
+              </Grid>
+
+              <ItemsControl ItemsSource="{Binding Betalingen}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="m:Ontvangst">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10" Margin="0,2">
+                      <TextBlock VerticalAlignment="Center" Text="{Binding Datum, StringFormat='{}{0:dd/MM/yyyy}'}"/>
+                      <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Betaalwijze}"/>
+                      <TextBlock Grid.Column="2" VerticalAlignment="Center" FontWeight="SemiBold" Text="{Binding BedragIncl, StringFormat='€ {0:0.00}'}"/>
+                      <Button Grid.Column="3" Content="&#x2715;" Width="28" Height="24" Padding="0"
+                              HorizontalContentAlignment="Center"
+                              Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
+                              ToolTip.Tip="Betaling verwijderen"
+                              Command="{Binding $parent[ItemsControl].((vm:FacturenViewModel)DataContext).VerwijderBetalingCommand}"
+                              CommandParameter="{Binding}"/>
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <Grid ColumnDefinitions="*,*,*,Auto" ColumnSpacing="6" IsVisible="{Binding HeeftRest}">
+                <NumericUpDown Minimum="0" Increment="5" FormatString="'€ '0.00" Watermark="Bedrag"
+                               Value="{Binding NieuweBetalingBedrag, Mode=TwoWay}"/>
+                <DatePicker Grid.Column="1" HorizontalAlignment="Stretch" SelectedDate="{Binding NieuweBetalingDatum, Mode=TwoWay}"/>
+                <ComboBox Grid.Column="2" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding BetaalwijzeOpties}"
+                          SelectedItem="{Binding NieuweBetalingBetaalwijze, Mode=TwoWay}"/>
+                <Button Grid.Column="3" Classes="AccentBtn" Content="Betaling registreren" Command="{Binding RegistreerBetalingCommand}"/>
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <WrapPanel Grid.Row="4">
             <Button Classes="AccentBtn" Content="Opslaan" Command="{Binding SaveCommand}" Margin="0,0,8,6" Padding="12,8"/>
             <Button Classes="AccentBtn" Content="Markeer als klaar voor export" Command="{Binding MarkeerKlaarVoorExportCommand}" Margin="0,0,8,6" Padding="12,8"/>
             <Button Classes="AccentBtn" Content="Export PDF" Command="{Binding ExportPdfCommand}" Margin="0,0,8,6" Padding="12,8"/>
-            <Button Classes="AccentBtn" Content="Markeer Betaald" Command="{Binding MarkeerBetaaldCommand}" Margin="0,0,0,6" Padding="12,8"/>
+            <Button Classes="AccentBtn" Content="Rest betaald" ToolTip.Tip="Registreert het restbedrag als betaling met de gekozen betaalwijze en zet de bestelbon op Betaald" Command="{Binding MarkeerBetaaldCommand}" Margin="0,0,0,6" Padding="12,8"/>
           </WrapPanel>
         </Grid>
       </Border>

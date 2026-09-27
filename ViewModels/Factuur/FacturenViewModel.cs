@@ -6,6 +6,7 @@ using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Service.Model;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -20,6 +21,7 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
     private readonly IFactuurExportService _exportService;
     private readonly IToastService _toast;
     private readonly INavigationService _nav;
+    private readonly IOntvangstService _ontvangsten;   // US-70
 
     [ObservableProperty] private ObservableCollection<Factuur> facturen = new();
     [ObservableProperty] private Factuur? geselecteerdeFactuur;
@@ -47,9 +49,11 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
         IFactuurWorkflowService workflow,
         IFactuurExportService exportService,
         IToastService toast,
-        INavigationService nav)
+        INavigationService nav,
+        IOntvangstService ontvangsten)
         : base(toast)
     {
+        _ontvangsten = ontvangsten;
         _factory = factory;
         _workflow = workflow;
         _exportService = exportService;
@@ -96,6 +100,88 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
             Lijnen.Add(l);
 
         OnPropertyChanged(nameof(IsDraft));
+        RunAsync(LaadBetalingenAsync);   // US-70
+    }
+
+    // ── US-70: betalingen op de bestelbon (vooraf, bij afhalen of achteraf; meerdere mogelijk) ──
+    public ObservableCollection<Ontvangst> Betalingen { get; } = new();
+    public IReadOnlyList<Betaalwijze> BetaalwijzeOpties { get; } = Enum.GetValues<Betaalwijze>();
+    [ObservableProperty] private BetaalStand? stand;
+    [ObservableProperty] private decimal? nieuweBetalingBedrag;
+    [ObservableProperty] private DateTimeOffset? nieuweBetalingDatum = new DateTimeOffset(DateTime.Today);
+    [ObservableProperty] private Betaalwijze nieuweBetalingBetaalwijze = Betaalwijze.Bancontact;
+
+    public decimal StandTotaal => Stand?.TotaalIncl ?? 0m;
+    public decimal StandVoorschot => Stand?.Voorschot ?? 0m;
+    public decimal StandBetaald => Stand?.Betaald ?? 0m;
+    public decimal StandRest => Stand?.Rest ?? 0m;
+    public bool HeeftRest => StandRest > 0m;
+
+    partial void OnStandChanged(BetaalStand? value)
+    {
+        OnPropertyChanged(nameof(StandTotaal));
+        OnPropertyChanged(nameof(StandVoorschot));
+        OnPropertyChanged(nameof(StandBetaald));
+        OnPropertyChanged(nameof(StandRest));
+        OnPropertyChanged(nameof(HeeftRest));
+    }
+
+    private async Task LaadBetalingenAsync()
+    {
+        Betalingen.Clear();
+        Stand = null;
+        if (GeselecteerdeFactuur is not { Id: > 0 } f) return;
+
+        foreach (var b in await _ontvangsten.GetBetalingenAsync(f.Id))
+            Betalingen.Add(b);
+        Stand = await _ontvangsten.GetBetaalStandAsync(f.Id);
+        NieuweBetalingBedrag = Stand.Rest > 0m ? Stand.Rest : null;   // standaard: het restbedrag
+    }
+
+    [RelayCommand]
+    private async Task RegistreerBetalingAsync()
+    {
+        if (GeselecteerdeFactuur is null) return;
+        if (NieuweBetalingBedrag is not > 0m)
+        {
+            _toast.Warning("Geef een bedrag groter dan 0 in.");
+            return;
+        }
+
+        try
+        {
+            var bedrag = NieuweBetalingBedrag.Value;
+            var nieuw = await _ontvangsten.RegistreerBetalingAsync(
+                GeselecteerdeFactuur.Id, bedrag, (NieuweBetalingDatum ?? DateTimeOffset.Now).Date, NieuweBetalingBetaalwijze);
+
+            _toast.Success(nieuw.Rest == 0m
+                ? $"Betaling van € {bedrag:0.00} geregistreerd — bestelbon volledig betaald."
+                : $"Betaling van € {bedrag:0.00} geregistreerd — nog te betalen: € {nieuw.Rest:0.00}.");
+
+            var id = GeselecteerdeFactuur.Id;
+            await InitializeAsync();
+            GeselecteerdeFactuur = Facturen.FirstOrDefault(x => x.Id == id);
+        }
+        catch (Exception ex)
+        {
+            _toast.Error(ex.GetBaseException().Message);
+        }
+    }
+
+    [RelayCommand]
+    private async Task VerwijderBetalingAsync(Ontvangst? betaling)
+    {
+        if (betaling is null) return;
+        try
+        {
+            await _ontvangsten.VerwijderAsync(betaling.Id);
+            _toast.Success("Betaling verwijderd.");
+            await LaadBetalingenAsync();
+        }
+        catch (Exception ex)
+        {
+            _toast.Error(ex.GetBaseException().Message);
+        }
     }
 
     private async Task SaveAsync()
@@ -153,9 +239,20 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
         await InitializeAsync();
     }
 
+    /// <summary>US-70: "Markeer betaald" registreert het restbedrag als betaling (met de gekozen
+    /// betaalwijze), zodat het mee in het overzicht betalingen komt. Geen rest meer → enkel status.</summary>
     private async Task MarkeerBetaaldAsync()
     {
         if (GeselecteerdeFactuur is null) return;
+
+        var stand = await _ontvangsten.GetBetaalStandAsync(GeselecteerdeFactuur.Id);
+        if (stand.Rest > 0m)
+        {
+            NieuweBetalingBedrag = stand.Rest;
+            await RegistreerBetalingAsync();
+            return;
+        }
+
         await _workflow.MarkeerBetaaldAsync(GeselecteerdeFactuur.Id);
         _toast.Success("Bestelbon gemarkeerd als betaald.");
         await InitializeAsync();
