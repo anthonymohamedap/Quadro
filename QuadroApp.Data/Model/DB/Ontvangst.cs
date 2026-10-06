@@ -72,7 +72,7 @@ namespace QuadroApp.Model.DB
 
         /// <summary>Winkelverkoop: aantal × prijs − korting, afgerond op de cent.</summary>
         [NotMapped]
-        public decimal TotaalIncl => Math.Round(Aantal * PrijsPerStukIncl * (1m - KortingPct / 100m), 2);
+        public decimal TotaalIncl => Math.Round(Aantal * PrijsPerStukIncl * (1m - KortingPct / 100m), 2, MidpointRounding.AwayFromZero);
 
         /// <summary>Label voor lijsten/afdrukken: omschrijving, of het bonnummer bij een betaling.</summary>
         [NotMapped]
