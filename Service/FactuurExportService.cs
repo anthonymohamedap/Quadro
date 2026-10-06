@@ -42,6 +42,7 @@ public sealed class FactuurExportService : IFactuurExportService
         if (!_exporters.TryGetValue(formaat, out var exporter))
             throw new InvalidOperationException($"Geen exporter geregistreerd voor formaat {formaat}.");
 
+        await LaadBetalingenAsync(db, factuur);
         var result = await exporter.ExportAsync(factuur, exportFolder);
         if (!result.Success)
         {
@@ -71,6 +72,16 @@ public sealed class FactuurExportService : IFactuurExportService
         if (!_exporters.TryGetValue(formaat, out var exporter))
             throw new InvalidOperationException($"Geen exporter geregistreerd voor formaat {formaat}.");
 
+        await LaadBetalingenAsync(db, factuur);
         return await exporter.ExportAsync(factuur, exportFolder);
+    }
+
+    /// <summary>US-73 — betalingen meegeven aan de PDF (oudste eerst).</summary>
+    private static async Task LaadBetalingenAsync(AppDbContext db, Factuur factuur)
+    {
+        factuur.GeregistreerdeBetalingen = await db.Ontvangsten.AsNoTracking()
+            .Where(o => o.FactuurId == factuur.Id && o.Soort == OntvangstSoort.Betaling)
+            .OrderBy(o => o.Datum).ThenBy(o => o.Id)
+            .ToListAsync();
     }
 }

@@ -99,6 +99,11 @@ public class Factuur
     [NotMapped]
     public decimal RestTeBetalen => TotaalInclBtw - VoorschotBedrag;
 
+    /// <summary>US-73 — de geregistreerde betalingen (ontvangsten van soort Betaling) op deze
+    /// bestelbon, alleen ingeladen voor de PDF (zie FactuurExportService). Niet in de database.</summary>
+    [NotMapped]
+    public List<Ontvangst> GeregistreerdeBetalingen { get; set; } = new();
+
     [MaxLength(500)]
     public string? ExportPad { get; set; }
 
