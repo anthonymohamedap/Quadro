@@ -58,7 +58,7 @@
                                                        Classes="body"
                                                        TextWrapping="Wrap"
                                                        Margin="0,0,8,0"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding Aantal}" Classes="body"
+                                            <TextBlock Grid.Column="1" Text="{Binding Aantal, StringFormat='{}{0:0.##}'}" Classes="body"
                                                        TextAlignment="Right" VerticalAlignment="Top"/>
                                             <TextBlock Grid.Column="2" Text="{Binding PrijsExcl, StringFormat=€ {0:N2}}" Classes="body"
                                                        TextAlignment="Right" VerticalAlignment="Top"/>
