@@ -351,6 +351,7 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
             InlegTypeLijstId = s.InlegTypeLijst?.Id ?? s.InlegTypeLijstId, InlegTypeLijst = s.InlegTypeLijst,
             Titel = s.Titel, Opmerking = s.Opmerking,
             TypeLijstId = s.TypeLijst?.Id ?? s.TypeLijstId, TypeLijst = s.TypeLijst,
+            KantKlaarKaderId = s.KantKlaarKader?.Id ?? s.KantKlaarKaderId, KantKlaarKader = s.KantKlaarKader,
             GlasId = s.Glas?.Id ?? s.GlasId, Glas = s.Glas,
             PassePartout1Id = s.PassePartout1?.Id ?? s.PassePartout1Id, PassePartout1 = s.PassePartout1,
             PassePartout2Id = s.PassePartout2?.Id ?? s.PassePartout2Id, PassePartout2 = s.PassePartout2,

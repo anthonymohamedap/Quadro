@@ -82,6 +82,13 @@ namespace QuadroApp.Model.Snapshot
         public string? TypeLijstNaam { get; set; }
         public string? TypeLijstArtikelnummer { get; set; }
 
+        /// <summary>US-65 — inleg-lijst (ontbreekt in oudere snapshots → null).</summary>
+        public int? InlegTypeLijstId { get; set; }
+
+        /// <summary>US-68 — standaardkader i.p.v. lijst (ontbreekt in oudere snapshots → null).</summary>
+        public int? KantKlaarKaderId { get; set; }
+        public string? KantKlaarKaderNaam { get; set; }
+
         // Afwerkingen (id + label voor leesbaarheid)
         public int? GlasId { get; set; }
         public string? GlasNaam { get; set; }
