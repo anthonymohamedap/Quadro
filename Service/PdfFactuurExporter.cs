@@ -56,7 +56,8 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             .ToList();
 
         var voorschot = factuur.VoorschotBedrag;
-        var teBetalenBijAfhalen = factuur.TotaalInclBtw - voorschot;
+        var betalingen = factuur.GeregistreerdeBetalingen ?? new List<Ontvangst>();
+        var (teBetalenBijAfhalen, isBetaald) = BerekenTeBetalen(factuur);
 
         // Bruto (vóór korting) excl./BTW uit de lijnsommen — zo toont de bon altijd de
         // volledige excl -> BTW -> incl splitsing, ook wanneer korting van toepassing is.
@@ -85,7 +86,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
                         DrawItemBlock(col, items[i], i + 1, ref currentY);
                     }
 
-                    DrawTotals(col, brutoExcl, brutoBtw, factuur.TotaalInclBtw, voorschot, teBetalenBijAfhalen, factuur.IsBtwVrijgesteld, factuur.KortingPct, factuur.KortingBedragExcl);
+                    DrawTotals(col, brutoExcl, brutoBtw, factuur.TotaalInclBtw, voorschot, teBetalenBijAfhalen, factuur.IsBtwVrijgesteld, factuur.KortingPct, factuur.KortingBedragExcl, betalingen, isBetaald);
                     DrawSignature(col);
                 });
 
@@ -284,7 +285,25 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     // Eén vaste opbouw: altijd de excl -> BTW -> incl splitsing; bij korting komt onder
     // het incl-subtotaal de kortingregel + nieuw totaal; bij een voorschot wordt dat van
     // het totaal afgetrokken. Onderaan altijd "Te betalen". (kortingBedragIncl = incl-bedrag, US-28.)
-    private static void DrawTotals(ColumnDescriptor col, decimal brutoExcl, decimal brutoBtw, decimal totaalIncl, decimal voorschot, decimal teBetalen, bool isBtwVrijgesteld, decimal kortingPct = 0m, decimal kortingBedragIncl = 0m)
+    /// <summary>US-73 — wat er nog te betalen is: totaal − voorschot − geregistreerde betalingen
+    /// (nooit negatief). Betaald = niets meer open én er is iets betaald, of de bestelbon staat op
+    /// <see cref="FactuurStatus.Betaald"/> (ook oude bonnen die zonder betalingsregels betaald werden).</summary>
+    public static (decimal TeBetalen, bool IsBetaald) BerekenTeBetalen(Factuur factuur)
+    {
+        var betaald = (factuur.GeregistreerdeBetalingen ?? new List<Ontvangst>()).Sum(b => b.BedragIncl);
+        var rest = Math.Max(0m, Math.Round(factuur.TotaalInclBtw - factuur.VoorschotBedrag - betaald, 2));
+
+        if (factuur.Status == FactuurStatus.Betaald)
+            return (0m, true);
+
+        var isBetaald = rest == 0m && (betaald > 0m || factuur.VoorschotBedrag > 0m);
+        return (rest, isBetaald);
+    }
+
+    private static string BetaalwijzeLabel(Betaalwijze b) => b.ToString().ToLowerInvariant();
+
+    private static void DrawTotals(ColumnDescriptor col, decimal brutoExcl, decimal brutoBtw, decimal totaalIncl, decimal voorschot, decimal teBetalen, bool isBtwVrijgesteld, decimal kortingPct = 0m, decimal kortingBedragIncl = 0m,
+        IReadOnlyList<Ontvangst>? betalingen = null, bool isBetaald = false)
     {
         var heeftKorting = kortingPct > 0m && kortingBedragIncl > 0m;
         var brutoIncl = Math.Round(brutoExcl + brutoBtw, 2);
@@ -343,11 +362,29 @@ public sealed class PdfFactuurExporter : IFactuurExporter
                 });
             }
 
-            // Te betalen (na voorschot)
+            // US-73: elke geregistreerde betaling (datum + betaalwijze)
+            foreach (var b in betalingen ?? Array.Empty<Ontvangst>())
+            {
+                totaalCol.Item().Row(r =>
+                {
+                    r.RelativeItem().Text($"Betaald {b.Datum:dd/MM/yyyy} ({BetaalwijzeLabel(b.Betaalwijze)})");
+                    r.ConstantItem(130).AlignRight().Text($"- {Eur(b.BedragIncl)}");
+                });
+            }
+
+            // Te betalen (na voorschot en betalingen) — of "Betaald" als er niets meer openstaat
             totaalCol.Item().PaddingTop(6).Row(r =>
             {
-                r.RelativeItem().Text("Te betalen bij afhalen").SemiBold().FontSize(13);
-                r.ConstantItem(160).AlignRight().Text(Eur(teBetalen)).SemiBold().FontSize(13);
+                if (isBetaald)
+                {
+                    r.RelativeItem().Text("Betaald").SemiBold().FontSize(13).FontColor(Colors.Green.Darken2);
+                    r.ConstantItem(160).AlignRight().Text(Eur(0m)).SemiBold().FontSize(13).FontColor(Colors.Green.Darken2);
+                }
+                else
+                {
+                    r.RelativeItem().Text("Te betalen bij afhalen").SemiBold().FontSize(13);
+                    r.ConstantItem(160).AlignRight().Text(Eur(teBetalen)).SemiBold().FontSize(13);
+                }
             });
         });
     }
