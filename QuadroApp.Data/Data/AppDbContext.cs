@@ -11,6 +11,7 @@ namespace QuadroApp.Data
     {
         public DbSet<TypeLijst> TypeLijsten => Set<TypeLijst>();
         public DbSet<KantKlaarKader> KantKlaarKaders => Set<KantKlaarKader>();
+        public DbSet<Ontvangst> Ontvangsten => Set<Ontvangst>();   // US-66
         public DbSet<AfwerkingsGroep> AfwerkingsGroepen => Set<AfwerkingsGroep>();
         public DbSet<AfwerkingsOptie> AfwerkingsOpties => Set<AfwerkingsOptie>();
         public DbSet<AfwerkingsVariant> AfwerkingsVarianten => Set<AfwerkingsVariant>();
@@ -314,6 +315,24 @@ namespace QuadroApp.Data
                 entity.Property(w => w.TotaalPrijsIncl).HasPrecision(10, 2);
 
                 // Index op OfferteId heb je al via [Index] attribuut. :contentReference[oaicite:5]{index=5}  
+            });
+
+            // ───────── Ontvangst (US-66): centraal ontvangstenregister ─────────
+            b.Entity<Ontvangst>(entity =>
+            {
+                entity.Property(x => x.Soort).HasConversion<string>().HasMaxLength(20);
+                entity.Property(x => x.Betaalwijze).HasConversion<string>().HasMaxLength(20);
+                entity.Property(x => x.BedragIncl).HasPrecision(18, 2);
+                entity.Property(x => x.Omschrijving).HasMaxLength(300);
+                entity.Property(x => x.Aantal).HasPrecision(18, 2);
+                entity.Property(x => x.PrijsPerStukIncl).HasPrecision(18, 2);
+                entity.Property(x => x.KortingPct).HasPrecision(5, 2);
+                entity.Property(x => x.AangemaaktDoor).HasMaxLength(100);
+                entity.HasIndex(x => x.Datum);
+
+                // Offerte/bestelbon verwijderd of gearchiveerd → ontvangst blijft (boekhouding), koppeling NULL.
+                entity.HasOne(x => x.Offerte).WithMany().HasForeignKey(x => x.OfferteId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne(x => x.Factuur).WithMany().HasForeignKey(x => x.FactuurId).OnDelete(DeleteBehavior.SetNull);
             });
 
             // ───────── WerkTaak ─────────

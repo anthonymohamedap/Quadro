@@ -103,6 +103,12 @@
     <Compile Update="Views\ArchiefView.axaml.cs">
       <DependentUpon>ArchiefView.axaml</DependentUpon>
     </Compile>
+    <Compile Update="Views\WinkelVerkopenView.axaml.cs">
+      <DependentUpon>WinkelVerkopenView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\OverzichtBetalingenView.axaml.cs">
+      <DependentUpon>OverzichtBetalingenView.axaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

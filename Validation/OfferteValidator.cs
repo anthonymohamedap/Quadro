@@ -117,7 +117,8 @@ public sealed class OfferteValidator : IOfferteValidator
             // de berekening partieel doorgaan zonder lijstprofiel.
             var tlId = r.TypeLijstId;
             var heeftVastePrijs = r.AfgesprokenPrijsExcl.HasValue;
-            if (!tlId.HasValue && !heeftVastePrijs)
+            var isStandaardkader = r.KantKlaarKaderId.HasValue;   // US-68: standaardkader i.p.v. lijst
+            if (!tlId.HasValue && !heeftVastePrijs && !isStandaardkader)
             {
                 if (mode is "confirm")
                     vr.Error($"{prefix}.{nameof(OfferteRegel.TypeLijstId)}", "Selecteer een TypeLijst.");

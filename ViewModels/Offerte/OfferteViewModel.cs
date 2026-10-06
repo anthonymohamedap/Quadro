@@ -8,6 +8,7 @@ using QuadroApp.Service.Import;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Validation;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -22,6 +23,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     private readonly INavigationService _nav;
     private readonly IDialogService _dialogs;
     private readonly IOfferteValidator _validator;
+    private readonly IOntvangstService _ontvangsten;   // US-69
 
     // ── Root aggregate state ──
     [ObservableProperty] private Offerte? offerte;
@@ -62,6 +64,92 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         }
     }
 
+    // ── US-69: voorschot ontvangen (met datum + betaalwijze → ontvangstenregister) ──
+    public ObservableCollection<Ontvangst> Voorschotten { get; } = new();
+    public IReadOnlyList<Betaalwijze> BetaalwijzeOpties { get; } = Enum.GetValues<Betaalwijze>();
+    [ObservableProperty] private decimal? nieuwVoorschotBedrag;
+    [ObservableProperty] private DateTimeOffset? nieuwVoorschotDatum = new DateTimeOffset(DateTime.Today);
+    [ObservableProperty] private Betaalwijze nieuwVoorschotBetaalwijze = Betaalwijze.Bancontact;
+    public bool HeeftVoorschotRegels => Voorschotten.Count > 0;
+
+    private async Task LaadVoorschottenAsync()
+    {
+        Voorschotten.Clear();
+        if (Offerte is { Id: > 0 } o)
+            foreach (var v in await _ontvangsten.GetVoorschottenAsync(o.Id))
+                Voorschotten.Add(v);
+        OnPropertyChanged(nameof(HeeftVoorschotRegels));
+    }
+
+    [RelayCommand]
+    private async Task RegistreerVoorschotAsync()
+    {
+        if (Offerte is null) return;
+        if (Offerte.Id == 0)
+        {
+            Toast.Warning("Sla de offerte eerst op voor je een voorschot registreert.");
+            return;
+        }
+        if (NieuwVoorschotBedrag is not > 0m)
+        {
+            Toast.Warning("Geef een voorschotbedrag groter dan 0 in.");
+            return;
+        }
+
+        try
+        {
+            var datum = NieuwVoorschotDatum?.Date ?? DateTime.Today;
+            var totaal = await _ontvangsten.RegistreerVoorschotAsync(Offerte.Id, NieuwVoorschotBedrag.Value, datum, NieuwVoorschotBetaalwijze);
+            await NaVoorschotWijzigingAsync(totaal);
+            Toast.Success($"Voorschot van € {NieuwVoorschotBedrag.Value:0.00} geregistreerd ({NieuwVoorschotBetaalwijze}).");
+            NieuwVoorschotBedrag = null;
+        }
+        catch (Exception ex)
+        {
+            Toast.Error($"Voorschot registreren mislukt: {ex.GetBaseException().Message}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task VerwijderVoorschotAsync(Ontvangst? voorschot)
+    {
+        if (voorschot is null || Offerte is null) return;
+        var ok = await _dialogs.ConfirmAsync("Voorschot verwijderen",
+            $"Voorschot van € {voorschot.BedragIncl:0.00} ({voorschot.Betaalwijze}, {voorschot.Datum:dd/MM/yyyy}) verwijderen?\n\n" +
+            "Het verdwijnt ook uit het overzicht betalingen.");
+        if (!ok) return;
+
+        try
+        {
+            var totaal = await _ontvangsten.VerwijderAsync(voorschot.Id);
+            await NaVoorschotWijzigingAsync(totaal ?? Offerte.VoorschotBedrag);
+        }
+        catch (Exception ex)
+        {
+            Toast.Error($"Verwijderen mislukt: {ex.GetBaseException().Message}");
+        }
+    }
+
+    /// <summary>De service wijzigde de offerte in de DB (voorschot + RowVersion). Neem beide over,
+    /// anders geeft de volgende "Opslaan" een onterechte melding "gelijktijdig gewijzigd".</summary>
+    private async Task NaVoorschotWijzigingAsync(decimal nieuwVoorschot)
+    {
+        if (Offerte is null) return;
+        Offerte.VoorschotBedrag = nieuwVoorschot;
+        Offerte.IsVoorschotBetaald = nieuwVoorschot > 0m;
+
+        await using (var db = await _dbFactory.CreateDbContextAsync())
+        {
+            var rv = await db.Offertes.AsNoTracking().Where(o => o.Id == Offerte.Id)
+                .Select(o => o.RowVersion).FirstOrDefaultAsync();
+            Offerte.RowVersion = rv;
+        }
+
+        OnPropertyChanged(nameof(VoorschotBedragInput));
+        RefreshTotals();
+        await LaadVoorschottenAsync();
+    }
+
     // Afhaal datum — manueel in te vullen door de gebruiker
     public DateTimeOffset? AfhaalDatumInput
     {
@@ -80,6 +168,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     partial void OnOfferteChanged(Offerte? value)
     {
         OnPropertyChanged(nameof(VoorschotBedragInput));
+        RunAsync(LaadVoorschottenAsync);   // US-69
         OnPropertyChanged(nameof(AfhaalDatumInput));
         OnPropertyChanged(nameof(KanNaarVerzonden));
         OnPropertyChanged(nameof(KanNaarGoedgekeurd));
@@ -752,9 +841,11 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         IOfferteValidator validator,
         IToastService toast,
         ICrudValidator<Klant> crudValidator,
-        IKlantDialogService klantDialog)
+        IKlantDialogService klantDialog,
+        IOntvangstService ontvangsten)
         : base(toast)
     {
+        _ontvangsten = ontvangsten ?? throw new ArgumentNullException(nameof(ontvangsten));
         _dbFactory = dbFactory ?? throw new ArgumentNullException(nameof(dbFactory));
         _nav = nav ?? throw new ArgumentNullException(nameof(nav));
         _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
@@ -1611,6 +1702,8 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         HoogteCm = vmRule.HoogteCm, InlegBreedteCm = vmRule.InlegBreedteCm,
         InlegHoogteCm = vmRule.InlegHoogteCm, Titel = vmRule.Titel, Opmerking = vmRule.Opmerking,
         TypeLijstId = vmRule.TypeLijst?.Id, InlegTypeLijstId = vmRule.InlegTypeLijst?.Id, GlasId = vmRule.Glas?.Id,
+        // US-58/US-68: standaardkader moet mee opgeslagen worden (werd voorheen weggegooid bij opslaan).
+        KantKlaarKaderId = vmRule.KantKlaarKader?.Id ?? vmRule.KantKlaarKaderId,
         PassePartout1Id = vmRule.PassePartout1?.Id, PassePartout2Id = vmRule.PassePartout2?.Id,
         DiepteKernId = vmRule.DiepteKern?.Id, OpklevenId = vmRule.Opkleven?.Id,
         RugId = vmRule.Rug?.Id, AfgesprokenPrijsExcl = vmRule.AfgesprokenPrijsExcl,
@@ -1630,6 +1723,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         dbRule.InlegHoogteCm = vmRule.InlegHoogteCm; dbRule.Titel = vmRule.Titel;
         dbRule.Opmerking = vmRule.Opmerking; dbRule.TypeLijstId = vmRule.TypeLijst?.Id;
         dbRule.InlegTypeLijstId = vmRule.InlegTypeLijst?.Id;
+        dbRule.KantKlaarKaderId = vmRule.KantKlaarKader?.Id ?? vmRule.KantKlaarKaderId;   // US-68
         dbRule.GlasId = vmRule.Glas?.Id; dbRule.PassePartout1Id = vmRule.PassePartout1?.Id;
         dbRule.PassePartout2Id = vmRule.PassePartout2?.Id; dbRule.DiepteKernId = vmRule.DiepteKern?.Id;
         dbRule.OpklevenId = vmRule.Opkleven?.Id; dbRule.RugId = vmRule.Rug?.Id;
