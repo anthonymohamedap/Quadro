@@ -78,6 +78,9 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
         _auth = auth;
 
         MagBewerken = _auth.HeeftPermissie(Permissie.Factureren);
+
+        // US-72: standaard de lopende maand, zoals de maand-tabbladen van de oude kassa.
+        ZetMaand(DateTime.Today);
     }
 
     public async Task InitializeAsync() => await LoadAsync();

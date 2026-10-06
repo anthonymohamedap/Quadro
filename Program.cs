@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using System;
+using System.Globalization;
 using Velopack;
 
 namespace QuadroApp;
@@ -24,6 +25,15 @@ internal sealed class Program
         // geen tz-conversie) — exact zoals SQLite het opslaat. UtcToLocalConverter blijft
         // kloppen. Heeft geen effect op SQLite-installaties.
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
+        // US-72: de app is Nederlandstalig (Quadro, Aarschot) — maand- en dagnamen in de
+        // datumkiezers en StringFormats ("oktober", "dinsdag") en de komma als decimaalteken,
+        // ongeacht de taal-/regio-instelling van Windows (bv. en-BE gaf "October"/"Tuesday").
+        var nl = CultureInfo.GetCultureInfo("nl-BE");
+        CultureInfo.DefaultThreadCurrentCulture = nl;
+        CultureInfo.DefaultThreadCurrentUICulture = nl;
+        CultureInfo.CurrentCulture = nl;
+        CultureInfo.CurrentUICulture = nl;
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
