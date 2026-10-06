@@ -88,8 +88,49 @@ public sealed class OntvangstService : IOntvangstService
         }
 
         db.Ontvangsten.Remove(ontvangst);
+
+        // US-72: stond de bestelbon op Betaald en is er nu weer een rest, zet hem dan terug open.
+        await HeropenBestelbonIndienNodigAsync(db, ontvangst);
+
         await db.SaveChangesAsync();
         return nieuwVoorschot;
+    }
+
+    /// <summary>US-72 — na het verwijderen van een voorschot of betaling: was de bestelbon
+    /// <see cref="FactuurStatus.Betaald"/> en staat er weer een rest open, dan gaat hij terug naar
+    /// Geëxporteerd (als hij al geëxporteerd was) of KlaarVoorExport; de offerte gaat van Betaald
+    /// terug naar Besteld. Werkt op de nog niet opgeslagen wijzigingen in <paramref name="db"/>.</summary>
+    private static async Task HeropenBestelbonIndienNodigAsync(AppDbContext db, Ontvangst verwijderd)
+    {
+        Factuur? factuur = null;
+        if (verwijderd.FactuurId is int fid)
+            factuur = await db.Facturen.FirstOrDefaultAsync(f => f.Id == fid);
+        else if (verwijderd.OfferteId is int oid)
+            factuur = await db.Facturen.FirstOrDefaultAsync(f => f.OfferteId == oid);
+
+        if (factuur is null || factuur.Status != FactuurStatus.Betaald)
+            return;
+
+        var betalingen = await db.Ontvangsten.AsNoTracking()
+            .Where(o => o.FactuurId == factuur.Id && o.Soort == OntvangstSoort.Betaling && o.Id != verwijderd.Id)
+            .Select(o => o.BedragIncl)
+            .ToListAsync();
+
+        var stand = new BetaalStand(factuur.TotaalInclBtw, factuur.VoorschotBedrag, betalingen.Sum(), true);
+        if (stand.Rest <= 0m)
+            return;
+
+        factuur.Status = string.IsNullOrWhiteSpace(factuur.ExportPad)
+            ? FactuurStatus.KlaarVoorExport
+            : FactuurStatus.Geexporteerd;
+        factuur.BijgewerktOp = DateTime.UtcNow;
+
+        if (factuur.OfferteId is int offerteId)
+        {
+            var offerte = await db.Offertes.FirstOrDefaultAsync(o => o.Id == offerteId);
+            if (offerte is not null && offerte.Status == OfferteStatus.Betaald)
+                offerte.Status = OfferteStatus.Besteld;
+        }
     }
 
     // ── US-70: betalingen op een bestelbon ──

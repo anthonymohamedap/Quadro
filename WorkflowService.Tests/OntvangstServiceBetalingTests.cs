@@ -106,6 +106,30 @@ public class OntvangstServiceBetalingTests
     }
 
     [Fact]
+    public async Task Betaling_verwijderen_zet_betaalde_bestelbon_terug_open_US72()
+    {
+        await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
+        var factuurId = await SeedBestelbonAsync(scope.Factory);
+        var sut = CreateSut(scope.Factory);
+
+        await sut.RegistreerBetalingAsync(factuurId, 120m, DateTime.Today, Betaalwijze.Kontant);
+        await sut.RegistreerBetalingAsync(factuurId, 80m, DateTime.Today, Betaalwijze.Visa);
+        var visa = (await sut.GetBetalingenAsync(factuurId)).Single(b => b.Betaalwijze == Betaalwijze.Visa);
+
+        await sut.VerwijderAsync(visa.Id);
+
+        var stand = await sut.GetBetaalStandAsync(factuurId);
+        Assert.Equal(80m, stand.Rest);
+        Assert.False(stand.IsBetaaldStatus);
+
+        await using var db = await scope.Factory.CreateDbContextAsync();
+        var factuur = await db.Facturen.AsNoTracking().SingleAsync(f => f.Id == factuurId);
+        Assert.Equal(FactuurStatus.KlaarVoorExport, factuur.Status);
+        var offerte = await db.Offertes.AsNoTracking().SingleAsync(o => o.Id == factuur.OfferteId);
+        Assert.Equal(OfferteStatus.Besteld, offerte.Status);
+    }
+
+    [Fact]
     public void Rest_is_nooit_negatief()
     {
         var stand = new BetaalStand(100m, 60m, 50m, false);

@@ -176,7 +176,11 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
         {
             await _ontvangsten.VerwijderAsync(betaling.Id);
             _toast.Success("Betaling verwijderd.");
-            await LaadBetalingenAsync();
+
+            // US-72: de status van de bestelbon kan terug open gegaan zijn → lijst herladen.
+            var id = GeselecteerdeFactuur?.Id;
+            await InitializeAsync();
+            GeselecteerdeFactuur = id is null ? null : Facturen.FirstOrDefault(x => x.Id == id);
         }
         catch (Exception ex)
         {
