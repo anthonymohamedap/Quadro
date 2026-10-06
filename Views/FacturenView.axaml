@@ -123,14 +123,18 @@
                 </ItemsControl.ItemTemplate>
               </ItemsControl>
 
-              <Grid ColumnDefinitions="*,*,*,Auto" ColumnSpacing="6" IsVisible="{Binding HeeftRest}">
-                <NumericUpDown Minimum="0" Increment="5" FormatString="'€ '0.00" Watermark="Bedrag"
+              <!-- US-74: twee rijen — de datumkiezer is te breed om naast bedrag en betaalwijze te passen. -->
+              <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="6" RowSpacing="6" IsVisible="{Binding HeeftRest}">
+                <NumericUpDown Grid.Row="0" Grid.Column="0" MinWidth="0" HorizontalAlignment="Stretch"
+                               Minimum="0" Increment="5" FormatString="'€ '0.00" Watermark="Bedrag"
                                Value="{Binding NieuweBetalingBedrag, Mode=TwoWay}"/>
-                <DatePicker Grid.Column="1" HorizontalAlignment="Stretch" SelectedDate="{Binding NieuweBetalingDatum, Mode=TwoWay}"/>
-                <ComboBox Grid.Column="2" HorizontalAlignment="Stretch"
+                <ComboBox Grid.Row="0" Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch"
                           ItemsSource="{Binding BetaalwijzeOpties}"
                           SelectedItem="{Binding NieuweBetalingBetaalwijze, Mode=TwoWay}"/>
-                <Button Grid.Column="3" Classes="AccentBtn" Content="Betaling registreren" Command="{Binding RegistreerBetalingCommand}"/>
+                <DatePicker Grid.Row="1" Grid.Column="0" MinWidth="0" HorizontalAlignment="Stretch"
+                            SelectedDate="{Binding NieuweBetalingDatum, Mode=TwoWay}"/>
+                <Button Grid.Row="1" Grid.Column="1" Classes="AccentBtn" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                        Content="Betaling registreren" Command="{Binding RegistreerBetalingCommand}"/>
               </Grid>
             </StackPanel>
           </Border>
