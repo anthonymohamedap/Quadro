@@ -1702,6 +1702,8 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         HoogteCm = vmRule.HoogteCm, InlegBreedteCm = vmRule.InlegBreedteCm,
         InlegHoogteCm = vmRule.InlegHoogteCm, Titel = vmRule.Titel, Opmerking = vmRule.Opmerking,
         TypeLijstId = vmRule.TypeLijst?.Id, InlegTypeLijstId = vmRule.InlegTypeLijst?.Id, GlasId = vmRule.Glas?.Id,
+        // US-58/US-68: standaardkader moet mee opgeslagen worden (werd voorheen weggegooid bij opslaan).
+        KantKlaarKaderId = vmRule.KantKlaarKader?.Id ?? vmRule.KantKlaarKaderId,
         PassePartout1Id = vmRule.PassePartout1?.Id, PassePartout2Id = vmRule.PassePartout2?.Id,
         DiepteKernId = vmRule.DiepteKern?.Id, OpklevenId = vmRule.Opkleven?.Id,
         RugId = vmRule.Rug?.Id, AfgesprokenPrijsExcl = vmRule.AfgesprokenPrijsExcl,
@@ -1721,6 +1723,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         dbRule.InlegHoogteCm = vmRule.InlegHoogteCm; dbRule.Titel = vmRule.Titel;
         dbRule.Opmerking = vmRule.Opmerking; dbRule.TypeLijstId = vmRule.TypeLijst?.Id;
         dbRule.InlegTypeLijstId = vmRule.InlegTypeLijst?.Id;
+        dbRule.KantKlaarKaderId = vmRule.KantKlaarKader?.Id ?? vmRule.KantKlaarKaderId;   // US-68
         dbRule.GlasId = vmRule.Glas?.Id; dbRule.PassePartout1Id = vmRule.PassePartout1?.Id;
         dbRule.PassePartout2Id = vmRule.PassePartout2?.Id; dbRule.DiepteKernId = vmRule.DiepteKern?.Id;
         dbRule.OpklevenId = vmRule.Opkleven?.Id; dbRule.RugId = vmRule.Rug?.Id;

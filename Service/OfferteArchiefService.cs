@@ -48,6 +48,8 @@ namespace QuadroApp.Service
                 .Include(o => o.Regels)
                     .ThenInclude(r => r.TypeLijst)
                 .Include(o => o.Regels)
+                    .ThenInclude(r => r.KantKlaarKader)
+                .Include(o => o.Regels)
                     .ThenInclude(r => r.Glas)
                 .Include(o => o.Regels)
                     .ThenInclude(r => r.PassePartout1)
@@ -194,6 +196,8 @@ namespace QuadroApp.Service
                     InlegBreedteCm      = r.InlegBreedteCm,
                     InlegHoogteCm       = r.InlegHoogteCm,
                     TypeLijstId         = r.TypeLijstId,
+                    InlegTypeLijstId    = r.InlegTypeLijstId,
+                    KantKlaarKaderId    = r.KantKlaarKaderId,
                     GlasId              = r.GlasId,
                     PassePartout1Id     = r.PassePartout1Id,
                     PassePartout2Id     = r.PassePartout2Id,
@@ -349,6 +353,9 @@ namespace QuadroApp.Service
                     TypeLijstId           = r.TypeLijstId,
                     TypeLijstNaam         = r.TypeLijst?.Artikelnummer,
                     TypeLijstArtikelnummer= r.TypeLijst?.Artikelnummer,
+                    InlegTypeLijstId      = r.InlegTypeLijstId,
+                    KantKlaarKaderId      = r.KantKlaarKaderId,
+                    KantKlaarKaderNaam    = r.KantKlaarKader?.Naam,
                     GlasId                = r.GlasId,
                     GlasNaam              = r.Glas?.Naam,
                     PassePartout1Id       = r.PassePartout1Id,

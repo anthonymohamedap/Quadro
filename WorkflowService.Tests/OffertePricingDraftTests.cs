@@ -79,6 +79,19 @@ public class OffertePricingDraftTests
         Assert.Equal(122.57m, offerte.TotaalInclBtw);
     }
 
+    [Fact]
+    public async Task ValidateForConfirm_Standaardkader_zonder_lijst_is_geen_fout_US68()
+    {
+        var factory = DbFactoryBuilder.CreateInMemoryFactory();
+        var validator = new OfferteValidator(factory);
+        var offerte = CreateOfferte(typeLijst: null);
+        foreach (var r in offerte.Regels) r.KantKlaarKaderId = 5;
+
+        var result = await validator.ValidateForConfirmAsync(offerte);
+
+        Assert.DoesNotContain(result.Items, i => i.Field.Contains(nameof(OfferteRegel.TypeLijstId), StringComparison.Ordinal));
+    }
+
     private static Offerte CreateOfferte(TypeLijst? typeLijst, decimal? afgesprokenPrijsExcl = null)
     {
         return new Offerte
