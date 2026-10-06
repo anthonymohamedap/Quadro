@@ -46,33 +46,34 @@
 
                 <TextBlock Text="Winkelverkopen" Classes="h1" TextTrimming="CharacterEllipsis"/>
 
-                <Grid Grid.Row="1"
-                      ColumnDefinitions="Auto,Auto,Auto,*"
-                      ColumnSpacing="10">
+                <!-- US-72: zoeken + periode op één rij, knoppen op een eigen rij (anders krijgen ze geen breedte). -->
+                <StackPanel Grid.Row="1" Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                        <TextBox Grid.Column="0"
+                                 MinWidth="200"
+                                 VerticalAlignment="Center"
+                                 Watermark="Zoek op omschrijving..."
+                                 Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <TextBox Grid.Column="0"
-                             MinWidth="200"
-                             Watermark="Zoek op omschrijving..."
-                             Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="Van" Classes="label" VerticalAlignment="Center"/>
+                            <DatePicker SelectedDate="{Binding FilterVanaf, Mode=TwoWay}"/>
+                        </StackPanel>
 
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <TextBlock Text="Van" Classes="label" VerticalAlignment="Center"/>
-                        <DatePicker SelectedDate="{Binding FilterVanaf, Mode=TwoWay}"/>
-                    </StackPanel>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="Tot" Classes="label" VerticalAlignment="Center"/>
+                            <DatePicker SelectedDate="{Binding FilterTot, Mode=TwoWay}"/>
+                        </StackPanel>
+                    </Grid>
 
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <TextBlock Text="Tot" Classes="label" VerticalAlignment="Center"/>
-                        <DatePicker SelectedDate="{Binding FilterTot, Mode=TwoWay}"/>
-                    </StackPanel>
-
-                    <WrapPanel Grid.Column="3" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Button Content="Deze maand" Command="{Binding DezeMaandCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
-                        <Button Content="Vorige maand" Command="{Binding VorigeMaandCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
-                        <Button Content="Alles" Command="{Binding AllePeriodesCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
-                        <Button Content="➕ Nieuw" Command="{Binding NieuwCommand}" Classes="MainBtn" Margin="0,0,6,6" IsEnabled="{Binding MagBewerken}"/>
-                        <Button Content="🔄 Ververs" Command="{Binding RefreshCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
+                    <WrapPanel HorizontalAlignment="Right">
+                        <Button Content="Deze maand" Command="{Binding DezeMaandCommand}" Classes="MainBtn" Margin="0,0,6,0"/>
+                        <Button Content="Vorige maand" Command="{Binding VorigeMaandCommand}" Classes="MainBtn" Margin="0,0,6,0"/>
+                        <Button Content="Alles" Command="{Binding AllePeriodesCommand}" Classes="MainBtn" Margin="0,0,6,0"/>
+                        <Button Content="➕ Nieuw" Command="{Binding NieuwCommand}" Classes="MainBtn" Margin="0,0,6,0" IsEnabled="{Binding MagBewerken}"/>
+                        <Button Content="🔄 Ververs" Command="{Binding RefreshCommand}" Classes="MainBtn"/>
                     </WrapPanel>
-                </Grid>
+                </StackPanel>
 
                 <Border Grid.Row="2"
                         Background="{DynamicResource Surface}"
@@ -125,7 +126,7 @@
                                                        ToolTip.Tip="{Binding Omschrijving}"/>
 
                                             <TextBlock Grid.Column="2"
-                                                       Text="{Binding Aantal}"
+                                                       Text="{Binding Aantal, StringFormat='{}{0:0.##}'}"
                                                        TextTrimming="CharacterEllipsis"/>
 
                                             <TextBlock Grid.Column="3"
