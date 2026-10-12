@@ -17,6 +17,7 @@ namespace QuadroApp.ViewModels
         private readonly IOfferteNavigationService _offerteNav;
         private readonly IWerkBonWorkflowService _workflow;
         private readonly IWorkflowService _statusWorkflow;
+        private readonly IOntvangstService? _ontvangsten;   // US-76
         private readonly IToastService _toast;
 
         [ObservableProperty] private ObservableCollection<WerkBon> werkBonnen = new();
@@ -44,9 +45,11 @@ namespace QuadroApp.ViewModels
             IOfferteNavigationService offerteNav,
             IWerkBonWorkflowService workflow,
             IWorkflowService statusWorkflow,
-            IToastService toast)
+            IToastService toast,
+            IOntvangstService? ontvangsten = null)
             : base(toast)
         {
+            _ontvangsten = ontvangsten;
             _factory = factory;
             _nav = nav;
             _offerteNav = offerteNav;
@@ -160,7 +163,7 @@ namespace QuadroApp.ViewModels
 
             SelectedWerkBon = wb; // markeer de rij als geselecteerd
 
-            var vm = new WerkBonDetailViewModel(_factory, _statusWorkflow, _offerteNav, _toast, wb.Id);
+            var vm = new WerkBonDetailViewModel(_factory, _statusWorkflow, _offerteNav, _toast, wb.Id, _ontvangsten);
             await vm.LoadAsync();
 
             var window = new QuadroApp.Views.WerkBonDetailWindow { DataContext = vm };
