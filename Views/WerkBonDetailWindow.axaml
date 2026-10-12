@@ -57,7 +57,49 @@
                     <Button Content="Opslaan status"
                             Classes="MainBtn"
                             Command="{Binding SaveStatusCommand}"/>
+                    <!-- US-76: al afgehaald, maar nog niet (volledig) betaald -->
+                    <Button Content="Afrekenen"
+                            Classes="AccentBtn"
+                            IsVisible="{Binding HeeftOpenstaandeRest}"
+                            Command="{Binding AfrekenenCommand}"/>
                 </StackPanel>
+
+                <!-- US-76: afrekenen bij afhaling -->
+                <Border IsVisible="{Binding IsAfrekenenOpen}"
+                        Background="{DynamicResource WarningBg}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1" CornerRadius="8" Padding="14,12">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{Binding AfrekenTitel}" FontWeight="Bold" FontSize="15" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+                        <TextBlock Text="{Binding AfrekenDetail}" Classes="caption" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondary}"/>
+
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="6" RowSpacing="6">
+                            <NumericUpDown Grid.Row="0" Grid.Column="0" MinWidth="0" HorizontalAlignment="Stretch"
+                                           Minimum="0" Increment="5" FormatString="'€ '0.00" Watermark="Bedrag"
+                                           Value="{Binding AfrekenBedrag, Mode=TwoWay}"/>
+                            <ComboBox Grid.Row="0" Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch"
+                                      ItemsSource="{Binding BetaalwijzeOpties}"
+                                      SelectedItem="{Binding AfrekenBetaalwijze, Mode=TwoWay}"/>
+                            <DatePicker Grid.Row="1" Grid.Column="0" MinWidth="0" HorizontalAlignment="Stretch"
+                                        SelectedDate="{Binding AfrekenDatum, Mode=TwoWay}"/>
+                        </Grid>
+
+                        <TextBlock Text="Gesplitst betalen (bv. deels cash, deels kaart)? Vul eerst het eerste bedrag in — daarna wordt de rest gevraagd."
+                                   Classes="caption" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
+
+                        <WrapPanel HorizontalAlignment="Right">
+                            <Button Content="Annuleren" Classes="MainBtn" Margin="0,0,6,0"
+                                    Command="{Binding AnnuleerAfrekenenCommand}"/>
+                            <Button Content="Later betalen" Classes="MainBtn" Margin="0,0,6,0"
+                                    ToolTip.Tip="Werkbon wel op Afgehaald, de bestelbon blijft openstaan"
+                                    Command="{Binding LaterBetalenCommand}"/>
+                            <Button Content="Betalen en afhalen" Classes="AccentBtn"
+                                    Command="{Binding BetalenCommand}"/>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
 
             </StackPanel>
         </Border>
