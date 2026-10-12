@@ -192,6 +192,81 @@ public sealed class OntvangstService : IOntvangstService
         return nieuw;
     }
 
+    // ── US-76: afrekenen bij afhaling ──
+
+    public async Task<AfrekenStand?> GetAfrekenStandAsync(int werkBonId)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        var werkBon = await db.WerkBonnen.AsNoTracking().FirstOrDefaultAsync(w => w.Id == werkBonId);
+        if (werkBon is null) return null;
+
+        var factuur = await ZoekBestelbonAsync(db, werkBon, tracked: false);
+        if (factuur is null) return null;
+
+        return new AfrekenStand(factuur.Id, factuur.FactuurNummer, await BerekenStandAsync(db, factuur.Id));
+    }
+
+    public async Task<AfrekenStand> AfrekenenBijAfhalingAsync(int werkBonId, decimal bedragIncl, DateTime datum, Betaalwijze betaalwijze)
+    {
+        _auth.VereisPermissie(Permissie.Factureren);
+        if (bedragIncl <= 0m)
+            throw new InvalidOperationException("Het bedrag moet groter zijn dan 0.");
+
+        await using var db = await _factory.CreateDbContextAsync();
+
+        var werkBon = await db.WerkBonnen.FirstOrDefaultAsync(w => w.Id == werkBonId)
+            ?? throw new InvalidOperationException("Werkbon niet gevonden.");
+        if (werkBon.Status is not (WerkBonStatus.Afgewerkt or WerkBonStatus.Afgehaald))
+            throw new InvalidOperationException("De werkbon moet eerst afgewerkt zijn voor hij afgehaald kan worden.");
+
+        var factuur = await ZoekBestelbonAsync(db, werkBon, tracked: true)
+            ?? throw new InvalidOperationException("Er is nog geen bestelbon voor deze werkbon.");
+
+        var stand = await BerekenStandAsync(db, factuur.Id);
+        var bedrag = Math.Round(bedragIncl, 2);
+        if (bedrag > stand.Rest)
+            throw new InvalidOperationException($"Het bedrag (€ {bedrag:0.00}) is hoger dan wat nog te betalen is (€ {stand.Rest:0.00}).");
+
+        // Alles in dezelfde context → één SaveChanges = één transactie.
+        werkBon.Status = WerkBonStatus.Afgehaald;
+
+        db.Ontvangsten.Add(new Ontvangst
+        {
+            Soort = OntvangstSoort.Betaling,
+            FactuurId = factuur.Id,
+            OfferteId = factuur.OfferteId ?? werkBon.OfferteId,
+            Datum = datum.Date,
+            Betaalwijze = betaalwijze,
+            BedragIncl = bedrag,
+            AangemaaktDoor = _auth.CurrentUser?.GebruikersNaam
+        });
+
+        var nieuw = stand with { Betaald = stand.Betaald + bedrag };
+        if (nieuw.Rest == 0m && factuur.Status != FactuurStatus.Betaald)
+        {
+            factuur.Status = FactuurStatus.Betaald;
+            factuur.BijgewerktOp = DateTime.UtcNow;
+
+            var offerte = await db.Offertes.FirstOrDefaultAsync(o => o.Id == (factuur.OfferteId ?? werkBon.OfferteId));
+            if (offerte is not null)
+                OfferteStatusPropagation.TryAdvanceTo(offerte, OfferteStatus.Betaald);
+
+            nieuw = nieuw with { IsBetaaldStatus = true };
+        }
+
+        await db.SaveChangesAsync();
+        return new AfrekenStand(factuur.Id, factuur.FactuurNummer, nieuw);
+    }
+
+    private static Task<Factuur?> ZoekBestelbonAsync(AppDbContext db, WerkBon werkBon, bool tracked)
+    {
+        var q = tracked ? db.Facturen : db.Facturen.AsNoTracking();
+        return q.Where(f => f.Status != FactuurStatus.Geannuleerd
+                            && (f.WerkBonId == werkBon.Id || f.OfferteId == werkBon.OfferteId))
+                .OrderByDescending(f => f.WerkBonId == werkBon.Id)
+                .FirstOrDefaultAsync();
+    }
+
     private static async Task<BetaalStand> BerekenStandAsync(AppDbContext db, int factuurId)
     {
         var factuur = await db.Facturen.AsNoTracking().FirstOrDefaultAsync(f => f.Id == factuurId)
