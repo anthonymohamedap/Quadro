@@ -32,7 +32,22 @@ public interface IOntvangstService
     /// betalingen mogelijk, bv. deels cash en deels kaart). Is de rest daarna 0, dan wordt de
     /// bestelbon op Betaald gezet. Geeft de nieuwe stand terug.</summary>
     Task<BetaalStand> RegistreerBetalingAsync(int factuurId, decimal bedragIncl, DateTime datum, Betaalwijze betaalwijze);
+
+    // ── US-76: afrekenen bij afhaling vanuit de werkbon ──
+
+    /// <summary>De bestelbon van een werkbon (via de werkbon of diens offerte) met zijn betaalstand,
+    /// of null als er (nog) geen niet-geannuleerde bestelbon is.</summary>
+    Task<AfrekenStand?> GetAfrekenStandAsync(int werkBonId);
+
+    /// <summary>Registreert een betaling op de bestelbon van de werkbon én zet de werkbon op
+    /// Afgehaald (als hij Afgewerkt was), in één keer: lukt één stap niet, dan verandert niets.
+    /// Is de rest daarna 0, dan gaan bestelbon en offerte op Betaald. Een gesplitste betaling kan:
+    /// nadien opnieuw aanroepen voor de rest (de werkbon blijft dan Afgehaald).</summary>
+    Task<AfrekenStand> AfrekenenBijAfhalingAsync(int werkBonId, decimal bedragIncl, DateTime datum, Betaalwijze betaalwijze);
 }
+
+/// <summary>US-76 — bestelbon van een werkbon + zijn betaalstand.</summary>
+public sealed record AfrekenStand(int FactuurId, string FactuurNummer, BetaalStand Stand);
 
 /// <summary>US-70 — betaalstand van een bestelbon.</summary>
 public sealed record BetaalStand(decimal TotaalIncl, decimal Voorschot, decimal Betaald, bool IsBetaaldStatus)
