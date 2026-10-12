@@ -209,12 +209,12 @@
                                     IsEnabled="{Binding MagBewerken}">
 
                             <Grid ColumnDefinitions="1*,2*"
-                                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                                   RowSpacing="10"
                                   ColumnSpacing="15">
 
                                 <TextBlock Text="Datum" Grid.Row="0" Grid.Column="0" Classes="label" VerticalAlignment="Center"/>
-                                <DatePicker Grid.Row="0" Grid.Column="1" SelectedDate="{Binding VerkoopDatum, Mode=TwoWay}"/>
+                                <DatePicker Grid.Row="0" Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" SelectedDate="{Binding VerkoopDatum, Mode=TwoWay}"/>
 
                                 <TextBlock Text="Omschrijving" Grid.Row="1" Grid.Column="0" Classes="label" VerticalAlignment="Top" Margin="0,4,0,0"/>
                                 <TextBox Grid.Row="1"
@@ -239,11 +239,24 @@
                                           Grid.Column="1"
                                           HorizontalAlignment="Stretch"
                                           ItemsSource="{Binding BetaalwijzeOpties}"
-                                          SelectedItem="{Binding GeselecteerdeVerkoop.Betaalwijze, Mode=TwoWay}"/>
+                                          SelectedItem="{Binding VerkoopBetaalwijze, Mode=TwoWay}"/>
 
                                 <TextBlock Text="Totaal (incl. 21 % btw)" Grid.Row="6" Grid.Column="0" Classes="label" VerticalAlignment="Center" TextWrapping="Wrap"/>
                                 <TextBlock Grid.Row="6" Grid.Column="1" FontWeight="SemiBold" VerticalAlignment="Center"
                                            Text="{Binding VerkoopTotaal, StringFormat='€ {0:0.00}'}"/>
+
+                                <!-- US-74: wisselgeld bij kontant (niet opgeslagen) -->
+                                <TextBlock Text="Ontvangen (cash)" Grid.Row="7" Grid.Column="0" Classes="label" VerticalAlignment="Center"
+                                           TextWrapping="Wrap" IsVisible="{Binding IsKontant}"/>
+                                <NumericUpDown Grid.Row="7" Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch"
+                                               Foreground="{DynamicResource TextPrimary}" Minimum="0" Increment="5"
+                                               FormatString="'€ '0.00" Watermark="bv. 50"
+                                               Value="{Binding Ontvangen, Mode=TwoWay}"
+                                               IsVisible="{Binding IsKontant}"/>
+
+                                <TextBlock Grid.Row="8" Grid.Column="1" FontWeight="Bold" FontSize="16" VerticalAlignment="Center"
+                                           Text="{Binding TerugTekst}"
+                                           IsVisible="{Binding IsKontant}"/>
 
                             </Grid>
 
