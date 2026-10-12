@@ -96,29 +96,82 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
         OnPropertyChanged(nameof(VerkoopAantal));
         OnPropertyChanged(nameof(VerkoopPrijs));
         OnPropertyChanged(nameof(VerkoopKortingPct));
-        OnPropertyChanged(nameof(VerkoopTotaal));
+        OnPropertyChanged(nameof(VerkoopBetaalwijze));
+        Ontvangen = null;   // US-74: wisselgeld hoort bij één verkoop
+        RaiseTotaalChanged();
     }
 
     // ── Proxies zodat het totaal live meebeweegt (Ontvangst is een POCO zonder INotifyPropertyChanged) ──
     public decimal? VerkoopAantal
     {
         get => GeselecteerdeVerkoop?.Aantal;
-        set { if (GeselecteerdeVerkoop is null) return; GeselecteerdeVerkoop.Aantal = value ?? 0m; OnPropertyChanged(); OnPropertyChanged(nameof(VerkoopTotaal)); }
+        set { if (GeselecteerdeVerkoop is null) return; GeselecteerdeVerkoop.Aantal = value ?? 0m; OnPropertyChanged(); RaiseTotaalChanged(); }
     }
 
     public decimal? VerkoopPrijs
     {
         get => GeselecteerdeVerkoop?.PrijsPerStukIncl;
-        set { if (GeselecteerdeVerkoop is null) return; GeselecteerdeVerkoop.PrijsPerStukIncl = value ?? 0m; OnPropertyChanged(); OnPropertyChanged(nameof(VerkoopTotaal)); }
+        set { if (GeselecteerdeVerkoop is null) return; GeselecteerdeVerkoop.PrijsPerStukIncl = value ?? 0m; OnPropertyChanged(); RaiseTotaalChanged(); }
     }
 
     public decimal? VerkoopKortingPct
     {
         get => GeselecteerdeVerkoop?.KortingPct;
-        set { if (GeselecteerdeVerkoop is null) return; GeselecteerdeVerkoop.KortingPct = Math.Clamp(value ?? 0m, 0m, 100m); OnPropertyChanged(); OnPropertyChanged(nameof(VerkoopTotaal)); }
+        set { if (GeselecteerdeVerkoop is null) return; GeselecteerdeVerkoop.KortingPct = Math.Clamp(value ?? 0m, 0m, 100m); OnPropertyChanged(); RaiseTotaalChanged(); }
     }
 
     public decimal VerkoopTotaal => GeselecteerdeVerkoop?.TotaalIncl ?? 0m;
+
+    public Betaalwijze VerkoopBetaalwijze
+    {
+        get => GeselecteerdeVerkoop?.Betaalwijze ?? Betaalwijze.Kontant;
+        set
+        {
+            if (GeselecteerdeVerkoop is null) return;
+            GeselecteerdeVerkoop.Betaalwijze = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsKontant));
+        }
+    }
+
+    // ── US-74: wisselgeld (zoals "terug" in de oude kassa) — enkel ter info, wordt niet opgeslagen ──
+
+    /// <summary>Het bedrag dat de klant cash geeft.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Terug))]
+    [NotifyPropertyChangedFor(nameof(TerugTekst))]
+    [NotifyPropertyChangedFor(nameof(HeeftOntvangen))]
+    private decimal? ontvangen;
+
+    public bool IsKontant => GeselecteerdeVerkoop?.Betaalwijze == Betaalwijze.Kontant;
+
+    public bool HeeftOntvangen => Ontvangen is > 0m;
+
+    /// <summary>Terug te geven = ontvangen − totaal (nooit negatief).</summary>
+    public decimal Terug => BerekenTerug(Ontvangen, VerkoopTotaal);
+
+    public string TerugTekst
+    {
+        get
+        {
+            if (Ontvangen is not > 0m) return string.Empty;
+            var verschil = Math.Round(Ontvangen.Value - VerkoopTotaal, 2);
+            return verschil >= 0m
+                ? $"Terug: € {verschil:0.00}"
+                : $"Nog te ontvangen: € {-verschil:0.00}";
+        }
+    }
+
+    public static decimal BerekenTerug(decimal? ontvangen, decimal totaal)
+        => ontvangen is > 0m ? Math.Max(0m, Math.Round(ontvangen.Value - totaal, 2)) : 0m;
+
+    private void RaiseTotaalChanged()
+    {
+        OnPropertyChanged(nameof(VerkoopTotaal));
+        OnPropertyChanged(nameof(Terug));
+        OnPropertyChanged(nameof(TerugTekst));
+        OnPropertyChanged(nameof(IsKontant));
+    }
 
     // ── Snelle maandfilter (zoals de maand-tabbladen in de kassa) ──
     [RelayCommand]
