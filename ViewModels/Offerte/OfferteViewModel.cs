@@ -168,6 +168,8 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     partial void OnOfferteChanged(Offerte? value)
     {
         OnPropertyChanged(nameof(VoorschotBedragInput));
+        OnPropertyChanged(nameof(OfferteKortingPct));      // US-78
+        OnPropertyChanged(nameof(OfferteMeerPrijsIncl));
         RunAsync(LaadVoorschottenAsync);   // US-69
         OnPropertyChanged(nameof(AfhaalDatumInput));
         OnPropertyChanged(nameof(KanNaarVerzonden));
@@ -310,8 +312,56 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         {
             if (Regelbeheer.SelectedRegel is null) return;
             var nieuw = Math.Clamp(value ?? 0m, 0m, 100m);
-            if (Regelbeheer.SelectedRegel.KortingPct == nieuw) return;
+            if (Regelbeheer.SelectedRegel.KortingPct == nieuw)
+            {
+                // US-78: leeg gemaakt veld springt terug naar "0" (geen verschil tussen leeg en 0).
+                if (value is null) OnPropertyChanged();
+                return;
+            }
             Regelbeheer.SelectedRegel.KortingPct = nieuw;
+            OnPropertyChanged();
+            if (!_suppressRecalc) Prijzen.TriggerRecalc();
+        }
+    }
+
+    /// <summary>US-77 — prijs (incl. btw) van de inlijsting die je aan het invullen bent, live.</summary>
+    public decimal SelectedRegelPrijsIncl => Regelbeheer.SelectedRegel?.TotaalInclBtw ?? 0m;
+
+    /// <summary>US-78 — korting op het offertetotaal via de VM, zodat een wijziging meteen
+    /// herberekent (voorheen schreef het veld rechtstreeks naar het model zonder herberekening,
+    /// waardoor de korting pas meetelde als er daarna nog iets anders wijzigde).</summary>
+    public decimal? OfferteKortingPct
+    {
+        get => Offerte?.KortingPct;
+        set
+        {
+            if (Offerte is null) return;
+            var nieuw = Math.Clamp(value ?? 0m, 0m, 100m);
+            if (Offerte.KortingPct == nieuw)
+            {
+                if (value is null) OnPropertyChanged();   // leeg → toont terug "0"
+                return;
+            }
+            Offerte.KortingPct = nieuw;
+            OnPropertyChanged();
+            if (!_suppressRecalc) Prijzen.TriggerRecalc();
+        }
+    }
+
+    /// <summary>US-78 — meerprijs (incl. btw) via de VM, met herberekening.</summary>
+    public decimal? OfferteMeerPrijsIncl
+    {
+        get => Offerte?.MeerPrijsIncl;
+        set
+        {
+            if (Offerte is null) return;
+            var nieuw = Math.Max(0m, value ?? 0m);
+            if (Offerte.MeerPrijsIncl == nieuw)
+            {
+                if (value is null) OnPropertyChanged();
+                return;
+            }
+            Offerte.MeerPrijsIncl = nieuw;
             OnPropertyChanged();
             if (!_suppressRecalc) Prijzen.TriggerRecalc();
         }
@@ -819,6 +869,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             OnPropertyChanged(nameof(SelectedRegelAfhaalDatum));
             OnPropertyChanged(nameof(SelectedRegelAfgesprokenPrijs));   // US-22
             OnPropertyChanged(nameof(SelectedRegelKortingPct));         // US-63
+            OnPropertyChanged(nameof(SelectedRegelPrijsIncl));          // US-77
             OnPropertyChanged(nameof(SelectedRegelBreedteCm));          // US-65
             OnPropertyChanged(nameof(SelectedRegelHoogteCm));
             OnPropertyChanged(nameof(SelectedRegelInlegBreedteCm));
@@ -1563,6 +1614,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                 dst.SubtotaalExBtw = src.SubtotaalExBtw;
                 dst.BtwBedrag      = src.BtwBedrag;
                 dst.TotaalInclBtw  = src.TotaalInclBtw;
+                dst.MeldWeergaveGewijzigd();   // US-77: prijs in de lijst live bijwerken
             }
             // Remove any excess regels (defensive; should not happen in practice).
             while (Regelbeheer.Regels.Count > srcRegels.Count)
@@ -1667,6 +1719,9 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
 
     private void RefreshTotals()
     {
+        OnPropertyChanged(nameof(SelectedRegelPrijsIncl));   // US-77
+        OnPropertyChanged(nameof(OfferteKortingPct));        // US-78
+        OnPropertyChanged(nameof(OfferteMeerPrijsIncl));
         OnPropertyChanged(nameof(OfferteEx));
         OnPropertyChanged(nameof(OfferteBtw));
         OnPropertyChanged(nameof(OfferteIncl));

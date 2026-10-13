@@ -1,12 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuadroApp.Model.DB
 {
-    public class OfferteRegel
+    public class OfferteRegel : INotifyPropertyChanged
     {
+        /// <summary>US-77 — zodat de regelprijs in de offertelijst live meebeweegt na een
+        /// herberekening (alleen voor weergave; EF gebruikt nog steeds snapshot-tracking).</summary>
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        /// <summary>US-77 — meldt de weergave dat prijs en/of omschrijving van deze regel gewijzigd zijn.</summary>
+        public void MeldWeergaveGewijzigd()
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TotaalInclBtw)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AfmetingLabel)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Titel)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TypeLijst)));
+        }
+
         public int Id { get; set; }
 
         // ========================
@@ -262,8 +276,19 @@ namespace QuadroApp.Model.DB
         [Column(TypeName = "decimal(18,2)")]
         public decimal BtwBedrag { get; set; }
 
+        private decimal _totaalInclBtw;
+
         [Column(TypeName = "decimal(18,2)")]
-        public decimal TotaalInclBtw { get; set; }
+        public decimal TotaalInclBtw
+        {
+            get => _totaalInclBtw;
+            set
+            {
+                if (_totaalInclBtw == value) return;
+                _totaalInclBtw = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TotaalInclBtw)));
+            }
+        }
 
         // ========================
         // US-51: compacte afwerkings-samenvatting voor weergave (niet in DB).
