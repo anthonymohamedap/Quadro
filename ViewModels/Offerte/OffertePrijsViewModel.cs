@@ -21,6 +21,10 @@ public partial class OffertePrijsViewModel : AsyncViewModelBase
 
     private CancellationTokenSource? _recalcCts;
 
+    /// <summary>US-77 — kwam er een wijziging binnen terwijl er al gerekend werd, dan wordt die
+    /// niet meer stil genegeerd maar volgt er meteen nog een herberekening.</summary>
+    private bool _opnieuwBerekenen;
+
     [ObservableProperty] private bool isBusy;
 
     public IAsyncRelayCommand BerekenCommand { get; }
@@ -74,7 +78,11 @@ public partial class OffertePrijsViewModel : AsyncViewModelBase
 
     private async Task BerekenAsync(bool showFeedback)
     {
-        if (IsBusy) return;
+        if (IsBusy)
+        {
+            if (!showFeedback) _opnieuwBerekenen = true;
+            return;
+        }
 
         // De gedebouncte, stille herberekening (showFeedback: false) mag niet blokkeren op de
         // volledige-offerte-validatie: tijdens het invullen van een 2e (of volgende) regel is die
@@ -110,6 +118,11 @@ public partial class OffertePrijsViewModel : AsyncViewModelBase
         finally
         {
             IsBusy = false;
+            if (_opnieuwBerekenen)
+            {
+                _opnieuwBerekenen = false;
+                TriggerRecalc();
+            }
         }
     }
 }

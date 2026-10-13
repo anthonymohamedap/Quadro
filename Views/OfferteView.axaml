@@ -410,7 +410,7 @@
 
 						<StackPanel Spacing="6">
 							<TextBlock Text="Prijs" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
-							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" RowSpacing="10" ColumnSpacing="12">
+							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
 							<TextBlock Grid.Row="0" Grid.Column="0" Text="Afgesproken prijs (incl. BTW)" VerticalAlignment="Center" MaxWidth="220" TextWrapping="Wrap"/>
 							<TextBox Grid.Row="0"
                                      Grid.Column="1"
@@ -427,6 +427,10 @@
                                            Foreground="{DynamicResource TextPrimary}"
                                            ToolTip.Tip="Enkel op deze inlijsting. Niet van toepassing als er een afgesproken prijs is ingevuld."
                                            Value="{Binding SelectedRegelKortingPct, Mode=TwoWay}"/>
+							<!-- US-77: live prijs van deze inlijsting (incl. btw) -->
+							<TextBlock Grid.Row="2" Grid.Column="0" Text="Prijs deze inlijsting (incl. BTW)" VerticalAlignment="Center" MaxWidth="220" TextWrapping="Wrap" FontWeight="SemiBold"/>
+							<TextBlock Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" FontWeight="Bold" FontSize="15"
+							           Text="{Binding SelectedRegelPrijsIncl, StringFormat='€ {0:N2}'}"/>
 							</Grid>
 						</StackPanel>
 
@@ -810,13 +814,18 @@
 											   Minimum="0"
 											   Foreground="{DynamicResource TextPrimary}"
 											   Maximum="100"
-											   Value="{Binding Offerte.KortingPct, Mode=TwoWay}"/>
+											   FormatString="0.##"
+											   Value="{Binding OfferteKortingPct, Mode=TwoWay}"/>
 
 								<!-- MEERPRIJS -->
 								<TextBlock Grid.Row="1" Grid.Column="0" Text="Meerprijs (incl. BTW)" VerticalAlignment="Center"/>
-								<TextBox Grid.Row="1"
-										 Grid.Column="1"
-										 Text="{Binding Offerte.MeerPrijsIncl, Mode=TwoWay}"/>
+								<NumericUpDown Grid.Row="1"
+										   Grid.Column="1"
+										   Minimum="0"
+										   Increment="5"
+										   FormatString="'€ '0.00"
+										   Foreground="{DynamicResource TextPrimary}"
+										   Value="{Binding OfferteMeerPrijsIncl, Mode=TwoWay}"/>
 
 								<!-- VOORSCHOT (US-69): enkel via "Voorschot ontvangen" hieronder, zodat datum en
 								     betaalwijze mee in het overzicht betalingen komen. -->
