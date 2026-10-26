@@ -150,6 +150,11 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         await LaadVoorschottenAsync();
     }
 
+    /// <summary>US-81 — het offertenummer op het scherm; een nieuwe offerte krijgt het bij opslaan.</summary>
+    public string OfferteNummerTekst => Offerte is { OfferteNummer: > 0 } o
+        ? o.OfferteNummer.ToString()
+        : "nieuw";
+
     // Afhaal datum — manueel in te vullen door de gebruiker
     public DateTimeOffset? AfhaalDatumInput
     {
@@ -172,6 +177,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         OnPropertyChanged(nameof(OfferteMeerPrijsIncl));
         RunAsync(LaadVoorschottenAsync);   // US-69
         OnPropertyChanged(nameof(AfhaalDatumInput));
+        OnPropertyChanged(nameof(OfferteNummerTekst));
         OnPropertyChanged(nameof(KanNaarVerzonden));
         OnPropertyChanged(nameof(KanNaarGoedgekeurd));
         OnPropertyChanged(nameof(KanTerugNaarConcept));
@@ -1336,6 +1342,15 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         {
             Toast.Warning("Voeg minstens één regel toe voor je de offerte afdrukt.");
             return;
+        }
+
+        // US-81: een nieuwe offerte heeft nog geen nummer ("offertenr. 0") — eerst opslaan,
+        // dan krijgt ze haar doorlopend nummer en staat dat op de PDF.
+        if (Offerte.Id == 0)
+        {
+            await SaveCoreAsync(reloadAfterSave: true);
+            if (Offerte is null || Offerte.Id == 0 || Offerte.OfferteNummer == 0)
+                return; // opslaan lukte niet (bv. geen klant); de melding is al getoond
         }
 
         try

@@ -345,6 +345,7 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         DocumentType = factuur.DocumentType, KlantNaam = factuur.KlantNaam,
         KlantAdres = factuur.KlantAdres, KlantBtwNummer = factuur.KlantBtwNummer,
         FactuurDatum = factuur.FactuurDatum, VervalDatum = factuur.VervalDatum,
+        GeplandeDatum = factuur.GeplandeDatum, AfhaalDatum = factuur.AfhaalDatum,
         Opmerking = factuur.Opmerking, AangenomenDoorInitialen = factuur.AangenomenDoorInitialen,
         IsBtwVrijgesteld = factuur.IsBtwVrijgesteld, TotaalExclBtw = factuur.TotaalExclBtw,
         TotaalBtw = factuur.TotaalBtw, TotaalInclBtw = factuur.TotaalInclBtw,
