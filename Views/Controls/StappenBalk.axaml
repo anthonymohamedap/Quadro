@@ -1,0 +1,103 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:QuadroApp.ViewModels.Verkoop"
+             x:Class="QuadroApp.Views.Controls.StappenBalk"
+             x:DataType="vm:StappenBalkViewModel">
+
+    <!-- US-83: Offerte → Bestelling → In productie → Klaar om af te halen → Afgehaald & betaald.
+         Klaar = groen vinkje, huidige stap = geel, nog te doen = grijs. Geannuleerd = hele balk grijs. -->
+    <UserControl.Styles>
+        <Style Selector="Border.stap">
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+        <Style Selector="Border.stap.huidig">
+            <Setter Property="Background" Value="{DynamicResource BrandYellowHover}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandYellow}"/>
+        </Style>
+        <Style Selector="Border.bol">
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+            <Setter Property="Background" Value="{DynamicResource Surface}"/>
+        </Style>
+        <Style Selector="Border.bol.klaar">
+            <Setter Property="Background" Value="{DynamicResource Success}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Success}"/>
+        </Style>
+        <Style Selector="Border.bol.huidig">
+            <Setter Property="Background" Value="{DynamicResource BrandYellow}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandYellow}"/>
+        </Style>
+        <Style Selector="TextBlock.bolTekst">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+        </Style>
+        <Style Selector="TextBlock.bolTekst.klaar">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="TextBlock.bolTekst.huidig">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+        </Style>
+        <Style Selector="TextBlock.stapTitel">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+        <Style Selector="ItemsControl.geannuleerd">
+            <Setter Property="Opacity" Value="0.45"/>
+        </Style>
+        <Style Selector="TextBlock.stapTitel.actief">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Border Background="{DynamicResource Surface}"
+            BorderBrush="{DynamicResource BorderSubtle}"
+            BorderThickness="0,0,0,1"
+            Padding="24,8">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+            <ItemsControl ItemsSource="{Binding Stappen}" Classes.geannuleerd="{Binding IsGeannuleerd}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="1"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:StapWeergave">
+                        <Border Classes="stap" Classes.huidig="{Binding IsHuidig}" Margin="0,0,6,0"
+                                ToolTip.Tip="{Binding Uitleg}">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <Border Classes="bol" Classes.klaar="{Binding IsKlaar}" Classes.huidig="{Binding IsHuidig}">
+                                    <TextBlock Classes="bolTekst" Classes.klaar="{Binding IsKlaar}" Classes.huidig="{Binding IsHuidig}"
+                                               Text="{Binding Bolletje}"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Classes="stapTitel" Classes.actief="{Binding !IsNogTeDoen}" Text="{Binding Titel}"
+                                               ToolTip.Tip="{Binding Uitleg}"/>
+                                    <TextBlock Text="hier ben je" Classes="caption" Foreground="{DynamicResource Warning}"
+                                               IsVisible="{Binding IsHuidig}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <TextBlock Text="{Binding StatusTekst}" VerticalAlignment="Center" FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextSecondary}"/>
+                <Button Classes="AccentBtn" Padding="12,8"
+                        Content="{Binding VolgendeStapTekst}"
+                        Command="{Binding VolgendeStapCommand}"
+                        IsVisible="{Binding IsVolgendeStapZichtbaar}"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>
