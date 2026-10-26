@@ -899,7 +899,9 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         IToastService toast,
         ICrudValidator<Klant> crudValidator,
         IKlantDialogService klantDialog,
-        IOntvangstService ontvangsten)
+        IOntvangstService ontvangsten,
+        IPathOpener pathOpener,
+        IOfferteNavigationService offerteNav)
         : base(toast)
     {
         _ontvangsten = ontvangsten ?? throw new ArgumentNullException(nameof(ontvangsten));
@@ -931,7 +933,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         Workflow = new OfferteWorkflowViewModel(
             dbFactory, workflow, werkBonWorkflow, statusWorkflow,
             factuurWorkflow, factuurExportService, filePickerService,
-            dialogs, toast,
+            dialogs, toast, ontvangsten, pathOpener, offerteNav,
             getOfferteId: () => Offerte?.Id ?? 0,
             saveAndReload: () => SaveCoreAsync(reloadAfterSave: true),
             berekenAsync: () => BerekenSilentAsync(),
@@ -1264,6 +1266,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         Regelbeheer.SelectedRegel = null;
         Workflow.GekoppeldeWerkBon = null;
         Workflow.GekoppeldeFactuur = null;
+        Workflow.ToonStappen(OfferteStatus.Concept, nogTeBetalen: 0m);
         RefreshTotals();
         return Task.CompletedTask;
     }

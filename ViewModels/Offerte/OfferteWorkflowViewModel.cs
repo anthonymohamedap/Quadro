@@ -5,6 +5,8 @@ using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Import;
 using QuadroApp.Service.Interfaces;
+using QuadroApp.Service.Verkoop;
+using QuadroApp.ViewModels.Verkoop;
 using QuadroApp.Views;
 using System;
 using System.Linq;
@@ -22,6 +24,9 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
     private readonly IFactuurExportService _factuurExportService;
     private readonly IFilePickerService _filePickerService;
     private readonly IDialogService _dialogs;
+    private readonly IOntvangstService _ontvangsten;
+    private readonly IPathOpener _pathOpener;
+    private readonly IOfferteNavigationService _offerteNav;
 
     // Delegates geleverd door OfferteViewModel
     private readonly Func<int> _getOfferteId;
@@ -72,6 +77,11 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
     public IAsyncRelayCommand BevestigenCommand { get; }
     public IAsyncRelayCommand OpenPlanningCommand { get; }
     public IAsyncRelayCommand FactuurCommand { get; }
+    public IAsyncRelayCommand OpenWerkBonCommand { get; }
+    public IAsyncRelayCommand BestelbonAfdrukkenCommand { get; }
+
+    /// <summary>US-83 — stappenbalk bovenaan de offerte.</summary>
+    public StappenBalkViewModel StappenBalk { get; } = new();
 
     public OfferteWorkflowViewModel(
         IDbContextFactory<AppDbContext> dbFactory,
@@ -83,6 +93,9 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         IFilePickerService filePickerService,
         IDialogService dialogs,
         IToastService toast,
+        IOntvangstService ontvangsten,
+        IPathOpener pathOpener,
+        IOfferteNavigationService offerteNav,
         Func<int> getOfferteId,
         Func<Task> saveAndReload,
         Func<Task> berekenAsync,
@@ -98,6 +111,9 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         _factuurExportService = factuurExportService ?? throw new ArgumentNullException(nameof(factuurExportService));
         _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
         _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
+        _ontvangsten = ontvangsten ?? throw new ArgumentNullException(nameof(ontvangsten));
+        _pathOpener = pathOpener ?? throw new ArgumentNullException(nameof(pathOpener));
+        _offerteNav = offerteNav ?? throw new ArgumentNullException(nameof(offerteNav));
         _getOfferteId = getOfferteId;
         _saveAndReload = saveAndReload;
         _berekenAsync = berekenAsync;
@@ -107,6 +123,10 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         BevestigenCommand   = new AsyncRelayCommand(BevestigenAsync);
         OpenPlanningCommand = new AsyncRelayCommand(OpenPlanningAsync);
         FactuurCommand      = new AsyncRelayCommand(OpenFactuurAsync);
+        OpenWerkBonCommand  = new AsyncRelayCommand(OpenWerkBonAsync);
+        BestelbonAfdrukkenCommand = new AsyncRelayCommand(BestelbonAfdrukkenAsync);
+
+        ToonStappen(OfferteStatus.Concept, nogTeBetalen: 0m);
     }
 
     public async Task LoadFactuurContextAsync(AppDbContext db, int offerteId)
@@ -128,6 +148,112 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
             factuur.Lijnen = factuur.Lijnen.OrderBy(x => x.Sortering).ToList();
 
         GekoppeldeFactuur = factuur;
+
+        // US-83: stap bepalen uit offerte-, werkbon- en bestelbonstatus.
+        var offerte = await db.Offertes.AsNoTracking()
+            .Where(o => o.Id == offerteId)
+            .Select(o => new { o.Status, o.TotaalInclBtw, o.VoorschotBedrag })
+            .FirstOrDefaultAsync();
+
+        var nogTeBetalen = factuur is not null
+            ? (await _ontvangsten.GetBetaalStandAsync(factuur.Id)).Rest
+            : Math.Max(0m, (offerte?.TotaalInclBtw ?? 0m) - (offerte?.VoorschotBedrag ?? 0m));
+
+        ToonStappen(offerte?.Status ?? OfferteStatus.Concept, nogTeBetalen);
+    }
+
+    /// <summary>US-83 — werkt de stappenbalk en de knop voor de volgende stap bij.</summary>
+    public void ToonStappen(OfferteStatus offerteStatus, decimal nogTeBetalen)
+    {
+        var info = VerkoopStapResolver.Bepaal(offerteStatus, GekoppeldeWerkBon?.Status, GekoppeldeFactuur?.Status, nogTeBetalen);
+
+        (string? tekst, IAsyncRelayCommand? command) volgende = info switch
+        {
+            { IsAfgerond: true } => (null, null),
+            { Huidig: VerkoopStap.Offerte } => ("Bevestigen als bestelling", BevestigenCommand),
+            { Huidig: VerkoopStap.Bestelling or VerkoopStap.InProductie } => ("Werkbon openen", OpenWerkBonCommand),
+            { Huidig: VerkoopStap.KlaarOmAfTeHalen } when GekoppeldeFactuur is not null => ("Bestelbon afdrukken", BestelbonAfdrukkenCommand),
+            { Huidig: VerkoopStap.KlaarOmAfTeHalen } => ("Werkbon openen", OpenWerkBonCommand),
+            { IsAfgehaaldNogTeBetalen: true } => ("Afrekenen", OpenWerkBonCommand),
+            _ => (null, null)
+        };
+
+        StappenBalk.Toon(info, volgende.tekst, volgende.command);
+    }
+
+    /// <summary>US-83 — opent het werkbonvenster (inplannen, status, afrekenen bij afhalen).</summary>
+    private async Task OpenWerkBonAsync()
+    {
+        if (IsBusy) return;
+
+        var werkBon = GekoppeldeWerkBon;
+        if (werkBon is null)
+        {
+            Toast.Error("Geen werkbon gevonden. Bevestig de offerte eerst.");
+            return;
+        }
+
+        var owner = GetOwnerWindow();
+        if (owner is null) return;
+
+        try
+        {
+            IsBusy = true;
+
+            var vm = new WerkBonDetailViewModel(_dbFactory, _statusWorkflow, _offerteNav, Toast, werkBon.Id, _ontvangsten);
+            await vm.LoadAsync();
+
+            var window = new WerkBonDetailWindow { DataContext = vm };
+            await window.ShowDialog(owner);
+        }
+        catch (Exception ex)
+        {
+            await _dialogs.ShowErrorAsync("Werkbon openen mislukt", ex.GetBaseException().Message);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+
+        // Status of betalingen kunnen in het venster gewijzigd zijn.
+        if (_reloadOnly is not null) await _reloadOnly();
+    }
+
+    /// <summary>US-83/US-82 — bestelbon afdrukken vanuit de stappenbalk, in elke status.</summary>
+    private async Task BestelbonAfdrukkenAsync()
+    {
+        if (IsBusy) return;
+
+        var factuur = GekoppeldeFactuur;
+        if (factuur is null)
+        {
+            Toast.Error("Er is nog geen bestelbon voor deze offerte.");
+            return;
+        }
+
+        try
+        {
+            IsBusy = true;
+
+            var result = await _factuurExportService.AfdrukkenAsync(factuur.Id);
+            if (!result.Success)
+            {
+                Toast.Error(result.Message);
+                return;
+            }
+
+            _pathOpener.OpenFile(result.BestandPad);
+        }
+        catch (Exception ex)
+        {
+            Toast.Error($"Afdrukken mislukt: {ex.GetBaseException().Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+
+        if (_reloadOnly is not null) await _reloadOnly();
     }
 
     private async Task BevestigenAsync()
