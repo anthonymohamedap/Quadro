@@ -22,7 +22,7 @@ public class BestelbonBetalingenPdfTests
             f.GeregistreerdeBetalingen.Add(new Ontvangst
             {
                 Soort = OntvangstSoort.Betaling, Datum = new DateTime(2026, 10, 6),
-                Betaalwijze = Betaalwijze.Storting, BedragIncl = b
+                Betaalwijze = Betaalwijze.Overschrijving, BedragIncl = b
             });
         return f;
     }

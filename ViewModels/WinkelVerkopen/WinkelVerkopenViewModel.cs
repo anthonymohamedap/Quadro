@@ -124,13 +124,13 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
 
     public Betaalwijze VerkoopBetaalwijze
     {
-        get => GeselecteerdeVerkoop?.Betaalwijze ?? Betaalwijze.Kontant;
+        get => GeselecteerdeVerkoop?.Betaalwijze ?? Betaalwijze.Cash;
         set
         {
             if (GeselecteerdeVerkoop is null) return;
             GeselecteerdeVerkoop.Betaalwijze = value;
             OnPropertyChanged();
-            OnPropertyChanged(nameof(IsKontant));
+            OnPropertyChanged(nameof(IsCash));
         }
     }
 
@@ -143,7 +143,7 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
     [NotifyPropertyChangedFor(nameof(HeeftOntvangen))]
     private decimal? ontvangen;
 
-    public bool IsKontant => GeselecteerdeVerkoop?.Betaalwijze == Betaalwijze.Kontant;
+    public bool IsCash => GeselecteerdeVerkoop?.Betaalwijze == Betaalwijze.Cash;
 
     public bool HeeftOntvangen => Ontvangen is > 0m;
 
@@ -170,7 +170,7 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
         OnPropertyChanged(nameof(VerkoopTotaal));
         OnPropertyChanged(nameof(Terug));
         OnPropertyChanged(nameof(TerugTekst));
-        OnPropertyChanged(nameof(IsKontant));
+        OnPropertyChanged(nameof(IsCash));
     }
 
     // ── Snelle maandfilter (zoals de maand-tabbladen in de kassa) ──

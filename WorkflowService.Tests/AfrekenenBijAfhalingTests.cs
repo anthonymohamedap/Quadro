@@ -75,7 +75,7 @@ public class AfrekenenBijAfhalingTests
         var (wbId, fId) = await SeedAsync(scope.Factory);
         var sut = Sut(scope.Factory);
 
-        var na1 = await sut.AfrekenenBijAfhalingAsync(wbId, 50m, DateTime.Today, Betaalwijze.Kontant);
+        var na1 = await sut.AfrekenenBijAfhalingAsync(wbId, 50m, DateTime.Today, Betaalwijze.Cash);
         Assert.Equal(150m, na1.Stand.Rest);
 
         await using (var db = await scope.Factory.CreateDbContextAsync())
@@ -84,7 +84,7 @@ public class AfrekenenBijAfhalingTests
             Assert.Equal(FactuurStatus.KlaarVoorExport, (await db.Facturen.SingleAsync(f => f.Id == fId)).Status);
         }
 
-        var na2 = await sut.AfrekenenBijAfhalingAsync(wbId, 150m, DateTime.Today, Betaalwijze.Visa);
+        var na2 = await sut.AfrekenenBijAfhalingAsync(wbId, 150m, DateTime.Today, Betaalwijze.CreditCard);
         Assert.Equal(0m, na2.Stand.Rest);
         Assert.True(na2.Stand.IsBetaaldStatus);
     }
@@ -96,7 +96,7 @@ public class AfrekenenBijAfhalingTests
         var (wbId, _) = await SeedAsync(scope.Factory);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            Sut(scope.Factory).AfrekenenBijAfhalingAsync(wbId, 250m, DateTime.Today, Betaalwijze.Kontant));
+            Sut(scope.Factory).AfrekenenBijAfhalingAsync(wbId, 250m, DateTime.Today, Betaalwijze.Cash));
 
         await using var db = await scope.Factory.CreateDbContextAsync();
         Assert.Equal(WerkBonStatus.Afgewerkt, (await db.WerkBonnen.SingleAsync(w => w.Id == wbId)).Status);
@@ -110,7 +110,7 @@ public class AfrekenenBijAfhalingTests
         var (wbId, _) = await SeedAsync(scope.Factory, WerkBonStatus.InUitvoering);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            Sut(scope.Factory).AfrekenenBijAfhalingAsync(wbId, 10m, DateTime.Today, Betaalwijze.Kontant));
+            Sut(scope.Factory).AfrekenenBijAfhalingAsync(wbId, 10m, DateTime.Today, Betaalwijze.Cash));
     }
 
     [Fact]

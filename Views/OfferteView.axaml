@@ -861,7 +861,13 @@
 											  MinWidth="0"
 											  HorizontalAlignment="Stretch"
 											  ItemsSource="{Binding BetaalwijzeOpties}"
-											  SelectedItem="{Binding NieuwVoorschotBetaalwijze, Mode=TwoWay}"/>
+											  SelectedItem="{Binding NieuwVoorschotBetaalwijze, Mode=TwoWay}">
+    <ComboBox.ItemTemplate>
+        <DataTemplate x:DataType="m:Betaalwijze">
+            <TextBlock Text="{Binding Converter={x:Static conv:BetaalwijzeToLabelConverter.Instance}}"/>
+        </DataTemplate>
+    </ComboBox.ItemTemplate>
+</ComboBox>
 									<DatePicker Grid.Row="1" Grid.Column="0"
 												MinWidth="0"
 												HorizontalAlignment="Stretch"
@@ -882,7 +888,7 @@
 												<TextBlock Grid.Column="0" VerticalAlignment="Center"
 														   Text="{Binding Datum, StringFormat='{}{0:dd/MM/yyyy}'}"/>
 												<TextBlock Grid.Column="1" VerticalAlignment="Center"
-														   Text="{Binding Betaalwijze}"/>
+														   Text="{Binding Betaalwijze, Converter={x:Static conv:BetaalwijzeToLabelConverter.Instance}}"/>
 												<TextBlock Grid.Column="2" VerticalAlignment="Center" FontWeight="SemiBold"
 														   Text="{Binding BedragIncl, StringFormat='€ {0:0.00}'}"/>
 												<Button Grid.Column="3" Content="&#x2715;" Width="28" Height="24" Padding="0"
