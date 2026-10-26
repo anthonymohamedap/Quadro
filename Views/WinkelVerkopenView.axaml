@@ -138,7 +138,7 @@
                                                        TextTrimming="CharacterEllipsis"/>
 
                                             <TextBlock Grid.Column="5"
-                                                       Text="{Binding Betaalwijze}"
+                                                       Text="{Binding Betaalwijze, Converter={x:Static conv:BetaalwijzeToLabelConverter.Instance}}"
                                                        TextTrimming="CharacterEllipsis"/>
 
                                             <TextBlock Grid.Column="6"
@@ -239,24 +239,30 @@
                                           Grid.Column="1"
                                           HorizontalAlignment="Stretch"
                                           ItemsSource="{Binding BetaalwijzeOpties}"
-                                          SelectedItem="{Binding VerkoopBetaalwijze, Mode=TwoWay}"/>
+                                          SelectedItem="{Binding VerkoopBetaalwijze, Mode=TwoWay}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="m:Betaalwijze">
+                                            <TextBlock Text="{Binding Converter={x:Static conv:BetaalwijzeToLabelConverter.Instance}}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
 
                                 <TextBlock Text="Totaal (incl. 21 % btw)" Grid.Row="6" Grid.Column="0" Classes="label" VerticalAlignment="Center" TextWrapping="Wrap"/>
                                 <TextBlock Grid.Row="6" Grid.Column="1" FontWeight="SemiBold" VerticalAlignment="Center"
                                            Text="{Binding VerkoopTotaal, StringFormat='€ {0:0.00}'}"/>
 
-                                <!-- US-74: wisselgeld bij kontant (niet opgeslagen) -->
+                                <!-- US-74: wisselgeld bij cash (niet opgeslagen) -->
                                 <TextBlock Text="Ontvangen (cash)" Grid.Row="7" Grid.Column="0" Classes="label" VerticalAlignment="Center"
-                                           TextWrapping="Wrap" IsVisible="{Binding IsKontant}"/>
+                                           TextWrapping="Wrap" IsVisible="{Binding IsCash}"/>
                                 <NumericUpDown Grid.Row="7" Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch"
                                                Foreground="{DynamicResource TextPrimary}" Minimum="0" Increment="5"
                                                FormatString="'€ '0.00" Watermark="bv. 50"
                                                Value="{Binding Ontvangen, Mode=TwoWay}"
-                                               IsVisible="{Binding IsKontant}"/>
+                                               IsVisible="{Binding IsCash}"/>
 
                                 <TextBlock Grid.Row="8" Grid.Column="1" FontWeight="Bold" FontSize="16" VerticalAlignment="Center"
                                            Text="{Binding TerugTekst}"
-                                           IsVisible="{Binding IsKontant}"/>
+                                           IsVisible="{Binding IsCash}"/>
 
                             </Grid>
 

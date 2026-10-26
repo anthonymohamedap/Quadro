@@ -54,16 +54,14 @@
                 <Grid RowDefinitions="Auto,*,Auto">
                     <Border Background="{DynamicResource SurfaceHeader}" Padding="10,6"
                             BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="0,0,0,1">
-                        <Grid ColumnDefinitions="1.2*,0.6*,1*,1*,1*,1*,1*,1*,1.2*" ColumnSpacing="10">
+                        <Grid ColumnDefinitions="1.2*,0.6*,1*,1*,1*,1*,1.2*" ColumnSpacing="10">
                             <TextBlock Text="Datum" Classes="label"/>
                             <TextBlock Grid.Column="1" Text="Dag" Classes="label"/>
-                            <TextBlock Grid.Column="2" Text="Kontant" Classes="label" HorizontalAlignment="Right"/>
-                            <TextBlock Grid.Column="3" Text="Cheque" Classes="label" HorizontalAlignment="Right"/>
-                            <TextBlock Grid.Column="4" Text="Visa" Classes="label" HorizontalAlignment="Right"/>
-                            <TextBlock Grid.Column="5" Text="Bancontact" Classes="label" HorizontalAlignment="Right"/>
-                            <TextBlock Grid.Column="6" Text="Proton" Classes="label" HorizontalAlignment="Right"/>
-                            <TextBlock Grid.Column="7" Text="Storting" Classes="label" HorizontalAlignment="Right"/>
-                            <TextBlock Grid.Column="8" Text="Totaal" Classes="label" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="2" Text="Bancontact" Classes="label" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="3" Text="Cash" Classes="label" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="4" Text="Credit card" Classes="label" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="5" Text="Overschrijving" Classes="label" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="6" Text="Totaal" Classes="label" HorizontalAlignment="Right"/>
                         </Grid>
                     </Border>
 
@@ -75,16 +73,14 @@
                              ScrollViewer.VerticalScrollBarVisibility="Auto">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="si:BetalingsOverzichtDag">
-                                <Grid ColumnDefinitions="1.2*,0.6*,1*,1*,1*,1*,1*,1*,1.2*" ColumnSpacing="10" Margin="0,2">
+                                <Grid ColumnDefinitions="1.2*,0.6*,1*,1*,1*,1*,1.2*" ColumnSpacing="10" Margin="0,2">
                                     <TextBlock Text="{Binding Datum, StringFormat='{}{0:dd/MM/yyyy}'}"/>
                                     <TextBlock Grid.Column="1" Text="{Binding DagNaam}"/>
-                                    <TextBlock Grid.Column="2" Text="{Binding Kontant, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
-                                    <TextBlock Grid.Column="3" Text="{Binding Cheque, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
-                                    <TextBlock Grid.Column="4" Text="{Binding Visa, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
-                                    <TextBlock Grid.Column="5" Text="{Binding Bancontact, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
-                                    <TextBlock Grid.Column="6" Text="{Binding Proton, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
-                                    <TextBlock Grid.Column="7" Text="{Binding Storting, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
-                                    <TextBlock Grid.Column="8" Text="{Binding Totaal, StringFormat='{}€ {0:#,##0.00}'}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding Bancontact, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="3" Text="{Binding Cash, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="4" Text="{Binding CreditCard, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="5" Text="{Binding Overschrijving, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="6" Text="{Binding Totaal, StringFormat='{}€ {0:#,##0.00}'}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -93,15 +89,13 @@
                     <!-- Totalen van de periode -->
                     <Border Grid.Row="2" Background="{DynamicResource SurfaceHeader}" Padding="10,8"
                             BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="0,1,0,0">
-                        <Grid ColumnDefinitions="1.2*,0.6*,1*,1*,1*,1*,1*,1*,1.2*" ColumnSpacing="10">
+                        <Grid ColumnDefinitions="1.2*,0.6*,1*,1*,1*,1*,1.2*" ColumnSpacing="10">
                             <TextBlock Text="Totaal" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="2" Text="{Binding Overzicht.Kontant, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
-                            <TextBlock Grid.Column="3" Text="{Binding Overzicht.Cheque, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
-                            <TextBlock Grid.Column="4" Text="{Binding Overzicht.Visa, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
-                            <TextBlock Grid.Column="5" Text="{Binding Overzicht.Bancontact, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
-                            <TextBlock Grid.Column="6" Text="{Binding Overzicht.Proton, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
-                            <TextBlock Grid.Column="7" Text="{Binding Overzicht.Storting, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
-                            <TextBlock Grid.Column="8" Text="{Binding Overzicht.Totaal, StringFormat='{}€ {0:#,##0.00}', FallbackValue=''}" FontWeight="Bold" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="2" Text="{Binding Overzicht.Bancontact, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="3" Text="{Binding Overzicht.Cash, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="4" Text="{Binding Overzicht.CreditCard, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="5" Text="{Binding Overzicht.Overschrijving, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="6" Text="{Binding Overzicht.Totaal, StringFormat='{}€ {0:#,##0.00}', FallbackValue=''}" FontWeight="Bold" HorizontalAlignment="Right"/>
                         </Grid>
                     </Border>
                 </Grid>
@@ -134,7 +128,7 @@
                                         <TextBlock Grid.Column="1" Text="{Binding SoortLabel}"/>
                                         <TextBlock Grid.Column="2" Text="{Binding Omschrijving}" TextTrimming="CharacterEllipsis"
                                                    ToolTip.Tip="{Binding Omschrijving}"/>
-                                        <TextBlock Grid.Column="3" Text="{Binding Betaalwijze}"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding BetaalwijzeLabel}"/>
                                         <TextBlock Grid.Column="4" Text="{Binding Bedrag, StringFormat='{}€ {0:#,##0.00}'}" HorizontalAlignment="Right"/>
                                     </Grid>
                                 </DataTemplate>

@@ -61,7 +61,7 @@ public class OntvangstServiceBetalingTests
         var factuurId = await SeedBestelbonAsync(scope.Factory);
         var sut = CreateSut(scope.Factory);
 
-        var na1 = await sut.RegistreerBetalingAsync(factuurId, 50m, DateTime.Today, Betaalwijze.Kontant);
+        var na1 = await sut.RegistreerBetalingAsync(factuurId, 50m, DateTime.Today, Betaalwijze.Cash);
         Assert.Equal(150m, na1.Rest);
         Assert.False(na1.IsBetaaldStatus);
 
@@ -86,7 +86,7 @@ public class OntvangstServiceBetalingTests
         var sut = CreateSut(scope.Factory);
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => sut.RegistreerBetalingAsync(factuurId, 250m, DateTime.Today, Betaalwijze.Visa));
+            () => sut.RegistreerBetalingAsync(factuurId, 250m, DateTime.Today, Betaalwijze.CreditCard));
         Assert.Contains("hoger dan wat nog te betalen is", ex.Message);
     }
 
@@ -97,11 +97,11 @@ public class OntvangstServiceBetalingTests
         var factuurId = await SeedBestelbonAsync(scope.Factory, totaal: 120m, voorschot: 0m);
         var sut = CreateSut(scope.Factory);
 
-        var stand = await sut.RegistreerBetalingAsync(factuurId, 120m, DateTime.Today.AddDays(-3), Betaalwijze.Storting);
+        var stand = await sut.RegistreerBetalingAsync(factuurId, 120m, DateTime.Today.AddDays(-3), Betaalwijze.Overschrijving);
 
         Assert.Equal(0m, stand.Rest);
         var b = Assert.Single(await sut.GetBetalingenAsync(factuurId));
-        Assert.Equal(Betaalwijze.Storting, b.Betaalwijze);
+        Assert.Equal(Betaalwijze.Overschrijving, b.Betaalwijze);
         Assert.Equal(DateTime.Today.AddDays(-3), b.Datum);
     }
 
@@ -112,9 +112,9 @@ public class OntvangstServiceBetalingTests
         var factuurId = await SeedBestelbonAsync(scope.Factory);
         var sut = CreateSut(scope.Factory);
 
-        await sut.RegistreerBetalingAsync(factuurId, 120m, DateTime.Today, Betaalwijze.Kontant);
-        await sut.RegistreerBetalingAsync(factuurId, 80m, DateTime.Today, Betaalwijze.Visa);
-        var visa = (await sut.GetBetalingenAsync(factuurId)).Single(b => b.Betaalwijze == Betaalwijze.Visa);
+        await sut.RegistreerBetalingAsync(factuurId, 120m, DateTime.Today, Betaalwijze.Cash);
+        await sut.RegistreerBetalingAsync(factuurId, 80m, DateTime.Today, Betaalwijze.CreditCard);
+        var visa = (await sut.GetBetalingenAsync(factuurId)).Single(b => b.Betaalwijze == Betaalwijze.CreditCard);
 
         await sut.VerwijderAsync(visa.Id);
 
