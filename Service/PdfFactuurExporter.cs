@@ -300,8 +300,6 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         return (rest, isBetaald);
     }
 
-    private static string BetaalwijzeLabel(Betaalwijze b) => b.ToString().ToLowerInvariant();
-
     private static void DrawTotals(ColumnDescriptor col, decimal brutoExcl, decimal brutoBtw, decimal totaalIncl, decimal voorschot, decimal teBetalen, bool isBtwVrijgesteld, decimal kortingPct = 0m, decimal kortingBedragIncl = 0m,
         IReadOnlyList<Ontvangst>? betalingen = null, bool isBetaald = false)
     {
@@ -367,7 +365,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             {
                 totaalCol.Item().Row(r =>
                 {
-                    r.RelativeItem().Text($"Betaald {b.Datum:dd/MM/yyyy} ({BetaalwijzeLabel(b.Betaalwijze)})");
+                    r.RelativeItem().Text($"Betaald {b.Datum:dd/MM/yyyy} ({b.Betaalwijze.Label()})");
                     r.ConstantItem(130).AlignRight().Text($"- {Eur(b.BedragIncl)}");
                 });
             }

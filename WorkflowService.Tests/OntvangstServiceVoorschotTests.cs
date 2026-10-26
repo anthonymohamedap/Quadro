@@ -52,7 +52,7 @@ public class OntvangstServiceVoorschotTests
         var id = await SeedOfferteAsync(scope.Factory);
         var sut = new OntvangstService(scope.Factory, new TestAuthService());
 
-        await sut.RegistreerVoorschotAsync(id, 50m, new DateTime(2026, 9, 1), Betaalwijze.Kontant);
+        await sut.RegistreerVoorschotAsync(id, 50m, new DateTime(2026, 9, 1), Betaalwijze.Cash);
         var totaal = await sut.RegistreerVoorschotAsync(id, 25m, new DateTime(2026, 9, 2), Betaalwijze.Bancontact);
 
         Assert.Equal(75m, totaal);
@@ -74,7 +74,7 @@ public class OntvangstServiceVoorschotTests
         var id = await SeedOfferteAsync(scope.Factory, legacyVoorschot: 100m);
         var sut = new OntvangstService(scope.Factory, new TestAuthService());
 
-        var totaal = await sut.RegistreerVoorschotAsync(id, 20m, DateTime.Today, Betaalwijze.Visa);
+        var totaal = await sut.RegistreerVoorschotAsync(id, 20m, DateTime.Today, Betaalwijze.CreditCard);
 
         Assert.Equal(120m, totaal);
     }
@@ -87,7 +87,7 @@ public class OntvangstServiceVoorschotTests
         var sut = new OntvangstService(scope.Factory, new TestAuthService());
 
         await sut.RegistreerVoorschotAsync(id, 80m, DateTime.Today, Betaalwijze.Bancontact);
-        await sut.RegistreerVoorschotAsync(id, 20m, DateTime.Today, Betaalwijze.Kontant);
+        await sut.RegistreerVoorschotAsync(id, 20m, DateTime.Today, Betaalwijze.Cash);
 
         await using (var db = await scope.Factory.CreateDbContextAsync())
             Assert.Equal(100m, (await db.Facturen.AsNoTracking().SingleAsync(f => f.OfferteId == id)).VoorschotBedrag);
@@ -111,6 +111,6 @@ public class OntvangstServiceVoorschotTests
         var id = await SeedOfferteAsync(scope.Factory);
         var sut = new OntvangstService(scope.Factory, new TestAuthService());
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => sut.RegistreerVoorschotAsync(id, 0m, DateTime.Today, Betaalwijze.Kontant));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => sut.RegistreerVoorschotAsync(id, 0m, DateTime.Today, Betaalwijze.Cash));
     }
 }

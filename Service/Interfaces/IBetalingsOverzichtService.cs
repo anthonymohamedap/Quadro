@@ -34,22 +34,21 @@ public sealed record BetalingsOverzichtRegel(
         _ => Soort.ToString()
     };
 
-    public decimal Kontant => Betaalwijze == Betaalwijze.Kontant ? Bedrag : 0m;
-    public decimal Cheque => Betaalwijze == Betaalwijze.Cheque ? Bedrag : 0m;
-    public decimal Visa => Betaalwijze == Betaalwijze.Visa ? Bedrag : 0m;
+    public string BetaalwijzeLabel => Betaalwijze.Label();
+
     public decimal Bancontact => Betaalwijze == Betaalwijze.Bancontact ? Bedrag : 0m;
-    public decimal Proton => Betaalwijze == Betaalwijze.Proton ? Bedrag : 0m;
-    public decimal Storting => Betaalwijze == Betaalwijze.Storting ? Bedrag : 0m;
+    public decimal Cash => Betaalwijze == Betaalwijze.Cash ? Bedrag : 0m;
+    public decimal CreditCard => Betaalwijze == Betaalwijze.CreditCard ? Bedrag : 0m;
+    public decimal Overschrijving => Betaalwijze == Betaalwijze.Overschrijving ? Bedrag : 0m;
 }
 
 /// <summary>Totalen per betaalwijze (basis voor een dag en voor de hele periode).</summary>
 public abstract class BetaalwijzeTotalen
 {
-    /// <summary>Kolomvolgorde zoals op de oude afdrukken van de kassa.</summary>
+    /// <summary>US-79 — kolomvolgorde op het scherm en op beide afdrukken.</summary>
     public static readonly IReadOnlyList<Betaalwijze> KolomVolgorde = new[]
     {
-        Betaalwijze.Kontant, Betaalwijze.Cheque, Betaalwijze.Visa,
-        Betaalwijze.Bancontact, Betaalwijze.Proton, Betaalwijze.Storting
+        Betaalwijze.Bancontact, Betaalwijze.Cash, Betaalwijze.CreditCard, Betaalwijze.Overschrijving
     };
 
     private readonly Dictionary<Betaalwijze, decimal> _perBetaalwijze;
@@ -64,12 +63,10 @@ public abstract class BetaalwijzeTotalen
 
     public decimal Voor(Betaalwijze betaalwijze) => _perBetaalwijze.GetValueOrDefault(betaalwijze);
 
-    public decimal Kontant => Voor(Betaalwijze.Kontant);
-    public decimal Cheque => Voor(Betaalwijze.Cheque);
-    public decimal Visa => Voor(Betaalwijze.Visa);
     public decimal Bancontact => Voor(Betaalwijze.Bancontact);
-    public decimal Proton => Voor(Betaalwijze.Proton);
-    public decimal Storting => Voor(Betaalwijze.Storting);
+    public decimal Cash => Voor(Betaalwijze.Cash);
+    public decimal CreditCard => Voor(Betaalwijze.CreditCard);
+    public decimal Overschrijving => Voor(Betaalwijze.Overschrijving);
     public decimal Totaal { get; }
 }
 
