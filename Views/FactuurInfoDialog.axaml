@@ -60,6 +60,16 @@
                     <TextBlock Text="{Binding ValidatieFout, TargetNullValue=''}" Classes="body" Foreground="{DynamicResource Danger}" TextWrapping="Wrap"/>
                 </Border>
 
+                <!-- US-81: niet blokkerend -->
+                <Border Background="{DynamicResource WarningBg}"
+                        BorderBrush="{DynamicResource Warning}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="10"
+                        IsVisible="{Binding HasAfhaalWaarschuwing}">
+                    <TextBlock Text="{Binding AfhaalWaarschuwing, TargetNullValue=''}" Classes="body" Foreground="{DynamicResource Warning}" TextWrapping="Wrap"/>
+                </Border>
+
                 <TextBlock Text="Na bevestigen wordt meteen een PDF-preview van de bestelbon geopend."
                            Classes="body"
                            Foreground="{DynamicResource TextSecondary}"

@@ -23,6 +23,11 @@
 				Padding="24,10">
 			<StackPanel Orientation="Horizontal" Spacing="28" VerticalAlignment="Center">
 				<StackPanel Spacing="1">
+					<TextBlock Text="Offerte" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+					<TextBlock Text="{Binding OfferteNummerTekst}" FontWeight="SemiBold"
+							   ToolTip.Tip="Een nieuwe offerte krijgt haar nummer bij de eerste keer opslaan of afdrukken."/>
+				</StackPanel>
+				<StackPanel Spacing="1">
 					<TextBlock Text="Klant" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
 					<TextBlock Text="{Binding SelectedKlant.Achternaam, TargetNullValue='—'}"
 							   FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
