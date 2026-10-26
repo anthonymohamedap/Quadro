@@ -147,8 +147,8 @@
 
           <WrapPanel Grid.Row="4">
             <Button Classes="AccentBtn" Content="Opslaan" Command="{Binding SaveCommand}" Margin="0,0,8,6" Padding="12,8"/>
-            <Button Classes="AccentBtn" Content="Markeer als klaar voor export" Command="{Binding MarkeerKlaarVoorExportCommand}" Margin="0,0,8,6" Padding="12,8"/>
-            <Button Classes="AccentBtn" Content="Export PDF" Command="{Binding ExportPdfCommand}" Margin="0,0,8,6" Padding="12,8"/>
+            <Button Classes="AccentBtn" Content="Afdrukken" Command="{Binding AfdrukkenCommand}" Margin="0,0,8,6" Padding="12,8"
+                    ToolTip.Tip="Maakt de PDF in Documenten › QuadroApp › Bestelbonnen en opent hem — ook als de bon al betaald is"/>
             <Button Classes="AccentBtn" Content="Rest betaald" ToolTip.Tip="Registreert het restbedrag als betaling met de gekozen betaalwijze en zet de bestelbon op Betaald" Command="{Binding MarkeerBetaaldCommand}" Margin="0,0,0,6" Padding="12,8"/>
           </WrapPanel>
         </Grid>

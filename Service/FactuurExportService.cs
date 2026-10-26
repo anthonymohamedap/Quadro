@@ -6,6 +6,7 @@ using QuadroApp.Service.Interfaces;
 using QuadroApp.Service.Model;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -74,6 +75,49 @@ public sealed class FactuurExportService : IFactuurExportService
 
         await LaadBetalingenAsync(db, factuur);
         return await exporter.ExportAsync(factuur, exportFolder);
+    }
+
+    /// <summary>US-82 — vaste, terug te vinden map voor afgedrukte bestelbonnen.</summary>
+    public static string BestelbonnenMap => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "QuadroApp", "Bestelbonnen");
+
+    public async Task<ExportResult> AfdrukkenAsync(int factuurId, string? exportFolder = null)
+    {
+        var folder = exportFolder ?? BestelbonnenMap;
+        _logger?.LogInformation("Bestelbon afdrukken. FactuurId={FactuurId}, Folder={Folder}", factuurId, folder);
+        await using var db = await _factory.CreateDbContextAsync();
+
+        var factuur = await db.Facturen.Include(x => x.Lijnen.OrderBy(l => l.Sortering)).FirstOrDefaultAsync(x => x.Id == factuurId);
+        if (factuur is null)
+            throw new InvalidOperationException("Bestelbon niet gevonden.");
+
+        if (!_exporters.TryGetValue(ExportFormaat.Pdf, out var exporter))
+            throw new InvalidOperationException("Geen PDF-exporter geregistreerd.");
+
+        await LaadBetalingenAsync(db, factuur);
+
+        ExportResult result;
+        try
+        {
+            result = await exporter.ExportAsync(factuur, folder);
+        }
+        catch (IOException ex)
+        {
+            // Typisch op Windows: de vorige PDF van deze bon staat nog open in een PDF-lezer.
+            _logger?.LogWarning(ex, "Bestelbon afdrukken mislukt (bestand in gebruik). FactuurId={FactuurId}", factuurId);
+            return ExportResult.Fail("De PDF van deze bestelbon is nog geopend. Sluit hem en probeer opnieuw.");
+        }
+
+        if (!result.Success)
+            return result;
+
+        if (factuur.Status is FactuurStatus.Draft or FactuurStatus.KlaarVoorExport)
+            factuur.Status = FactuurStatus.Geexporteerd;
+        factuur.ExportPad = result.BestandPad;
+        factuur.BijgewerktOp = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        return result;
     }
 
     /// <summary>US-73 — betalingen meegeven aan de PDF (oudste eerst).</summary>
