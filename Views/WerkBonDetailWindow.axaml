@@ -176,6 +176,12 @@
                                                Foreground="{DynamicResource TextSecondary}"
                                                TextTrimming="CharacterEllipsis"
                                                ToolTip.Tip="{Binding OfferteRegel.TypeLijst.Artikelnummer}"/>
+                                    <!-- US-80: standaardkader met omschrijving -->
+                                    <TextBlock Text="{Binding OfferteRegel.StandaardkaderLabel}"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip.Tip="{Binding OfferteRegel.StandaardkaderLabel}"
+                                               IsVisible="{Binding OfferteRegel.StandaardkaderLabel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                                     <TextBlock Text="{Binding OfferteRegel.AfwerkingSamenvatting, StringFormat='Afwerking: {0}'}"
                                                Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"
                                                ToolTip.Tip="{Binding OfferteRegel.AfwerkingSamenvatting}"

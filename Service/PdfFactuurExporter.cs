@@ -510,8 +510,9 @@ public sealed class PdfFactuurExporter : IFactuurExporter
 
         // "Lijstwerk volgens bestelbon." fallback removed — not needed on factuur.
 
-        // US-68: standaardkader-lijn (artikel zonder maat): "Standaardkader <naam>", geen lijstcode.
-        var isStandaardkader = string.Equals(dimsPart, FactuurWorkflowService.StandaardkaderMarker, StringComparison.OrdinalIgnoreCase);
+        // US-68/US-80: standaardkader-lijn: "Standaardkader <naam – omschrijving>"; de afmeting
+        // (indien ingegeven) staat achter de markering en is hierboven al uitgelezen.
+        var isStandaardkader = FactuurWorkflowService.IsStandaardkaderSegment(dimsPart);
         if (isStandaardkader && !string.IsNullOrWhiteSpace(artikelnummer))
             artikelnummer = $"Standaardkader {artikelnummer}";
 

@@ -161,6 +161,10 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
     // Nederlandse cultuur voor maand-/dagnamen in de kalender (voluit geschreven, NL).
     private static readonly CultureInfo Nl = CultureInfo.GetCultureInfo("nl-BE");
 
+    /// <summary>US-80 — "Standaardkader C2 – omschrijving" of het artikelnummer van de lijst.</summary>
+    private static string? LijstOfKader(OfferteRegel r)
+        => r.KantKlaarKader is not null ? r.StandaardkaderLabel : r.TypeLijst?.Artikelnummer;
+
     private static string Capitalize(string s) =>
         string.IsNullOrEmpty(s) ? s : char.ToUpper(s[0], Nl) + s.Substring(1);
 
@@ -277,6 +281,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
 
         var regels = await db.OfferteRegels
             .Include(r => r.TypeLijst)
+            .Include(r => r.KantKlaarKader)   // US-80
             .Where(r => r.OfferteId == offerteId)
             .ToListAsync();
 
@@ -284,12 +289,14 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             regels.Select(r => new RegelPlanItem
             {
                 RegelId = r.Id,
-                Label = $"{r.AantalStuks}x {r.BreedteCm}×{r.HoogteCm} — {r.TypeLijst?.Artikelnummer ?? "?"}",
+                Label = $"{r.AantalStuks}x {r.BreedteCm}×{r.HoogteCm} — {LijstOfKader(r) ?? "?"}",
                 Titel = string.IsNullOrWhiteSpace(r.Titel) ? "Inlijsting" : r.Titel!,
                 Afmeting = $"{r.AantalStuks}× {r.BreedteCm:0.#}×{r.HoogteCm:0.#} cm",
-                LijstLabel = r.TypeLijst is null
-                    ? "Geen lijst gekozen"
-                    : $"{r.TypeLijst.Artikelnummer} · {r.TypeLijst.Soort}",
+                LijstLabel = r.KantKlaarKader is not null
+                    ? r.StandaardkaderLabel   // US-80 (P6: was "Geen lijst gekozen")
+                    : r.TypeLijst is null
+                        ? "Geen lijst gekozen"
+                        : $"{r.TypeLijst.Artikelnummer} · {r.TypeLijst.Soort}",
                 IsSelected = false
             })
         );
@@ -403,6 +410,8 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
                     .ThenInclude(o => o.Klant)
             .Include(t => t.OfferteRegel)
                 .ThenInclude(r => r!.TypeLijst)
+            .Include(t => t.OfferteRegel)
+                .ThenInclude(r => r!.KantKlaarKader)   // US-80
             .Where(t => t.GeplandVan.Date == SelectedDate.Date)
             .OrderBy(t => t.GeplandVan)
             .ToListAsync();
@@ -596,6 +605,8 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
                     .ThenInclude(o => o.Klant)
             .Include(t => t.OfferteRegel)
                 .ThenInclude(r => r!.TypeLijst)
+            .Include(t => t.OfferteRegel)
+                .ThenInclude(r => r!.KantKlaarKader)   // US-80
             .Where(t => t.GeplandVan >= weekStart && t.GeplandVan < weekEnd)
             .OrderBy(t => t.GeplandVan)
             .ToListAsync();
@@ -612,8 +623,8 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
                 Datum = t.GeplandVan.Date,
                 KlantNaam = t.WerkBon?.Offerte?.Klant?.Achternaam ?? "",
                 Afmeting = r is null ? "" : $"{r.AantalStuks}× {r.BreedteCm}×{r.HoogteCm}",
-                Lijst = r?.TypeLijst?.Artikelnummer ?? "",
-                LijstType = r?.TypeLijst?.Soort ?? "",
+                Lijst = r is null ? "" : LijstOfKader(r) ?? "",
+                LijstType = r?.KantKlaarKader is not null ? "Standaardkader" : r?.TypeLijst?.Soort ?? "",
                 Dag = Capitalize(t.GeplandVan.ToString("ddd dd/MM", Nl))
             });
         }
