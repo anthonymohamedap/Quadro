@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QuadroApp.Model.DB;
+using QuadroApp.Service;
 using System;
 
 namespace QuadroApp.ViewModels;
@@ -21,6 +22,12 @@ public partial class FactuurInfoDialogViewModel : ObservableObject
     public string KlantNaam => _factuur.KlantNaam;
     public bool HasValidatieFout => !string.IsNullOrWhiteSpace(ValidatieFout);
 
+    /// <summary>US-81 — niet-blokkerende waarschuwing als er afgehaald wordt vóór de besteldatum.</summary>
+    public string? AfhaalWaarschuwing => FactuurDatum is null
+        ? null
+        : AfhaalDatumControle.Waarschuwing(FactuurDatum.Value.Date, AfhaalDatumControle.VroegsteAfhaalDatum(_factuur));
+    public bool HasAfhaalWaarschuwing => !string.IsNullOrWhiteSpace(AfhaalWaarschuwing);
+
     public FactuurInfoDialogViewModel(Factuur factuur)
     {
         _factuur = factuur;
@@ -31,6 +38,12 @@ public partial class FactuurInfoDialogViewModel : ObservableObject
     }
 
     partial void OnValidatieFoutChanged(string? value) => OnPropertyChanged(nameof(HasValidatieFout));
+
+    partial void OnFactuurDatumChanged(DateTimeOffset? value)
+    {
+        OnPropertyChanged(nameof(AfhaalWaarschuwing));
+        OnPropertyChanged(nameof(HasAfhaalWaarschuwing));
+    }
 
     [RelayCommand]
     private void Bevestig()
