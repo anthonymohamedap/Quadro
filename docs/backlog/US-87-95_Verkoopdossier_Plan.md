@@ -50,7 +50,7 @@ Op `Offerte`:
 
 Op `WerkTaak`: `VoltooidOp` (`DateTime?`) en `VoltooidDoor` (`string?`, initialen) voor de voortgang per inlijsting in stap 3 (K08: "ingelijst en nagekeken 26/10 · AB"). Vandaag markeert `MarkeerTaakAlsVoltooidAsync` dat met `Resource = "Voltooid"` en geen knop roept het aan; dat wordt een echt veld.
 
-`Betaalwijze` (opgeslagen als string): enum wordt `Bancontact, Cash, CreditCard, Overschrijving` met data-update in dezelfde migratie: `Kontant→Cash`, `Visa→CreditCard`, `Storting→Overschrijving`. `Cheque` en `Proton` blijven als `[Obsolete]`-waarden bestaan voor historische ontvangsten, maar staan niet meer in keuzelijsten (zie open vraag 2).
+`Betaalwijze` (opgeslagen als string): enum wordt `Bancontact, Cash, CreditCard, Overschrijving` met data-update in dezelfde migratie: `Kontant→Cash`, `Visa→CreditCard`, `Storting→Overschrijving`. `Cheque` en `Proton` → `Cash` (afgesproken in US-79; eerst nakijken of ze in productie voorkomen). **Dit gebeurt al in de sprint (US-79)**; dit plan voegt hier niets aan toe.
 
 Migratie via `.\Scripts\add-migration.ps1 Verkoopdossier` (SQLite + Npgsql), nooit handmatige SQL.
 
@@ -110,17 +110,17 @@ Nagekeken in `docs/backlog` en in de code (26/10/2026). Wat al gebouwd is, wordt
 | **US-76** Afrekenen bij afhaling | betaling + Afgehaald in één transactie, gesplitst of later betalen (werkbonvenster + planning) | Logica wordt hergebruikt in stap 5; enkel de UI verhuist. |
 | **US-69 / US-70 / US-73** Voorschot, betalingen op bestelbon, betalingen op PDF | `Ontvangst` met `OfferteId`/`FactuurId`, rest op de PDF | Blijft. "Betalingen in deze verkoop" = ontvangsten met dit `OfferteId` of het `FactuurId` van de bestelbon. |
 | **US-58 / US-68 / US-75** Standaardkader | standaardkader in de offerte; US-75 (prijs incl. btw) nog open | US-91/94 tonen omschrijving + afmeting overal (US-80). US-75 los houden. |
-| **US-45** Bestelbonnen in het Exportcenter + `FactuurExportService` | export vereist status KlaarVoorExport en zet Geexporteerd; `OntvangstService` zet een bon terug naar KlaarVoorExport/Geexporteerd | De statussen blijven in de database (boekhouding/Exportcenter). **Afdrukken verandert de status niet** en heeft geen statusvoorwaarde; in de UI heten Draft/KlaarVoorExport/Geexporteerd samen "Open". |
+| **US-45** Bestelbonnen in het Exportcenter + `FactuurExportService` | export vereist status KlaarVoorExport en zet Geexporteerd; `OntvangstService` zet een bon terug naar KlaarVoorExport/Geexporteerd | De statussen blijven in de database (boekhouding/Exportcenter). Afdrukken heeft geen statusvoorwaarde; zoals US-82 AC 3 afspreekt zet het eerste afdrukken een Draft/KlaarVoorExport-bon intern op Geexporteerd (exportpad bewaard), Betaald blijft Betaald. In de UI heten Draft/KlaarVoorExport/Geexporteerd samen "Open" (US-85). |
 | **UI_OPTIMIZATION_PLAN** | tokens, style-classes, geen hex/`FontSize=` in views | Geldt voor elk nieuw scherm (Verkopen, dossier, preview). Kleuren uit de canvas = bestaande tokens (`BrandYellow`, `BrandDark`, …). |
 | **BL-010 / BL-014** (Backlog.docx) | `OfferteViewModel` is een god-object (nu 1 798 regels) met handmatige property-forwarders | US-91 splitst niet verder op dan nodig om in de stap te passen; geen extra forwarders bijmaken. |
-| **US-79–86** (sprint nov 2026) | het bestand `Sprint_2026-11_US-79-86.md` waarnaar de canvas verwijst, staat **niet** in de repo | Mapping hieronder is gebaseerd op de canvas. Graag dat bestand toevoegen om de acceptatiecriteria naast elkaar te leggen. |
+| **US-79–86** (sprint nov 2026) | `Sprint_2026-11_US-79-86.md` op branch `docs/sprint-november-2026` (nog niet in main); release v1.3.26 ten laatste 11/11, demo bij Veerle 12/11 | Zie hieronder: de sprint gaat eerst en wordt zo gebouwd dat het dossier erop voortbouwt. |
 
 ## Stories (volgorde)
 
 | # | Story | Fase | ± |
 |---|---|---|---|
 | 1 | **US-87** Fundament: stapbepaling, datamodel, `VerkoopDossierService` | A | 5–7u |
-| 2 | **US-88** Betaalwijzen Bancontact / Cash / Credit card / Overschrijving (= US-79) | A | 1,5–2u |
+| 2 | ~~**US-88** Betaalwijzen~~ — vervalt: wordt US-79 in de sprint | — | 0u |
 | 3 | **US-89** Scherm Verkopen (K01) + Nieuwe verkoop (K02) | B | 4–6u |
 | 4 | **US-90** Dossier-schil: kop, documentchips, stappenbalk, vorige stap bekijken | B | 4–5u |
 | 5 | **US-91** Stap 1 Offerte in het dossier + voorschot (K03, K05) | B | 4–6u |
@@ -129,9 +129,25 @@ Nagekeken in `docs/backlog` en in de code (26/10/2026). Wat al gebouwd is, wordt
 | 8 | **US-94** Afdrukken offerte / werkbon / bestelbon (K04, K07, K11) | C | 5–7u |
 | 9 | **US-95** Navigatie opruimen, Home, oude schermen weg | D | 2–3u |
 
-Totaal ± 36–50u. Elke story = eigen feature-branch + PR; na fase B is er al een bruikbaar dossier naast de oude schermen.
+Totaal ± 34–48u (zonder US-88, dat in de sprint als US-79 gebeurt). Elke story = eigen feature-branch + PR; na fase B is er al een bruikbaar dossier naast de oude schermen.
 
-Koppeling met de lopende stories US-79–86: US-79 → US-88; US-80 (standaardkaderinfo) wordt in US-91/94 meegenomen; US-81 → US-87/91; US-82 → US-94; US-83 → US-87/93; US-84 → US-89; US-85 (namen) → US-89/90/95; US-86 → US-95.
+### Verhouding tot de sprint van november (US-79 → US-86)
+
+De sprint (± 13–17,5u, release ten laatste 11/11) lost dezelfde pijnpunten op **binnen de huidige schermen**; dit plan vervangt die schermen daarna door het dossier. Volgorde: **eerst de sprint, dan dit plan als volgende versie.** Om geen werk weg te gooien, worden de sprintstories zo gebouwd dat het dossier ze hergebruikt:
+
+| Sprint | Bouwen als | Later in dit plan |
+|---|---|---|
+| US-79 Betaalwijzen | zoals beschreven (Cheque/Proton → Cash) | US-88 vervalt |
+| US-80 Standaardkaders (omschrijving, afwerkingen) | zoals beschreven | US-91/94 tonen het gewoon; niets opnieuw |
+| US-81 Offertenummer 0 | kies de optie **"krijgt meteen een nummer"** (niet "eerst automatisch opslaan") + eenmalige correctie + waarschuwing afhaaldatum | = US-87 AC 3; `StartVerkoopAsync` gebruikt dezelfde nummering |
+| US-82 Bestelbon afdrukken | als kleine `IDocumentAfdrukService` (bestelbon eerst), vaste map `Documenten/QuadroApp/Bestelbonnen` | US-94 voegt offerte, werkbon en het voorbeeldvenster toe |
+| US-83 Stappenbalk in de offerte | stapbepaling meteen als **`VerkoopStapResolver`** (incl. tests), de balk als herbruikbare UserControl `StappenBalk` | US-87 krijgt de resolver kant-en-klaar; US-90 hergebruikt de balk; de knop "volgende stap" wordt de voetbalk van het dossier |
+| US-84 Offertelijst per fase | tabs + tellers op basis van de resolver, query in een aparte service (`VerkoopOverzichtService`) | US-89 (K01) gebruikt dezelfde service, met 8 tabs i.p.v. 5 |
+| US-85 Gewone woorden | één `StatusLabels`-helper/converter voor offerte, werkbon en bestelbon | overal hergebruikt; US-95 doet de rest van de namen |
+| US-86 Beginscherm | queries "vandaag af te halen" / "nog te betalen" in `VerkoopOverzichtService` | dezelfde kaarten bovenaan K01 |
+
+Na de sprint krimpt US-87 tot datamodel + `VerkoopDossierService`, en US-89 tot de nieuwe lijst-UI.
+
 
 ---
 
@@ -153,14 +169,14 @@ Technisch: `Service/Verkoop/VerkoopStap.cs`, `VerkoopStapResolver.cs`, `VerkoopD
 
 ---
 
-### US-88 — Betaalwijzen (= US-79)
+### ~~US-88 — Betaalwijzen~~ (vervalt: zie US-79 in de sprint; onderstaande tekst enkel ter referentie)
 
 **Als** medewerker **wil ik** enkel Bancontact, Cash, Credit card en Overschrijving zien, **zodat** de keuze klopt met hoe klanten echt betalen.
 
 1. Overal dezelfde vier, in die volgorde: voorschot, afrekenen, winkelverkoop, betalingen op de bestelbon.
 2. Wisselgeldveld "Ontvangen (cash)" verschijnt bij Cash.
-3. Overzicht betalingen: vier kolommen. Oude Cheque/Proton-ontvangsten tellen nog mee in een kolom "Andere" die alleen verschijnt als er zo'n ontvangst in de periode is.
-4. Bestaande ontvangsten worden omgezet (Kontant→Cash, Visa→Credit card, Storting→Overschrijving).
+3. Overzicht betalingen: vier kolommen.
+4. Bestaande ontvangsten worden omgezet (Kontant→Cash, Visa→Credit card, Storting→Overschrijving, Cheque/Proton→Cash).
 
 Technisch: `Betaalwijze.cs` + weergavenaam (`BetaalwijzeLabels`), dezelfde migratie als US-87 of een eigen, `OverzichtBetalingenViewModel`, `PdfBetalingsOverzichtExporter`, `WinkelVerkopenViewModel`.
 
@@ -274,7 +290,7 @@ Technisch: `IDocumentAfdrukService` + `DocumentPreviewWindow` (QuestPDF `Generat
 ## Open vragen (voor Veerle / Anthony)
 
 1. **Vorige stap**: alleen terug *bekijken* (zoals het prototype), of moet een stap ook echt teruggezet kunnen worden (bv. bestelling terug naar offerte omdat de klant nog iets wijzigt)? Dit plan gaat uit van alleen bekijken; wijzigen van de offerte na bevestigen → aparte story.
-2. **Cheque en Proton**: zijn er nog historische ontvangsten mee die in het overzicht moeten blijven? Anders kunnen ze volledig weg.
+2. ~~Cheque en Proton~~ — beslist in US-79: worden Cash.
 3. **Annuleren met voorschot**: wordt het voorschot terugbetaald (negatieve ontvangst *Correctie*) of blijft het staan?
 4. **Printer en exemplaren** in de app (K04/K11 tonen een printerkeuze en "Exemplaren 2"): nodig, of volstaat de printdialoog van macOS? Rechtstreeks afdrukken vanuit Avalonia is niet cross-platform; via de systeemviewer wel.
 5. **Bestelbon bij overslaan**: overslaan van Bestelling + Productie maakt meteen de bestelbon aan (K09). Ook als alleen Bestelling wordt overgeslagen? Plan: nee, die ontstaat bij "Klaar".
