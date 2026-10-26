@@ -8,7 +8,7 @@
     x:Class="QuadroApp.Views.OfferteView"
     x:DataType="vm:OfferteViewModel">
 
-	<Grid RowDefinitions="Auto,Auto,*,Auto"
+	<Grid RowDefinitions="Auto,Auto,Auto,*,Auto"
           Background="{DynamicResource SurfaceMutedAlt}"
           TextElement.Foreground="{DynamicResource TextPrimary}">
 
@@ -55,8 +55,11 @@
 			</StackPanel>
 		</Border>
 
+		<!-- ================= STAPPENBALK (US-83) ================= -->
+		<controls:StappenBalk Grid.Row="2" DataContext="{Binding Workflow.StappenBalk}"/>
+
 		<!-- ================= BODY ================= -->
-		<Grid Grid.Row="2"
+		<Grid Grid.Row="3"
                   Margin="24"
                   ColumnDefinitions="1*,1.05*"
                   ColumnSpacing="24">
@@ -911,7 +914,7 @@
 			</Grid>
 
 		<!-- ================= STICKY FOOTER ================= -->
-		<Border Grid.Row="3"
+		<Border Grid.Row="4"
                 Background="{DynamicResource Surface}"
                 BorderBrush="{DynamicResource BorderSubtle}"
                 BorderThickness="0,1,0,0"
