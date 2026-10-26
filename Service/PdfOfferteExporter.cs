@@ -125,8 +125,8 @@ public sealed class PdfOfferteExporter
     {
         var titel = !string.IsNullOrWhiteSpace(r.Titel)
             ? r.Titel
-            : r.KantKlaarKader is { } standaard
-                ? $"Standaardkader {standaard.Naam}"   // US-68
+            : r.KantKlaarKader is not null
+                ? r.StandaardkaderLabel   // US-68/US-80
                 : !string.IsNullOrWhiteSpace(r.TypeLijst?.Artikelnummer)
                     ? r.TypeLijst!.Artikelnummer
                     : $"Werkstuk {index}";
@@ -142,8 +142,13 @@ public sealed class PdfOfferteExporter
             });
 
             var metaParts = new List<string>();
-            if (r.KantKlaarKader is null && r.BreedteCm > 0 && r.HoogteCm > 0)   // standaardkader: geen maat (US-68)
-                metaParts.Add($"{r.BreedteCm:0.##} × {r.HoogteCm:0.##} cm");
+            var maat = r.BreedteCm > 0 && r.HoogteCm > 0 ? $"{r.BreedteCm:0.##} × {r.HoogteCm:0.##} cm" : null;
+            // US-80: bij een standaardkader met eigen titel komt "Standaardkader C2 – omschrijving · B × H cm"
+            // onder de titel (zonder titel is het kader zelf de titel).
+            if (r.KantKlaarKader is not null && !string.IsNullOrWhiteSpace(r.Titel))
+                metaParts.Add(maat is null ? r.StandaardkaderLabel : $"{r.StandaardkaderLabel} · {maat}");
+            else if (maat is not null)
+                metaParts.Add(maat);
             if (!string.IsNullOrWhiteSpace(r.TypeLijst?.Artikelnummer) && !string.IsNullOrWhiteSpace(r.Titel))
                 metaParts.Add($"lijst: {r.TypeLijst!.Artikelnummer}");
             if (!string.IsNullOrWhiteSpace(r.InlegLabel))
