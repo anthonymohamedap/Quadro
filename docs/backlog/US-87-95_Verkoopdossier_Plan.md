@@ -48,6 +48,8 @@ Op `Offerte`:
 - `OverslaanReden` (`string?`, max 200)
 - `GeannuleerdOp` (`DateTime?`), `AnnuleerReden` (`string?`, max 300)
 
+Op `WerkTaak`: `VoltooidOp` (`DateTime?`) en `VoltooidDoor` (`string?`, initialen) voor de voortgang per inlijsting in stap 3 (K08: "ingelijst en nagekeken 26/10 · AB"). Vandaag markeert `MarkeerTaakAlsVoltooidAsync` dat met `Resource = "Voltooid"` en geen knop roept het aan; dat wordt een echt veld.
+
 `Betaalwijze` (opgeslagen als string): enum wordt `Bancontact, Cash, CreditCard, Overschrijving` met data-update in dezelfde migratie: `Kontant→Cash`, `Visa→CreditCard`, `Storting→Overschrijving`. `Cheque` en `Proton` blijven als `[Obsolete]`-waarden bestaan voor historische ontvangsten, maar staan niet meer in keuzelijsten (zie open vraag 2).
 
 Migratie via `.\Scripts\add-migration.ps1 Verkoopdossier` (SQLite + Npgsql), nooit handmatige SQL.
@@ -65,7 +67,7 @@ Nieuwe service bovenop de bestaande (`IWorkflowService`, `IWerkBonWorkflowServic
 | `SlaStappenOverAsync(id, stappen, reden)` | zet de tussenliggende werkbonstatussen in één keer, bewaart flags + reden, maakt bestelbon | nieuw |
 | `RekenAfEnHaalAfAsync(id, bedrag, betaalwijze, ontvangen?)` | hergebruikt US-76-logica (betaling + Afgehaald, gesplitst of later) | afrekenblok werkbon |
 | `HaalAfZonderBetalenAsync(id)` | werkbon → Afgehaald, rest blijft open | idem |
-| `AnnuleerAsync(id, reden)` | offerte + bestelbon → Geannuleerd, planning-taken weg, voorraadreservaties vrij (`ReleaseReservationsForWerkBonAsync`) | "Naar archief" als enige uitweg (P12) |
+| `AnnuleerAsync(id, reden)` | hergebruikt `ChangeOfferteStatusAsync(Geannuleerd)` (geeft voorraad vrij, annuleert open leveranciersbestellingen, archiveert een snapshot van de werkbon) + reden bewaren + bestelbon → Geannuleerd + planning-taken weg | "Naar archief" als enige uitweg (P12) |
 
 **Statussynchronisatie**: `OfferteStatusPropagation` blijft, maar de aanroep in `WerkBonWorkflowService` bij *inplannen* (regels 111/226/291–302) verdwijnt; offerte → InProductie gebeurt alleen nog in `StartProductieAsync`. De transitietabellen in `WorkflowService` blijven de bewaker; `SlaStappenOverAsync` doorloopt ze stap voor stap binnen één transactie in plaats van ze te omzeilen.
 
@@ -90,6 +92,28 @@ Bestelbon afdrukken werkt **in elke status** (P2, US-82); de knoppen "Markeer al
 - **K06** stap 2 van het dossier → de view met de werkbonregels van deze verkoop.
 
 De drie `new PlanningCalendarWindow` (`HomeViewModel:123`, `OfferteWorkflowViewModel:170/215`) verdwijnen. `WeekWerkLijstWindow` mag een venster blijven (afdrukbare weeklijst).
+
+## Samenhang met bestaande stories
+
+Nagekeken in `docs/backlog` en in de code (26/10/2026). Wat al gebouwd is, wordt hergebruikt; waar het concept een eerdere beslissing omkeert, staat het hier expliciet.
+
+| Story | Wat er al is | Gevolg voor dit plan |
+|---|---|---|
+| **US-42** Statussync offerte ↔ werkbon ↔ bestelbon | `OfferteStatusPropagation`: werkbon/bestelbon zetten de offerte vooruit, transactioneel | Blijft. Enige wijziging: inplannen zet de offerte niet meer op InProductie (US-51-aanroep in `WerkBonWorkflowService`), dat doet nu "Start productie" (P10). |
+| **US-48** Status-reconciliatie | `OfferteStatusReconciliatieService.BepaalDoelStatus(werkbon, factuur)` leidt de offertestatus al af | `VerkoopStapResolver` bouwt hierop voort, zodat stap en offertestatus nooit verschillen. Extra test: voor elke combinatie zijn resolver en `BepaalDoelStatus` het eens. |
+| **US-56** Offertestatus manueel wijzigen | knoppen Concept ↔ Verzonden ↔ Goedgekeurd, ook terug als correctie | Het concept kent geen aparte stap Verzonden. Voorstel: **Offerte afdrukken zet Concept → Verzonden automatisch** (K01 toont "Offerte · afgedrukt"); Goedgekeurd = "Klant akkoord". Terug naar Concept enkel zolang er geen werkbon is (lost P15 op). → open vraag 7. |
+| **US-57** Offerte-PDF | `PdfOfferteExporter` + bestandskiezer | Exporter blijft; de bestandskiezer wordt de vaste map (US-94). |
+| **US-27** Plandatum = afhaaldatum | plannen zet `OfferteRegel.AfhaalDatum` = laatste plandag; handmatig overschrijven mag | Blijft zo. Stap 4 krijgt "Afhalen wijzigen" als die handmatige overschrijving (K10). |
+| **US-21** Plannen per regel | aparte datums per inlijsting | Blijft; zit in de planner in stap 2. |
+| **US-49 / US-50** Planning-redesign + drag & drop | KPI's, dagtegels, dagdetail; code-behind `DayTile_PointerPressed`, `OnDataContextChanged` en DnD via `DataTransfer` | Bij Window → UserControl (US-92) moet die code-behind letterlijk mee; dat is het grootste risico van fase C. |
+| **US-51** Werkbonnenlijst + werkbonvenster | bewuste keuze (29/07) voor een **modaal** `WerkBonDetailWindow` met "Open offerte" | **Het concept draait dit om**: het werkbonvenster verdwijnt in het dossier. Akkoord nodig vóór US-95. |
+| **US-76** Afrekenen bij afhaling | betaling + Afgehaald in één transactie, gesplitst of later betalen (werkbonvenster + planning) | Logica wordt hergebruikt in stap 5; enkel de UI verhuist. |
+| **US-69 / US-70 / US-73** Voorschot, betalingen op bestelbon, betalingen op PDF | `Ontvangst` met `OfferteId`/`FactuurId`, rest op de PDF | Blijft. "Betalingen in deze verkoop" = ontvangsten met dit `OfferteId` of het `FactuurId` van de bestelbon. |
+| **US-58 / US-68 / US-75** Standaardkader | standaardkader in de offerte; US-75 (prijs incl. btw) nog open | US-91/94 tonen omschrijving + afmeting overal (US-80). US-75 los houden. |
+| **US-45** Bestelbonnen in het Exportcenter + `FactuurExportService` | export vereist status KlaarVoorExport en zet Geexporteerd; `OntvangstService` zet een bon terug naar KlaarVoorExport/Geexporteerd | De statussen blijven in de database (boekhouding/Exportcenter). **Afdrukken verandert de status niet** en heeft geen statusvoorwaarde; in de UI heten Draft/KlaarVoorExport/Geexporteerd samen "Open". |
+| **UI_OPTIMIZATION_PLAN** | tokens, style-classes, geen hex/`FontSize=` in views | Geldt voor elk nieuw scherm (Verkopen, dossier, preview). Kleuren uit de canvas = bestaande tokens (`BrandYellow`, `BrandDark`, …). |
+| **BL-010 / BL-014** (Backlog.docx) | `OfferteViewModel` is een god-object (nu 1 798 regels) met handmatige property-forwarders | US-91 splitst niet verder op dan nodig om in de stap te passen; geen extra forwarders bijmaken. |
+| **US-79–86** (sprint nov 2026) | het bestand `Sprint_2026-11_US-79-86.md` waarnaar de canvas verwijst, staat **niet** in de repo | Mapping hieronder is gebaseerd op de canvas. Graag dat bestand toevoegen om de acceptatiecriteria naast elkaar te leggen. |
 
 ## Stories (volgorde)
 
@@ -255,3 +279,6 @@ Technisch: `IDocumentAfdrukService` + `DocumentPreviewWindow` (QuestPDF `Generat
 4. **Printer en exemplaren** in de app (K04/K11 tonen een printerkeuze en "Exemplaren 2"): nodig, of volstaat de printdialoog van macOS? Rechtstreeks afdrukken vanuit Avalonia is niet cross-platform; via de systeemviewer wel.
 5. **Bestelbon bij overslaan**: overslaan van Bestelling + Productie maakt meteen de bestelbon aan (K09). Ook als alleen Bestelling wordt overgeslagen? Plan: nee, die ontstaat bij "Klaar".
 6. **Afhaaldatum vóór besteldatum** (P7): waarschuwing in stap 1 of stap 2?
+7. **Verzonden** (US-56): mag "Offerte afdrukken" de offerte automatisch op Verzonden zetten, zodat de handmatige statusknoppen weg kunnen?
+8. **Werkbonvenster** (US-51): akkoord dat het modale werkbonvenster, gekozen op 29/07, verdwijnt ten voordele van het dossier?
+9. **Annuleren na Klaar**: de transitietabel laat Geannuleerd vandaag alleen toe tot InProductie. Moet een verkoop met een bestelbon (Afgewerkt/Besteld) ook geannuleerd kunnen worden?
