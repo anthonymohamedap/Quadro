@@ -19,6 +19,7 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
     private readonly IDbContextFactory<AppDbContext> _factory;
     private readonly IFactuurWorkflowService _workflow;
     private readonly IFactuurExportService _exportService;
+    private readonly IPathOpener _pathOpener;
     private readonly IToastService _toast;
     private readonly INavigationService _nav;
     private readonly IOntvangstService _ontvangsten;   // US-70
@@ -39,8 +40,7 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
 
     public IAsyncRelayCommand RefreshCommand { get; }
     public IAsyncRelayCommand SaveCommand { get; }
-    public IAsyncRelayCommand MarkeerKlaarVoorExportCommand { get; }
-    public IAsyncRelayCommand ExportPdfCommand { get; }
+    public IAsyncRelayCommand AfdrukkenCommand { get; }
     public IAsyncRelayCommand MarkeerBetaaldCommand { get; }
     public IAsyncRelayCommand GaTerugCommand { get; }
 
@@ -50,9 +50,11 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
         IFactuurExportService exportService,
         IToastService toast,
         INavigationService nav,
-        IOntvangstService ontvangsten)
+        IOntvangstService ontvangsten,
+        IPathOpener pathOpener)
         : base(toast)
     {
+        _pathOpener = pathOpener;
         _ontvangsten = ontvangsten;
         _factory = factory;
         _workflow = workflow;
@@ -62,8 +64,7 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
 
         RefreshCommand = new AsyncRelayCommand(InitializeAsync);
         SaveCommand = new AsyncRelayCommand(SaveAsync);
-        MarkeerKlaarVoorExportCommand = new AsyncRelayCommand(MarkeerKlaarVoorExportAsync);
-        ExportPdfCommand = new AsyncRelayCommand(ExportPdfAsync);
+        AfdrukkenCommand = new AsyncRelayCommand(AfdrukkenAsync);
         MarkeerBetaaldCommand = new AsyncRelayCommand(MarkeerBetaaldAsync);
         GaTerugCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<HomeViewModel>());
     }
@@ -202,42 +203,26 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
         await InitializeAsync();
     }
 
-    private async Task MarkeerKlaarVoorExportAsync()
+    /// <summary>US-82 — één knop: PDF in Documenten/QuadroApp/Bestelbonnen en meteen openen,
+    /// in elke status (ook Betaald).</summary>
+    private async Task AfdrukkenAsync()
     {
         if (GeselecteerdeFactuur is null) return;
-        await _workflow.MarkeerKlaarVoorExportAsync(GeselecteerdeFactuur.Id);
-        _toast.Success("Bestelbon staat klaar voor export.");
-        await InitializeAsync();
-    }
-
-    private async Task ExportPdfAsync()
-    {
-        if (GeselecteerdeFactuur is null) return;
-
-        // Bug 1 fix: guard against wrong status so the user gets clear feedback
-        // instead of a silent crash swallowed by AsyncRelayCommand.
-        if (GeselecteerdeFactuur.Status != FactuurStatus.KlaarVoorExport)
-        {
-            _toast.Error("Markeer de bestelbon eerst als 'Klaar voor export'.");
-            return;
-        }
-
-        // Bug 3 fix: BaseDirectory on a single-file publish points to a temp
-        // extraction folder in %TEMP% — nobody finds it. Use MyDocuments instead.
-        var exportFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            "Quadro", "exports");
-        Directory.CreateDirectory(exportFolder);
 
         try
         {
-            var result = await _exportService.ExportAsync(GeselecteerdeFactuur.Id, ExportFormaat.Pdf, exportFolder);
-            if (result.Success) _toast.Success($"{result.Message} → {exportFolder}");
-            else _toast.Error(result.Message);
+            var result = await _exportService.AfdrukkenAsync(GeselecteerdeFactuur.Id);
+            if (!result.Success)
+            {
+                _toast.Error(result.Message);
+                return;
+            }
+
+            _pathOpener.OpenFile(result.BestandPad);
         }
         catch (Exception ex)
         {
-            _toast.Error($"Export mislukt: {ex.GetBaseException().Message}");
+            _toast.Error($"Afdrukken mislukt: {ex.GetBaseException().Message}");
         }
 
         await InitializeAsync();
