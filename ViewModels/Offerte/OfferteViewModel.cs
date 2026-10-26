@@ -101,7 +101,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             var datum = NieuwVoorschotDatum?.Date ?? DateTime.Today;
             var totaal = await _ontvangsten.RegistreerVoorschotAsync(Offerte.Id, NieuwVoorschotBedrag.Value, datum, NieuwVoorschotBetaalwijze);
             await NaVoorschotWijzigingAsync(totaal);
-            Toast.Success($"Voorschot van € {NieuwVoorschotBedrag.Value:0.00} geregistreerd ({NieuwVoorschotBetaalwijze}).");
+            Toast.Success($"Voorschot van € {NieuwVoorschotBedrag.Value:0.00} geregistreerd ({NieuwVoorschotBetaalwijze.Label()}).");
             NieuwVoorschotBedrag = null;
         }
         catch (Exception ex)
@@ -115,7 +115,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     {
         if (voorschot is null || Offerte is null) return;
         var ok = await _dialogs.ConfirmAsync("Voorschot verwijderen",
-            $"Voorschot van € {voorschot.BedragIncl:0.00} ({voorschot.Betaalwijze}, {voorschot.Datum:dd/MM/yyyy}) verwijderen?\n\n" +
+            $"Voorschot van € {voorschot.BedragIncl:0.00} ({voorschot.Betaalwijze.Label()}, {voorschot.Datum:dd/MM/yyyy}) verwijderen?\n\n" +
             "Het verdwijnt ook uit het overzicht betalingen.");
         if (!ok) return;
 

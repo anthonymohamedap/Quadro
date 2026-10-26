@@ -26,12 +26,10 @@ public sealed class PdfBetalingsOverzichtExporter
 
     private static readonly (Betaalwijze Wijze, string Kop)[] Kolommen =
     {
-        (Betaalwijze.Kontant, "kontant"),
-        (Betaalwijze.Cheque, "cheque"),
-        (Betaalwijze.Visa, "visa"),
         (Betaalwijze.Bancontact, "bancontact"),
-        (Betaalwijze.Proton, "proton"),
-        (Betaalwijze.Storting, "storting")
+        (Betaalwijze.Cash, "cash"),
+        (Betaalwijze.CreditCard, "credit card"),
+        (Betaalwijze.Overschrijving, "overschrijving")
     };
 
     public string ExportDetail(BetalingsOverzicht overzicht)

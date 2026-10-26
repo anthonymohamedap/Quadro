@@ -72,7 +72,7 @@ public class OntvangstTests
             db.Offertes.Add(offerte);
             await db.SaveChangesAsync();
 
-            var o = new Ontvangst { Soort = OntvangstSoort.Voorschot, OfferteId = offerte.Id, BedragIncl = 50m, Betaalwijze = Betaalwijze.Kontant };
+            var o = new Ontvangst { Soort = OntvangstSoort.Voorschot, OfferteId = offerte.Id, BedragIncl = 50m, Betaalwijze = Betaalwijze.Cash };
             db.Ontvangsten.Add(o);
             await db.SaveChangesAsync();
             ontvangstId = o.Id;
