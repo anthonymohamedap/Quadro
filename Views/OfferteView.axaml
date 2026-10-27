@@ -190,6 +190,11 @@
 															   Classes="caption" Foreground="{DynamicResource TextSecondary}"
 															   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding TypeLijst.Artikelnummer}"
 															   IsVisible="{Binding TypeLijst, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+													<!-- US-80: standaardkader met omschrijving -->
+													<TextBlock Text="{Binding StandaardkaderLabel}"
+															   Classes="caption" Foreground="{DynamicResource TextSecondary}"
+															   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding StandaardkaderLabel}"
+															   IsVisible="{Binding KantKlaarKader, Converter={x:Static ObjectConverters.IsNotNull}}"/>
 												</StackPanel>
 												<TextBlock Grid.Column="1" Text="{Binding TotaalInclBtw, StringFormat=€ {0:N2}}"
 														   FontWeight="SemiBold" VerticalAlignment="Center"/>
@@ -318,24 +323,31 @@
 							</Grid>
 						</StackPanel>
 
-						<!-- US-58: kant-en-klaar kader — duidelijk gescheiden van de op-maat-lijst hierboven.
-						     Een kant-en-klaar kader is al volledig afgewerkt: geen afmeting, en de
-						     afwerkingen-kaart hieronder verdwijnt zodra dit gekozen is. -->
+						<!-- US-58: standaardkader — duidelijk gescheiden van de op-maat-lijst hierboven.
+						     US-80: naam + omschrijving zichtbaar en doorzoekbaar; afwerkingen blijven mogelijk
+						     en tellen mee op de ingegeven afmeting. -->
 						<StackPanel Spacing="6">
 							<TextBlock Text="Standaardkader" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
-							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" RowSpacing="10" ColumnSpacing="12">
-							<TextBlock Grid.Row="0" Grid.Column="0" Text="Kader" VerticalAlignment="Center"/>
+							<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" RowSpacing="6" ColumnSpacing="12">
+							<TextBlock Grid.Row="0" Grid.Column="0" Text="Zoek" VerticalAlignment="Center"/>
+							<TextBox Grid.Row="0" Grid.Column="1" Watermark="Naam of omschrijving, bv. c2 zwart"
+							         Text="{Binding KantKlaarKaderZoekterm, UpdateSourceTrigger=PropertyChanged}"/>
+							<TextBlock Grid.Row="1" Grid.Column="0" Text="Kader" VerticalAlignment="Center"/>
 							<!-- US-65: ✕ om de keuze te wissen -->
-							<Grid ColumnDefinitions="*,Auto" ColumnSpacing="4" Grid.Row="0" Grid.Column="1">
+							<Grid ColumnDefinitions="*,Auto" ColumnSpacing="4" Grid.Row="1" Grid.Column="1">
 								<ComboBox
-										  ItemsSource="{Binding KantKlaarKaders}"
+										  ItemsSource="{Binding GefilterdeKantKlaarKaders}"
 										  SelectedItem="{Binding SelectedRegelKantKlaarKader, Mode=TwoWay}"
 										  HorizontalAlignment="Stretch"
 										  MaxDropDownHeight="300"
 										  PlaceholderText="Geen standaardkader (op-maat lijst hierboven gebruiken)">
 									<ComboBox.ItemTemplate>
 										<DataTemplate x:DataType="m:KantKlaarKader">
-											<TextBlock Text="{Binding Naam}" TextTrimming="CharacterEllipsis"/>
+											<Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+												<TextBlock Text="{Binding Weergave}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Weergave}"/>
+												<TextBlock Grid.Column="1" Text="{Binding PrijsPerStukExcl, StringFormat='€ {0:0.00} excl.'}"
+												           Classes="caption" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+											</Grid>
 										</DataTemplate>
 									</ComboBox.ItemTemplate>
 								</ComboBox>
@@ -463,9 +475,8 @@
 					</StackPanel>
 					</Border>
 
-					<!-- AFWERKINGEN — niet van toepassing op een kant-en-klaar kader: dat is al
-					     volledig afgewerkt. -->
-					<Border Classes="quadro-card" IsVisible="{Binding !HasKantKlaarKader}">
+					<!-- AFWERKINGEN — US-80: ook bij een standaardkader (op de ingegeven afmeting). -->
+					<Border Classes="quadro-card">
 
 						<StackPanel Spacing="6">
 
@@ -941,12 +952,6 @@
 								Background="{DynamicResource InfoBorder}"
 								Foreground="{DynamicResource InfoText}"
 								FontWeight="Bold"
-								Margin="0,0,12,6"/>
-
-						<!-- US-57: klantvriendelijke offerte-PDF, los van de bestelbon-/factuurpreview -->
-						<Button Content="Offerte afdrukken"
-								Command="{Binding OfferteAfdrukkenCommand}"
-								Classes="GhostBtn"
 								Margin="0,0,12,6"/>
 
 						<!-- Bevestigen: alleen zichtbaar als er nog GEEN werkbon is -->

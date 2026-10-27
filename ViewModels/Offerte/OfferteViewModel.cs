@@ -255,6 +255,15 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     // ── US-58: kant-en-klaar kader picker facade ──
     public System.Collections.ObjectModel.ObservableCollection<KantKlaarKader> KantKlaarKaders
         => Regelbeheer.KantKlaarKaders;
+
+    /// <summary>US-80 — zoeken in de standaardkaders op naam en omschrijving.</summary>
+    public string? KantKlaarKaderZoekterm
+    {
+        get => Regelbeheer.KantKlaarKaderZoekterm;
+        set => Regelbeheer.KantKlaarKaderZoekterm = value;
+    }
+    public System.Collections.ObjectModel.ObservableCollection<KantKlaarKader> GefilterdeKantKlaarKaders
+        => Regelbeheer.GefilterdeKantKlaarKaders;
     public System.Collections.ObjectModel.ObservableCollection<AfwerkingsOptie> GlasOpties
         => Regelbeheer.GlasOpties;
     public System.Collections.ObjectModel.ObservableCollection<AfwerkingsOptie> Passe1Opties
@@ -991,6 +1000,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                 case nameof(Regelbeheer.GefilterdeInlegTypeLijsten): OnPropertyChanged(nameof(GefilterdeInlegTypeLijsten)); break;
                 case nameof(Regelbeheer.SelectedKantKlaarKader): OnPropertyChanged(nameof(SelectedRegelKantKlaarKader)); break;
                 case nameof(Regelbeheer.KantKlaarKaders): OnPropertyChanged(nameof(KantKlaarKaders)); break;
+                case nameof(Regelbeheer.KantKlaarKaderZoekterm): OnPropertyChanged(nameof(KantKlaarKaderZoekterm)); break;
                 case nameof(Regelbeheer.HasKantKlaarKader): OnPropertyChanged(nameof(HasKantKlaarKader)); break;
                 case nameof(Regelbeheer.GlasOpties):
                     OnPropertyChanged(nameof(GlasOpties));
@@ -1050,14 +1060,15 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         Regelbeheer.ApplyTypeLijstFilter(Regelbeheer.TypeLijstZoekterm);
         Regelbeheer.ApplyInlegTypeLijstFilter(Regelbeheer.InlegTypeLijstZoekterm);
 
-        // US-58: kant-en-klare kaders — kleine lijst, geen filter/diff nodig.
+        // US-58: standaardkaders. US-80: gesorteerd op naam én omschrijving (8× "C2"), met zoekfilter.
         var kantKlaarKaders = await db.KantKlaarKaders.AsNoTracking()
-            .OrderBy(k => k.Naam)
+            .OrderBy(k => k.Naam).ThenBy(k => k.Beschrijving)
             .ToListAsync();
 
         Regelbeheer.KantKlaarKaders.Clear();
         foreach (var k in kantKlaarKaders)
             Regelbeheer.KantKlaarKaders.Add(k);
+        Regelbeheer.ApplyKantKlaarKaderFilter(Regelbeheer.KantKlaarKaderZoekterm);
 
         var klanten = await db.Klanten.AsNoTracking()
             .OrderBy(k => k.Achternaam).ThenBy(k => k.Voornaam)
@@ -1333,75 +1344,6 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             case "OpklevenVariant": SelectedRegelOpklevenVariant = null; break;
             case "RugVariant":      SelectedRegelRugVariant = null; break;
         }
-    }
-
-    // ── Offerte afdrukken (US-57): klantvriendelijke PDF, geen productie-/facturatiegegevens ──
-    [RelayCommand]
-    private async Task OfferteAfdrukkenAsync()
-    {
-        if (Offerte is null || IsBusy) return;
-
-        if (Regelbeheer.Regels.Count == 0)
-        {
-            Toast.Warning("Voeg minstens één regel toe voor je de offerte afdrukt.");
-            return;
-        }
-
-        // US-81: een nieuwe offerte heeft nog geen nummer ("offertenr. 0") — eerst opslaan,
-        // dan krijgt ze haar doorlopend nummer en staat dat op de PDF.
-        if (Offerte.Id == 0)
-        {
-            await SaveCoreAsync(reloadAfterSave: true);
-            if (Offerte is null || Offerte.Id == 0 || Offerte.OfferteNummer == 0)
-                return; // opslaan lukte niet (bv. geen klant); de melding is al getoond
-        }
-
-        try
-        {
-            IsBusy = true;
-
-            var snapshot = BuildSnapshotForPrint();
-            var exporter = new PdfOfferteExporter();
-            var path = await Task.Run(() => exporter.Export(snapshot));
-
-            if (!File.Exists(path))
-            {
-                Toast.Error("PDF kon niet aangemaakt worden.");
-                return;
-            }
-
-            Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
-        }
-        catch (Exception ex)
-        {
-            var msg = ex.InnerException?.Message ?? ex.Message;
-            Toast.Error($"Afdrukken mislukt: {msg}");
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
-
-    // Werkt zowel voor een nieuwe (nog niet opgeslagen) als een bestaande offerte: bouwt de PDF
-    // rechtstreeks uit de reeds in-memory geladen regels (met hun navigaties), geen extra DB-call nodig.
-    private Offerte BuildSnapshotForPrint()
-    {
-        var source = Offerte ?? new Offerte();
-        return new Offerte
-        {
-            Id = source.Id,
-            OfferteNummer = source.OfferteNummer,
-            Datum = source.Datum == default ? DateTime.Today : source.Datum,
-            Opmerking = source.Opmerking,
-            KortingPct = source.KortingPct,
-            MeerPrijsIncl = source.MeerPrijsIncl,
-            SubtotaalExBtw = source.SubtotaalExBtw,
-            BtwBedrag = source.BtwBedrag,
-            TotaalInclBtw = source.TotaalInclBtw,
-            Klant = KlantSelectie.SelectedKlant,
-            Regels = Regelbeheer.Regels.ToList()
-        };
     }
 
     // ── Save ──

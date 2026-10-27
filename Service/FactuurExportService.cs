@@ -111,7 +111,8 @@ public sealed class FactuurExportService : IFactuurExportService
         if (!result.Success)
             return result;
 
-        if (factuur.Status is FactuurStatus.Draft or FactuurStatus.KlaarVoorExport)
+        // Een voorlopige bon (nog niet bevestigd) gaat niet naar de boekhouding: status blijft.
+        if (!factuur.IsVoorlopig && factuur.Status is FactuurStatus.Draft or FactuurStatus.KlaarVoorExport)
             factuur.Status = FactuurStatus.Geexporteerd;
         factuur.ExportPad = result.BestandPad;
         factuur.BijgewerktOp = DateTime.UtcNow;

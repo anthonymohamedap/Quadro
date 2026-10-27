@@ -47,7 +47,7 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         get
         {
             if (GekoppeldeFactuur is not null)
-                return $"Bestelbon {GekoppeldeFactuur.FactuurNummer} ({GekoppeldeFactuur.Status.Label()})";
+                return $"Bestelbon {GekoppeldeFactuur.NummerLabel} ({GekoppeldeFactuur.Status.Label()})";
 
             if (GekoppeldeWerkBon is null)
                 return "Nog geen bestelbon voor deze offerte.";
@@ -178,7 +178,13 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
             _ => (null, null)
         };
 
-        StappenBalk.Toon(info, volgende.tekst, volgende.command);
+        // De klant krijgt de bestelbon ook als prijsvoorstel: vanaf stap 1 aan te maken en af te drukken.
+        (string? tekst, IAsyncRelayCommand? command) bestelbon =
+            GekoppeldeFactuur is null ? ("Bestelbon aanmaken", FactuurCommand)
+            : volgende.command == BestelbonAfdrukkenCommand ? (null, null)
+            : ("Bestelbon afdrukken", BestelbonAfdrukkenCommand);
+
+        StappenBalk.Toon(info, volgende.tekst, volgende.command, bestelbon.tekst, bestelbon.command);
     }
 
     /// <summary>US-83 — opent het werkbonvenster (inplannen, status, afrekenen bij afhalen).</summary>
@@ -365,12 +371,13 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
     {
         if (IsBusy) return;
 
-        var offerteId = _getOfferteId();
-        if (offerteId == 0)
-        {
-            Toast.Error("Geen offerte geladen.");
-            return;
-        }
+        // De klant krijgt de bestelbon als prijsvoorstel: een nieuwe offerte wordt eerst opgeslagen
+        // (en krijgt zo haar nummer), net zoals vroeger bij de offerte-PDF (US-81).
+        if (_getOfferteId() == 0)
+            await _saveAndReload();
+
+        if (_getOfferteId() == 0)
+            return; // opslaan lukte niet (bv. geen klant); de melding is al getoond
 
         var pricingOk = await _runValidation(true);
         if (!pricingOk) return;

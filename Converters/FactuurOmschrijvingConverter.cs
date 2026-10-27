@@ -46,11 +46,12 @@ namespace QuadroApp.Converters
             var artikel  = parts.ElementAtOrDefault(0);
             var afmeting = parts.ElementAtOrDefault(1);
 
-            // US-68: standaardkader-lijn → "Standaardkader <naam>", geen afmeting
-            if (string.Equals(afmeting, QuadroApp.Service.FactuurWorkflowService.StandaardkaderMarker, StringComparison.OrdinalIgnoreCase))
+            // US-68/US-80: standaardkader-lijn → "Standaardkader <naam – omschrijving>", afmeting achter de markering
+            if (QuadroApp.Service.FactuurWorkflowService.IsStandaardkaderSegment(afmeting))
             {
                 artikel = $"Standaardkader {artikel}";
-                afmeting = null;
+                var maat = afmeting![QuadroApp.Service.FactuurWorkflowService.StandaardkaderMarker.Length..].Trim();
+                afmeting = maat.Length > 0 ? maat : null;
             }
 
             string? titel = null, lijstOpm = null, regelOpm = null, afhaal = null, korting = null, inleg = null;

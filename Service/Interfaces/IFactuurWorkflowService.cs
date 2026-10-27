@@ -13,4 +13,7 @@ public interface IFactuurWorkflowService
     Task MarkeerBetaaldAsync(int factuurId);
     Task SaveDraftAsync(Factuur factuur);
     Task HerberekenTotalenAsync(int factuurId);
+
+    /// <summary>Een voorlopige bestelbon (zonder volgnummer) krijgt bij de bevestiging van de offerte zijn volgnummer.</summary>
+    Task KenVolgnummerToeBijBevestigingAsync(int offerteId);
 }
