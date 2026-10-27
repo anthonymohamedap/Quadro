@@ -20,7 +20,7 @@
 	<Grid RowDefinitions="Auto,*">
 
 		<!-- HEADER -->
-		<controls:QuadroHeader Grid.Row="0" Title="BESTELLINGEN" BackCommand="{Binding GaTerugCommand}"/>
+		<controls:QuadroHeader Grid.Row="0" Title="WERKBONNEN" BackCommand="{Binding GaTerugCommand}"/>
 
 		<!-- MAIN -->
 		<Grid Grid.Row="1"
@@ -33,7 +33,7 @@
 
 				<StackPanel Spacing="14">
 
-					<TextBlock Text="Bestellingen"
+					<TextBlock Text="Werkbonnen"
 							   Classes="h1"/>
 
 					<!-- Search + tools -->
