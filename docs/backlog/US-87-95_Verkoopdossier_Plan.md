@@ -23,7 +23,7 @@ In de praktijk krijgt de klant de **bestelbon**, ook als prijsvoorstel vóór he
 - De bestelbon kan al **vanaf stap 1** aangemaakt en afgedrukt worden; de stappenbalk heeft daarvoor een tweede knop naast de volgende stap. De aanname "de bestelbon ontstaat pas bij Klaar om af te halen" (K10, P3) vervalt.
 - `MeldKlaarAsync` maakt de bestelbon enkel aan als die nog niet bestaat.
 - US-94 drukt enkel werkbon en bestelbon af; K04 vervalt.
-- Open vraag 10: de bestelbon krijgt bij het aanmaken een volgnummer voor de boekhouding. Een klant die niet bestelt, laat een geannuleerde bon achter in die nummering. Is dat goed voor de boekhouder?
+- **Beslist (27/10):** een bestelbon vóór het akkoord is *voorlopig* ("V412", "voorlopig (offerte 412)"), zonder volgnummer, en telt niet mee voor de boekhouding. Het volgnummer (2026-19) en de besteldatum komen pas bij "Bevestigen als bestelling", zodat klanten die niet bestellen geen gaten in de nummering laten.
 
 ## Architectuurkeuzes
 
@@ -307,4 +307,4 @@ Technisch: `IDocumentAfdrukService` + `DocumentPreviewWindow` (QuestPDF `Generat
 7. **Verzonden** (US-56): mag het afdrukken van de bestelbon in stap 1 de offerte automatisch op Verzonden zetten, zodat de handmatige statusknoppen weg kunnen?
 8. **Werkbonvenster** (US-51): akkoord dat het modale werkbonvenster, gekozen op 29/07, verdwijnt ten voordele van het dossier?
 9. **Annuleren na Klaar**: de transitietabel laat Geannuleerd vandaag alleen toe tot InProductie. Moet een verkoop met een bestelbon (Afgewerkt/Besteld) ook geannuleerd kunnen worden?
-10. **Nummering bestelbon** — zie "Wijziging 27/10/2026" bovenaan: geannuleerde bonnen van klanten die niet bestellen blijven in de doorlopende nummering.
+10. ~~Nummering bestelbon~~ — beslist: volgnummer pas na bevestiging (zie bovenaan).

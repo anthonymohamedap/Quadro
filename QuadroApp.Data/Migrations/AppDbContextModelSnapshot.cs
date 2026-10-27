@@ -273,7 +273,7 @@ namespace QuadroApp.Migrations
                     b.Property<DateTime>("VervalDatum")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("VolgNr")
+                    b.Property<int?>("VolgNr")
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("VoorschotBedrag")

@@ -39,6 +39,8 @@ namespace QuadroApp.Service
             public Task SaveDraftAsync(Factuur factuur) => Task.CompletedTask;
 
             public Task HerberekenTotalenAsync(int factuurId) => Task.CompletedTask;
+
+            public Task KenVolgnummerToeBijBevestigingAsync(int offerteId) => Task.CompletedTask;
         }
 
         private sealed class FallbackStockService : IStockService
@@ -218,6 +220,10 @@ namespace QuadroApp.Service
             {
                 await _stock.ReserveStockForWerkBonAsync(createdWerkBonId);
             }
+
+            // Een voorlopige bestelbon (prijsvoorstel) krijgt pas bij de bevestiging zijn volgnummer.
+            if (newStatus == OfferteStatus.Goedgekeurd)
+                await _factuurWorkflow.KenVolgnummerToeBijBevestigingAsync(offerteId);
 
             _logger.LogInformation(
                 "Offerte {OfferteId} status changed from {OldStatus} to {NewStatus} at {Timestamp}",
