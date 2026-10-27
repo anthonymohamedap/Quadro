@@ -20,7 +20,7 @@
 	<Grid RowDefinitions="Auto,*">
 
 		<!-- HEADER -->
-		<controls:QuadroHeader Grid.Row="0" Title="WERKBONNEN" BackCommand="{Binding GaTerugCommand}"/>
+		<controls:QuadroHeader Grid.Row="0" Title="BESTELLINGEN" BackCommand="{Binding GaTerugCommand}"/>
 
 		<!-- MAIN -->
 		<Grid Grid.Row="1"
@@ -33,7 +33,7 @@
 
 				<StackPanel Spacing="14">
 
-					<TextBlock Text="Werkbonnen"
+					<TextBlock Text="Bestellingen"
 							   Classes="h1"/>
 
 					<!-- Search + tools -->
@@ -45,7 +45,7 @@
 									VerticalAlignment="Center">
 							<TextBox MinWidth="180"
 									 Foreground="{DynamicResource TextPrimary}"
-									 Watermark="Zoek op bonnr of klant…"
+									 Watermark="Zoek op werkbonnr. of klant…"
 									 Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 							<ComboBox ItemsSource="{Binding BeschikbareJaren}"
 									  SelectedItem="{Binding GeselecteerdJaar, Mode=TwoWay}"
@@ -103,7 +103,7 @@
 
 											<!-- Bon-nr + status-badge -->
 											<StackPanel Grid.Column="0" Spacing="5" MinWidth="72" VerticalAlignment="Center">
-												<TextBlock Text="{Binding Id, StringFormat='Bon #{0}'}" FontWeight="Bold"/>
+												<TextBlock Text="{Binding Id, StringFormat='Werkbon #{0}'}" FontWeight="Bold"/>
 												<Border Background="{Binding Status, Converter={x:Static conv:WerkBonStatusToBrushConverter.Instance}}"
 														CornerRadius="10" Padding="9,2" HorizontalAlignment="Left">
 													<TextBlock Text="{Binding Status, Converter={x:Static conv:WerkBonStatusToLabelConverter.Instance}}"
