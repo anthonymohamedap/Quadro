@@ -133,7 +133,7 @@
                         <TextBlock Text="Bestelbon" Classes="h2"/>
                         <WrapPanel>
                             <TextBlock Text="{Binding Bestelbon.FactuurNummer, StringFormat='Nr. {0}'}" FontWeight="SemiBold" Margin="0,0,16,0"/>
-                            <TextBlock Text="{Binding Bestelbon.Status, StringFormat='Status: {0}'}" Foreground="{DynamicResource TextSecondary}" Margin="0,0,16,0"/>
+                            <TextBlock Text="{Binding Bestelbon.Status, Converter={x:Static conv:StatusLabelConverter.Instance}, ConverterParameter='Status: {0}'}" Foreground="{DynamicResource TextSecondary}" Margin="0,0,16,0"/>
                             <TextBlock Text="{Binding Bestelbon.TotaalInclBtw, StringFormat='Totaal: € {0:N2}'}" Foreground="{DynamicResource TextSecondary}"/>
                         </WrapPanel>
                         <WrapPanel>

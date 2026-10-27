@@ -4,6 +4,7 @@
     xmlns:controls="clr-namespace:QuadroApp.Views.Controls"
     xmlns:vm="using:QuadroApp.ViewModels"
     xmlns:m="clr-namespace:QuadroApp.Model.DB;assembly=QuadroApp.Data"
+             xmlns:conv="using:QuadroApp.Converters"
     x:Class="QuadroApp.Views.KlantDetailView"
     x:DataType="vm:KlantDetailViewModel"
     Background="{DynamicResource SurfaceMuted}">
@@ -95,9 +96,8 @@
 
 											<TextBlock
 												Grid.Column="2"
-												Text="{Binding Status}"
-												TextTrimming="CharacterEllipsis"
-												ToolTip.Tip="{Binding Status}"/>
+												Text="{Binding Status, Converter={x:Static conv:StatusLabelConverter.Instance}}"
+												TextTrimming="CharacterEllipsis"/>
 
 											<TextBlock
 												Grid.Column="3"
@@ -145,9 +145,8 @@
 
 											<TextBlock
 												Grid.Column="2"
-												Text="{Binding Status}"
-												TextTrimming="CharacterEllipsis"
-												ToolTip.Tip="{Binding Status}"/>
+												Text="{Binding Status, Converter={x:Static conv:StatusLabelConverter.Instance}}"
+												TextTrimming="CharacterEllipsis"/>
 
 											<TextBlock
 												Grid.Column="3"

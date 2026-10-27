@@ -34,7 +34,7 @@ namespace QuadroApp.ViewModels
             new WerkBonStatusFilterOptie("Alle statussen", null),
             new WerkBonStatusFilterOptie("Gepland",        WerkBonStatus.Gepland),
             new WerkBonStatusFilterOptie("In uitvoering",  WerkBonStatus.InUitvoering),
-            new WerkBonStatusFilterOptie("Afgewerkt",      WerkBonStatus.Afgewerkt),
+            new WerkBonStatusFilterOptie("Klaar om af te halen", WerkBonStatus.Afgewerkt),
             new WerkBonStatusFilterOptie("Afgehaald",      WerkBonStatus.Afgehaald),
         };
         [ObservableProperty] private WerkBonStatusFilterOptie? geselecteerdeStatusFilter;
