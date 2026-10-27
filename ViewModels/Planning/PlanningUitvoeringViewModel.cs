@@ -352,6 +352,13 @@ public partial class PlanningUitvoeringViewModel : ObservableObject
 
         var nieuweDag = dialogVm.GetStartDatum();
 
+        // US-96: niet in het verleden
+        if (nieuweDag.Date < DateTime.Today)
+        {
+            _toast.Error($"Plannen in het verleden kan niet: {nieuweDag:dd/MM/yyyy} ligt vóór vandaag.");
+            return;
+        }
+
         // Check blokkering
         if (await _isDagGeblokkeerd(nieuweDag))
         {
