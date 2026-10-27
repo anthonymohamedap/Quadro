@@ -164,6 +164,7 @@ public partial class App : Application
         services.AddScoped<IFactuurWorkflowService, FactuurWorkflowService>();
         services.AddScoped<IOntvangstService, OntvangstService>();   // US-69/US-70
         services.AddScoped<IBetalingsOverzichtService, BetalingsOverzichtService>();   // US-67
+        services.AddScoped<QuadroApp.Service.Verkoop.IVerkoopOverzichtService, QuadroApp.Service.Verkoop.VerkoopOverzichtService>();   // US-84
         services.AddScoped<IFactuurExportService, FactuurExportService>();
         services.AddScoped<ICentralExcelExportService, CentralExcelExportService>();
         services.AddScoped<IFactuurExporter, PdfFactuurExporter>();
