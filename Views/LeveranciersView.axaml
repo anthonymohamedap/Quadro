@@ -242,7 +242,7 @@
 																	<TextBlock Text="{Binding BestelNummer}" FontWeight="Bold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding BestelNummer}"/>
 																	<Border Grid.Column="1" CornerRadius="10" Padding="9,2"
                                                                             Background="{Binding Status, Converter={x:Static conv:BooleanConverters.BestelStatusToBrush}}">
-																		<TextBlock Text="{Binding Status}" Foreground="{DynamicResource TextOnDark}" Classes="caption" FontWeight="SemiBold"/>
+																		<TextBlock Text="{Binding Status, Converter={x:Static conv:StatusLabelConverter.Instance}}" Foreground="{DynamicResource TextOnDark}" Classes="caption" FontWeight="SemiBold"/>
 																	</Border>
 																</Grid>
 																<TextBlock Text="{Binding BesteldOp, StringFormat='Besteld op: {0:dd/MM/yyyy}'}" Classes="label" Foreground="{DynamicResource TextSecondary}"/>
@@ -320,7 +320,7 @@
 													<DataTemplate x:DataType="m:VoorraadAlert">
 														<Border BorderBrush="{DynamicResource BrandYellow}" BorderThickness="1" CornerRadius="6" Padding="8" Background="{DynamicResource WarningBg}" Margin="0,0,0,8">
 															<StackPanel Spacing="3">
-																<TextBlock Text="{Binding AlertType}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+																<TextBlock Text="{Binding AlertType, Converter={x:Static conv:StatusLabelConverter.Instance}}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
 																<TextBlock Text="{Binding Bericht}" TextWrapping="Wrap"/>
 															</StackPanel>
 														</Border>

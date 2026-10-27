@@ -29,8 +29,8 @@ public partial class FactuurPreviewViewModel : ObservableObject
 
     public Action? RequestClose { get; set; }
 
-    public string Titel => $"{Factuur.DocumentType} {Factuur.FactuurNummer}";
-    public string StatusTekst => $"Status: {Factuur.Status}";
+    public string Titel => $"Bestelbon {Factuur.FactuurNummer}";   // US-85 (P1): nooit "Factuur"
+    public string StatusTekst => $"Status: {Factuur.Status.Label()}";
 
     public FactuurPreviewViewModel(
         int factuurId,

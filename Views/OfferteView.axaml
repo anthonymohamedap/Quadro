@@ -49,7 +49,7 @@
 				<Border CornerRadius="10" Padding="10,3" VerticalAlignment="Center"
 						Background="{Binding Offerte.Status, Converter={x:Static conv:OfferteStatusToBrushConverter.Instance}}"
 						IsVisible="{Binding Offerte, Converter={x:Static ObjectConverters.IsNotNull}}">
-					<TextBlock Text="{Binding Offerte.Status}"
+					<TextBlock Text="{Binding Offerte.Status, Converter={x:Static conv:StatusLabelConverter.Instance}}"
 							   Foreground="White" FontWeight="SemiBold" FontSize="12"/>
 				</Border>
 			</StackPanel>
@@ -969,7 +969,7 @@
 					<Border CornerRadius="10" Padding="10,3" HorizontalAlignment="Left"
 							Background="{Binding Offerte.Status, Converter={x:Static conv:OfferteStatusToBrushConverter.Instance}}"
 							IsVisible="{Binding Offerte, Converter={x:Static ObjectConverters.IsNotNull}}">
-						<TextBlock Text="{Binding Offerte.Status}"
+						<TextBlock Text="{Binding Offerte.Status, Converter={x:Static conv:StatusLabelConverter.Instance}}"
 								   Foreground="White" FontWeight="SemiBold" FontSize="12"/>
 					</Border>
 
