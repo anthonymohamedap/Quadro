@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Verkoop;
 using QuadroApp.ViewModels.Verkoop;
@@ -60,5 +60,26 @@ public class StappenBalkViewModelTests
         Assert.Equal("Geannuleerd", vm.StatusTekst);
         Assert.False(vm.IsVolgendeStapZichtbaar);
         Assert.All(vm.Stappen, s => Assert.True(s.IsNogTeDoen));
+    }
+
+    [Fact]
+    public void Bestelbon_kan_al_vanaf_stap_1_naast_de_volgende_stap()
+    {
+        var bestelbon = new AsyncRelayCommand(() => Task.CompletedTask);
+        var vm = new StappenBalkViewModel();
+        vm.Toon(VerkoopStapResolver.Bepaal(OfferteStatus.Concept, null, null, 154.86m),
+            "Bevestigen als bestelling", Volgende, "Bestelbon aanmaken", bestelbon);
+
+        Assert.True(vm.IsVolgendeStapZichtbaar);
+        Assert.True(vm.IsNevenActieZichtbaar);
+        Assert.Equal("Bestelbon aanmaken", vm.NevenActieTekst);
+    }
+
+    [Fact]
+    public void Geannuleerd_toont_ook_geen_bestelbonknop()
+    {
+        var vm = new StappenBalkViewModel();
+        vm.Toon(VerkoopStapResolver.Bepaal(OfferteStatus.Geannuleerd, null, null, 0m), "x", Volgende, "Bestelbon afdrukken", Volgende);
+        Assert.False(vm.IsNevenActieZichtbaar);
     }
 }

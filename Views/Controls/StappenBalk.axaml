@@ -93,6 +93,10 @@
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                 <TextBlock Text="{Binding StatusTekst}" VerticalAlignment="Center" FontWeight="SemiBold"
                            Foreground="{DynamicResource TextSecondary}"/>
+                <Button Classes="GhostBtn" Padding="12,8"
+                        Content="{Binding NevenActieTekst}"
+                        Command="{Binding NevenActieCommand}"
+                        IsVisible="{Binding IsNevenActieZichtbaar}"/>
                 <Button Classes="AccentBtn" Padding="12,8"
                         Content="{Binding VolgendeStapTekst}"
                         Command="{Binding VolgendeStapCommand}"

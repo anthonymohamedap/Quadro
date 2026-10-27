@@ -38,6 +38,17 @@ public partial class StappenBalkViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsVolgendeStapZichtbaar))]
     private IAsyncRelayCommand? volgendeStapCommand;
 
+    /// <summary>Tweede knop naast de volgende stap: de bestelbon, die de klant ook als prijsvoorstel krijgt.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNevenActieZichtbaar))]
+    private string? nevenActieTekst;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNevenActieZichtbaar))]
+    private IAsyncRelayCommand? nevenActieCommand;
+
+    public bool IsNevenActieZichtbaar => NevenActieCommand is not null && !string.IsNullOrWhiteSpace(NevenActieTekst);
+
     public bool IsGeannuleerd => Info?.IsGeannuleerd == true;
 
     public bool IsVolgendeStapZichtbaar => VolgendeStapCommand is not null && !string.IsNullOrWhiteSpace(VolgendeStapTekst);
@@ -51,11 +62,14 @@ public partial class StappenBalkViewModel : ObservableObject
         var i => $"Stap {(int)i.Huidig} van 5 · {VerkoopStapResolver.Titel(i.Huidig)}"
     };
 
-    public void Toon(VerkoopStapInfo info, string? volgendeStapTekst, IAsyncRelayCommand? volgendeStapCommand)
+    public void Toon(VerkoopStapInfo info, string? volgendeStapTekst, IAsyncRelayCommand? volgendeStapCommand,
+        string? nevenActieTekst = null, IAsyncRelayCommand? nevenActieCommand = null)
     {
         Info = info;
         VolgendeStapTekst = info.IsGeannuleerd ? null : volgendeStapTekst;
         VolgendeStapCommand = info.IsGeannuleerd ? null : volgendeStapCommand;
+        NevenActieTekst = info.IsGeannuleerd ? null : nevenActieTekst;
+        NevenActieCommand = info.IsGeannuleerd ? null : nevenActieCommand;
 
         var nieuw = VerkoopStapResolver.AlleStappen
             .Select(s => new StapWeergave((int)s, VerkoopStapResolver.Titel(s), VerkoopStapResolver.Uitleg(s),
