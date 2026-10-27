@@ -62,16 +62,7 @@ namespace QuadroApp.Converters
         public static readonly WerkBonStatusToLabelConverter Instance = new();
 
         public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-            => value is WerkBonStatus s
-                ? s switch
-                {
-                    WerkBonStatus.Gepland      => "Gepland",
-                    WerkBonStatus.InUitvoering => "In uitvoering",
-                    WerkBonStatus.Afgewerkt    => "Afgewerkt",
-                    WerkBonStatus.Afgehaald    => "Afgehaald",
-                    _                          => s.ToString()
-                }
-                : "";
+            => value is WerkBonStatus s ? s.Label() : "";   // US-85: zelfde woorden als overal
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
             => throw new NotSupportedException();
