@@ -4,12 +4,20 @@ using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
+using QuadroApp.Service.Verkoop;
+using System.Collections.Generic;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace QuadroApp.ViewModels;
+
+/// <summary>US-84 — één tabblad van de offertelijst, met het aantal offertes in die fase.</summary>
+public sealed record FaseTab(VerkoopFase Fase, string Titel, int Aantal)
+{
+    public string Label => $"{Titel} ({Aantal})";
+}
 
 public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializable
 {
@@ -19,9 +27,33 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
     private readonly INavigationService _nav;
     private readonly IOfferteArchiefService _archiefService;
     private readonly IToastService _toast;
+    private readonly IVerkoopOverzichtService _overzicht;
 
-    public ObservableCollection<Offerte> Offertes { get; } = new();
-    public ObservableCollection<Offerte> FilteredOffertes { get; } = new();
+    private List<VerkoopOverzichtRegel> _alle = new();
+    public ObservableCollection<VerkoopOverzichtRegel> FilteredOffertes { get; } = new();
+
+    // ── US-84: tabbladen per fase ────────────────────────────────────────────
+    private static readonly (VerkoopFase Fase, string Titel)[] TabDefinities =
+    {
+        (VerkoopFase.OpenOffertes, "Open offertes"),
+        (VerkoopFase.LopendeBestellingen, "Lopende bestellingen"),
+        (VerkoopFase.KlaarOmAfTeHalen, "Klaar om af te halen"),
+        (VerkoopFase.Afgerond, "Afgerond"),
+        (VerkoopFase.Geannuleerd, "Geannuleerd")
+    };
+
+    public ObservableCollection<FaseTab> Tabs { get; } = new();
+
+    /// <summary>Standaard "Open offertes" (AC 2).</summary>
+    [ObservableProperty] private VerkoopFase geselecteerdeFase = VerkoopFase.OpenOffertes;
+
+    /// <summary>Zoeken over alle tabbladen heen in plaats van enkel in het gekozen tabblad.</summary>
+    [ObservableProperty] private bool zoekInAlle;
+
+    private bool _syncingTab;
+    [ObservableProperty] private FaseTab? geselecteerdeTab;
+
+    public bool IsLeeg => FilteredOffertes.Count == 0;
 
     // ── Jaar-filter ──────────────────────────────────────────────────────────
     public ObservableCollection<int> BeschikbareJaren { get; } = new();
@@ -29,7 +61,7 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
     /// <summary>0 = alle jaren.</summary>
     [ObservableProperty] private int geselecteerdJaar = 0;
 
-    [ObservableProperty] private Offerte? selectedOfferte;
+    [ObservableProperty] private VerkoopOverzichtRegel? selectedOfferte;
     [ObservableProperty] private string? zoekterm;
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? foutmelding;
@@ -40,8 +72,10 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
         IDialogService dialogs,
         INavigationService nav,
         IToastService toast,
-        IOfferteArchiefService archiefService)
+        IOfferteArchiefService archiefService,
+        IVerkoopOverzichtService overzicht)
     {
+        _overzicht      = overzicht;
         _dbFactory      = dbFactory;
         _offerteNav     = offerteNav;
         _dialogs        = dialogs;
@@ -54,6 +88,14 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
 
     partial void OnZoektermChanged(string? value) => ApplyFilter();
     partial void OnGeselecteerdJaarChanged(int value) => ApplyFilter();
+    partial void OnGeselecteerdeFaseChanged(VerkoopFase value) => ApplyFilter();
+    partial void OnZoekInAlleChanged(bool value) => ApplyFilter();
+
+    partial void OnGeselecteerdeTabChanged(FaseTab? value)
+    {
+        if (_syncingTab || value is null) return;
+        GeselecteerdeFase = value.Fase;
+    }
 
     // ── Laden ────────────────────────────────────────────────────────────────
 
@@ -63,22 +105,15 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
         if (IsBusy) return;
 
         // Onthoud huidige selectie zodat we die na het herladen kunnen herstellen.
-        var previousId = SelectedOfferte?.Id;
+        var previousId = SelectedOfferte?.OfferteId;
 
         try
         {
             IsBusy = true;
             Foutmelding = null;
 
-            await using var db = await _dbFactory.CreateDbContextAsync();
-
-            var list = await db.Offertes
-                .Include(o => o.Klant)
-                .OrderByDescending(o => o.Datum)
-                .ToListAsync();
-
-            Offertes.Clear();
-            foreach (var o in list) Offertes.Add(o);
+            var list = (await _overzicht.GetOverzichtAsync()).ToList();
+            _alle = list;
 
             // Bouw jaar-dropdown
             var jaren = list
@@ -95,7 +130,7 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
 
             // Herstel selectie na herladen (nieuwe objectinstanties, zelfde Id).
             if (previousId.HasValue)
-                SelectedOfferte = FilteredOffertes.FirstOrDefault(o => o.Id == previousId.Value);
+                SelectedOfferte = FilteredOffertes.FirstOrDefault(o => o.OfferteId == previousId.Value);
         }
         catch (Exception ex)
         {
@@ -109,21 +144,44 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
 
     private void ApplyFilter()
     {
-        FilteredOffertes.Clear();
-        var q = Offertes.AsEnumerable();
-
+        var binnenJaar = _alle.AsEnumerable();
         if (GeselecteerdJaar > 0)
-            q = q.Where(o => o.Datum.Year == GeselecteerdJaar);
+            binnenJaar = binnenJaar.Where(o => o.Datum.Year == GeselecteerdJaar);
+        var jaarLijst = binnenJaar.ToList();
 
-        var term = Zoekterm?.Trim();
-        if (!string.IsNullOrWhiteSpace(term))
+        // Tabbladen met aantallen (binnen het gekozen jaar).
+        _syncingTab = true;
+        try
+        {
+            Tabs.Clear();
+            foreach (var (fase, titel) in TabDefinities)
+                Tabs.Add(new FaseTab(fase, titel, jaarLijst.Count(o => o.Fase == fase)));
+            GeselecteerdeTab = Tabs.FirstOrDefault(t => t.Fase == GeselecteerdeFase);
+        }
+        finally { _syncingTab = false; }
+
+        FilteredOffertes.Clear();
+        foreach (var o in Filter(jaarLijst, GeselecteerdeFase, Zoekterm, ZoekInAlle))
+            FilteredOffertes.Add(o);
+        OnPropertyChanged(nameof(IsLeeg));
+    }
+
+    /// <summary>US-84 — zoeken binnen het gekozen tabblad, of in alle tabbladen als <paramref name="zoekInAlle"/>
+    /// aan staat en er een zoekterm is. Zoekt op offertenummer en klantnaam.</summary>
+    public static IEnumerable<VerkoopOverzichtRegel> Filter(
+        IEnumerable<VerkoopOverzichtRegel> regels, VerkoopFase fase, string? zoekterm, bool zoekInAlle)
+    {
+        var term = zoekterm?.Trim();
+        var heeftTerm = !string.IsNullOrWhiteSpace(term);
+
+        var q = zoekInAlle && heeftTerm ? regels : regels.Where(o => o.Fase == fase);
+
+        if (heeftTerm)
             q = q.Where(o =>
-                o.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                (o.Klant != null &&
-                 $"{o.Klant.Voornaam} {o.Klant.Achternaam}"
-                    .Contains(term, StringComparison.OrdinalIgnoreCase)));
+                o.OfferteNummer.ToString().Contains(term!, StringComparison.OrdinalIgnoreCase) ||
+                o.KlantNaam.Contains(term!, StringComparison.OrdinalIgnoreCase));
 
-        foreach (var o in q) FilteredOffertes.Add(o);
+        return q;
     }
 
     // ── Navigatie ────────────────────────────────────────────────────────────
@@ -135,7 +193,7 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
     private async Task OpenAsync()
     {
         if (SelectedOfferte is null) return;
-        await _offerteNav.OpenOfferteAsync(SelectedOfferte.Id);
+        await _offerteNav.OpenOfferteAsync(SelectedOfferte.OfferteId);
     }
 
     // ── Verwijderen = archiveren ──────────────────────────────────────────────
@@ -148,8 +206,8 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
     {
         if (SelectedOfferte is null) return;
 
-        var klantNaam = SelectedOfferte.Klant is { } k
-            ? $"{k.Voornaam} {k.Achternaam}".Trim()
+        var klantNaam = !string.IsNullOrWhiteSpace(SelectedOfferte.KlantNaam)
+            ? SelectedOfferte.KlantNaam
             : $"offerte #{SelectedOfferte.OfferteNummer}";
 
         var ok = await _dialogs.ConfirmAsync(
@@ -161,7 +219,7 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
         IsBusy = true;
         try
         {
-            await _archiefService.ArchiveerAsync(SelectedOfferte.Id);
+            await _archiefService.ArchiveerAsync(SelectedOfferte.OfferteId);
             _toast.Success($"Offerte #{SelectedOfferte.OfferteNummer} gearchiveerd.");
             await LoadAsync();
         }
