@@ -40,8 +40,23 @@
 							Orientation="Horizontal"
 							Spacing="10"
 							VerticalAlignment="Center">
+					<!-- US-98: week kiezen (vooral handig vanuit Werkbonnen) -->
+					<Button Content="◀"
+							Command="{Binding VorigeWeekCommand}"
+							ToolTip.Tip="Vorige week"
+							Classes="AccentBtn"
+							VerticalAlignment="Center"
+							Padding="10,6"
+							MinHeight="32"/>
 					<TextBlock Text="{Binding Year}" Classes="body" Foreground="{DynamicResource TextOnDark}" VerticalAlignment="Center"/>
 					<TextBlock Text="{Binding WeekNr, StringFormat='Week {0}'}" Classes="body" Foreground="{DynamicResource TextOnDark}" VerticalAlignment="Center"/>
+					<Button Content="▶"
+							Command="{Binding VolgendeWeekCommand}"
+							ToolTip.Tip="Volgende week"
+							Classes="AccentBtn"
+							VerticalAlignment="Center"
+							Padding="10,6"
+							MinHeight="32"/>
 
 					<Button Content="🔄 Vernieuwen"
 							Command="{Binding VerversCommand}"
