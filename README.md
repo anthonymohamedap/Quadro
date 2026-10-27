@@ -28,16 +28,28 @@ Openen in Rider of Visual Studio kan via `Quadro.sln`. De app maakt bij de eerst
 
 1. Feature-branch vanaf `main`
 2. Wijzigingen + tests → `.\verify.ps1` moet groen zijn
-3. Schemawijziging? → `.\Scripts\add-migration.ps1 <Naam>` (nooit handmatige SQL-patches)
+3. Schemawijziging? → `.\Scripts\add-migration.ps1 <Naam>` (nooit handmatige SQL-patches).
+   Het script genereert dezelfde migratie voor beide providers (geen draaiende database nodig):
+   ```powershell
+   # SQLite (QuadroApp.Data/Migrations)
+   dotnet ef migrations add <Naam> --project QuadroApp.Data --startup-project QuadroApp.Data
+   # PostgreSQL (QuadroApp.Migrations.Npgsql/Migrations); QUADRO_PG_DESIGN_CS mag een dummy zijn
+   $env:QUADRO_PG_DESIGN_CS = "Host=localhost;Database=x;Username=x;Password=x"
+   dotnet ef migrations add <Naam> --project QuadroApp.Migrations.Npgsql --startup-project QuadroApp.Migrations.Npgsql
+   ```
+   Bij een pure datamigratie (model ongewijzigd) mag een herschreven `AppDbContextModelSnapshot.cs` met enkel
+   herordende entiteiten teruggedraaid worden. Ongedaan maken: `dotnet ef migrations remove` met dezelfde
+   `--project`/`--startup-project` in beide projecten.
 4. Push → CI draait build/test/security-scan → PR → merge
 
 ## Mappenstructuur
 
 ```
-Data/           EF Core: AppDbContext, migratie-runner (SqliteSchemaPatcher), audit-writer, seeder
-Migrations/     EF-migraties (Baseline-squash van juli 2026 + vervolg)
-Model/DB/       Entiteiten (Klant, Offerte, WerkBon, Factuur, Gebruiker, AuditLog, ...)
-Model/Import/   Import-preview- en resultaatmodellen
+QuadroApp.Data/  EF Core: AppDbContext, migratie-runner (SqliteSchemaPatcher), audit-writer, seeder,
+                 SQLite-migraties in Migrations/ (Baseline-squash van juli 2026 + vervolg)
+QuadroApp.Migrations.Npgsql/  PostgreSQL-migraties + NpgsqlDesignTimeFactory (US-41)
+QuadroApp.Data/Model/DB/      Entiteiten (Klant, Offerte, WerkBon, Factuur, Gebruiker, AuditLog, ...)
+QuadroApp.Data/Model/Import/  Import-preview- en resultaatmodellen
 Service/        Businesslogica: workflows, pricing, export, backup, GDPR, security (auth)
 Validation/     ICrudValidator<T> per entiteit
 ViewModels/     MVVM-schermlogica (per domein gegroepeerd)
