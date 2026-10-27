@@ -16,6 +16,15 @@ Vandaag is één inlijsting verspreid over drie schermen en drie nummers: offert
 - **Winkelverkopen** en **Overzicht betalingen** blijven apart.
 - **Betaalwijzen**: Bancontact, Cash, Credit card, Overschrijving.
 
+## Wijziging 27/10/2026: geen offerte-PDF, de bestelbon is het prijsvoorstel
+
+In de praktijk krijgt de klant de **bestelbon**, ook als prijsvoorstel vóór het akkoord. De offerte-PDF (US-57, canvas K04) is daarom verwijderd (branch `feature/bestelbon-als-offerte`). Gevolgen voor dit plan:
+
+- De bestelbon kan al **vanaf stap 1** aangemaakt en afgedrukt worden; de stappenbalk heeft daarvoor een tweede knop naast de volgende stap. De aanname "de bestelbon ontstaat pas bij Klaar om af te halen" (K10, P3) vervalt.
+- `MeldKlaarAsync` maakt de bestelbon enkel aan als die nog niet bestaat.
+- US-94 drukt enkel werkbon en bestelbon af; K04 vervalt.
+- **Beslist (27/10):** een bestelbon vóór het akkoord is *voorlopig* ("V412", "voorlopig (offerte 412)"), zonder volgnummer, en telt niet mee voor de boekhouding. Het volgnummer (2026-19) en de besteldatum komen pas bij "Bevestigen als bestelling", zodat klanten die niet bestellen geen gaten in de nummering laten.
+
 ## Architectuurkeuzes
 
 ### 1. Geen nieuwe entiteit: de verkoop ís de offerte
@@ -63,7 +72,7 @@ Nieuwe service bovenop de bestaande (`IWorkflowService`, `IWerkBonWorkflowServic
 | `StartVerkoopAsync(klantId)` | maakt offerte + kent nummer meteen toe | "Nieuwe offerte" (P7: geen "offertenr. 0" meer) |
 | `BevestigAlsBestellingAsync(id)` | offerte → Goedgekeurd, werkbon aanmaken | "Bevestigen → Bestelling" |
 | `StartProductieAsync(id)` | werkbon → InUitvoering, offerte → InProductie | inplannen zette offerte al op InProductie (P10) |
-| `MeldKlaarAsync(id)` | werkbon → Afgewerkt, bestelbon aanmaken (zichtbaar gemeld), offerte → Afgewerkt → Besteld | onzichtbare bestelbon (P3) |
+| `MeldKlaarAsync(id)` | werkbon → Afgewerkt, bestelbon aanmaken als die nog niet bestaat (zichtbaar gemeld), offerte → Afgewerkt → Besteld | onzichtbare bestelbon (P3) |
 | `SlaStappenOverAsync(id, stappen, reden)` | zet de tussenliggende werkbonstatussen in één keer, bewaart flags + reden, maakt bestelbon | nieuw |
 | `RekenAfEnHaalAfAsync(id, bedrag, betaalwijze, ontvangen?)` | hergebruikt US-76-logica (betaling + Afgehaald, gesplitst of later) | afrekenblok werkbon |
 | `HaalAfZonderBetalenAsync(id)` | werkbon → Afgehaald, rest blijft open | idem |
@@ -77,7 +86,7 @@ De handmatige knoppen "↩ Concept" / "↩ Verzonden" (P15) en de werkbon-status
 
 `ToonEnDrukAsync(DocumentSoort soort, int offerteId)` voor Offerte, Werkbon en Bestelbon:
 
-- bouwt de PDF met de bestaande exporters (`PdfOfferteExporter`, `PdfFactuurExporter`) + een nieuwe `PdfWerkBonExporter` (zonder prijzen, afvinkvakjes, één blok per inlijsting — K07);
+- bouwt de PDF met de bestaande `PdfFactuurExporter` (bestelbon) + een nieuwe `PdfWerkBonExporter` (zonder prijzen, afvinkvakjes, één blok per inlijsting — K07);
 - toont een voorbeeldvenster (QuestPDF `GenerateImages()` → `Image`-lijst in Avalonia);
 - "Bewaren als PDF" → vaste map `Documenten/QuadroApp/{Offertes|Werkbonnen|Bestelbonnen}/<Soort>-<nr>.pdf`;
 - "Afdrukken" → bestand bewaren en openen met de systeemviewer (`IPathOpener`), waar macOS/Windows de printerdialoog geven. Printerkeuze en aantal exemplaren in de app zelf (K04/K07/K11) is fase 2 (zie open vraag 4).
@@ -102,7 +111,7 @@ Nagekeken in `docs/backlog` en in de code (26/10/2026). Wat al gebouwd is, wordt
 | **US-42** Statussync offerte ↔ werkbon ↔ bestelbon | `OfferteStatusPropagation`: werkbon/bestelbon zetten de offerte vooruit, transactioneel | Blijft. Enige wijziging: inplannen zet de offerte niet meer op InProductie (US-51-aanroep in `WerkBonWorkflowService`), dat doet nu "Start productie" (P10). |
 | **US-48** Status-reconciliatie | `OfferteStatusReconciliatieService.BepaalDoelStatus(werkbon, factuur)` leidt de offertestatus al af | `VerkoopStapResolver` bouwt hierop voort, zodat stap en offertestatus nooit verschillen. Extra test: voor elke combinatie zijn resolver en `BepaalDoelStatus` het eens. |
 | **US-56** Offertestatus manueel wijzigen | knoppen Concept ↔ Verzonden ↔ Goedgekeurd, ook terug als correctie | Het concept kent geen aparte stap Verzonden. Voorstel: **Offerte afdrukken zet Concept → Verzonden automatisch** (K01 toont "Offerte · afgedrukt"); Goedgekeurd = "Klant akkoord". Terug naar Concept enkel zolang er geen werkbon is (lost P15 op). → open vraag 7. |
-| **US-57** Offerte-PDF | `PdfOfferteExporter` + bestandskiezer | Exporter blijft; de bestandskiezer wordt de vaste map (US-94). |
+| **US-57** Offerte-PDF | `PdfOfferteExporter` + bestandskiezer | **Verwijderd (27/10)**: de klant krijgt de bestelbon als prijsvoorstel. |
 | **US-27** Plandatum = afhaaldatum | plannen zet `OfferteRegel.AfhaalDatum` = laatste plandag; handmatig overschrijven mag | Blijft zo. Stap 4 krijgt "Afhalen wijzigen" als die handmatige overschrijving (K10). |
 | **US-21** Plannen per regel | aparte datums per inlijsting | Blijft; zit in de planner in stap 2. |
 | **US-49 / US-50** Planning-redesign + drag & drop | KPI's, dagtegels, dagdetail; code-behind `DayTile_PointerPressed`, `OnDataContextChanged` en DnD via `DataTransfer` | Bij Window → UserControl (US-92) moet die code-behind letterlijk mee; dat is het grootste risico van fase C. |
@@ -126,7 +135,7 @@ Nagekeken in `docs/backlog` en in de code (26/10/2026). Wat al gebouwd is, wordt
 | 5 | **US-91** Stap 1 Offerte in het dossier + voorschot (K03, K05) | B | 4–6u |
 | 6 | **US-92** Planning als pagina en in stap 2 (K06, K14) | C | 4–6u |
 | 7 | **US-93** Stappen 3–5, overslaan, afgerond, annuleren (K08–K10, K12, K13, K09) | C | 6–8u |
-| 8 | **US-94** Afdrukken offerte / werkbon / bestelbon (K04, K07, K11) | C | 5–7u |
+| 8 | **US-94** Afdrukken werkbon / bestelbon (K07, K11) | C | 4–6u |
 | 9 | **US-95** Navigatie opruimen, Home, oude schermen weg | D | 2–3u |
 
 Totaal ± 34–48u (zonder US-88, dat in de sprint als US-79 gebeurt). Elke story = eigen feature-branch + PR; na fase B is er al een bruikbaar dossier naast de oude schermen.
@@ -220,7 +229,7 @@ Technisch: `VerkoopDossierViewModel` (houdt `OfferteId`, `StapInfo`, `BekekenSta
 2. Rechts de geselecteerde inlijsting: titel, aantal, schakelaar *Lijst op maat / Standaardkader*, afwerkingen, prijs (afgesproken prijs, korting %, prijs deze inlijsting). Wijzigingen worden meteen bewaard.
 3. Standaardkader-keuzelijst toont naam + omschrijving + prijs en is doorzoekbaar ("c2 zwart"); de kaart Afwerkingen blijft zichtbaar (US-80).
 4. "Voorschot ontvangen" (K05): bedrag met snelknoppen 25 % / 50 % / Volledig, betaalwijze, datum.
-5. Voetknoppen: "Offerte afdrukken" en "Klant akkoord: bevestigen als bestelling ▶".
+5. Voetknoppen: "Bestelbon aanmaken / afdrukken" (prijsvoorstel voor de klant) en "Klant akkoord: bevestigen als bestelling ▶".
 
 Technisch: de bestaande `OfferteViewModel` (1 798 regels) + `OfferteRegelViewModel`/`OffertePrijsViewModel` worden hergebruikt; `OfferteView.axaml` wordt opgesplitst in `OfferteRegelsPaneel` en `OfferteRegelEditor` (UserControls) zodat ze in de stap passen. Workflowknoppen uit `OfferteWorkflowViewModel` verhuizen naar de dossier-voetbalk; "Bestelbon aanmaken" in de offerte verdwijnt (P3). Automatisch bewaren: debounce (± 800 ms) op `SaveAsync`, met de bestaande concurrency-afhandeling (`ConcurrencyUx`).
 
@@ -255,12 +264,12 @@ Technisch: kind-ViewModels per stap; afrekenlogica uit `WerkBonDetailViewModel` 
 
 ---
 
-### US-94 — Afdrukken offerte / werkbon / bestelbon
+### US-94 — Afdrukken werkbon / bestelbon
 
 **Als** medewerker **wil ik** elk document met één knop afdrukken of als PDF bewaren, **zodat** ik niet hoef te zoeken waar het bestand terechtkwam.
 
 1. Elk "… afdrukken" opent een voorbeeldvenster met de echte PDF en de knoppen Afdrukken, Bewaren als PDF, Sluiten; het pad (`Documenten › QuadroApp › Bestelbonnen › Bestelbon-2026-19.pdf`) staat eronder.
-2. Offerte-PDF toont "Offertenr. 412" (nooit 0), geldig-tot-datum en optioneel voorschot en rest.
+2. ~~Offerte-PDF~~ — vervallen (27/10): de bestelbon is het prijsvoorstel.
 3. Werkbon-PDF (nieuw): zonder prijzen, per inlijsting maat, lijst/kader, glas, inleg, geplande datum en afvinkvakjes; optie "Prijzen tonen".
 4. Bestelbon afdrukken kan in elke status; een betaalde bon toont "Betaald op …".
 5. Standaardkader staat met naam + omschrijving + afmeting op elk document (US-80).
@@ -295,6 +304,7 @@ Technisch: `IDocumentAfdrukService` + `DocumentPreviewWindow` (QuestPDF `Generat
 4. **Printer en exemplaren** in de app (K04/K11 tonen een printerkeuze en "Exemplaren 2"): nodig, of volstaat de printdialoog van macOS? Rechtstreeks afdrukken vanuit Avalonia is niet cross-platform; via de systeemviewer wel.
 5. **Bestelbon bij overslaan**: overslaan van Bestelling + Productie maakt meteen de bestelbon aan (K09). Ook als alleen Bestelling wordt overgeslagen? Plan: nee, die ontstaat bij "Klaar".
 6. **Afhaaldatum vóór besteldatum** (P7): waarschuwing in stap 1 of stap 2?
-7. **Verzonden** (US-56): mag "Offerte afdrukken" de offerte automatisch op Verzonden zetten, zodat de handmatige statusknoppen weg kunnen?
+7. **Verzonden** (US-56): mag het afdrukken van de bestelbon in stap 1 de offerte automatisch op Verzonden zetten, zodat de handmatige statusknoppen weg kunnen?
 8. **Werkbonvenster** (US-51): akkoord dat het modale werkbonvenster, gekozen op 29/07, verdwijnt ten voordele van het dossier?
 9. **Annuleren na Klaar**: de transitietabel laat Geannuleerd vandaag alleen toe tot InProductie. Moet een verkoop met een bestelbon (Afgewerkt/Besteld) ook geannuleerd kunnen worden?
+10. ~~Nummering bestelbon~~ — beslist: volgnummer pas na bevestiging (zie bovenaan).

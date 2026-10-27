@@ -132,7 +132,7 @@
                     <StackPanel Spacing="6">
                         <TextBlock Text="Bestelbon" Classes="h2"/>
                         <WrapPanel>
-                            <TextBlock Text="{Binding Bestelbon.FactuurNummer, StringFormat='Nr. {0}'}" FontWeight="SemiBold" Margin="0,0,16,0"/>
+                            <TextBlock Text="{Binding Bestelbon.NummerLabel, StringFormat='Nr. {0}'}" FontWeight="SemiBold" Margin="0,0,16,0"/>
                             <TextBlock Text="{Binding Bestelbon.Status, Converter={x:Static conv:StatusLabelConverter.Instance}, ConverterParameter='Status: {0}'}" Foreground="{DynamicResource TextSecondary}" Margin="0,0,16,0"/>
                             <TextBlock Text="{Binding Bestelbon.TotaalInclBtw, StringFormat='Totaal: € {0:N2}'}" Foreground="{DynamicResource TextSecondary}"/>
                         </WrapPanel>
@@ -176,6 +176,12 @@
                                                Foreground="{DynamicResource TextSecondary}"
                                                TextTrimming="CharacterEllipsis"
                                                ToolTip.Tip="{Binding OfferteRegel.TypeLijst.Artikelnummer}"/>
+                                    <!-- US-80: standaardkader met omschrijving -->
+                                    <TextBlock Text="{Binding OfferteRegel.StandaardkaderLabel}"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip.Tip="{Binding OfferteRegel.StandaardkaderLabel}"
+                                               IsVisible="{Binding OfferteRegel.StandaardkaderLabel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                                     <TextBlock Text="{Binding OfferteRegel.AfwerkingSamenvatting, StringFormat='Afwerking: {0}'}"
                                                Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"
                                                ToolTip.Tip="{Binding OfferteRegel.AfwerkingSamenvatting}"

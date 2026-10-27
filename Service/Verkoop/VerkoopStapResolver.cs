@@ -1,4 +1,4 @@
-using QuadroApp.Model.DB;
+﻿using QuadroApp.Model.DB;
 using System.Collections.Generic;
 
 namespace QuadroApp.Service.Verkoop
@@ -93,10 +93,10 @@ namespace QuadroApp.Service.Verkoop
         /// <summary>Uitleg per stap (tooltip, AC 5).</summary>
         public static string Uitleg(VerkoopStap stap) => stap switch
         {
-            VerkoopStap.Offerte            => "Prijs opmaken en de offerte aan de klant geven. Gaat de klant akkoord, bevestig dan als bestelling.",
+            VerkoopStap.Offerte            => "Prijs opmaken en de bestelbon als prijsvoorstel aan de klant geven. Gaat de klant akkoord, bevestig dan als bestelling.",
             VerkoopStap.Bestelling         => "De klant heeft bevestigd: er is een werkbon. Plan het werk in en bestel wat nodig is.",
             VerkoopStap.InProductie        => "Het werk is bezig in het atelier (werkbon in uitvoering).",
-            VerkoopStap.KlaarOmAfTeHalen   => "Het werk is klaar en de bestelbon bestaat. Druk de bestelbon af voor de klant.",
+            VerkoopStap.KlaarOmAfTeHalen   => "Het werk is klaar. Druk de bestelbon af voor de klant.",
             VerkoopStap.AfgehaaldEnBetaald => "De klant haalt af en betaalt de rest.",
             _                              => string.Empty
         };

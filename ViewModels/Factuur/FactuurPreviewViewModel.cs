@@ -29,7 +29,7 @@ public partial class FactuurPreviewViewModel : ObservableObject
 
     public Action? RequestClose { get; set; }
 
-    public string Titel => $"Bestelbon {Factuur.FactuurNummer}";   // US-85 (P1): nooit "Factuur"
+    public string Titel => $"Bestelbon {Factuur.NummerLabel}";   // US-85 (P1): nooit "Factuur"
     public string StatusTekst => $"Status: {Factuur.Status.Label()}";
 
     public FactuurPreviewViewModel(
@@ -117,7 +117,7 @@ public partial class FactuurPreviewViewModel : ObservableObject
             }
 
             ExportResult result;
-            if (Factuur.Status is FactuurStatus.Draft)
+            if (Factuur.Status is FactuurStatus.Draft && !Factuur.IsVoorlopig)
             {
                 await _workflow.MarkeerKlaarVoorExportAsync(Factuur.Id);
                 result = await _exportService.ExportAsync(Factuur.Id, ExportFormaat.Pdf, exportFolder);

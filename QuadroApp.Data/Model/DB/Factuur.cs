@@ -30,7 +30,22 @@ public class Factuur
     public Offerte? Offerte { get; set; }
 
     public int Jaar { get; set; }
-    public int VolgNr { get; set; }
+
+    /// <summary>Doorlopend volgnummer voor de boekhouding. Leeg (null) zolang de klant de offerte
+    /// nog niet bevestigd heeft: dan is het een voorlopige bon ("V412" = bij offerte 412).
+    /// Het nummer wordt toegekend bij "Bevestigen als bestelling", zodat klanten die niet
+    /// bestellen geen gaten in de nummering laten.</summary>
+    public int? VolgNr { get; set; }
+
+    /// <summary>Nog niet bevestigd: geen volgnummer, telt niet mee voor de boekhouding.</summary>
+    [NotMapped]
+    public bool IsVoorlopig => VolgNr is null;
+
+    /// <summary>Wat de gebruiker en de klant zien: "2026-19", of "voorlopig (offerte 412)".</summary>
+    [NotMapped]
+    public string NummerLabel => IsVoorlopig
+        ? $"voorlopig (offerte {FactuurNummer.TrimStart('V')})"
+        : FactuurNummer;
 
     [MaxLength(20)]
     public string FactuurNummer { get; set; } = string.Empty;

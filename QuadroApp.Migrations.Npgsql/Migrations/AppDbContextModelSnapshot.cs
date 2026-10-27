@@ -286,7 +286,7 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.Property<DateTime>("VervalDatum")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("VolgNr")
+                    b.Property<int?>("VolgNr")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("VoorschotBedrag")
