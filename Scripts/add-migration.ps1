@@ -1,5 +1,20 @@
-# add-migration.ps1 - voegt een EF Core migratie toe (US-30 workflow).
+# add-migration.ps1 - voegt een EF Core migratie toe voor BEIDE providers (US-30/US-41 workflow).
 # Gebruik:  .\Scripts\add-migration.ps1 AddGebruikers
+#
+# Sinds US-41 leeft de EF-laag (AppDbContext) in QuadroApp.Data en heeft elke provider een eigen
+# migratieset met dezelfde naam:
+#   1. SQLite     -> QuadroApp.Data/Migrations              (design-time: AppDbContextFactory)
+#   2. PostgreSQL -> QuadroApp.Migrations.Npgsql/Migrations (design-time: NpgsqlDesignTimeFactory,
+#      leest QUADRO_PG_DESIGN_CS; 'migrations add' heeft GEEN draaiende database nodig)
+#
+# Let op bij een pure datamigratie (model ongewijzigd): dotnet ef herschrijft soms
+# AppDbContextModelSnapshot.cs met enkel herordende entiteiten. Dat is ruis en mag je terugdraaien
+# (git checkout -- <pad>/AppDbContextModelSnapshot.cs); de drift-guard
+# (ModelDriftTests/MigrationSafetyTests) blijft groen.
+#
+# Migratie ongedaan maken (in beide projecten):
+#   dotnet ef migrations remove --project QuadroApp.Data --startup-project QuadroApp.Data
+#   dotnet ef migrations remove --project QuadroApp.Migrations.Npgsql --startup-project QuadroApp.Migrations.Npgsql
 param([Parameter(Mandatory=$true)][string]$Naam)
 
 $ErrorActionPreference = "Stop"
@@ -38,8 +53,21 @@ elseif ($ef -notmatch [regex]::Escape($efVersion)) {
     if ($LASTEXITCODE -ne 0) { exit 1 }
 }
 
-Write-Host "Migratie '$Naam' genereren..." -ForegroundColor Cyan
-dotnet ef migrations add $Naam --project (Join-Path $repoRoot "QuadroApp.csproj")
-if ($LASTEXITCODE -ne 0) { Write-Host "MISLUKT" -ForegroundColor Red; exit 1 }
+# Dummy design-time connection string voor Npgsql; een bestaande waarde wordt gerespecteerd.
+if (-not $env:QUADRO_PG_DESIGN_CS) {
+    $env:QUADRO_PG_DESIGN_CS = "Host=localhost;Database=x;Username=x;Password=x"
+}
 
-Write-Host "Klaar. Controleer het gegenereerde bestand in Migrations/ en draai .\verify.ps1" -ForegroundColor Green
+Write-Host "[1/2] SQLite-migratie '$Naam' genereren (QuadroApp.Data)..." -ForegroundColor Cyan
+dotnet ef migrations add $Naam --project QuadroApp.Data --startup-project QuadroApp.Data
+if ($LASTEXITCODE -ne 0) { Write-Host "MISLUKT (SQLite)" -ForegroundColor Red; exit 1 }
+
+Write-Host "[2/2] PostgreSQL-migratie '$Naam' genereren (QuadroApp.Migrations.Npgsql)..." -ForegroundColor Cyan
+dotnet ef migrations add $Naam --project QuadroApp.Migrations.Npgsql --startup-project QuadroApp.Migrations.Npgsql
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "MISLUKT (Npgsql). De SQLite-migratie staat er al; verwijder die met:" -ForegroundColor Red
+    Write-Host "    dotnet ef migrations remove --project QuadroApp.Data --startup-project QuadroApp.Data" -ForegroundColor Yellow
+    exit 1
+}
+
+Write-Host "Klaar. Controleer de gegenereerde bestanden in QuadroApp.Data/Migrations/ en QuadroApp.Migrations.Npgsql/Migrations/ en draai .\verify.ps1" -ForegroundColor Green
