@@ -47,8 +47,20 @@ namespace QuadroApp.Service
             return werkBon;
         }
 
+        /// <summary>
+        /// US-96 — plannen in het verleden kan niet: zo'n taak komt nooit meer op de weeklijst
+        /// die het atelier opvraagt. Vandaag zelf mag wel.
+        /// </summary>
+        public static void ControleerNietInVerleden(DateTime dag)
+        {
+            if (dag.Date < DateTime.Today)
+                throw new InvalidOperationException(
+                    $"Plannen in het verleden kan niet: {dag:dd/MM/yyyy} ligt vóór vandaag. Kies vandaag of een latere dag.");
+        }
+
         public async Task VoegPlanningToeVoorRegelAsync(int werkBonId, int offerteRegelId, DateTime dag, int duurMinuten, string? omschrijving = null)
         {
+            ControleerNietInVerleden(dag);
             await using var db = await _factory.CreateDbContextAsync();
 
             var werkBon = await db.WerkBonnen.FirstOrDefaultAsync(w => w.Id == werkBonId);
@@ -126,6 +138,8 @@ namespace QuadroApp.Service
 
             if (capaciteitMinutenPerDag <= 0)
                 throw new InvalidOperationException("Dagcapaciteit moet groter zijn dan 0 minuten.");
+
+            ControleerNietInVerleden(startDag);
 
             await using var db = await _factory.CreateDbContextAsync();
 
@@ -232,6 +246,7 @@ namespace QuadroApp.Service
 
         public async Task HerplanWerkBonRegelsAsync(int werkBonId, DateTime nieuweDag, int? startUur = 9, int? startMinuut = 0)
         {
+            ControleerNietInVerleden(nieuweDag);
             await using var db = await _factory.CreateDbContextAsync();
 
             var werkBon = await db.WerkBonnen.Include(w => w.Taken).FirstOrDefaultAsync(w => w.Id == werkBonId);
@@ -260,6 +275,7 @@ namespace QuadroApp.Service
 
         public async Task VoegPlanningToeAsync(int werkBonId, DateTime start, int duurMinuten, string? omschrijving = null)
         {
+            ControleerNietInVerleden(start);
             await using var db = await _factory.CreateDbContextAsync();
 
             var werkBon = await db.WerkBonnen.Include(w => w.Taken).FirstOrDefaultAsync(w => w.Id == werkBonId);
