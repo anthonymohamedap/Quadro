@@ -47,12 +47,12 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         get
         {
             if (GekoppeldeFactuur is not null)
-                return $"Bestelbon {GekoppeldeFactuur.FactuurNummer} ({GekoppeldeFactuur.Status})";
+                return $"Bestelbon {GekoppeldeFactuur.FactuurNummer} ({GekoppeldeFactuur.Status.Label()})";
 
             if (GekoppeldeWerkBon is null)
                 return "Nog geen bestelbon voor deze offerte.";
 
-            return $"Nog geen bestelbon. Werkbon status: {GekoppeldeWerkBon.Status}.";
+            return $"Nog geen bestelbon. Werkbon: {GekoppeldeWerkBon.Status.Label()}.";
         }
     }
 

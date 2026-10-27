@@ -6,6 +6,7 @@ using QuadroApp.Model.Snapshot;
 using QuadroApp.Service.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace QuadroApp.Service
@@ -278,14 +279,16 @@ namespace QuadroApp.Service
         {
             if (!OfferteTransitions.TryGetValue(oldStatus, out var allowed) || !allowed.Contains(newStatus))
                 throw new InvalidOperationException(
-                    $"Ongeldige statusovergang: {oldStatus} → {newStatus}");
+                    $"Dit kan niet: van \"{oldStatus.Label()}\" naar \"{newStatus.Label()}\" gaan.");
         }
 
         private static void ValidateWerkBonTransition(WerkBonStatus oldStatus, WerkBonStatus newStatus)
         {
+            // US-85: gewone woorden, en zeggen wat wél kan (P4).
             if (!WerkBonTransitions.TryGetValue(oldStatus, out var allowed) || !allowed.Contains(newStatus))
-                throw new InvalidOperationException(
-                    $"Ongeldige statusovergang: {oldStatus} → {newStatus}");
+                throw new InvalidOperationException(allowed is { Count: > 0 }
+                    ? $"Dit kan niet: van \"{oldStatus.Label()}\" naar \"{newStatus.Label()}\". De volgende stap is \"{allowed.First().Label()}\"."
+                    : $"Dit kan niet: de werkbon staat al op \"{oldStatus.Label()}\".");
         }
 
         // ── No-op archief voor backward-compatible constructors ─────────────
