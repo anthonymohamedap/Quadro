@@ -29,7 +29,7 @@ public class FactuurWorkflowServiceTests
         Assert.Null(factuur.WerkBonId);
         Assert.Equal(FactuurStatus.Draft, factuur.Status);
         Assert.NotEmpty(factuur.Lijnen);
-        Assert.Equal("Factuur", factuur.DocumentType);
+        Assert.Equal("Bestelbon", factuur.DocumentType);
     }
 
     [Fact]

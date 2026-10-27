@@ -39,7 +39,8 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     {
         Directory.CreateDirectory(exportFolder);
         var safeNumber = factuur.FactuurNummer.Replace('/', '-');
-        var path = Path.Combine(exportFolder, $"{factuur.DocumentType}-{safeNumber}.pdf");
+        // Altijd "Bestelbon-…" (ook voor oude bonnen met DocumentType "Factuur"; US-82/US-85).
+        var path = Path.Combine(exportFolder, $"Bestelbon-{safeNumber}.pdf");
         _logger?.LogInformation("PDF export map gegarandeerd: {Folder}", exportFolder);
 
         // Logo's laden
@@ -122,8 +123,18 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             row.ConstantItem(220).AlignRight().Column(right =>
             {
                 right.Spacing(2);
-                right.Item().AlignRight().Text($"bestelbonnr. {factuur.FactuurNummer}").SemiBold();
-                right.Item().AlignRight().Text($"besteldatum {factuur.FactuurDatum:dd/MM/yyyy}");
+                if (factuur.IsVoorlopig)
+                {
+                    // Prijsvoorstel vóór het akkoord: nog geen volgnummer en nog geen besteldatum.
+                    right.Item().AlignRight().Text("voorlopige bestelbon").SemiBold();
+                    right.Item().AlignRight().Text($"bij offerte {factuur.FactuurNummer.TrimStart('V')}");
+                    right.Item().AlignRight().Text($"datum {factuur.FactuurDatum:dd/MM/yyyy}");
+                }
+                else
+                {
+                    right.Item().AlignRight().Text($"bestelbonnr. {factuur.FactuurNummer}").SemiBold();
+                    right.Item().AlignRight().Text($"besteldatum {factuur.FactuurDatum:dd/MM/yyyy}");
+                }
                 if (factuur.GeplandeDatum.HasValue)
                     right.Item().AlignRight().Text($"gepland op: {factuur.GeplandeDatum.Value:dd/MM/yyyy}").SemiBold();
             });

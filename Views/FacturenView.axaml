@@ -29,7 +29,7 @@
           <ListBox.ItemTemplate>
             <DataTemplate>
               <Grid ColumnDefinitions="1.2*,2*,1*" Margin="4">
-                <TextBlock Text="{Binding FactuurNummer}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="{Binding NummerLabel}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                 <TextBlock Grid.Column="1" Text="{Binding KlantNaam}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding KlantNaam}"/>
                 <TextBlock Grid.Column="2" Text="{Binding Status, Converter={x:Static conv:StatusLabelConverter.Instance}}" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
               </Grid>

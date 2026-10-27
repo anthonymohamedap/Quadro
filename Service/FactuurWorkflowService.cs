@@ -93,6 +93,8 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         var factuur = await db.Facturen.FindAsync(factuurId) ?? throw new InvalidOperationException("Factuur niet gevonden.");
         if (factuur.Status != FactuurStatus.Draft)
             throw new InvalidOperationException("Alleen draft facturen kunnen klaar gezet worden voor export.");
+        if (factuur.IsVoorlopig)
+            throw new InvalidOperationException("Een voorlopige bestelbon (offerte nog niet bevestigd) gaat niet naar de boekhouding.");
         factuur.Status = FactuurStatus.KlaarVoorExport;
         factuur.BijgewerktOp = DateTime.UtcNow;
         await db.SaveChangesAsync();
@@ -477,6 +479,14 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
                 changed = true;
             }
 
+            // Voorlopige bon van een intussen bevestigde offerte → nu het volgnummer toekennen.
+            if (existing.IsVoorlopig && existing.Status != FactuurStatus.Geannuleerd
+                && await IsBevestigdAsync(db, offerte, werkBonId))
+            {
+                await KenVolgnummerToeAsync(db, existing);
+                changed = false; // al bewaard
+            }
+
             if (NeedsDraftPrijsRefresh(existing))
             {
                 var btwPctExisting = await LeesBtwPctAsync(db);
@@ -505,7 +515,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             OfferteId = offerte.Id,
             WerkBonId = werkBonId,
             Jaar = jaar,
-            DocumentType = "Factuur",
+            DocumentType = "Bestelbon",
             KlantNaam = BuildKlantNaam(klant),
             KlantAdres = BuildAdres(klant),
             KlantBtwNummer = klant?.BtwNummer,
@@ -521,19 +531,51 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         };
 
         HerberekenTotalen(factuur);
-
-        // US-38: nummer-toekenning met retry. De unieke index op (Jaar, VolgNr) /
-        // FactuurNummer laat een gelijktijdige insert falen (DbUpdateException);
-        // in dat geval herberekenen we het volgnummer en proberen opnieuw i.p.v.
-        // stil een duplicaat nummer weg te schrijven.
         db.Facturen.Add(factuur);
+
+        if (await IsBevestigdAsync(db, offerte, werkBonId))
+        {
+            await KenVolgnummerToeAsync(db, factuur);
+        }
+        else
+        {
+            // Prijsvoorstel vóór het akkoord van de klant: nog geen volgnummer.
+            factuur.FactuurNummer = VoorlopigNummer(offerte);
+            await db.SaveChangesAsync();
+        }
+
+        return factuur;
+    }
+
+    /// <summary>"V412": voorlopige bon bij offerte 412 (uniek, want één bon per offerte).</summary>
+    private static string VoorlopigNummer(Offerte offerte)
+        => offerte.OfferteNummer > 0 ? $"V{offerte.OfferteNummer}" : $"V-{offerte.Id}";
+
+    /// <summary>Bevestigd = de offerte is goedgekeurd of verder, of er bestaat al een werkbon.</summary>
+    private static async Task<bool> IsBevestigdAsync(AppDbContext db, Offerte offerte, int? werkBonId)
+        => werkBonId.HasValue
+           || offerte.Status is >= OfferteStatus.Goedgekeurd and not OfferteStatus.Geannuleerd
+           || await db.WerkBonnen.AnyAsync(w => w.OfferteId == offerte.Id);
+
+    /// <summary>
+    /// Kent het doorlopende volgnummer toe (en zet de besteldatum op vandaag).
+    /// US-38: met retry. De unieke index op (Jaar, VolgNr) / FactuurNummer laat een gelijktijdige
+    /// toekenning falen (DbUpdateException); dan herberekenen we het volgnummer en proberen opnieuw
+    /// i.p.v. stil een duplicaat nummer weg te schrijven.
+    /// </summary>
+    private static async Task KenVolgnummerToeAsync(AppDbContext db, Factuur factuur)
+    {
+        var vandaag = DateTime.Today;
+        factuur.Jaar = vandaag.Year;
+        factuur.FactuurDatum = vandaag;
+        factuur.VervalDatum = vandaag.AddDays(30);
 
         const int maxPogingen = 5;
         for (var poging = 1; ; poging++)
         {
-            factuur.VolgNr = (await db.Facturen.Where(f => f.Jaar == jaar)
-                                               .MaxAsync(f => (int?)f.VolgNr) ?? 0) + 1;
-            factuur.FactuurNummer = $"{jaar}-{factuur.VolgNr}";
+            factuur.VolgNr = (await db.Facturen.Where(f => f.Jaar == factuur.Jaar)
+                                               .MaxAsync(f => f.VolgNr) ?? 0) + 1;
+            factuur.FactuurNummer = $"{factuur.Jaar}-{factuur.VolgNr}";
 
             try
             {
@@ -545,8 +587,17 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
                 // Nummer is intussen door een andere sessie ingenomen — opnieuw proberen.
             }
         }
+    }
 
-        return factuur;
+    /// <summary>Bij "Bevestigen als bestelling": een voorlopige bon van deze offerte krijgt nu zijn volgnummer.</summary>
+    public async Task KenVolgnummerToeBijBevestigingAsync(int offerteId)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        var factuur = await db.Facturen.FirstOrDefaultAsync(f => f.OfferteId == offerteId && f.VolgNr == null);
+        if (factuur is null || factuur.Status == FactuurStatus.Geannuleerd)
+            return;
+
+        await KenVolgnummerToeAsync(db, factuur);
     }
 
     private async Task EnsureOfferteCalculatedAsync(Offerte offerte)
