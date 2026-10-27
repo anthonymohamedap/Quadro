@@ -124,6 +124,20 @@ public partial class WeekWerkLijstViewModel : ObservableObject
         }
     }
 
+    /// <summary>US-98 — de weeklijst kan nu ook vanuit Werkbonnen geopend worden: daar kies je
+    /// de week in het venster zelf (vorige / volgende week).</summary>
+    [RelayCommand]
+    private async Task VorigeWeekAsync() => await GaNaarWeekAsync(-1);
+
+    [RelayCommand]
+    private async Task VolgendeWeekAsync() => await GaNaarWeekAsync(+1);
+
+    private async Task GaNaarWeekAsync(int verschil)
+    {
+        var maandag = ISOWeek.ToDateTime(Year, WeekNr, DayOfWeek.Monday).AddDays(7 * verschil);
+        await InitializeAsync(ISOWeek.GetYear(maandag), ISOWeek.GetWeekOfYear(maandag));
+    }
+
     /// <summary>Herlaadt de weeklijst — pikt bestellingen op die elders (bv. in het
     /// leveranciersscherm) zijn geplaatst, zodat de status hier mee verandert.</summary>
     [RelayCommand]
