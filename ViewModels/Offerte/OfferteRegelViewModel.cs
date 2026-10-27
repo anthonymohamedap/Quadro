@@ -83,7 +83,9 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
                 try { SelectedInlegTypeLijst = value?.InlegTypeLijst; }
                 finally { _syncingInlegTypeLijst = false; }
 
-                // US-58: idem voor het kant-en-klaar kader.
+                // US-58: idem voor het kant-en-klaar kader. US-80: eerst de zoekterm wissen, zodat
+                // het kader van de nieuwe regel zeker in de keuzelijst staat.
+                KantKlaarKaderZoekterm = null;
                 _syncingKantKlaarKader = true;
                 try { SelectedKantKlaarKader = value?.KantKlaarKader; }
                 finally { _syncingKantKlaarKader = false; }
@@ -149,25 +151,13 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
         finally { _syncingInlegTypeLijst = false; }
     }
 
-    /// <summary>US-58 — schrijf het gekozen kant-en-klaar kader terug naar de huidige regel en
-    /// neem meteen de vaste maat van het kader over (Breedte/Hoogte worden in de UI read-only
-    /// zodra <see cref="HasKantKlaarKader"/> true is).</summary>
+    /// <summary>US-58 — schrijf het gekozen standaardkader terug naar de huidige regel.
+    /// US-80: gekozen afwerkingen blijven staan; ze tellen mee op de ingegeven afmeting.</summary>
     partial void OnSelectedKantKlaarKaderChanged(KantKlaarKader? value)
     {
         if (_syncingKantKlaarKader || SelectedRegel is null) return;
 
         SelectedRegel.KantKlaarKader = value;
-        if (value is not null)
-        {
-            // Het kader is al volledig afgewerkt — een eventueel eerder gekozen afwerking
-            // (glas/passe-partout/...) mag niet blijven hangen, ook al toont de UI die niet meer.
-            SelectedRegel.Glas = null;
-            SelectedRegel.PassePartout1 = null;
-            SelectedRegel.PassePartout2 = null;
-            SelectedRegel.DiepteKern = null;
-            SelectedRegel.Opkleven = null;
-            SelectedRegel.Rug = null;
-        }
         OnPropertyChanged(nameof(HasKantKlaarKader));
         RegelChanged?.Invoke();
     }
@@ -175,6 +165,8 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
     /// <summary>US-58 — synct SelectedKantKlaarKader vanuit de huidige SelectedRegel.</summary>
     public void SyncKantKlaarKaderFromSelectedRegel()
     {
+        KantKlaarKaderZoekterm = null;
+        ApplyKantKlaarKaderFilter(null);
         _syncingKantKlaarKader = true;
         try { SelectedKantKlaarKader = SelectedRegel?.KantKlaarKader; }
         finally { _syncingKantKlaarKader = false; }
@@ -237,6 +229,50 @@ public partial class OfferteRegelViewModel : AsyncViewModelBase
     }
 
     partial void OnInlegTypeLijstZoektermChanged(string? value) => ApplyInlegTypeLijstFilter(value);
+
+    // ── US-80: standaardkader zoeken op naam én omschrijving ("c2 zwart") ──
+    [ObservableProperty] private string? kantKlaarKaderZoekterm;
+    public ObservableCollection<KantKlaarKader> GefilterdeKantKlaarKaders { get; } = new();
+
+    partial void OnKantKlaarKaderZoektermChanged(string? value) => ApplyKantKlaarKaderFilter(value);
+
+    /// <summary>US-80 — elk woord van de zoekterm moet in naam of beschrijving voorkomen.</summary>
+    public static bool PastBijZoekterm(KantKlaarKader kader, string? zoekterm)
+    {
+        if (string.IsNullOrWhiteSpace(zoekterm)) return true;
+        var tekst = $"{kader.Naam} {kader.Beschrijving}".ToLowerInvariant();
+        return zoekterm.ToLowerInvariant()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .All(tekst.Contains);
+    }
+
+    /// <summary>US-80 — zelfde diff-aanpak als <see cref="ApplyTypeLijstFilter"/> (nooit Clear),
+    /// zodat de keuzelijst haar geselecteerde kader niet verliest. Het gekozen kader blijft altijd zichtbaar.</summary>
+    public void ApplyKantKlaarKaderFilter(string? zoekterm)
+    {
+        var target = KantKlaarKaders
+            .Where(k => PastBijZoekterm(k, zoekterm) || ReferenceEquals(k, SelectedKantKlaarKader))
+            .ToList();
+        var targetSet = new System.Collections.Generic.HashSet<KantKlaarKader>(target);
+
+        for (int i = GefilterdeKantKlaarKaders.Count - 1; i >= 0; i--)
+        {
+            if (!targetSet.Contains(GefilterdeKantKlaarKaders[i]))
+                GefilterdeKantKlaarKaders.RemoveAt(i);
+        }
+
+        var currentSet = new System.Collections.Generic.HashSet<KantKlaarKader>(GefilterdeKantKlaarKaders);
+        int insertAt = 0;
+        foreach (var item in target)
+        {
+            if (!currentSet.Contains(item))
+            {
+                GefilterdeKantKlaarKaders.Insert(insertAt, item);
+                currentSet.Add(item);
+            }
+            insertAt++;
+        }
+    }
 
     /// <summary>US-53 — filtert GefilterdeInlegTypeLijsten via diff (nooit Clear), zelfde
     /// aanpak als ApplyTypeLijstFilter zodat de ComboBox zijn SelectedItem niet verliest.</summary>

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuadroApp.Model.DB
 {
@@ -23,5 +24,9 @@ namespace QuadroApp.Model.DB
 
         /// <summary>True = gearchiveerd. Wordt door de globale query filter uitgesloten.</summary>
         public bool IsGearchiveerd { get; set; } = false;
+
+        /// <summary>US-80 — "Naam – Beschrijving" (bv. "C2 – Alu zwart 50×70"); enkel de naam als er geen beschrijving is.</summary>
+        [NotMapped]
+        public string Weergave => string.IsNullOrWhiteSpace(Beschrijving) ? Naam : $"{Naam} – {Beschrijving.Trim()}";
     }
 }
