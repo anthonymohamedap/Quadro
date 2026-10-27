@@ -166,6 +166,28 @@ dotnet ef database update --project QuadroApp.Migrations.Npgsql --startup-projec
 
 Vergelijk het resultaat met wat `EnsureCreatedAsync` opleverde (zelfde tabellen/kolommen/indexen).
 
+### Vervolgmigraties (na US-41, actuele workflow)
+
+> De commando's hierboven beschrijven de eenmalige Baseline-generatie uit het plan. In de
+> uiteindelijke implementatie leeft de PG-design-time factory in het migratieproject zelf
+> (`QuadroApp.Migrations.Npgsql/NpgsqlDesignTimeFactory.cs`, leest `QUADRO_PG_DESIGN_CS`) en is
+> `EF_PROVIDER` niet meer nodig. Elke schemawijziging krijgt een migratie met **dezelfde naam** in
+> beide projecten — `.\Scripts\add-migration.ps1 <Naam>` doet dit in één keer:
+
+```powershell
+# SQLite (QuadroApp.Data/Migrations)
+dotnet ef migrations add <Naam> --project QuadroApp.Data --startup-project QuadroApp.Data
+
+# PostgreSQL (QuadroApp.Migrations.Npgsql/Migrations) — geen draaiende DB nodig, dummy volstaat
+$env:QUADRO_PG_DESIGN_CS = "Host=localhost;Database=x;Username=x;Password=x"
+dotnet ef migrations add <Naam> --project QuadroApp.Migrations.Npgsql --startup-project QuadroApp.Migrations.Npgsql
+```
+
+Ongedaan maken: `dotnet ef migrations remove` met dezelfde `--project`/`--startup-project` in beide
+projecten. Bij een pure datamigratie (model ongewijzigd) mag een herschreven
+`AppDbContextModelSnapshot.cs` met enkel herordende entiteiten teruggedraaid worden; de drift-guard
+(`ModelDriftTests`/`MigrationSafetyTests`) blijft groen.
+
 ---
 
 ## 7. Stap F — Baseline-markering van een BESTAANDE PG-DB
@@ -236,7 +258,8 @@ providers.
   ```
 - Npgsql: idem met een Npgsql-context (vereist een PG in CI), of via
   `dotnet ef migrations has-pending-model-changes --project QuadroApp.Migrations.Npgsql
-  --startup-project QuadroApp` als CI-stap (met `EF_PROVIDER=Npgsql`).
+  --startup-project QuadroApp.Migrations.Npgsql` als CI-stap (design-time factory leest
+  `QUADRO_PG_DESIGN_CS`; zie "Vervolgmigraties" in stap E).
 
 ---
 
