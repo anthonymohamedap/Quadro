@@ -307,6 +307,10 @@ namespace QuadroApp.Model.DB
         [NotMapped]
         public string InlegNummer => InlegTypeLijst?.Artikelnummer ?? "";
 
+        /// <summary>US-80 — "Standaardkader C2 – Alu zwart 50×70" voor een regel met standaardkader, anders leeg.</summary>
+        [NotMapped]
+        public string StandaardkaderLabel => KantKlaarKader is { } k ? $"Standaardkader {k.Weergave}" : "";
+
         [NotMapped]
         public string InlegLabel
         {

@@ -208,10 +208,11 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             }
 
             // Bouw verrijkte pipe-string met tagged segmenten
-            // US-68: een standaardkader is een artikel zonder maat — naam i.p.v. "Lijstwerk", en op de
-            // plaats van de afmeting de vaste markering "standaardkader" (PDF + preview herkennen die).
+            // US-68: bij een standaardkader staat op de plaats van de lijstcode de naam, en op de plaats
+            // van de afmeting de markering "standaardkader" (PDF + preview herkennen die).
+            // US-80: naam + omschrijving, en de ingegeven afmeting achter de markering.
             var segments = r.KantKlaarKader is { } standaard
-                ? new List<string> { standaard.Naam.Replace("|", "/"), StandaardkaderMarker }
+                ? new List<string> { standaard.Weergave.Replace("|", "/"), StandaardkaderSegment(r) }
                 : new List<string>
                 {
                     r.TypeLijst?.Artikelnummer ?? "Lijstwerk",
@@ -283,6 +284,16 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
     /// Invariante notatie zodat de bestelbon niet afhangt van de landinstelling van de pc.</summary>
     /// <summary>US-68 — markering op de plaats van de afmeting voor een standaardkader-lijn.</summary>
     public const string StandaardkaderMarker = "standaardkader";
+
+    /// <summary>US-80 — "standaardkader 50x70 cm" (of enkel de markering zonder afmeting).</summary>
+    private static string StandaardkaderSegment(OfferteRegel r)
+        => r.BreedteCm > 0 && r.HoogteCm > 0
+            ? $"{StandaardkaderMarker} {r.BreedteCm.ToString("0.##", CultureInfo.InvariantCulture)}x{r.HoogteCm.ToString("0.##", CultureInfo.InvariantCulture)} cm"
+            : StandaardkaderMarker;
+
+    /// <summary>US-80 — herkent het afmeting-segment van een standaardkader-lijn (met of zonder maat).</summary>
+    public static bool IsStandaardkaderSegment(string? segment)
+        => segment is not null && segment.StartsWith(StandaardkaderMarker, StringComparison.OrdinalIgnoreCase);
 
     public static string? InlegOmschrijving(OfferteRegel r)
     {

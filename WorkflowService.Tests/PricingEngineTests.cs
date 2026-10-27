@@ -250,10 +250,19 @@ public class PricingEngineTests
     }
 
     [Fact]
-    public void Calculate_KantKlaarKader_NegeertAfwerking_KaderIsAlVolledigAfgewerkt()
+    public void Calculate_Standaardkader_TeltAfwerkingMee_OpIngegevenAfmeting_US80()
     {
-        // US-58 — een kant-en-klaar kader is al volledig afgewerkt: een (per ongeluk) ingestelde
-        // afwerking mag nooit bovenop de stukprijs meetellen, ook al staat de UI dit niet meer toe.
+        // US-80 — afwerkingen tellen bij een standaardkader mee, berekend op de ingegeven afmeting
+        // (30×40 = 0,12 m²); de stukprijs van het kader blijft vast. Een (achtergebleven) inlegmaat
+        // speelt geen rol: inleg is niet van toepassing bij een standaardkader.
+        var glas = new AfwerkingsOptie
+        {
+            KostprijsPerM2 = 10m,
+            WinstMarge = 2m,
+            AfvalPercentage = 20m,
+            VasteKost = 3m,
+            WerkMinuten = 30
+        };
         var offerte = new Offerte
         {
             Regels =
@@ -263,15 +272,10 @@ public class PricingEngineTests
                     AantalStuks = 1,
                     BreedteCm = 30m,
                     HoogteCm = 40m,
+                    InlegBreedteCm = 10m,
+                    InlegHoogteCm = 10m,
                     KantKlaarKader = new KantKlaarKader { Naam = "Zwart 30x40", PrijsPerStukExcl = 20m },
-                    Glas = new AfwerkingsOptie
-                    {
-                        KostprijsPerM2 = 10m,
-                        WinstMarge = 2m,
-                        AfvalPercentage = 20m,
-                        VasteKost = 3m,
-                        WerkMinuten = 30
-                    }
+                    Glas = glas
                 }
             ]
         };
@@ -279,7 +283,9 @@ public class PricingEngineTests
         var result = _sut.Calculate(offerte, 60m, 21m, 0m, 1m, 10m);
 
         var regel = Assert.Single(result.Regels);
-        Assert.Equal(20m, regel.TotaalExcl); // enkel de stukprijs, glas wordt genegeerd
+        var verwachtGlas = PricingEngine.CalculateAfwerkingsOptiePrijsExcl(glas, 0.12m, 60m);
+        Assert.True(verwachtGlas > 0m);
+        Assert.Equal(20m + verwachtGlas, regel.TotaalExcl);
     }
 
     [Fact]

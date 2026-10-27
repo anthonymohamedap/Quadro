@@ -255,6 +255,15 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     // ── US-58: kant-en-klaar kader picker facade ──
     public System.Collections.ObjectModel.ObservableCollection<KantKlaarKader> KantKlaarKaders
         => Regelbeheer.KantKlaarKaders;
+
+    /// <summary>US-80 — zoeken in de standaardkaders op naam en omschrijving.</summary>
+    public string? KantKlaarKaderZoekterm
+    {
+        get => Regelbeheer.KantKlaarKaderZoekterm;
+        set => Regelbeheer.KantKlaarKaderZoekterm = value;
+    }
+    public System.Collections.ObjectModel.ObservableCollection<KantKlaarKader> GefilterdeKantKlaarKaders
+        => Regelbeheer.GefilterdeKantKlaarKaders;
     public System.Collections.ObjectModel.ObservableCollection<AfwerkingsOptie> GlasOpties
         => Regelbeheer.GlasOpties;
     public System.Collections.ObjectModel.ObservableCollection<AfwerkingsOptie> Passe1Opties
@@ -991,6 +1000,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                 case nameof(Regelbeheer.GefilterdeInlegTypeLijsten): OnPropertyChanged(nameof(GefilterdeInlegTypeLijsten)); break;
                 case nameof(Regelbeheer.SelectedKantKlaarKader): OnPropertyChanged(nameof(SelectedRegelKantKlaarKader)); break;
                 case nameof(Regelbeheer.KantKlaarKaders): OnPropertyChanged(nameof(KantKlaarKaders)); break;
+                case nameof(Regelbeheer.KantKlaarKaderZoekterm): OnPropertyChanged(nameof(KantKlaarKaderZoekterm)); break;
                 case nameof(Regelbeheer.HasKantKlaarKader): OnPropertyChanged(nameof(HasKantKlaarKader)); break;
                 case nameof(Regelbeheer.GlasOpties):
                     OnPropertyChanged(nameof(GlasOpties));
@@ -1050,14 +1060,15 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         Regelbeheer.ApplyTypeLijstFilter(Regelbeheer.TypeLijstZoekterm);
         Regelbeheer.ApplyInlegTypeLijstFilter(Regelbeheer.InlegTypeLijstZoekterm);
 
-        // US-58: kant-en-klare kaders — kleine lijst, geen filter/diff nodig.
+        // US-58: standaardkaders. US-80: gesorteerd op naam én omschrijving (8× "C2"), met zoekfilter.
         var kantKlaarKaders = await db.KantKlaarKaders.AsNoTracking()
-            .OrderBy(k => k.Naam)
+            .OrderBy(k => k.Naam).ThenBy(k => k.Beschrijving)
             .ToListAsync();
 
         Regelbeheer.KantKlaarKaders.Clear();
         foreach (var k in kantKlaarKaders)
             Regelbeheer.KantKlaarKaders.Add(k);
+        Regelbeheer.ApplyKantKlaarKaderFilter(Regelbeheer.KantKlaarKaderZoekterm);
 
         var klanten = await db.Klanten.AsNoTracking()
             .OrderBy(k => k.Achternaam).ThenBy(k => k.Voornaam)

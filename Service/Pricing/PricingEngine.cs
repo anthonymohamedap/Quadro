@@ -16,8 +16,10 @@ public sealed class PricingEngine
         {
             decimal SurfaceM2()
             {
-                var bw = r.InlegBreedteCm ?? r.BreedteCm;
-                var bh = r.InlegHoogteCm ?? r.HoogteCm;
+                // US-80: bij een standaardkader is inleg niet van toepassing → de ingegeven afmeting.
+                var metInleg = r.KantKlaarKaderId is null && r.KantKlaarKader is null;
+                var bw = metInleg ? r.InlegBreedteCm ?? r.BreedteCm : r.BreedteCm;
+                var bh = metInleg ? r.InlegHoogteCm ?? r.HoogteCm : r.HoogteCm;
                 return (bw * bh) / 10_000m;
             }
 
@@ -59,17 +61,15 @@ public sealed class PricingEngine
                         defaultAfvalPercentage)
                     : 0m;
 
-                // US-58: een kant-en-klaar kader is al volledig afgewerkt — afwerkingen
-                // (glas/passe-partout/...) tellen daar nooit bovenop mee, ook niet als er per
-                // ongeluk nog een afwerking op de regel staat.
-                var optiesEx = r.KantKlaarKaderId is not null
-                    ? 0m
-                    : CalcOpt(r.Glas) +
-                      CalcOpt(r.PassePartout1) +
-                      CalcOpt(r.PassePartout2) +
-                      CalcOpt(r.DiepteKern) +
-                      CalcOpt(r.Opkleven) +
-                      CalcOpt(r.Rug);
+                // US-80: afwerkingen tellen ook bij een standaardkader mee, berekend op de
+                // ingegeven afmeting; de stukprijs van het kader zelf blijft vast.
+                // (Wijzigt de afspraak van september / US-58 "geen afwerking".)
+                var optiesEx = CalcOpt(r.Glas) +
+                               CalcOpt(r.PassePartout1) +
+                               CalcOpt(r.PassePartout2) +
+                               CalcOpt(r.DiepteKern) +
+                               CalcOpt(r.Opkleven) +
+                               CalcOpt(r.Rug);
 
                 lineEx = lijstPrijs + inlegPrijs + optiesEx;
                 lineEx += (r.ExtraWerkMinuten / 60m) * uurloon;
