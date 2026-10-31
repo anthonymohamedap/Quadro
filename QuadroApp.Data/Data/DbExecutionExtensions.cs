@@ -13,7 +13,7 @@ namespace QuadroApp.Data
     /// <c>CommitAsync</c>); die HELE transactie is één herhaalbare eenheid. Bij een transient
     /// fout rolt de mislukte poging volledig terug (de transactie is niet gecommit) en draait
     /// de body opnieuw. De change tracker wordt vóór elke poging geleegd, zodat een retry geen
-    /// dubbele inserts/voorraadmutaties/factuurnummers oplevert.
+    /// dubbele inserts/voorraadmutaties/bestelbonnummers oplevert.
     ///
     /// <b>Belangrijk:</b> alle reads én writes moeten BINNEN de body gebeuren (niet ervoor
     /// opgebouwd), en er mogen geen al-gecommitte neveneffecten in de body zitten die bij een

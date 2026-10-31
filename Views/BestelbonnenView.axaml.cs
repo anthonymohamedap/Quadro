@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace QuadroApp.Views;
 
-public partial class FactuurInfoDialog : Window
+public partial class BestelbonnenView : UserControl
 {
-    public FactuurInfoDialog()
+    public BestelbonnenView()
     {
         InitializeComponent();
     }

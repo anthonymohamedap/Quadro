@@ -2,8 +2,8 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:QuadroApp.ViewModels"
-    x:Class="QuadroApp.Views.FactuurInfoDialog"
-    x:DataType="vm:FactuurInfoDialogViewModel"
+    x:Class="QuadroApp.Views.BestelbonGegevensDialog"
+    x:DataType="vm:BestelbonGegevensDialogViewModel"
     Width="560"
     Height="430"
     MinWidth="480"
@@ -18,12 +18,12 @@
             <StackPanel Spacing="14">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Extra bestelbon info" Classes="h1"/>
-                    <TextBlock Text="{Binding FactuurNummer}"
+                    <TextBlock Text="{Binding BestelbonNummer}"
                                Classes="body"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource InfoText}"
                                TextTrimming="CharacterEllipsis"
-                               ToolTip.Tip="{Binding FactuurNummer}"/>
+                               ToolTip.Tip="{Binding BestelbonNummer}"/>
                     <TextBlock Text="{Binding KlantNaam}"
                                Classes="body"
                                Foreground="{DynamicResource TextSecondary}"
@@ -33,7 +33,7 @@
 
                 <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="10">
                     <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Classes="body" Text="Besteldatum"/>
-                    <DatePicker Grid.Row="0" Grid.Column="1" SelectedDate="{Binding FactuurDatum, Mode=TwoWay}"/>
+                    <DatePicker Grid.Row="0" Grid.Column="1" SelectedDate="{Binding BestelbonDatum, Mode=TwoWay}"/>
 
                     <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Classes="body" Text="Vervaldatum"/>
                     <DatePicker Grid.Row="1" Grid.Column="1" SelectedDate="{Binding VervalDatum, Mode=TwoWay}"/>

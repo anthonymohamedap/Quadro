@@ -17,7 +17,7 @@ Stand 31/10/2026. Aanleiding: mail Veerle 28/10 — *"Wat bedoel je met 'facture
 | Nu | Wordt |
 |---|---|
 | `Factuur`, `FactuurLijn`, `FactuurStatus` | `Bestelbon`, `BestelbonLijn`, `BestelbonStatus` |
-| `FactuurId`, `FactuurNummer`, `FactuurDatum` | `BestelbonId`, `BestelbonNummer`, `BestelDatum` |
+| `FactuurId`, `FactuurNummer`, `FactuurDatum` | `BestelbonId`, `BestelbonNummer`, `BestelbonDatum` ¹ |
 | `Facturen`, `FactuurLijnen` (DbSet + tabel) | `Bestelbonnen`, `BestelbonLijnen` |
 | `FactuurWorkflowService`, `FactuurExportService`, `PdfFactuurExporter` (+ interfaces) | `BestelbonWorkflowService`, `BestelbonExportService`, `PdfBestelbonExporter` |
 | `FacturenViewModel`/`FacturenView`, `FactuurPreview*`, `FactuurInfoDialog*` | `BestelbonnenViewModel`/`BestelbonnenView`, `BestelbonPreview*`, `BestelbonGegevensDialog*` |
@@ -25,6 +25,8 @@ Stand 31/10/2026. Aanleiding: mail Veerle 28/10 — *"Wat bedoel je met 'facture
 | `Permissie.Factureren` | `Permissie.Bestelbonnen` |
 | `ExcelExportDataset.Facturen` | `ExcelExportDataset.Bestelbonnen` |
 | `DocumentType` (enkel "Bestelbon" of "Factuur") | weg (altijd bestelbon) |
+
+¹ Niet `BestelDatum`: die naam bestaat al voor de bestellingen bij de leverancier (o.a. op de werkbon), naast de datum van de bestelbon. Twee betekenissen voor één naam zou verwarrend zijn.
 
 ## Acceptatiecriteria
 
@@ -44,7 +46,23 @@ Stand 31/10/2026. Aanleiding: mail Veerle 28/10 — *"Wat bedoel je met 'facture
 
 **Fase B — code hernoemen (± 3–4u).** Types, bestanden, mappen, members en tests met IDE-refactor (Rider: Rename + "rename file"), één commit per groep. De database blijft hier nog onveranderd: in `AppDbContext` met `ToTable("Facturen")` / `HasColumnName("FactuurId")` enz. vastzetten, zodat er **geen** schemawijziging is (drift-guard `ModelDriftTests` moet groen blijven zonder migratie).
 
+> ✅ **Gedaan 31/10** (`feature/us99b-factuur-naar-bestelbon-code`): alle types, bestanden, de map `ViewModels/Bestelbon`, members, tests, Excel-sleutels (`bestelbonNummer`, `bestelbon-regels`, `bestelbonId`), GDPR-exportsleutel `Bestelbonnen` en `Permissie.Bestelbonnen` hernoemd (script, 87 bestanden). In `AppDbContext` vastgezet: `ToTable("Facturen")`, `ToTable("FactuurLijnen")`, `HasColumnName("FactuurNummer" / "FactuurDatum" / "FactuurId")`. `dotnet ef migrations has-pending-model-changes` geeft voor **SQLite én Npgsql** "no changes". Actuele docs (README, AUTH, GDPR, AUDIT, …) bijgewerkt; `docs/archief` en oude backlog blijven als geschiedenis.
+>
+> Nog "factu" in de code, bewust: de SQL in `SqliteSchemaPatcher`/`BestelbonSchemaUpgrade` en de mapping hierboven (verdwijnen in fase C), en de legacy-waarde `"Gefactureerd"` in `AppDbContext` (oude offertestatus in de data, moet gelezen kunnen blijven).
+>
+> Extra voor fase C: nieuwe audit-regels krijgen `EntiteitType = "Bestelbon"`/`"BestelbonLijn"` (typenaam), oude staan op `"Factuur"`/`"FactuurLijn"` → in de migratie mee omzetten (`UPDATE AuditLogs SET EntiteitType = …`), anders toont de filter in het auditlog beide.
+
 **Fase C — database (± 2u, met back-up).** De `ToTable`/`HasColumnName`-mapping uit fase B weghalen en een migratie `HernoemFactuurNaarBestelbon` genereren (`.\Scripts\add-migration.ps1`). Nakijken dat EF **RenameTable/RenameColumn** genereert en geen Drop/Create (anders handmatig omzetten naar rename — anders gaan de gegevens verloren). Test: migratietest zoals `BetaalwijzeTests.Migratie_zet_oude_betaalwijzen_om` met bestelbon + lijnen + betaling vóór en na. Op SQLite maakt EF bij een rename van een kolom met index/FK de tabel opnieuw aan (rebuild); controleren dat data meekomt.
+
+> ✅ **Gedaan 31/10** (`feature/us99c-database-bestelbon`): migratie `HernoemFactuurNaarBestelbon` (SQLite + Npgsql). EF genereerde **DropTable/CreateTable** (gegevens kwijt) → met de hand herschreven naar `RenameTable`/`RenameColumn`/`RenameIndex` + sleutels los/terug. Zet ook `DocumentType = 'Factuur'` → `'Bestelbon'` en `AuditLogs.EntiteitType` `Factuur`/`FactuurLijn` → `Bestelbon`/`BestelbonLijn`.
+> - SQLite: de herbouw van de tabellen kopieert elke rij (`INSERT … SELECT`); test `BestelbonMigratieTests` (bon, lijn, betaling, oude "Factuur"-bon, audit, sleutels en indexen).
+> - PostgreSQL 16 (lokaal): alleen `ALTER … RENAME`, één transactie; gegevens identiek, nieuwe bon krijgt een id, `Down` en opnieuw `Up` werken.
+> - De healer in `SqliteSchemaPatcher` raakt "Facturen" enkel nog aan als die tabel nog bestaat (anders crasht elke start na de migratie).
+> - `Scripts/MigrationTool` en `migrate_to_postgres.py` gebruiken de nieuwe tabelnamen.
+>
+> Wat nog "factu" bevat, bewust: oude migraties, de bevroren healer-SQL (`SqliteSchemaPatcher`, `BestelbonSchemaUpgrade`) voor databases van vóór de Baseline, en de legacy-waarde `"Gefactureerd"`.
+>
+> ⚠ **Vóór de uitrol: back-up van de productiedatabase** (zoals bij v1.3.26).
 
 ## Risico's
 

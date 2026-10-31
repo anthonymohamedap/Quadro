@@ -21,7 +21,7 @@
 1. Sluit QuadroApp op alle PC's.
 2. Ga naar `%LOCALAPPDATA%\QuadroApp\` en hernoem het huidige `quadro.db` naar `quadro.db.kapot` (niet verwijderen).
 3. Kopieer de gewenste backup uit de backupmap naar `%LOCALAPPDATA%\QuadroApp\` en hernoem naar `quadro.db`.
-4. Start QuadroApp — controleer klanten, offertes en facturen.
+4. Start QuadroApp — controleer klanten, offertes en bestelbonnen.
 5. Klopt alles? Dan mag `quadro.db.kapot` weg.
 
 ## Herstelprocedure — PostgreSQL

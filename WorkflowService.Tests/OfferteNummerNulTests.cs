@@ -84,34 +84,34 @@ public class OfferteNummerNulTests : IDisposable
     [Fact]
     public void Vroegste_afhaaldatum_kijkt_ook_naar_de_inlijstingen()
     {
-        var factuur = new Factuur
+        var bestelbon = new Bestelbon
         {
             AfhaalDatum = new DateTime(2026, 10, 30),
-            Lijnen = new List<FactuurLijn>
+            Lijnen = new List<BestelbonLijn>
             {
                 new() { Omschrijving = "TEST-0303 | 40x50 cm | titel:Schilderij | afhaal:2026-10-24" },
                 new() { Omschrijving = "Standaardkader C2 | titel:Trouwfoto" }
             }
         };
 
-        Assert.Equal(new DateTime(2026, 10, 24), AfhaalDatumControle.VroegsteAfhaalDatum(factuur));
+        Assert.Equal(new DateTime(2026, 10, 24), AfhaalDatumControle.VroegsteAfhaalDatum(bestelbon));
     }
 
     [Fact]
     public void Bestelbon_gegevens_toont_de_waarschuwing_en_volgt_de_besteldatum()
     {
-        var factuur = new Factuur
+        var bestelbon = new Bestelbon
         {
-            FactuurNummer = "2026-19",
-            FactuurDatum = new DateTime(2026, 10, 26),
+            BestelbonNummer = "2026-19",
+            BestelbonDatum = new DateTime(2026, 10, 26),
             VervalDatum = new DateTime(2026, 11, 25),
             AfhaalDatum = new DateTime(2026, 10, 24)
         };
-        var vm = new FactuurInfoDialogViewModel(factuur);
+        var vm = new BestelbonGegevensDialogViewModel(bestelbon);
 
         Assert.True(vm.HasAfhaalWaarschuwing);
 
-        vm.FactuurDatum = new DateTimeOffset(new DateTime(2026, 10, 23));
+        vm.BestelbonDatum = new DateTimeOffset(new DateTime(2026, 10, 23));
         Assert.False(vm.HasAfhaalWaarschuwing);
     }
 }

@@ -7,5 +7,5 @@ public enum ExcelExportDataset
     Afwerkingen = 2,
     Leveranciers = 3,
     Offertes = 4,
-    Facturen = 5
+    Bestelbonnen = 5
 }

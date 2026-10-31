@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace QuadroApp.Model.DB;
 
-public enum FactuurStatus
+public enum BestelbonStatus
 {
     Draft = 0,
     KlaarVoorExport = 1,
@@ -19,7 +19,7 @@ public enum FactuurStatus
 [Index(nameof(WerkBonId), IsUnique = true)]
 [Index(nameof(OfferteId), IsUnique = true)]
 [Index(nameof(Jaar), nameof(VolgNr), IsUnique = true)]
-public class Factuur
+public class Bestelbon
 {
     public int Id { get; set; }
 
@@ -44,11 +44,11 @@ public class Factuur
     /// <summary>Wat de gebruiker en de klant zien: "2026-19", of "voorlopig (offerte 412)".</summary>
     [NotMapped]
     public string NummerLabel => IsVoorlopig
-        ? $"voorlopig (offerte {FactuurNummer.TrimStart('V')})"
-        : FactuurNummer;
+        ? $"voorlopig (offerte {BestelbonNummer.TrimStart('V')})"
+        : BestelbonNummer;
 
     [MaxLength(20)]
-    public string FactuurNummer { get; set; } = string.Empty;
+    public string BestelbonNummer { get; set; } = string.Empty;
 
     [MaxLength(30)]
     public string DocumentType { get; set; } = "Bestelbon";
@@ -62,7 +62,7 @@ public class Factuur
     [MaxLength(120)]
     public string? KlantBtwNummer { get; set; }
 
-    public DateTime FactuurDatum { get; set; }
+    public DateTime BestelbonDatum { get; set; }
     public DateTime VervalDatum { get; set; }
     public DateTime? GeplandeDatum { get; set; }
     public DateTime? AfhaalDatum { get; set; }
@@ -115,18 +115,18 @@ public class Factuur
     public decimal RestTeBetalen => TotaalInclBtw - VoorschotBedrag;
 
     /// <summary>US-73 — de geregistreerde betalingen (ontvangsten van soort Betaling) op deze
-    /// bestelbon, alleen ingeladen voor de PDF (zie FactuurExportService). Niet in de database.</summary>
+    /// bestelbon, alleen ingeladen voor de PDF (zie BestelbonExportService). Niet in de database.</summary>
     [NotMapped]
     public List<Ontvangst> GeregistreerdeBetalingen { get; set; } = new();
 
     [MaxLength(500)]
     public string? ExportPad { get; set; }
 
-    public FactuurStatus Status { get; set; } = FactuurStatus.Draft;
+    public BestelbonStatus Status { get; set; } = BestelbonStatus.Draft;
     public DateTime AangemaaktOp { get; set; } = DateTime.UtcNow;
     public DateTime? BijgewerktOp { get; set; }
 
     [Timestamp] public byte[]? RowVersion { get; set; }
 
-    public ICollection<FactuurLijn> Lijnen { get; set; } = new List<FactuurLijn>();
+    public ICollection<BestelbonLijn> Lijnen { get; set; } = new List<BestelbonLijn>();
 }

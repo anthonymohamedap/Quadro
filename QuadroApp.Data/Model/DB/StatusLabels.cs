@@ -30,11 +30,11 @@ namespace QuadroApp.Model.DB
         };
 
         /// <summary>Draft, KlaarVoorExport en Geexporteerd zijn voor de gebruiker allemaal "Open".</summary>
-        public static string Label(this FactuurStatus status) => status switch
+        public static string Label(this BestelbonStatus status) => status switch
         {
-            FactuurStatus.Draft or FactuurStatus.KlaarVoorExport or FactuurStatus.Geexporteerd => "Open",
-            FactuurStatus.Betaald     => "Betaald",
-            FactuurStatus.Geannuleerd => "Geannuleerd",
+            BestelbonStatus.Draft or BestelbonStatus.KlaarVoorExport or BestelbonStatus.Geexporteerd => "Open",
+            BestelbonStatus.Betaald     => "Betaald",
+            BestelbonStatus.Geannuleerd => "Geannuleerd",
             _                         => status.ToString()
         };
 

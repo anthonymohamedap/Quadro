@@ -33,8 +33,8 @@ var tables = new[]
     "LeverancierBestelLijnen",
     "VoorraadMutaties",
     "VoorraadAlerts",
-    "Facturen",
-    "FactuurLijnen",
+    "Bestelbonnen",   // US-99 fase C (voorheen "Facturen")
+    "BestelbonLijnen", // US-99 fase C (voorheen "FactuurLijnen")
     "GeblokkeerDagen",
     "WerkBonArchieven",
     "OfferteArchieven",
