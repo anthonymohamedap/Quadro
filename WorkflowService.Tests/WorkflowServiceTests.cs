@@ -17,6 +17,17 @@ namespace WorkflowService.Tests;
 
 public class WorkflowServiceTests
 {
+    /// <summary>US-96: plannen in het verleden kan niet meer → planningstests gebruiken een maandag in de toekomst.</summary>
+    private static DateTime VolgendeMaandag
+    {
+        get
+        {
+            var d = DateTime.Today.AddDays(7);
+            while (d.DayOfWeek != DayOfWeek.Monday) d = d.AddDays(1);
+            return d;
+        }
+    }
+
     [Fact]
     public async Task Valid_status_transition_succeeds()
     {
@@ -359,6 +370,41 @@ public class WorkflowServiceTests
     }
 
     [Fact]
+    public async Task Plannen_in_het_verleden_kan_niet_US96()
+    {
+        var factory = CreateFactory();
+        var toast = new TestToastService();
+        var (werkBonId, regelId) = await SeedWerkBonRegelAsync(factory);
+        var sut = CreateWerkBonWorkflowSut(factory, toast);
+        var gisteren = DateTime.Today.AddDays(-1);
+
+        var fout = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            sut.PlanRegelMetDagCapaciteitAsync(werkBonId, regelId, gisteren, 60, 480, "Inlijsten"));
+        Assert.Contains("verleden", fout.Message);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => sut.VoegPlanningToeVoorRegelAsync(werkBonId, regelId, gisteren, 60));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => sut.VoegPlanningToeAsync(werkBonId, gisteren.AddHours(9), 60));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => sut.HerplanWerkBonRegelsAsync(werkBonId, gisteren));
+
+        await using var db = await factory.CreateDbContextAsync();
+        Assert.Empty(await db.WerkTaken.Where(t => t.WerkBonId == werkBonId).ToListAsync());
+    }
+
+    [Fact]
+    public async Task Plannen_op_vandaag_mag_wel_US96()
+    {
+        var factory = CreateFactory();
+        var toast = new TestToastService();
+        var (werkBonId, regelId) = await SeedWerkBonRegelAsync(factory);
+        var sut = CreateWerkBonWorkflowSut(factory, toast);
+
+        await sut.PlanRegelMetDagCapaciteitAsync(werkBonId, regelId, DateTime.Today, 60, 480, "Inlijsten");
+
+        await using var db = await factory.CreateDbContextAsync();
+        Assert.Single(await db.WerkTaken.Where(t => t.WerkBonId == werkBonId).ToListAsync());
+    }
+
+    [Fact]
     public async Task PlanRegelMetDagCapaciteitAsync_splits_large_task_across_multiple_days()
     {
         var factory = CreateFactory();
@@ -369,7 +415,7 @@ public class WorkflowServiceTests
         var laatsteDag = await sut.PlanRegelMetDagCapaciteitAsync(
             werkBonId,
             regelId,
-            new DateTime(2026, 4, 6),
+            VolgendeMaandag,
             600,
             480,
             "Inlijsten");
@@ -380,11 +426,11 @@ public class WorkflowServiceTests
             .OrderBy(t => t.GeplandVan)
             .ToListAsync();
 
-        Assert.Equal(new DateTime(2026, 4, 7), laatsteDag);
+        Assert.Equal(VolgendeMaandag.AddDays(1), laatsteDag);
         Assert.Equal(2, taken.Count);
         Assert.Equal(new[] { 480, 120 }, taken.Select(t => t.DuurMinuten));
-        Assert.Equal(new DateTime(2026, 4, 6, 9, 0, 0), taken[0].GeplandVan);
-        Assert.Equal(new DateTime(2026, 4, 7, 9, 0, 0), taken[1].GeplandVan);
+        Assert.Equal(VolgendeMaandag.AddHours(9), taken[0].GeplandVan);
+        Assert.Equal(VolgendeMaandag.AddDays(1).AddHours(9), taken[1].GeplandVan);
         Assert.StartsWith("Inlijsten", taken[0].Omschrijving, StringComparison.Ordinal);
         Assert.Contains("deel 2/2", taken[1].Omschrijving, StringComparison.Ordinal);
     }
@@ -401,8 +447,8 @@ public class WorkflowServiceTests
             db.WerkTaken.Add(new WerkTaak
             {
                 WerkBonId = werkBonId,
-                GeplandVan = new DateTime(2026, 4, 6, 9, 0, 0),
-                GeplandTot = new DateTime(2026, 4, 6, 14, 0, 0),
+                GeplandVan = VolgendeMaandag.AddHours(9),
+                GeplandTot = VolgendeMaandag.AddHours(14),
                 DuurMinuten = 300,
                 Omschrijving = "Bestaande taak",
                 BenodigdeMeter = 0.25m
@@ -415,7 +461,7 @@ public class WorkflowServiceTests
         await sut.PlanRegelMetDagCapaciteitAsync(
             werkBonId,
             regelId,
-            new DateTime(2026, 4, 6),
+            VolgendeMaandag,
             300,
             480,
             "Inlijsten");
@@ -428,8 +474,8 @@ public class WorkflowServiceTests
 
         Assert.Equal(2, taken.Count);
         Assert.Equal(new[] { 180, 120 }, taken.Select(t => t.DuurMinuten));
-        Assert.Equal(new DateTime(2026, 4, 6, 9, 0, 0), taken[0].GeplandVan);
-        Assert.Equal(new DateTime(2026, 4, 7, 9, 0, 0), taken[1].GeplandVan);
+        Assert.Equal(VolgendeMaandag.AddHours(9), taken[0].GeplandVan);
+        Assert.Equal(VolgendeMaandag.AddDays(1).AddHours(9), taken[1].GeplandVan);
     }
 
     [Fact]
@@ -443,7 +489,7 @@ public class WorkflowServiceTests
         {
             db.GeblokkeerDagen.Add(new GeblokkeerdeDag
             {
-                Datum = new DateTime(2026, 4, 7)
+                Datum = VolgendeMaandag.AddDays(1)
             });
             await db.SaveChangesAsync();
         }
@@ -453,7 +499,7 @@ public class WorkflowServiceTests
         await sut.PlanRegelMetDagCapaciteitAsync(
             werkBonId,
             regelId,
-            new DateTime(2026, 4, 6),
+            VolgendeMaandag,
             600,
             480,
             "Inlijsten");
@@ -465,8 +511,8 @@ public class WorkflowServiceTests
             .ToListAsync();
 
         Assert.Equal(2, taken.Count);
-        Assert.Equal(new DateTime(2026, 4, 6, 9, 0, 0), taken[0].GeplandVan);
-        Assert.Equal(new DateTime(2026, 4, 8, 9, 0, 0), taken[1].GeplandVan);
+        Assert.Equal(VolgendeMaandag.AddHours(9), taken[0].GeplandVan);
+        Assert.Equal(VolgendeMaandag.AddDays(2).AddHours(9), taken[1].GeplandVan);
     }
 
     private static QuadroApp.Service.WorkflowService CreateSut(IDbContextFactory<AppDbContext> factory, IToastService toast) =>
