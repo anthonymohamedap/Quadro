@@ -19,7 +19,7 @@ Acceptatiecriteria:
    met scrollen. Geen waarschuwingen → "Alles in orde". De keuze open/dicht blijft bewaard zolang de app
    open is.
 4. "Snel naar": kleine tegels (Offertes, Planning, Winkelverkopen, Overzicht betalingen, Klanten,
-   Lijsten, Standaardkaders, Leveranciers). De rest staat in het menu.
+   Lijsten, Standaardkaders, Bestelbonnen). De rest staat in het menu.
 5. Menu links in groepen (Verkoop, Atelier, Beheer) met "Beginscherm" bovenaan.
 6. Smaller venster (< 1180 px): menu enkel iconen (met tooltip), blokken onder elkaar, minder kolommen.
    < 820 px: twee tegels per rij.
