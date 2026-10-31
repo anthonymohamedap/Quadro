@@ -185,7 +185,6 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         OnPropertyChanged(nameof(AfhaalDatumInput));
         OnPropertyChanged(nameof(OfferteNummerTekst));
         OnPropertyChanged(nameof(KanNaarVerzonden));
-        OnPropertyChanged(nameof(KanNaarGoedgekeurd));
         OnPropertyChanged(nameof(KanTerugNaarConcept));
         OnPropertyChanged(nameof(KanTerugNaarVerzonden));
         OnPropertyChanged(nameof(IsManueleStatusWijzigingZichtbaar));
@@ -203,7 +202,6 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     // die al in productie is kan hier nooit per ongeluk terug naar Concept gezet worden.
     // De automatische propagatie (OfferteStatusPropagation) blijft hier volledig los van.
     public bool KanNaarVerzonden      => Offerte?.Status == OfferteStatus.Concept;
-    public bool KanNaarGoedgekeurd    => Offerte?.Status == OfferteStatus.Verzonden;
     // US-103 (P15): zodra er een werkbon is, kan de offerte niet meer met de hand terug naar
     // Concept/Verzonden — dat ging buiten de statusmachine om en liet de werkbon gewoon bestaan.
     private bool HeeftWerkBon => Workflow.GekoppeldeWerkBon is not null;
@@ -1331,7 +1329,6 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
 
     // ── Status (US-56): manueel wijzigen, enkel de toegelaten overgangen ──
     [RelayCommand] private Task NaarVerzondenAsync()      => ZetStatusAsync(OfferteStatus.Verzonden);
-    [RelayCommand] private Task NaarGoedgekeurdAsync()    => ZetStatusAsync(OfferteStatus.Goedgekeurd);
     [RelayCommand] private Task TerugNaarConceptAsync()   => ZetStatusAsync(OfferteStatus.Concept);
     [RelayCommand] private Task TerugNaarVerzondenAsync() => ZetStatusAsync(OfferteStatus.Verzonden);
 
@@ -1342,7 +1339,9 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         var toegelaten = Offerte.Status switch
         {
             OfferteStatus.Concept     => nieuweStatus == OfferteStatus.Verzonden,
-            OfferteStatus.Verzonden   => nieuweStatus is OfferteStatus.Concept or OfferteStatus.Goedgekeurd,
+            // US-104: goedkeuren kan enkel nog via "Bevestigen → Werkbon" (maakt de werkbon aan,
+            // kent het volgnummer van de bestelbon toe en zet de prijs vast).
+            OfferteStatus.Verzonden   => nieuweStatus == OfferteStatus.Concept,
             OfferteStatus.Goedgekeurd => !HeeftWerkBon && (nieuweStatus is OfferteStatus.Concept or OfferteStatus.Verzonden),
             _ => false
         };

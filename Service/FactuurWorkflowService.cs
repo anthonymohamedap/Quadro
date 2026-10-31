@@ -589,7 +589,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         }
     }
 
-    /// <summary>Bij "Bevestigen als bestelling": een voorlopige bon van deze offerte krijgt nu zijn volgnummer.</summary>
+    /// <summary>Bij "Bevestigen → Werkbon": een voorlopige bon van deze offerte krijgt nu zijn volgnummer.</summary>
     public async Task KenVolgnummerToeBijBevestigingAsync(int offerteId)
     {
         await using var db = await _factory.CreateDbContextAsync();
