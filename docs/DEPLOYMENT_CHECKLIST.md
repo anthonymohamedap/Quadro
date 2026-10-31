@@ -24,7 +24,7 @@
 - [ ] Release-artefacten verschijnen op GitHub Releases (Windows + macOS).
 - [ ] **Eerst op jouw eigen PC:** installeer/upgrade via Velopack met je **echte** SQLite-database.
       Controleer dat de upgrade-flow draait (healer → Baseline → alle migraties) en dat klanten,
-      offertes en facturen intact zijn. (Vangnet: de dagelijkse backup uit US-34.)
+      offertes en bestelbonnen intact zijn. (Vangnet: de dagelijkse backup uit US-34.)
 
 ## C. PostgreSQL-server opzetten (PC 1)
 
@@ -37,7 +37,7 @@
 
 > Bevestigd 26 juli 2026: er is géén bestaande productiedata om te migreren. De enige data zijn de
 > afwerkingsgroepen (referentiedata, worden automatisch aangemaakt) en de lijsten + afwerkingsopties
-> (komen via Excel-import). Klanten/offertes/facturen worden live aangemaakt.
+> (komen via Excel-import). Klanten/offertes/bestelbonnen worden live aangemaakt.
 > **`Scripts/migrate_to_postgres.py` is dus NIET nodig voor deze uitrol.**
 
 - [ ] Start QuadroApp één keer met de PostgreSQL-connection string zodat het schema wordt aangemaakt
@@ -81,10 +81,10 @@
 - [ ] Offertes: lijst laadt, offerte openen werkt.
 - [ ] Planning: kalender opent, een WerkTaak plannen werkt.
 - [ ] Werkbon: aanmaken vanuit goedgekeurde offerte werkt.
-- [ ] Bestelbon/factuur: aanmaken + PDF-preview werkt (geen "Meerprijs"-regel, korting op incl. btw).
+- [ ] Bestelbon: aanmaken + PDF-preview werkt (geen "Meerprijs"-regel, korting op incl. btw).
 - [ ] Import: unified import-preview opent en commit werkt.
-- [ ] **Multi-user:** PC 1 en PC 2 tegelijk — twee offertes/facturen maken; controleer dat er geen
-      dubbele factuurnummers ontstaan en dat een gelijktijdige wijziging de nette
+- [ ] **Multi-user:** PC 1 en PC 2 tegelijk — twee offertes/bestelbonnen maken; controleer dat er geen
+      dubbele bestelbonnummers ontstaan en dat een gelijktijdige wijziging de nette
       "iemand anders heeft dit gewijzigd"-melding geeft (REL-03).
 
 ## I. macOS-specifiek (Veerle)

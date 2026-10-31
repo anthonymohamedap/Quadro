@@ -17,7 +17,7 @@ namespace QuadroApp.Converters
             {
                 OfferteStatus s               => s.Label(),
                 WerkBonStatus s               => s.Label(),
-                FactuurStatus s               => s.Label(),
+                BestelbonStatus s               => s.Label(),
                 VoorraadAlertType t           => t.Label(),
                 LeverancierBestellingStatus s => s.Label(),
                 null                          => "",

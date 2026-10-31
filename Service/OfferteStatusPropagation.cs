@@ -7,7 +7,7 @@ namespace QuadroApp.Service;
 ///
 /// De offerte "volgt" de productie: werkbon- en bestelbon-overgangen sturen de
 /// offertestatus. Deze helper is bewust <b>lenient en idempotent</b>:
-/// hij zet de offerte alleen VOORUIT naar een productie-/facturatiestatus en
+/// hij zet de offerte alleen VOORUIT naar een productie-/betaalstatus en
 /// gooit nooit een fout — een onverwachte bronstatus mag de betaling of het
 /// afwerken van een werkbon niet blokkeren.
 ///
@@ -24,7 +24,7 @@ public static class OfferteStatusPropagation
     /// </summary>
     public static bool TryAdvanceTo(Offerte offerte, OfferteStatus target)
     {
-        // Alleen productie-/facturatiestatussen zijn afgeleid propageerbaar.
+        // Alleen productie-/betaalstatussen zijn afgeleid propageerbaar.
         if (target is not (OfferteStatus.InProductie or OfferteStatus.Afgewerkt
             or OfferteStatus.Besteld or OfferteStatus.Betaald))
             return false;

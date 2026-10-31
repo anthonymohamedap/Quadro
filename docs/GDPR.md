@@ -2,13 +2,13 @@
 
 ## Wat kan er
 
-- **Inzage-export (art. 15):** alle persoonsgegevens van een klant plus gekoppelde offertes en facturen/bestelbonnen als JSON-bestand.
+- **Inzage-export (art. 15):** alle persoonsgegevens van een klant plus gekoppelde offertes en bestelbonnen als JSON-bestand.
 - **Anonimisering (art. 17):** naam, adres, e-mail, telefoon, BTW-nummer en opmerkingen van de klant worden onherstelbaar vervangen; ook oudere audit-records van die klant worden geschoond. De klant wordt gearchiveerd.
 - **Retentiebeleid:** kandidatenlijst van klanten zonder activiteit ouder dan de bewaartermijn. Er wordt **nooit automatisch** geanonimiseerd — de zaakvoerder beslist per klant.
 
 ## Wat blijft bewaard (bewust)
 
-Facturen en bestelbonnen zijn boekhoudkundige documenten met een wettelijke bewaarplicht (België: 7 jaar). Zij dragen hun eigen naam/adres-snapshot en blijven volledig ongewijzigd bij anonimisering. Dit is GDPR-conform: de wettelijke verplichting primeert op het recht op verwijdering.
+Bestelbonnen zijn boekhoudkundige documenten met een wettelijke bewaarplicht (België: 7 jaar). Zij dragen hun eigen naam/adres-snapshot en blijven volledig ongewijzigd bij anonimisering. Dit is GDPR-conform: de wettelijke verplichting primeert op het recht op verwijdering.
 
 ## Configuratie
 

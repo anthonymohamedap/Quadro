@@ -161,13 +161,13 @@ public partial class App : Application
         services.AddScoped<IWorkflowService, WorkflowService>();
         services.AddScoped<IOfferteWorkflowService, OfferteWorkflowService>();
         services.AddScoped<IWerkBonWorkflowService, WerkBonWorkflowService>();
-        services.AddScoped<IFactuurWorkflowService, FactuurWorkflowService>();
+        services.AddScoped<IBestelbonWorkflowService, BestelbonWorkflowService>();
         services.AddScoped<IOntvangstService, OntvangstService>();   // US-69/US-70
         services.AddScoped<IBetalingsOverzichtService, BetalingsOverzichtService>();   // US-67
         services.AddScoped<QuadroApp.Service.Verkoop.IVerkoopOverzichtService, QuadroApp.Service.Verkoop.VerkoopOverzichtService>();   // US-84
-        services.AddScoped<IFactuurExportService, FactuurExportService>();
+        services.AddScoped<IBestelbonExportService, BestelbonExportService>();
         services.AddScoped<ICentralExcelExportService, CentralExcelExportService>();
-        services.AddScoped<IFactuurExporter, PdfFactuurExporter>();
+        services.AddScoped<IBestelbonExporter, PdfBestelbonExporter>();
         services.AddScoped<IGdprService, GdprService>(); // US-37
 
         // US-32: authenticatie & autorisatie (singleton — CurrentUser is app-breed)
@@ -230,7 +230,7 @@ public partial class App : Application
         services.AddTransient<KlantDetailViewModel>();
         services.AddTransient<WerkBonLijstViewModel>();
         services.AddTransient<ArchiefViewModel>();
-        services.AddTransient<FacturenViewModel>();
+        services.AddTransient<BestelbonnenViewModel>();
         services.AddTransient<ExportCenterViewModel>();
         services.AddTransient<InstellingenViewModel>();
         services.AddTransient<ViewModels.Gebruikers.WachtwoordWijzigViewModel>();

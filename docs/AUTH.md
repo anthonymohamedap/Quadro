@@ -18,7 +18,7 @@ Bij de allereerste start (of een lege database) wordt automatisch één beheerde
 | Actie | Admin | Medewerker |
 |---|---|---|
 | Offertes, werkbonnen, planning | ✅ | ✅ |
-| Factureren / bestelbonnen | ✅ | ✅ |
+| Bestelbonnen en betalingen | ✅ | ✅ |
 | Prijzen wijzigen (afwerkingen) | ✅ | ❌ |
 | Leverancier verwijderen | ✅ | ❌ |
 | Lijst archiveren/verwijderen | ✅ | ❌ |

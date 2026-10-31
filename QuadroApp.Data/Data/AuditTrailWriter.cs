@@ -19,7 +19,7 @@ public static class AuditTrailWriter
     private static readonly HashSet<Type> AuditedTypes = new()
     {
         typeof(Offerte), typeof(OfferteRegel),
-        typeof(Factuur), typeof(FactuurLijn),
+        typeof(Bestelbon), typeof(BestelbonLijn),
         typeof(TypeLijst), typeof(AfwerkingsOptie), typeof(AfwerkingsVariant),
         typeof(Leverancier), typeof(LeverancierBestelling), typeof(LeverancierBestelLijn),
         typeof(Gebruiker), typeof(Klant)

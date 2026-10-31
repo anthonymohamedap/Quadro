@@ -20,8 +20,8 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
     private readonly IOfferteWorkflowService _workflow;
     private readonly IWerkBonWorkflowService _werkBonWorkflow;
     private readonly IWorkflowService _statusWorkflow;
-    private readonly IFactuurWorkflowService _factuurWorkflow;
-    private readonly IFactuurExportService _factuurExportService;
+    private readonly IBestelbonWorkflowService _bestelbonWorkflow;
+    private readonly IBestelbonExportService _bestelbonExportService;
     private readonly IFilePickerService _filePickerService;
     private readonly IDialogService _dialogs;
     private readonly IOntvangstService _ontvangsten;
@@ -36,18 +36,18 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
     private readonly Func<Task>? _reloadOnly;
 
     [ObservableProperty] private WerkBon? gekoppeldeWerkBon;
-    [ObservableProperty] private Factuur? gekoppeldeFactuur;
+    [ObservableProperty] private Bestelbon? gekoppeldeBestelbon;
     [ObservableProperty] private bool isBusy;
 
-    public string FactuurButtonText =>
-        GekoppeldeFactuur is null ? "Bestelbon aanmaken" : "Bestelbon bekijken";
+    public string BestelbonButtonText =>
+        GekoppeldeBestelbon is null ? "Bestelbon aanmaken" : "Bestelbon bekijken";
 
-    public string FactuurStatusText
+    public string BestelbonStatusText
     {
         get
         {
-            if (GekoppeldeFactuur is not null)
-                return $"Bestelbon {GekoppeldeFactuur.NummerLabel} ({GekoppeldeFactuur.Status.Label()})";
+            if (GekoppeldeBestelbon is not null)
+                return $"Bestelbon {GekoppeldeBestelbon.NummerLabel} ({GekoppeldeBestelbon.Status.Label()})";
 
             if (GekoppeldeWerkBon is null)
                 return "Nog geen bestelbon voor deze offerte.";
@@ -58,15 +58,15 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
 
     partial void OnGekoppeldeWerkBonChanged(WerkBon? value)
     {
-        OnPropertyChanged(nameof(FactuurStatusText));
+        OnPropertyChanged(nameof(BestelbonStatusText));
         OnPropertyChanged(nameof(IsBevestigenZichtbaar));
         OnPropertyChanged(nameof(IsPlanningZichtbaar));
     }
 
-    partial void OnGekoppeldeFactuurChanged(Factuur? value)
+    partial void OnGekoppeldeBestelbonChanged(Bestelbon? value)
     {
-        OnPropertyChanged(nameof(FactuurButtonText));
-        OnPropertyChanged(nameof(FactuurStatusText));
+        OnPropertyChanged(nameof(BestelbonButtonText));
+        OnPropertyChanged(nameof(BestelbonStatusText));
     }
 
     // Bevestigen is alleen zichtbaar als er nog geen werkbon is.
@@ -76,7 +76,7 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
 
     public IAsyncRelayCommand BevestigenCommand { get; }
     public IAsyncRelayCommand OpenPlanningCommand { get; }
-    public IAsyncRelayCommand FactuurCommand { get; }
+    public IAsyncRelayCommand BestelbonCommand { get; }
     public IAsyncRelayCommand OpenWerkBonCommand { get; }
     public IAsyncRelayCommand BestelbonAfdrukkenCommand { get; }
 
@@ -107,8 +107,8 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         IOfferteWorkflowService workflow,
         IWerkBonWorkflowService werkBonWorkflow,
         IWorkflowService statusWorkflow,
-        IFactuurWorkflowService factuurWorkflow,
-        IFactuurExportService factuurExportService,
+        IBestelbonWorkflowService bestelbonWorkflow,
+        IBestelbonExportService bestelbonExportService,
         IFilePickerService filePickerService,
         IDialogService dialogs,
         IToastService toast,
@@ -126,8 +126,8 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         _workflow = workflow ?? throw new ArgumentNullException(nameof(workflow));
         _werkBonWorkflow = werkBonWorkflow ?? throw new ArgumentNullException(nameof(werkBonWorkflow));
         _statusWorkflow = statusWorkflow ?? throw new ArgumentNullException(nameof(statusWorkflow));
-        _factuurWorkflow = factuurWorkflow ?? throw new ArgumentNullException(nameof(factuurWorkflow));
-        _factuurExportService = factuurExportService ?? throw new ArgumentNullException(nameof(factuurExportService));
+        _bestelbonWorkflow = bestelbonWorkflow ?? throw new ArgumentNullException(nameof(bestelbonWorkflow));
+        _bestelbonExportService = bestelbonExportService ?? throw new ArgumentNullException(nameof(bestelbonExportService));
         _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
         _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
         _ontvangsten = ontvangsten ?? throw new ArgumentNullException(nameof(ontvangsten));
@@ -141,14 +141,14 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
 
         BevestigenCommand   = new AsyncRelayCommand(BevestigenAsync);
         OpenPlanningCommand = new AsyncRelayCommand(OpenPlanningAsync);
-        FactuurCommand      = new AsyncRelayCommand(OpenFactuurAsync);
+        BestelbonCommand      = new AsyncRelayCommand(OpenBestelbonAsync);
         OpenWerkBonCommand  = new AsyncRelayCommand(OpenWerkBonAsync);
         BestelbonAfdrukkenCommand = new AsyncRelayCommand(BestelbonAfdrukkenAsync);
 
         ToonStappen(OfferteStatus.Concept, nogTeBetalen: 0m);
     }
 
-    public async Task LoadFactuurContextAsync(AppDbContext db, int offerteId)
+    public async Task LoadBestelbonContextAsync(AppDbContext db, int offerteId)
     {
         var werkBon = await db.WerkBonnen
             .AsNoTracking()
@@ -156,17 +156,17 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
 
         GekoppeldeWerkBon = werkBon;
 
-        var factuur = await db.Facturen
+        var bestelbon = await db.Bestelbonnen
             .Include(x => x.Lijnen)
             .AsNoTracking()
             .FirstOrDefaultAsync(x =>
                 x.OfferteId == offerteId ||
                 (werkBon != null && x.WerkBonId == werkBon.Id));
 
-        if (factuur is not null)
-            factuur.Lijnen = factuur.Lijnen.OrderBy(x => x.Sortering).ToList();
+        if (bestelbon is not null)
+            bestelbon.Lijnen = bestelbon.Lijnen.OrderBy(x => x.Sortering).ToList();
 
-        GekoppeldeFactuur = factuur;
+        GekoppeldeBestelbon = bestelbon;
 
         // US-83: stap bepalen uit offerte-, werkbon- en bestelbonstatus.
         var offerte = await db.Offertes.AsNoTracking()
@@ -174,8 +174,8 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
             .Select(o => new { o.Status, o.TotaalInclBtw, o.VoorschotBedrag })
             .FirstOrDefaultAsync();
 
-        var nogTeBetalen = factuur is not null
-            ? (await _ontvangsten.GetBetaalStandAsync(factuur.Id)).Rest
+        var nogTeBetalen = bestelbon is not null
+            ? (await _ontvangsten.GetBetaalStandAsync(bestelbon.Id)).Rest
             : Math.Max(0m, (offerte?.TotaalInclBtw ?? 0m) - (offerte?.VoorschotBedrag ?? 0m));
 
         ToonStappen(offerte?.Status ?? OfferteStatus.Concept, nogTeBetalen);
@@ -184,7 +184,7 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
     /// <summary>US-83 — werkt de stappenbalk en de knop voor de volgende stap bij.</summary>
     public void ToonStappen(OfferteStatus offerteStatus, decimal nogTeBetalen)
     {
-        var info = VerkoopStapResolver.Bepaal(offerteStatus, GekoppeldeWerkBon?.Status, GekoppeldeFactuur?.Status, nogTeBetalen);
+        var info = VerkoopStapResolver.Bepaal(offerteStatus, GekoppeldeWerkBon?.Status, GekoppeldeBestelbon?.Status, nogTeBetalen);
         IsPrijsVast = IsPrijsVastNaBevestiging(info);
         IsAfgerond = info.IsAfgerond;
 
@@ -193,7 +193,7 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
             { IsAfgerond: true } => (null, null),
             { Huidig: VerkoopStap.Offerte } => ("Bevestigen → Werkbon", BevestigenCommand),
             { Huidig: VerkoopStap.Werkbon or VerkoopStap.InProductie } => ("Werkbon openen", OpenWerkBonCommand),
-            { Huidig: VerkoopStap.KlaarOmAfTeHalen } when GekoppeldeFactuur is not null => ("Bestelbon afdrukken", BestelbonAfdrukkenCommand),
+            { Huidig: VerkoopStap.KlaarOmAfTeHalen } when GekoppeldeBestelbon is not null => ("Bestelbon afdrukken", BestelbonAfdrukkenCommand),
             { Huidig: VerkoopStap.KlaarOmAfTeHalen } => ("Werkbon openen", OpenWerkBonCommand),
             { IsAfgehaaldNogTeBetalen: true } => ("Afrekenen", OpenWerkBonCommand),
             _ => (null, null)
@@ -201,7 +201,7 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
 
         // De klant krijgt de bestelbon ook als prijsvoorstel: vanaf stap 1 aan te maken en af te drukken.
         (string? tekst, IAsyncRelayCommand? command) bestelbon =
-            GekoppeldeFactuur is null ? ("Bestelbon aanmaken", FactuurCommand)
+            GekoppeldeBestelbon is null ? ("Bestelbon aanmaken", BestelbonCommand)
             : volgende.command == BestelbonAfdrukkenCommand ? (null, null)
             : ("Bestelbon afdrukken", BestelbonAfdrukkenCommand);
 
@@ -255,8 +255,8 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
     {
         if (IsBusy) return;
 
-        var factuur = GekoppeldeFactuur;
-        if (factuur is null)
+        var bestelbon = GekoppeldeBestelbon;
+        if (bestelbon is null)
         {
             Toast.Error("Er is nog geen bestelbon voor deze offerte.");
             return;
@@ -266,7 +266,7 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         {
             IsBusy = true;
 
-            var result = await _factuurExportService.AfdrukkenAsync(factuur.Id);
+            var result = await _bestelbonExportService.AfdrukkenAsync(bestelbon.Id);
             if (!result.Success)
             {
                 Toast.Error(result.Message);
@@ -392,7 +392,7 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         }
     }
 
-    private async Task OpenFactuurAsync()
+    private async Task OpenBestelbonAsync()
     {
         if (IsBusy) return;
 
@@ -426,31 +426,31 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
             IsBusy = true;
 
             await using var db = await _dbFactory.CreateDbContextAsync();
-            await LoadFactuurContextAsync(db, _getOfferteId());
+            await LoadBestelbonContextAsync(db, _getOfferteId());
 
-            var wasNieuw = GekoppeldeFactuur is null;
-            var factuur = GekoppeldeFactuur;
-            if (factuur is null || factuur.Status == FactuurStatus.Draft)
-                factuur = await _factuurWorkflow.MaakFactuurVanOfferteAsync(_getOfferteId());
+            var wasNieuw = GekoppeldeBestelbon is null;
+            var bestelbon = GekoppeldeBestelbon;
+            if (bestelbon is null || bestelbon.Status == BestelbonStatus.Draft)
+                bestelbon = await _bestelbonWorkflow.MaakBestelbonVanOfferteAsync(_getOfferteId());
             else
-                factuur = await _factuurWorkflow.GetFactuurAsync(factuur.Id) ?? factuur;
+                bestelbon = await _bestelbonWorkflow.GetBestelbonAsync(bestelbon.Id) ?? bestelbon;
 
-            // Toon de info-dialog alleen bij aanmaak van een gloednieuwe factuur.
+            // Toon de info-dialog alleen bij aanmaak van een gloednieuwe bestelbon.
             // Bij heropenen van een bestaande Draft direct naar de preview — geen extra klik nodig.
-            if (wasNieuw && factuur.Status == FactuurStatus.Draft)
+            if (wasNieuw && bestelbon.Status == BestelbonStatus.Draft)
             {
-                var bijgewerkteFactuur = await ShowFactuurInfoDialogAsync(factuur);
-                if (bijgewerkteFactuur is null) return;
+                var bijgewerkteBestelbon = await ShowBestelbonGegevensDialogAsync(bestelbon);
+                if (bijgewerkteBestelbon is null) return;
 
-                await _factuurWorkflow.SaveDraftAsync(bijgewerkteFactuur);
-                factuur = await _factuurWorkflow.GetFactuurAsync(bijgewerkteFactuur.Id) ?? bijgewerkteFactuur;
+                await _bestelbonWorkflow.SaveDraftAsync(bijgewerkteBestelbon);
+                bestelbon = await _bestelbonWorkflow.GetBestelbonAsync(bijgewerkteBestelbon.Id) ?? bijgewerkteBestelbon;
             }
 
-            GekoppeldeFactuur = factuur;
-            await ShowFactuurPreviewAsync(factuur.Id);
+            GekoppeldeBestelbon = bestelbon;
+            await ShowBestelbonPreviewAsync(bestelbon.Id);
 
             await using var refreshDb = await _dbFactory.CreateDbContextAsync();
-            await LoadFactuurContextAsync(refreshDb, _getOfferteId());
+            await LoadBestelbonContextAsync(refreshDb, _getOfferteId());
         }
         catch (Exception ex)
         {
@@ -462,33 +462,33 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         }
     }
 
-    private async Task<Factuur?> ShowFactuurInfoDialogAsync(Factuur factuur)
+    private async Task<Bestelbon?> ShowBestelbonGegevensDialogAsync(Bestelbon bestelbon)
     {
         var owner = GetOwnerWindow();
         if (owner is null) throw new InvalidOperationException("Hoofdvenster niet gevonden.");
 
-        var vm = new FactuurInfoDialogViewModel(CloneFactuur(factuur));
-        var dialog = new FactuurInfoDialog { DataContext = vm };
+        var vm = new BestelbonGegevensDialogViewModel(CloneBestelbon(bestelbon));
+        var dialog = new BestelbonGegevensDialog { DataContext = vm };
         vm.RequestClose = confirmed => dialog.Close(confirmed);
         var confirmed = await dialog.ShowDialog<bool>(owner);
-        return confirmed ? vm.ToFactuur() : null;
+        return confirmed ? vm.ToBestelbon() : null;
     }
 
-    private async Task ShowFactuurPreviewAsync(int factuurId)
+    private async Task ShowBestelbonPreviewAsync(int bestelbonId)
     {
         var owner = GetOwnerWindow();
         if (owner is null) throw new InvalidOperationException("Hoofdvenster niet gevonden.");
 
-        var factuur = await _factuurWorkflow.GetFactuurAsync(factuurId)
+        var bestelbon = await _bestelbonWorkflow.GetBestelbonAsync(bestelbonId)
             ?? throw new InvalidOperationException("Bestelbon niet gevonden.");
 
-        var vm = new FactuurPreviewViewModel(
-            factuur.Id, factuur, _factuurWorkflow,
-            _factuurExportService, _filePickerService, Toast);
+        var vm = new BestelbonPreviewViewModel(
+            bestelbon.Id, bestelbon, _bestelbonWorkflow,
+            _bestelbonExportService, _filePickerService, Toast);
 
         await vm.InitializeAsync();
 
-        var window = new FactuurPreviewWindow { DataContext = vm };
+        var window = new BestelbonPreviewWindow { DataContext = vm };
         vm.RequestClose = () => window.Close();
         await window.ShowDialog(owner);
     }
@@ -501,25 +501,25 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         return desktop.MainWindow;
     }
 
-    private static Factuur CloneFactuur(Factuur factuur) => new()
+    private static Bestelbon CloneBestelbon(Bestelbon bestelbon) => new()
     {
-        Id = factuur.Id, OfferteId = factuur.OfferteId, WerkBonId = factuur.WerkBonId,
-        Jaar = factuur.Jaar, VolgNr = factuur.VolgNr, FactuurNummer = factuur.FactuurNummer,
-        DocumentType = factuur.DocumentType, KlantNaam = factuur.KlantNaam,
-        KlantAdres = factuur.KlantAdres, KlantBtwNummer = factuur.KlantBtwNummer,
-        FactuurDatum = factuur.FactuurDatum, VervalDatum = factuur.VervalDatum,
-        GeplandeDatum = factuur.GeplandeDatum, AfhaalDatum = factuur.AfhaalDatum,
-        Opmerking = factuur.Opmerking, AangenomenDoorInitialen = factuur.AangenomenDoorInitialen,
-        IsBtwVrijgesteld = factuur.IsBtwVrijgesteld, TotaalExclBtw = factuur.TotaalExclBtw,
-        TotaalBtw = factuur.TotaalBtw, TotaalInclBtw = factuur.TotaalInclBtw,
-        VoorschotBedrag = factuur.VoorschotBedrag, ExportPad = factuur.ExportPad,
-        Status = factuur.Status, AangemaaktOp = factuur.AangemaaktOp,
-        BijgewerktOp = factuur.BijgewerktOp, RowVersion = factuur.RowVersion,
-        Lijnen = factuur.Lijnen
+        Id = bestelbon.Id, OfferteId = bestelbon.OfferteId, WerkBonId = bestelbon.WerkBonId,
+        Jaar = bestelbon.Jaar, VolgNr = bestelbon.VolgNr, BestelbonNummer = bestelbon.BestelbonNummer,
+        DocumentType = bestelbon.DocumentType, KlantNaam = bestelbon.KlantNaam,
+        KlantAdres = bestelbon.KlantAdres, KlantBtwNummer = bestelbon.KlantBtwNummer,
+        BestelbonDatum = bestelbon.BestelbonDatum, VervalDatum = bestelbon.VervalDatum,
+        GeplandeDatum = bestelbon.GeplandeDatum, AfhaalDatum = bestelbon.AfhaalDatum,
+        Opmerking = bestelbon.Opmerking, AangenomenDoorInitialen = bestelbon.AangenomenDoorInitialen,
+        IsBtwVrijgesteld = bestelbon.IsBtwVrijgesteld, TotaalExclBtw = bestelbon.TotaalExclBtw,
+        TotaalBtw = bestelbon.TotaalBtw, TotaalInclBtw = bestelbon.TotaalInclBtw,
+        VoorschotBedrag = bestelbon.VoorschotBedrag, ExportPad = bestelbon.ExportPad,
+        Status = bestelbon.Status, AangemaaktOp = bestelbon.AangemaaktOp,
+        BijgewerktOp = bestelbon.BijgewerktOp, RowVersion = bestelbon.RowVersion,
+        Lijnen = bestelbon.Lijnen
             .OrderBy(x => x.Sortering)
-            .Select(x => new FactuurLijn
+            .Select(x => new BestelbonLijn
             {
-                Id = x.Id, FactuurId = x.FactuurId, Omschrijving = x.Omschrijving,
+                Id = x.Id, BestelbonId = x.BestelbonId, Omschrijving = x.Omschrijving,
                 Aantal = x.Aantal, Eenheid = x.Eenheid, PrijsExcl = x.PrijsExcl,
                 BtwPct = x.BtwPct, TotaalExcl = x.TotaalExcl, TotaalBtw = x.TotaalBtw,
                 TotaalIncl = x.TotaalIncl, Sortering = x.Sortering

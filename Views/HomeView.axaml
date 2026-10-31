@@ -36,7 +36,7 @@
 							<TextBlock Classes="NavLabel" Text="Werkbonnen" VerticalAlignment="Center"/>
 						</StackPanel>
 					</Button>
-					<Button Command="{Binding OpenFacturenCommand}" Classes="NavButton" ToolTip.Tip="Bestelbonnen = de bon die de klant krijgt bij het afhalen">
+					<Button Command="{Binding OpenBestelbonnenCommand}" Classes="NavButton" ToolTip.Tip="Bestelbonnen = de bon die de klant krijgt bij het afhalen">
 						<StackPanel Orientation="Horizontal" Spacing="10">
 							<Path Data="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" Fill="{Binding $parent[Button].Foreground}" Width="16" Height="16" Stretch="Uniform"/>
 							<TextBlock Classes="NavLabel" Text="Bestelbonnen" VerticalAlignment="Center"/>
@@ -344,7 +344,7 @@
 							</StackPanel>
 						</Grid>
 					</Button>
-					<Button Classes="Tegel" Command="{Binding OpenFacturenCommand}">
+					<Button Classes="Tegel" Command="{Binding OpenBestelbonnenCommand}">
 						<Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
 							<Border Background="{DynamicResource IconPurpleBg}" CornerRadius="8" Width="36" Height="36">
 								<Path Data="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" Fill="{DynamicResource IconPurple}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>

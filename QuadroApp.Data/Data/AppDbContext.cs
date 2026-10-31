@@ -31,8 +31,8 @@ namespace QuadroApp.Data
         public DbSet<Klant> Klanten => Set<Klant>();
         public DbSet<ImportSession> ImportSessions => Set<ImportSession>();
         public DbSet<ImportRowLog> ImportRowLogs => Set<ImportRowLog>();
-        public DbSet<Factuur> Facturen => Set<Factuur>();
-        public DbSet<FactuurLijn> FactuurLijnen => Set<FactuurLijn>();
+        public DbSet<Bestelbon> Bestelbonnen => Set<Bestelbon>();
+        public DbSet<BestelbonLijn> BestelbonLijnen => Set<BestelbonLijn>();
         public DbSet<GeblokkeerdeDag> GeblokkeerDagen => Set<GeblokkeerdeDag>();
         public DbSet<WerkBonArchief> WerkBonArchieven => Set<WerkBonArchief>();
         public DbSet<OfferteArchief> OfferteArchieven => Set<OfferteArchief>();
@@ -208,7 +208,7 @@ namespace QuadroApp.Data
             b.Entity<Offerte>(entity =>
             {
                 // Doorlopend zichtbaar offertenummer (zie OfferteNummering) — geen unique
-                // constraint (in tegenstelling tot Factuur.FactuurNummer), enkel voor snel opzoeken.
+                // constraint (in tegenstelling tot Bestelbon.BestelbonNummer), enkel voor snel opzoeken.
                 entity.HasIndex(o => o.OfferteNummer);
 
                 entity.Property(o => o.SubtotaalExBtw).HasColumnType("decimal(18,2)");
@@ -258,13 +258,19 @@ namespace QuadroApp.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            b.Entity<Factuur>(entity =>
+            b.Entity<Bestelbon>(entity =>
             {
-                // US-38: FactuurNummer expliciet uniek maken. (Jaar, VolgNr) is al uniek
-                // via het [Index]-attribuut op de klasse; FactuurNummer zelf was dat nog niet.
-                entity.HasIndex(x => x.FactuurNummer).IsUnique();
+                // US-99 fase B: in de code heet het document "bestelbon", de database houdt
+                // (tot fase C) de oude tabel- en kolomnamen. Geen schemawijziging.
+                entity.ToTable("Facturen");
+                entity.Property(x => x.BestelbonNummer).HasColumnName("FactuurNummer");
+                entity.Property(x => x.BestelbonDatum).HasColumnName("FactuurDatum");
 
-                entity.Property(x => x.FactuurNummer).HasMaxLength(20).IsRequired();
+                // US-38: BestelbonNummer expliciet uniek maken. (Jaar, VolgNr) is al uniek
+                // via het [Index]-attribuut op de klasse; BestelbonNummer zelf was dat nog niet.
+                entity.HasIndex(x => x.BestelbonNummer).IsUnique();
+
+                entity.Property(x => x.BestelbonNummer).HasMaxLength(20).IsRequired();
                 entity.Property(x => x.DocumentType).HasMaxLength(30).IsRequired();
                 entity.Property(x => x.KlantNaam).HasMaxLength(200).IsRequired();
                 entity.Property(x => x.KlantAdres).HasMaxLength(250);
@@ -279,22 +285,24 @@ namespace QuadroApp.Data
 
                 entity.HasOne(x => x.WerkBon)
                     .WithOne()
-                    .HasForeignKey<Factuur>(x => x.WerkBonId)
+                    .HasForeignKey<Bestelbon>(x => x.WerkBonId)
                     .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(x => x.Offerte)
                     .WithOne()
-                    .HasForeignKey<Factuur>(x => x.OfferteId)
+                    .HasForeignKey<Bestelbon>(x => x.OfferteId)
                     .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasMany(x => x.Lijnen)
-                    .WithOne(x => x.Factuur)
-                    .HasForeignKey(x => x.FactuurId)
+                    .WithOne(x => x.Bestelbon)
+                    .HasForeignKey(x => x.BestelbonId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            b.Entity<FactuurLijn>(entity =>
+            b.Entity<BestelbonLijn>(entity =>
             {
+                entity.ToTable("FactuurLijnen");                                        // US-99 fase B
+                entity.Property(x => x.BestelbonId).HasColumnName("FactuurId");
                 entity.Property(x => x.Omschrijving).HasMaxLength(500).IsRequired();
                 entity.Property(x => x.Eenheid).HasMaxLength(20);
                 entity.Property(x => x.Aantal).HasPrecision(18, 2);
@@ -320,6 +328,7 @@ namespace QuadroApp.Data
             // ───────── Ontvangst (US-66): centraal ontvangstenregister ─────────
             b.Entity<Ontvangst>(entity =>
             {
+                entity.Property(x => x.BestelbonId).HasColumnName("FactuurId");          // US-99 fase B
                 entity.Property(x => x.Soort).HasConversion<string>().HasMaxLength(20);
                 entity.Property(x => x.Betaalwijze).HasConversion<string>().HasMaxLength(20);
                 entity.Property(x => x.BedragIncl).HasPrecision(18, 2);
@@ -332,7 +341,7 @@ namespace QuadroApp.Data
 
                 // Offerte/bestelbon verwijderd of gearchiveerd → ontvangst blijft (boekhouding), koppeling NULL.
                 entity.HasOne(x => x.Offerte).WithMany().HasForeignKey(x => x.OfferteId).OnDelete(DeleteBehavior.SetNull);
-                entity.HasOne(x => x.Factuur).WithMany().HasForeignKey(x => x.FactuurId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne(x => x.Bestelbon).WithMany().HasForeignKey(x => x.BestelbonId).OnDelete(DeleteBehavior.SetNull);
             });
 
             // ───────── WerkTaak ─────────
@@ -457,7 +466,7 @@ namespace QuadroApp.Data
             // zodat het gedrag tussen beide providers identiek blijft.
             if (Database.IsNpgsql())
             {
-                foreach (var clrType in new[] { typeof(Factuur), typeof(TypeLijst), typeof(WerkBon) })
+                foreach (var clrType in new[] { typeof(Bestelbon), typeof(TypeLijst), typeof(WerkBon) })
                 {
                     var et = b.Entity(clrType);
                     // De byte[]-kolom blijft bestaan (data-import kopieert per kolomnaam) maar is

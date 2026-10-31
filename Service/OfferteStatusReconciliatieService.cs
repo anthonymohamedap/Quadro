@@ -27,11 +27,11 @@ public sealed class OfferteStatusReconciliatieService : IOfferteStatusReconcilia
         await using var db = await _factory.CreateDbContextAsync();
 
         var offertes = await db.Offertes.Include(o => o.WerkBon).ToListAsync();
-        var facturen = await db.Facturen.AsNoTracking().ToListAsync();
+        var bestelbonnen = await db.Bestelbonnen.AsNoTracking().ToListAsync();
 
-        var factuurPerOfferte = facturen.Where(f => f.OfferteId is not null)
+        var bestelbonPerOfferte = bestelbonnen.Where(f => f.OfferteId is not null)
             .GroupBy(f => f.OfferteId!.Value).ToDictionary(g => g.Key, g => g.First());
-        var factuurPerWerkBon = facturen.Where(f => f.WerkBonId is not null)
+        var bestelbonPerWerkBon = bestelbonnen.Where(f => f.WerkBonId is not null)
             .GroupBy(f => f.WerkBonId!.Value).ToDictionary(g => g.Key, g => g.First());
 
         var gewijzigd = 0;
@@ -39,11 +39,11 @@ public sealed class OfferteStatusReconciliatieService : IOfferteStatusReconcilia
         {
             if (offerte.Status == OfferteStatus.Geannuleerd) continue;
 
-            Factuur? factuur = null;
-            if (factuurPerOfferte.TryGetValue(offerte.Id, out var f1)) factuur = f1;
-            else if (offerte.WerkBon is not null && factuurPerWerkBon.TryGetValue(offerte.WerkBon.Id, out var f2)) factuur = f2;
+            Bestelbon? bestelbon = null;
+            if (bestelbonPerOfferte.TryGetValue(offerte.Id, out var f1)) bestelbon = f1;
+            else if (offerte.WerkBon is not null && bestelbonPerWerkBon.TryGetValue(offerte.WerkBon.Id, out var f2)) bestelbon = f2;
 
-            var doel = BepaalDoelStatus(offerte.WerkBon, factuur);
+            var doel = BepaalDoelStatus(offerte.WerkBon, bestelbon);
             if (doel is OfferteStatus target && (int)target > (int)offerte.Status)
             {
                 offerte.Status = target;
@@ -61,14 +61,14 @@ public sealed class OfferteStatusReconciliatieService : IOfferteStatusReconcilia
     /// Leidt de offerte-doelstatus af uit de werkbon + bestelbon. <c>null</c> = geen productie
     /// gestart (offerte blijft zoals ze is). Alleen omhoog toepassen door de aanroeper.
     /// </summary>
-    public static OfferteStatus? BepaalDoelStatus(WerkBon? werkbon, Factuur? factuur)
+    public static OfferteStatus? BepaalDoelStatus(WerkBon? werkbon, Bestelbon? bestelbon)
     {
         // Bestelbon betaald → Betaald.
-        if (factuur is { Status: FactuurStatus.Betaald })
+        if (bestelbon is { Status: BestelbonStatus.Betaald })
             return OfferteStatus.Betaald;
 
         // Bestelbon bestaat (niet geannuleerd) of werkbon afgewerkt/afgehaald → Besteld.
-        if ((factuur is not null && factuur.Status != FactuurStatus.Geannuleerd)
+        if ((bestelbon is not null && bestelbon.Status != BestelbonStatus.Geannuleerd)
             || werkbon is { Status: WerkBonStatus.Afgewerkt or WerkBonStatus.Afgehaald })
             return OfferteStatus.Besteld;
 

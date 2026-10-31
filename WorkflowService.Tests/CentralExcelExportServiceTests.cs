@@ -21,7 +21,7 @@ public sealed class CentralExcelExportServiceTests
     [InlineData(ExcelExportDataset.Afwerkingen, "Afwerkingen", "Mat")]
     [InlineData(ExcelExportDataset.Leveranciers, "Leveranciers", "LEV")]
     [InlineData(ExcelExportDataset.Offertes, "Offertes", "Concept")]
-    [InlineData(ExcelExportDataset.Facturen, "Bestelbonnen", "BON-2026-0001")]
+    [InlineData(ExcelExportDataset.Bestelbonnen, "Bestelbonnen", "BON-2026-0001")]
     public async Task ExportAsync_MaaktExcelBestandMetVerwachteData(
         ExcelExportDataset dataset,
         string expectedWorksheet,
@@ -110,7 +110,7 @@ public sealed class CentralExcelExportServiceTests
     }
 
     [Fact]
-    public async Task ExportAsync_FacturenMetRegels_MaaktRelatieWerkblad()
+    public async Task ExportAsync_BestelbonnenMetRegels_MaaktRelatieWerkblad()
     {
         await using var sqlite = await DbFactoryBuilder.CreateSqliteAsync();
         await SeedExportDataAsync(sqlite.Factory);
@@ -121,14 +121,14 @@ public sealed class CentralExcelExportServiceTests
         {
             var result = await sut.ExportAsync(new ExportAanvraag
             {
-                Dataset = ExcelExportDataset.Facturen,
-                KolomSleutels = ["factuurNummer", "klant", "status"],
+                Dataset = ExcelExportDataset.Bestelbonnen,
+                KolomSleutels = ["bestelbonNummer", "klant", "status"],
                 Relaties =
                 [
                     new ExportRelatieAanvraag
                     {
-                        Sleutel = "factuur-regels",
-                        KolomSleutels = ["factuurId", "omschrijving", "totaalIncl"]
+                        Sleutel = "bestelbon-regels",
+                        KolomSleutels = ["bestelbonId", "omschrijving", "totaalIncl"]
                     }
                 ]
             }, exportDirectory);
@@ -460,22 +460,22 @@ public sealed class CentralExcelExportServiceTests
             Referentie = "Reservatie"
         });
 
-        var factuur = new Factuur
+        var bestelbon = new Bestelbon
         {
             OfferteId = offerte.Id,
             Jaar = 2026,
             VolgNr = 1,
-            FactuurNummer = "BON-2026-0001",
+            BestelbonNummer = "BON-2026-0001",
             DocumentType = "Bestelbon",
             KlantNaam = "Jan Jansen",
-            FactuurDatum = new DateTime(2026, 3, 23),
+            BestelbonDatum = new DateTime(2026, 3, 23),
             VervalDatum = new DateTime(2026, 4, 23),
-            Status = FactuurStatus.KlaarVoorExport,
+            Status = BestelbonStatus.KlaarVoorExport,
             TotaalExclBtw = 123.97m,
             TotaalBtw = 26.03m,
             TotaalInclBtw = 150m
         };
-        factuur.Lijnen.Add(new FactuurLijn
+        bestelbon.Lijnen.Add(new BestelbonLijn
         {
             Omschrijving = "Poster inlijsten",
             Aantal = 1m,
@@ -487,7 +487,7 @@ public sealed class CentralExcelExportServiceTests
             TotaalIncl = 150m,
             Sortering = 1
         });
-        db.Facturen.Add(factuur);
+        db.Bestelbonnen.Add(bestelbon);
 
         await db.SaveChangesAsync();
     }

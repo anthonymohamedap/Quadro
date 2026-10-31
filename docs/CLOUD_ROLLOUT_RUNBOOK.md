@@ -64,7 +64,7 @@ Per pc:
 ## Deel 5 — Multi-user & backup verifiëren
 
 - [ ] **PC 1 en PC 2 tegelijk**: op beide een offerte/bestelbon maken; controleer dat er geen dubbele
-      factuurnummers ontstaan en dat een gelijktijdige wijziging de nette
+      bestelbonnummers ontstaan en dat een gelijktijdige wijziging de nette
       "iemand anders heeft dit gewijzigd"-melding geeft (REL-03).
 - [ ] **Proefherstel** van een Scaleway-backup uitgevoerd op een rustig moment (procedure bijwerken in
       `docs/BACKUP_RESTORE.md`, PostgreSQL-sectie), zodat je zeker weet dat restore werkt.

@@ -51,6 +51,7 @@ static class Schermen
         ["offerte-3-afgerond"] = f => OfferteAsync(f, 398),
         ["offertelijst"] = f => OffertelijstAsync(f, VerkoopFase.OpenOffertes),
         ["offertelijst-werkbonnen"] = f => OffertelijstAsync(f, VerkoopFase.LopendeWerkbonnen),
+        ["bestelbonnen"] = BestelbonnenAsync,
         ["home"] = f => HomeAsync(f, metVandaag: true),
         ["home-leeg"] = f => HomeAsync(f, metVandaag: false),
         ["home-vol"] = async f => { await TestGegevens.SeedVeelAsync(f, 10); return await HomeAsync(f, metVandaag: false); },
@@ -97,12 +98,12 @@ static class Schermen
         var auth = new TestAuthService();
         var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
         var pricing = new PricingService(f, new PricingSettingsProvider(f), new PricingEngine(), NullLogger<PricingService>.Instance);
-        var factuurWf = new FactuurWorkflowService(f, pricing, auth);
+        var bestelbonWf = new BestelbonWorkflowService(f, pricing, auth);
         var vm = new OfferteViewModel(f, new TestNavigationService(), new TestDialogService(), pricing,
-            new OfferteWorkflowService(f, wf), new WerkBonWorkflowService(f, wf), wf, factuurWf,
-            new FactuurExportService(f, new IFactuurExporter[] { new PdfFactuurExporter() }), new TestFilePickerService(),
+            new OfferteWorkflowService(f, wf), new WerkBonWorkflowService(f, wf), wf, bestelbonWf,
+            new BestelbonExportService(f, new IBestelbonExporter[] { new PdfBestelbonExporter() }), new TestFilePickerService(),
             new OfferteValidator(f), toast, new KlantValidator(f), new KlantDialogService(),
-            new OntvangstService(f, auth, factuurWf), new TestPathOpener(), new GeenOfferteNavigatie(), auth);
+            new OntvangstService(f, auth, bestelbonWf), new TestPathOpener(), new GeenOfferteNavigatie(), auth);
 
         await using var db = await f.CreateDbContextAsync();
         var id = await db.Offertes.Where(o => o.OfferteNummer == offerteNummer).Select(o => o.Id).SingleAsync();
@@ -120,6 +121,22 @@ static class Schermen
         await vm.LoadAsync();
         vm.GeselecteerdeFase = tabblad;
         return new OffertesLijstView { DataContext = vm };
+    }
+
+    static async Task<Control> BestelbonnenAsync(IDbContextFactory<AppDbContext> f)
+    {
+        await TestGegevens.SeedVandaagAsync(f);
+        var toast = new TestToastService();
+        var auth = new TestAuthService();
+        var pricing = new PricingService(f, new PricingSettingsProvider(f), new PricingEngine(), NullLogger<PricingService>.Instance);
+        var workflow = new BestelbonWorkflowService(f, pricing, auth);
+        var vm = new BestelbonnenViewModel(f, workflow,
+            new BestelbonExportService(f, new IBestelbonExporter[] { new PdfBestelbonExporter() }), toast,
+            new TestNavigationService(), new OntvangstService(f, auth, workflow), new TestPathOpener());
+        await vm.InitializeAsync();
+        vm.GeselecteerdeBestelbon = vm.Bestelbonnen.FirstOrDefault(b => b.BestelbonNummer == "2026-23");
+        await Task.Delay(300);
+        return new BestelbonnenView { DataContext = vm };
     }
 
     static async Task<Control> HomeAsync(IDbContextFactory<AppDbContext> f, bool metVandaag, bool voorraadOpen = false)
@@ -179,10 +196,10 @@ static partial class TestGegevens
         db.Offertes.AddRange(concept, verzonden, bevestigd, afgerond);
         await db.SaveChangesAsync();
 
-        db.Facturen.Add(new Factuur
+        db.Bestelbonnen.Add(new Bestelbon
         {
-            OfferteId = afgerond.Id, WerkBonId = afgerond.WerkBon!.Id, Jaar = 2026, VolgNr = 19, FactuurNummer = "2026-19",
-            KlantNaam = "Test Quadro", TotaalInclBtw = 45m, Status = FactuurStatus.Betaald
+            OfferteId = afgerond.Id, WerkBonId = afgerond.WerkBon!.Id, Jaar = 2026, VolgNr = 19, BestelbonNummer = "2026-19",
+            KlantNaam = "Test Quadro", TotaalInclBtw = 45m, Status = BestelbonStatus.Betaald
         });
         await db.SaveChangesAsync();
     }
@@ -263,13 +280,20 @@ static partial class TestGegevens
         db.Offertes.AddRange(peeters, janssens, claes, wouters, morgen);
         await db.SaveChangesAsync();
 
-        Factuur Bon(Offerte o, int volgNr, decimal voorschot) => new()
+        Bestelbon Bon(Offerte o, int volgNr, decimal voorschot) => new()
         {
-            OfferteId = o.Id, WerkBonId = o.WerkBon!.Id, Jaar = 2026, VolgNr = volgNr, FactuurNummer = $"2026-{volgNr}",
+            OfferteId = o.Id, WerkBonId = o.WerkBon!.Id, Jaar = 2026, VolgNr = volgNr, BestelbonNummer = $"2026-{volgNr}",
             KlantNaam = $"{o.Klant!.Voornaam} {o.Klant.Achternaam}", TotaalInclBtw = o.TotaalInclBtw,
-            VoorschotBedrag = voorschot, Status = FactuurStatus.KlaarVoorExport
+            VoorschotBedrag = voorschot, Status = BestelbonStatus.KlaarVoorExport,
+            BestelbonDatum = o.Datum, VervalDatum = o.Datum.AddDays(30),
+            Lijnen =
+            {
+                new BestelbonLijn { Omschrijving = "Kader 50×70, alu zwart, ontspiegeld glas", Aantal = 1, BtwPct = 21,
+                    TotaalIncl = o.TotaalInclBtw, TotaalExcl = Math.Round(o.TotaalInclBtw / 1.21m, 2),
+                    PrijsExcl = Math.Round(o.TotaalInclBtw / 1.21m, 2), TotaalBtw = o.TotaalInclBtw - Math.Round(o.TotaalInclBtw / 1.21m, 2) }
+            }
         };
-        db.Facturen.AddRange(Bon(claes, 23, 100m), Bon(wouters, 21, 40m));
+        db.Bestelbonnen.AddRange(Bon(claes, 23, 100m), Bon(wouters, 21, 40m));
         await db.SaveChangesAsync();
     }
 }
