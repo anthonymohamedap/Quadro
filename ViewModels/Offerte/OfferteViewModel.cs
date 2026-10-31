@@ -50,7 +50,11 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     public decimal OfferteBtw       => Offerte?.BtwBedrag        ?? 0m;
     public decimal OfferteIncl      => Offerte?.TotaalInclBtw    ?? 0m;
     public decimal OfferteVoorschot  => Offerte?.VoorschotBedrag  ?? 0m;
-    public decimal OfferteRest       => Offerte?.RestTeBetalen    ?? 0m;
+    /// <summary>Nog te betalen. Zodra er een bestelbon is, telt ook wat daarop betaald werd (bij het
+    /// afhalen of achteraf) — niet enkel het voorschot. Dezelfde rest als in de stappenbalk.</summary>
+    public decimal OfferteRest => Workflow.GekoppeldeFactuur is not null && Workflow.StappenBalk.Info is { } stap
+        ? stap.NogTeBetalen
+        : Offerte?.RestTeBetalen ?? 0m;
     public bool    HeeftVoorschot    => OfferteVoorschot > 0m;
 
     // Wrapper zodat het voorschot live zichtbaar is tijdens de berekening
@@ -1035,6 +1039,12 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             }
         };
 
+        Workflow.StappenBalk.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(Workflow.StappenBalk.Info))
+                OnPropertyChanged(nameof(OfferteRest));
+        };
+
         Workflow.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName is nameof(Workflow.FactuurButtonText)
@@ -1042,6 +1052,9 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                                or nameof(Workflow.IsBevestigenZichtbaar)
                                or nameof(Workflow.IsPlanningZichtbaar))
                 OnPropertyChanged(e.PropertyName);
+
+            if (e.PropertyName is nameof(Workflow.GekoppeldeFactuur))
+                OnPropertyChanged(nameof(OfferteRest));
 
             // US-100/101
             if (e.PropertyName is nameof(Workflow.IsPrijsVast) or nameof(Workflow.IsVergrendeld))

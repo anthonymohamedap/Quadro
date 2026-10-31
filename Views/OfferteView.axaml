@@ -142,7 +142,7 @@
 					<Border Classes="quadro-card">
 						<StackPanel Spacing="12">
 
-							<Grid ColumnDefinitions="*,Auto,Auto,Auto"
+							<Grid IsEnabled="{Binding !IsAlleenLezen}" ColumnDefinitions="*,Auto,Auto,Auto"
                                   ColumnSpacing="8">
 
 								<TextBlock Text="Regels"
