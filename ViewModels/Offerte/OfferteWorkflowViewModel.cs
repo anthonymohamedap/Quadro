@@ -191,8 +191,8 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         (string? tekst, IAsyncRelayCommand? command) volgende = info switch
         {
             { IsAfgerond: true } => (null, null),
-            { Huidig: VerkoopStap.Offerte } => ("Bevestigen als bestelling", BevestigenCommand),
-            { Huidig: VerkoopStap.Bestelling or VerkoopStap.InProductie } => ("Werkbon openen", OpenWerkBonCommand),
+            { Huidig: VerkoopStap.Offerte } => ("Bevestigen → Werkbon", BevestigenCommand),
+            { Huidig: VerkoopStap.Werkbon or VerkoopStap.InProductie } => ("Werkbon openen", OpenWerkBonCommand),
             { Huidig: VerkoopStap.KlaarOmAfTeHalen } when GekoppeldeFactuur is not null => ("Bestelbon afdrukken", BestelbonAfdrukkenCommand),
             { Huidig: VerkoopStap.KlaarOmAfTeHalen } => ("Werkbon openen", OpenWerkBonCommand),
             { IsAfgehaaldNogTeBetalen: true } => ("Afrekenen", OpenWerkBonCommand),
@@ -208,9 +208,9 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         StappenBalk.Toon(info, volgende.tekst, volgende.command, bestelbon.tekst, bestelbon.command);
     }
 
-    /// <summary>US-100 — vanaf "Bevestigen als bestelling" (stap 2 en verder) staat de prijs vast.</summary>
+    /// <summary>US-100 — vanaf "Bevestigen → Werkbon" (stap 2 en verder) staat de prijs vast.</summary>
     public static bool IsPrijsVastNaBevestiging(VerkoopStapInfo info)
-        => !info.IsGeannuleerd && (info.IsAfgerond || info.Huidig >= VerkoopStap.Bestelling);
+        => !info.IsGeannuleerd && (info.IsAfgerond || info.Huidig >= VerkoopStap.Werkbon);
 
     /// <summary>US-83 — opent het werkbonvenster (inplannen, status, afrekenen bij afhalen).</summary>
     private async Task OpenWerkBonAsync()

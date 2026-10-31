@@ -27,7 +27,7 @@ public class StatusLabelsTests
 
     [Theory]
     [InlineData(OfferteStatus.Concept, "Offerte (concept)")]
-    [InlineData(OfferteStatus.Goedgekeurd, "Bestelling")]
+    [InlineData(OfferteStatus.Goedgekeurd, "Werkbon")]
     [InlineData(OfferteStatus.InProductie, "In productie")]
     [InlineData(OfferteStatus.Besteld, "Klaar om af te halen")]
     public void Offerte_volgt_de_fasen(OfferteStatus status, string verwacht) => Assert.Equal(verwacht, status.Label());

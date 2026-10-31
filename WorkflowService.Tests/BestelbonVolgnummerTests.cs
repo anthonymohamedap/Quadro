@@ -15,7 +15,7 @@ namespace WorkflowService.Tests;
 
 /// <summary>
 /// De klant krijgt de bestelbon als prijsvoorstel. Vóór het akkoord is het een voorlopige bon zonder
-/// volgnummer; het volgnummer komt pas bij "Bevestigen als bestelling", zodat klanten die niet
+/// volgnummer; het volgnummer komt pas bij "Bevestigen → Werkbon", zodat klanten die niet
 /// bestellen geen gaten in de nummering laten.
 /// </summary>
 public class BestelbonVolgnummerTests

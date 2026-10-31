@@ -12,7 +12,7 @@ namespace QuadroApp.Service.Verkoop
     public enum VerkoopFase
     {
         OpenOffertes,
-        LopendeBestellingen,
+        LopendeWerkbonnen,
         KlaarOmAfTeHalen,
         Afgerond,
         Geannuleerd
@@ -40,7 +40,7 @@ namespace QuadroApp.Service.Verkoop
             var s => VerkoopStapResolver.Titel(s.Huidig)
         };
 
-        public bool ToontAfhaalDatum => AfhaalDatum.HasValue && Fase is VerkoopFase.LopendeBestellingen or VerkoopFase.KlaarOmAfTeHalen;
+        public bool ToontAfhaalDatum => AfhaalDatum.HasValue && Fase is VerkoopFase.LopendeWerkbonnen or VerkoopFase.KlaarOmAfTeHalen;
     }
 
     public interface IVerkoopOverzichtService
@@ -64,7 +64,7 @@ namespace QuadroApp.Service.Verkoop
             { IsGeannuleerd: true } => VerkoopFase.Geannuleerd,
             { IsAfgerond: true } => VerkoopFase.Afgerond,
             { Huidig: VerkoopStap.Offerte } => VerkoopFase.OpenOffertes,
-            { Huidig: VerkoopStap.Bestelling or VerkoopStap.InProductie } => VerkoopFase.LopendeBestellingen,
+            { Huidig: VerkoopStap.Werkbon or VerkoopStap.InProductie } => VerkoopFase.LopendeWerkbonnen,
             // Klaar om af te halen, en afgehaald maar nog niet (volledig) betaald.
             _ => VerkoopFase.KlaarOmAfTeHalen
         };

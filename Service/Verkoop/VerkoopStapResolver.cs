@@ -7,7 +7,7 @@ namespace QuadroApp.Service.Verkoop
     public enum VerkoopStap
     {
         Offerte = 1,
-        Bestelling = 2,
+        Werkbon = 2,
         InProductie = 3,
         KlaarOmAfTeHalen = 4,
         AfgehaaldEnBetaald = 5
@@ -58,14 +58,14 @@ namespace QuadroApp.Service.Verkoop
 
             var stap = werkBonStatus switch
             {
-                WerkBonStatus.Gepland      => VerkoopStap.Bestelling,
+                WerkBonStatus.Gepland      => VerkoopStap.Werkbon,
                 WerkBonStatus.InUitvoering => VerkoopStap.InProductie,
                 WerkBonStatus.Afgewerkt    => VerkoopStap.KlaarOmAfTeHalen,
                 WerkBonStatus.Afgehaald    => VerkoopStap.AfgehaaldEnBetaald,
                 // Geen werkbon (meer): volg de offertestatus (oude of gearchiveerde gegevens).
                 _ => offerteStatus switch
                 {
-                    OfferteStatus.Goedgekeurd => VerkoopStap.Bestelling,
+                    OfferteStatus.Goedgekeurd => VerkoopStap.Werkbon,
                     OfferteStatus.InProductie => VerkoopStap.InProductie,
                     OfferteStatus.Afgewerkt or OfferteStatus.Besteld => VerkoopStap.KlaarOmAfTeHalen,
                     OfferteStatus.Betaald => VerkoopStap.AfgehaaldEnBetaald,
@@ -83,7 +83,7 @@ namespace QuadroApp.Service.Verkoop
         public static string Titel(VerkoopStap stap) => stap switch
         {
             VerkoopStap.Offerte            => "Offerte",
-            VerkoopStap.Bestelling         => "Bestelling",
+            VerkoopStap.Werkbon            => "Werkbon",
             VerkoopStap.InProductie        => "In productie",
             VerkoopStap.KlaarOmAfTeHalen   => "Klaar om af te halen",
             VerkoopStap.AfgehaaldEnBetaald => "Afgehaald & betaald",
@@ -93,8 +93,8 @@ namespace QuadroApp.Service.Verkoop
         /// <summary>Uitleg per stap (tooltip, AC 5).</summary>
         public static string Uitleg(VerkoopStap stap) => stap switch
         {
-            VerkoopStap.Offerte            => "Prijs opmaken en de bestelbon als prijsvoorstel aan de klant geven. Gaat de klant akkoord, bevestig dan als bestelling.",
-            VerkoopStap.Bestelling         => "De klant heeft bevestigd: er is een werkbon. Plan het werk in en bestel wat nodig is.",
+            VerkoopStap.Offerte            => "Prijs opmaken en de bestelbon als prijsvoorstel aan de klant geven. Gaat de klant akkoord, maak dan de werkbon (Bevestigen → Werkbon).",
+            VerkoopStap.Werkbon         => "De klant heeft bevestigd: er is een werkbon. Plan het werk in en bestel wat nodig is.",
             VerkoopStap.InProductie        => "Het werk is bezig in het atelier (werkbon in uitvoering).",
             VerkoopStap.KlaarOmAfTeHalen   => "Het werk is klaar. Druk de bestelbon af voor de klant.",
             VerkoopStap.AfgehaaldEnBetaald => "De klant haalt af en betaalt de rest.",
@@ -103,7 +103,7 @@ namespace QuadroApp.Service.Verkoop
 
         public static IReadOnlyList<VerkoopStap> AlleStappen { get; } = new[]
         {
-            VerkoopStap.Offerte, VerkoopStap.Bestelling, VerkoopStap.InProductie,
+            VerkoopStap.Offerte, VerkoopStap.Werkbon, VerkoopStap.InProductie,
             VerkoopStap.KlaarOmAfTeHalen, VerkoopStap.AfgehaaldEnBetaald
         };
     }
