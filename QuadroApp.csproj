@@ -146,6 +146,14 @@
     <Content Remove="QuadroApp.Migrations.Npgsql\**\*" />
     <AvaloniaResource Remove="QuadroApp.Migrations.Npgsql\**\*" />
     <Page Remove="QuadroApp.Migrations.Npgsql\**\*" />
+
+    <!-- Hulpprogramma's (eigen projecten, bv. Tools/SchermAfbeeldingen) niet mee compileren. -->
+    <Compile Remove="Tools\**\*.cs" />
+    <EmbeddedResource Remove="Tools\**\*" />
+    <None Remove="Tools\**\*" />
+    <Content Remove="Tools\**\*" />
+    <AvaloniaResource Remove="Tools\**\*" />
+    <Page Remove="Tools\**\*" />
   </ItemGroup>
 
   <ItemGroup>
