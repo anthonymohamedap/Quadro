@@ -252,8 +252,8 @@ CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
         await db.Database.ExecuteSqlRawAsync(
             @"CREATE INDEX IF NOT EXISTS ""IX_VoorraadAlerts_TypeLijstId"" ON ""VoorraadAlerts"" (""TypeLijstId"")");
 
-        // Factuur-schema patches (voorheen FactuurSchemaUpgrade)
-        await FactuurSchemaUpgrade.EnsureAsync(db);
+        // Bestelbon-schema patches (tabel heet in de database nog "Facturen", US-99 fase C)
+        await BestelbonSchemaUpgrade.EnsureAsync(db);
 #pragma warning restore EF1002
     }
 

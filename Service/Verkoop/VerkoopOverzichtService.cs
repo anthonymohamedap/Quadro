@@ -55,10 +55,18 @@ namespace QuadroApp.Service.Verkoop
         public string NogTeBetalenTekst => NogTeBetalen > 0m ? $"nog € {NogTeBetalen:0.00}" : "betaald";
 
         /// <summary>US-86 — korte stap onder het bedrag, zonder het bedrag te herhalen.</summary>
-        public string StapKortTekst => Stap.IsAfgehaaldNogTeBetalen ? "Al afgehaald" : FaseTekst;
+        public string StapKortTekst => Stap switch
+        {
+            { IsAfgehaaldNogTeBetalen: true } => "Al afgehaald",
+            { IsGeannuleerd: false, IsAfgerond: false, Huidig: VerkoopStap.KlaarOmAfTeHalen } => "Klaar",
+            _ => FaseTekst
+        };
 
-        /// <summary>US-86 — "afhaaldatum 25/10/2026" in het blok "Nog te betalen".</summary>
-        public string AfhaalDatumTekst => AfhaalDatum is { } d ? $"afhaaldatum {d:dd/MM/yyyy}" : "";
+        /// <summary>US-105 — "afgehaald 25/10" in het blok "Nog te betalen".</summary>
+        public string AfhaalDatumTekst => AfhaalDatum is { } d ? $"afgehaald {d:dd/MM}" : "";
+
+        /// <summary>US-105 — bedrag in de compacte rij: "€ 136,50".</summary>
+        public string BedragTekst => $"€ {NogTeBetalen:#,##0.00}";
 
         public bool ToontAfhaalDatum => AfhaalDatum.HasValue && Fase is VerkoopFase.LopendeWerkbonnen or VerkoopFase.KlaarOmAfTeHalen;
     }
@@ -130,34 +138,34 @@ namespace QuadroApp.Service.Verkoop
                 .OrderByDescending(o => o.Datum).ThenByDescending(o => o.OfferteNummer)
                 .ToListAsync();
 
-            var facturen = await db.Facturen.AsNoTracking()
-                .Select(f => new { f.Id, f.OfferteId, f.WerkBonId, f.Status, f.TotaalInclBtw, f.VoorschotBedrag, f.VolgNr, f.FactuurNummer })
+            var bestelbonnen = await db.Bestelbonnen.AsNoTracking()
+                .Select(f => new { f.Id, f.OfferteId, f.WerkBonId, f.Status, f.TotaalInclBtw, f.VoorschotBedrag, f.VolgNr, f.BestelbonNummer })
                 .ToListAsync();
 
             // SQLite kan geen SUM op decimal → in het geheugen optellen (zelfde aanpak als OntvangstService).
             var betalingen = (await db.Ontvangsten.AsNoTracking()
-                    .Where(o => o.FactuurId != null && o.Soort == OntvangstSoort.Betaling)
-                    .Select(o => new { FactuurId = o.FactuurId!.Value, o.BedragIncl })
+                    .Where(o => o.BestelbonId != null && o.Soort == OntvangstSoort.Betaling)
+                    .Select(o => new { BestelbonId = o.BestelbonId!.Value, o.BedragIncl })
                     .ToListAsync())
-                .GroupBy(o => o.FactuurId)
+                .GroupBy(o => o.BestelbonId)
                 .ToDictionary(g => g.Key, g => g.Sum(x => x.BedragIncl));
 
-            var perOfferte = facturen.Where(f => f.OfferteId != null)
+            var perOfferte = bestelbonnen.Where(f => f.OfferteId != null)
                 .GroupBy(f => f.OfferteId!.Value).ToDictionary(g => g.Key, g => g.First());
-            var perWerkBon = facturen.Where(f => f.WerkBonId != null)
+            var perWerkBon = bestelbonnen.Where(f => f.WerkBonId != null)
                 .GroupBy(f => f.WerkBonId!.Value).ToDictionary(g => g.Key, g => g.First());
 
             var regels = new List<VerkoopOverzichtRegel>(offertes.Count);
             foreach (var o in offertes)
             {
-                var factuur = perOfferte.GetValueOrDefault(o.Id)
+                var bestelbon = perOfferte.GetValueOrDefault(o.Id)
                     ?? (o.WerkBon is null ? null : perWerkBon.GetValueOrDefault(o.WerkBon.Id));
 
-                var rest = factuur is null
+                var rest = bestelbon is null
                     ? o.TotaalInclBtw - o.VoorschotBedrag
-                    : factuur.TotaalInclBtw - factuur.VoorschotBedrag - betalingen.GetValueOrDefault(factuur.Id);
+                    : bestelbon.TotaalInclBtw - bestelbon.VoorschotBedrag - betalingen.GetValueOrDefault(bestelbon.Id);
 
-                var stap = VerkoopStapResolver.Bepaal(o.Status, o.WerkBon?.Status, factuur?.Status, Math.Round(rest, 2));
+                var stap = VerkoopStapResolver.Bepaal(o.Status, o.WerkBon?.Status, bestelbon?.Status, Math.Round(rest, 2));
 
                 var klantNaam = o.Klant is null ? "" : $"{o.Klant.Voornaam} {o.Klant.Achternaam}".Trim();
                 regels.Add(new VerkoopOverzichtRegel(
@@ -165,7 +173,7 @@ namespace QuadroApp.Service.Verkoop
                     o.AfhaalDatum ?? o.WerkBon?.AfhaalDatum, stap)
                 {
                     // Voorlopige bon (nog geen volgnummer) heeft geen nummer om te tonen.
-                    BestelbonNummer = factuur?.VolgNr is null ? null : factuur.FactuurNummer
+                    BestelbonNummer = bestelbon?.VolgNr is null ? null : bestelbon.BestelbonNummer
                 });
             }
 

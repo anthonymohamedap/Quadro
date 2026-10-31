@@ -18,7 +18,7 @@ namespace QuadroApp.ViewModels;
 /// <see cref="OntvangstSoort.Winkelverkoop"/>), zodat ze mee in het "overzicht betalingen" komen.
 /// Naar het voorbeeld van de kassa-verkopen van Quadro: datum, omschrijving, aantal, prijs incl.,
 /// korting %, betaalwijze; btw altijd 21 %; wordt altijd meteen volledig betaald.
-/// Hergebruikt <see cref="Permissie.Factureren"/>.</summary>
+/// Hergebruikt <see cref="Permissie.Bestelbonnen"/>.</summary>
 public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializable
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
@@ -41,7 +41,7 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? foutmelding;
 
-    /// <summary>US-32: uitboeken van winkelverkopen valt onder Factureren.</summary>
+    /// <summary>US-32: uitboeken van winkelverkopen valt onder Bestelbonnen.</summary>
     public bool MagBewerken { get; }
 
     public IReadOnlyList<Betaalwijze> BetaalwijzeOpties { get; } = Enum.GetValues<Betaalwijze>();
@@ -77,7 +77,7 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
         _toast = toast;
         _auth = auth;
 
-        MagBewerken = _auth.HeeftPermissie(Permissie.Factureren);
+        MagBewerken = _auth.HeeftPermissie(Permissie.Bestelbonnen);
 
         // US-72: standaard de lopende maand, zoals de maand-tabbladen van de oude kassa.
         ZetMaand(DateTime.Today);
@@ -289,7 +289,7 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
         // Winkelverkoop = altijd meteen volledig betaald (Veerle, 27/09): ontvangen bedrag = totaal.
         GeselecteerdeVerkoop.Soort = OntvangstSoort.Winkelverkoop;
         GeselecteerdeVerkoop.OfferteId = null;
-        GeselecteerdeVerkoop.FactuurId = null;
+        GeselecteerdeVerkoop.BestelbonId = null;
         GeselecteerdeVerkoop.BedragIncl = GeselecteerdeVerkoop.TotaalIncl;
         if (GeselecteerdeVerkoop.Id == 0)
             GeselecteerdeVerkoop.AangemaaktDoor = _auth.CurrentUser?.GebruikersNaam;

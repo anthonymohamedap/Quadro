@@ -73,8 +73,8 @@
 			<views:ArchiefView/>
 		</DataTemplate>
 
- 		<DataTemplate DataType="{x:Type vm:FacturenViewModel}">
- 			<views:FacturenView/>
+ 		<DataTemplate DataType="{x:Type vm:BestelbonnenViewModel}">
+ 			<views:BestelbonnenView/>
  		</DataTemplate>
 
 		<DataTemplate DataType="{x:Type vm:ExportCenterViewModel}">

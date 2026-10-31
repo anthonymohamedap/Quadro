@@ -4,11 +4,11 @@ using System;
 
 namespace QuadroApp.Views;
 
-public partial class FactuurPreviewWindow : Window
+public partial class BestelbonPreviewWindow : Window
 {
     private bool _previewOpened;
 
-    public FactuurPreviewWindow()
+    public BestelbonPreviewWindow()
     {
         InitializeComponent();
         Opened += OnOpened;
@@ -16,7 +16,7 @@ public partial class FactuurPreviewWindow : Window
 
     private async void OnOpened(object? sender, EventArgs e)
     {
-        if (_previewOpened || DataContext is not FactuurPreviewViewModel vm)
+        if (_previewOpened || DataContext is not BestelbonPreviewViewModel vm)
             return;
 
         _previewOpened = true;

@@ -48,7 +48,7 @@ namespace QuadroApp.Service.Verkoop
         public static VerkoopStapInfo Bepaal(
             OfferteStatus offerteStatus,
             WerkBonStatus? werkBonStatus,
-            FactuurStatus? bestelbonStatus,
+            BestelbonStatus? bestelbonStatus,
             decimal nogTeBetalen)
         {
             var rest = nogTeBetalen < 0m ? 0m : nogTeBetalen;
@@ -73,7 +73,7 @@ namespace QuadroApp.Service.Verkoop
                 }
             };
 
-            var betaald = bestelbonStatus == FactuurStatus.Betaald
+            var betaald = bestelbonStatus == BestelbonStatus.Betaald
                 || (stap == VerkoopStap.AfgehaaldEnBetaald && werkBonStatus is null && offerteStatus == OfferteStatus.Betaald);
             var afgerond = stap == VerkoopStap.AfgehaaldEnBetaald && betaald;
 

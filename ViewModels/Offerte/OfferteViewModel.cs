@@ -52,7 +52,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     public decimal OfferteVoorschot  => Offerte?.VoorschotBedrag  ?? 0m;
     /// <summary>Nog te betalen. Zodra er een bestelbon is, telt ook wat daarop betaald werd (bij het
     /// afhalen of achteraf) — niet enkel het voorschot. Dezelfde rest als in de stappenbalk.</summary>
-    public decimal OfferteRest => Workflow.GekoppeldeFactuur is not null && Workflow.StappenBalk.Info is { } stap
+    public decimal OfferteRest => Workflow.GekoppeldeBestelbon is not null && Workflow.StappenBalk.Info is { } stap
         ? stap.NogTeBetalen
         : Offerte?.RestTeBetalen ?? 0m;
     public bool    HeeftVoorschot    => OfferteVoorschot > 0m;
@@ -192,8 +192,8 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     }
 
     // Workflow
-    public string FactuurButtonText       => Workflow.FactuurButtonText;
-    public string FactuurStatusText       => Workflow.FactuurStatusText;
+    public string BestelbonButtonText       => Workflow.BestelbonButtonText;
+    public string BestelbonStatusText       => Workflow.BestelbonStatusText;
     public bool   IsBevestigenZichtbaar   => Workflow.IsBevestigenZichtbaar;
     public bool   IsPlanningZichtbaar     => Workflow.IsPlanningZichtbaar;
 
@@ -216,7 +216,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     public IAsyncRelayCommand BerekenCommand      => Prijzen.BerekenCommand;
     public IAsyncRelayCommand BevestigenCommand   => Workflow.BevestigenCommand;
     public IAsyncRelayCommand OpenPlanningCommand => Workflow.OpenPlanningCommand;
-    public IAsyncRelayCommand FactuurCommand      => Workflow.FactuurCommand;
+    public IAsyncRelayCommand BestelbonCommand      => Workflow.BestelbonCommand;
     public IAsyncRelayCommand NieuweKlantCommand => KlantSelectie.NieuweKlantCommand;
     public IRelayCommand  RegelDuplicerenCommand    => Regelbeheer.RegelDuplicerenCommand;
     public IAsyncRelayCommand ApplyLegacyCodeCommand => Regelbeheer.ApplyLegacyCodeCommand;
@@ -909,8 +909,8 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         IOfferteWorkflowService workflow,
         IWerkBonWorkflowService werkBonWorkflow,
         IWorkflowService statusWorkflow,
-        IFactuurWorkflowService factuurWorkflow,
-        IFactuurExportService factuurExportService,
+        IBestelbonWorkflowService bestelbonWorkflow,
+        IBestelbonExportService bestelbonExportService,
         IFilePickerService filePickerService,
         IOfferteValidator validator,
         IToastService toast,
@@ -952,7 +952,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
 
         Workflow = new OfferteWorkflowViewModel(
             dbFactory, workflow, werkBonWorkflow, statusWorkflow,
-            factuurWorkflow, factuurExportService, filePickerService,
+            bestelbonWorkflow, bestelbonExportService, filePickerService,
             dialogs, toast, ontvangsten, pathOpener, offerteNav,
             getOfferteId: () => Offerte?.Id ?? 0,
             saveAndReload: () => SaveCoreAsync(reloadAfterSave: true),
@@ -1049,13 +1049,13 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
 
         Workflow.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName is nameof(Workflow.FactuurButtonText)
-                               or nameof(Workflow.FactuurStatusText)
+            if (e.PropertyName is nameof(Workflow.BestelbonButtonText)
+                               or nameof(Workflow.BestelbonStatusText)
                                or nameof(Workflow.IsBevestigenZichtbaar)
                                or nameof(Workflow.IsPlanningZichtbaar))
                 OnPropertyChanged(e.PropertyName);
 
-            if (e.PropertyName is nameof(Workflow.GekoppeldeFactuur))
+            if (e.PropertyName is nameof(Workflow.GekoppeldeBestelbon))
                 OnPropertyChanged(nameof(OfferteRest));
 
             if (e.PropertyName is nameof(Workflow.GekoppeldeWerkBon))   // US-103
@@ -1288,7 +1288,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
 
             // ── Update UI op main thread ──
             Offerte = offerte;
-            await Workflow.LoadFactuurContextAsync(await _dbFactory.CreateDbContextAsync(), offerteId);
+            await Workflow.LoadBestelbonContextAsync(await _dbFactory.CreateDbContextAsync(), offerteId);
 
             // Selecteer de juiste klant uit de al-geladen catalogus.
             // Niet SetKlanten aanroepen met de eigen collectie — dat wist hem eerst (self-clear bug).
@@ -1313,7 +1313,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         Regelbeheer.Regels = new ObservableCollection<OfferteRegel>();
         Regelbeheer.SelectedRegel = null;
         Workflow.GekoppeldeWerkBon = null;
-        Workflow.GekoppeldeFactuur = null;
+        Workflow.GekoppeldeBestelbon = null;
         Workflow.IsOntgrendeld = false;
         Workflow.ToonStappen(OfferteStatus.Concept, nogTeBetalen: 0m);
         RefreshTotals();

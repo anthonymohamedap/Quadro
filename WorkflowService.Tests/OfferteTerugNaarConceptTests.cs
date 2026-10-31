@@ -48,12 +48,12 @@ public class OfferteTerugNaarConceptTests
         var auth = new TestAuthService();
         var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
         var pricing = new PricingService(f, new PricingSettingsProvider(f), new PricingEngine(), NullLogger<PricingService>.Instance);
-        var factuurWf = new FactuurWorkflowService(f, pricing, auth);
+        var bestelbonWf = new BestelbonWorkflowService(f, pricing, auth);
         var vm = new OfferteViewModel(f, new TestNavigationService(), new TestDialogService(), pricing,
-            new OfferteWorkflowService(f, wf), new WerkBonWorkflowService(f, wf), wf, factuurWf,
-            new FactuurExportService(f, Array.Empty<IFactuurExporter>()), new TestFilePickerService(),
+            new OfferteWorkflowService(f, wf), new WerkBonWorkflowService(f, wf), wf, bestelbonWf,
+            new BestelbonExportService(f, Array.Empty<IBestelbonExporter>()), new TestFilePickerService(),
             new OfferteValidator(f), toast, new KlantValidator(f), new KlantDialogService(),
-            new OntvangstService(f, auth, factuurWf), new TestPathOpener(), new GeenOfferteNavigatie(), auth);
+            new OntvangstService(f, auth, bestelbonWf), new TestPathOpener(), new GeenOfferteNavigatie(), auth);
         await vm.InitializeAsync();
         await vm.LoadAsync(id);
         return vm;

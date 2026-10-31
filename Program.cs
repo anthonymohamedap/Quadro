@@ -18,7 +18,7 @@ internal sealed class Program
         // één Npgsql-verbinding wordt opgebouwd (moet dus hier, vóór BuildAvaloniaApp).
         // Zonder dit koppelt Npgsql DateTime aan 'timestamp with time zone' en eist het
         // Kind=Utc. De app slaat echter kalenderdatums bewust LOKAAL op (offertedatum,
-        // planning, factuurdatums = Kind=Local/Unspecified) naast UTC-gebeurtenis-
+        // planning, bestelbondatums = Kind=Local/Unspecified) naast UTC-gebeurtenis-
         // tijdstippen (REL-01). Dat mengt niet op een timestamptz-kolom -> crash
         // ("Cannot write DateTime with Kind=Local/Unspecified ... only UTC is supported").
         // Met deze switch worden DateTime-kolommen 'timestamp without time zone' (wall-clock,

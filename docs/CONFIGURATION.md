@@ -68,7 +68,7 @@ Voor een correcte werking op een gedeelde (mogelijk UTC-)PostgreSQL-server geldt
 - **Gebeurtenis-tijdstippen** (wanneer iets gebeurde) worden in **UTC** opgeslagen: audit-log,
   laatste login, account-aanmaakdatum, lijst-`LaatsteUpdate`, GDPR-archivering. De UI toont ze in
   lokale tijd via `UtcToLocalConverter`.
-- **Kalenderdatums** (een dag in de agenda) blijven **lokaal**: offerte-/factuur-/afhaal-/plandatum,
+- **Kalenderdatums** (een dag in de agenda) blijven **lokaal**: offerte-/bestelbon-/afhaal-/plandatum,
   bestelbon-datums, de GDPR-retentie-cutoff (die vergelijkt met de lokale offertedatum).
 
 Vuistregel bij nieuwe code: een *moment in de tijd* → `DateTime.UtcNow`; een *dag op de kalender*
