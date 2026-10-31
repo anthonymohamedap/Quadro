@@ -39,7 +39,7 @@ public sealed class PdfBestelbonExporter : IBestelbonExporter
     {
         Directory.CreateDirectory(exportFolder);
         var safeNumber = bestelbon.BestelbonNummer.Replace('/', '-');
-        // Altijd "Bestelbon-…" (ook voor oude bonnen met DocumentType "Bestelbon"; US-82/US-85).
+        // Altijd "Bestelbon-…" (US-82/US-85; oude bonnen met een ander DocumentType zijn omgezet in US-99 fase C).
         var path = Path.Combine(exportFolder, $"Bestelbon-{safeNumber}.pdf");
         _logger?.LogInformation("PDF export map gegarandeerd: {Folder}", exportFolder);
 

@@ -54,6 +54,16 @@ Stand 31/10/2026. Aanleiding: mail Veerle 28/10 — *"Wat bedoel je met 'facture
 
 **Fase C — database (± 2u, met back-up).** De `ToTable`/`HasColumnName`-mapping uit fase B weghalen en een migratie `HernoemFactuurNaarBestelbon` genereren (`.\Scripts\add-migration.ps1`). Nakijken dat EF **RenameTable/RenameColumn** genereert en geen Drop/Create (anders handmatig omzetten naar rename — anders gaan de gegevens verloren). Test: migratietest zoals `BetaalwijzeTests.Migratie_zet_oude_betaalwijzen_om` met bestelbon + lijnen + betaling vóór en na. Op SQLite maakt EF bij een rename van een kolom met index/FK de tabel opnieuw aan (rebuild); controleren dat data meekomt.
 
+> ✅ **Gedaan 31/10** (`feature/us99c-database-bestelbon`): migratie `HernoemFactuurNaarBestelbon` (SQLite + Npgsql). EF genereerde **DropTable/CreateTable** (gegevens kwijt) → met de hand herschreven naar `RenameTable`/`RenameColumn`/`RenameIndex` + sleutels los/terug. Zet ook `DocumentType = 'Factuur'` → `'Bestelbon'` en `AuditLogs.EntiteitType` `Factuur`/`FactuurLijn` → `Bestelbon`/`BestelbonLijn`.
+> - SQLite: de herbouw van de tabellen kopieert elke rij (`INSERT … SELECT`); test `BestelbonMigratieTests` (bon, lijn, betaling, oude "Factuur"-bon, audit, sleutels en indexen).
+> - PostgreSQL 16 (lokaal): alleen `ALTER … RENAME`, één transactie; gegevens identiek, nieuwe bon krijgt een id, `Down` en opnieuw `Up` werken.
+> - De healer in `SqliteSchemaPatcher` raakt "Facturen" enkel nog aan als die tabel nog bestaat (anders crasht elke start na de migratie).
+> - `Scripts/MigrationTool` en `migrate_to_postgres.py` gebruiken de nieuwe tabelnamen.
+>
+> Wat nog "factu" bevat, bewust: oude migraties, de bevroren healer-SQL (`SqliteSchemaPatcher`, `BestelbonSchemaUpgrade`) voor databases van vóór de Baseline, en de legacy-waarde `"Gefactureerd"`.
+>
+> ⚠ **Vóór de uitrol: back-up van de productiedatabase** (zoals bij v1.3.26).
+
 ## Risico's
 
 - **Gegevensverlies bij fase C** als EF een drop/create i.p.v. rename genereert → migratie handmatig nalezen, test met echte data-kopie, back-up vóór release.
