@@ -51,6 +51,8 @@ static class Schermen
         ["offerte-3-afgerond"] = f => OfferteAsync(f, 398),
         ["offertelijst"] = f => OffertelijstAsync(f, VerkoopFase.OpenOffertes),
         ["offertelijst-werkbonnen"] = f => OffertelijstAsync(f, VerkoopFase.LopendeWerkbonnen),
+        ["home"] = f => HomeAsync(f, metVandaag: true),
+        ["home-leeg"] = f => HomeAsync(f, metVandaag: false),
     };
 
     public static async Task AllesAsync(string uitvoer, HashSet<string> gekozen)
@@ -109,6 +111,22 @@ static class Schermen
         return new OffertesLijstView { DataContext = vm };
     }
 
+    static async Task<Control> HomeAsync(IDbContextFactory<AppDbContext> f, bool metVandaag)
+    {
+        if (metVandaag) await TestGegevens.SeedVandaagAsync(f);
+        var toast = new TestToastService();
+        var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
+        var vm = new HomeViewModel(new TestNavigationService(), f, new WerkBonWorkflowService(f, wf), toast, wf,
+            new GeenServices(), new VerkoopOverzichtService(f), new GeenOfferteNavigatie());
+        await vm.InitializeAsync();
+        return new HomeView { DataContext = vm };
+    }
+
+    sealed class GeenServices : IServiceProvider
+    {
+        public object? GetService(Type serviceType) => null;
+    }
+
     sealed class GeenOfferteNavigatie : IOfferteNavigationService
     {
         public Task OpenOfferteAsync(int offerteId) => Task.CompletedTask;
@@ -118,7 +136,7 @@ static class Schermen
 
 /// <summary>Vaste testgegevens: offerte 419 (concept), 418 (verzonden), 412 (bevestigd, werkbon gepland),
 /// 398 (afgehaald en betaald).</summary>
-static class TestGegevens
+static partial class TestGegevens
 {
     public static async Task SeedAsync(IDbContextFactory<AppDbContext> f)
     {
@@ -154,6 +172,44 @@ static class TestGegevens
             OfferteId = afgerond.Id, WerkBonId = afgerond.WerkBon!.Id, Jaar = 2026, VolgNr = 19, FactuurNummer = "2026-19",
             KlantNaam = "Test Quadro", TotaalInclBtw = 45m, Status = FactuurStatus.Betaald
         });
+        await db.SaveChangesAsync();
+    }
+}
+
+/// <summary>Extra voor het beginscherm (US-86): verkopen met afhaaldatum vandaag en afgehaalde
+/// bonnen met een rest.</summary>
+static partial class TestGegevens
+{
+    public static async Task SeedVandaagAsync(IDbContextFactory<AppDbContext> f)
+    {
+        await using var db = await f.CreateDbContextAsync();
+        var vandaag = DateTime.Today;
+        Klant K(string v, string a) => new() { Voornaam = v, Achternaam = a, Gemeente = "Aarschot" };
+        Offerte O(int nr, Klant k, OfferteStatus st, decimal totaal, decimal voorschot, WerkBonStatus wb, DateTime? afhaal) => new()
+        {
+            OfferteNummer = nr, Datum = vandaag.AddDays(-14), Klant = k, Status = st,
+            TotaalInclBtw = totaal, VoorschotBedrag = voorschot, AfhaalDatum = afhaal,
+            WerkBon = new WerkBon { Status = wb, TotaalPrijsIncl = totaal, AfhaalDatum = afhaal }
+        };
+
+        // Vandaag af te halen: klaar (met voorschot), klaar zonder voorschot, en al afgehaald met rest.
+        var peeters = O(421, K("Marleen", "Peeters"), OfferteStatus.Afgewerkt, 186.50m, 50m, WerkBonStatus.Afgewerkt, vandaag);
+        var janssens = O(422, K("Luc", "Janssens"), OfferteStatus.Afgewerkt, 64.00m, 0m, WerkBonStatus.Afgewerkt, vandaag.AddHours(15));
+        var claes = O(423, K("Sofie", "Claes"), OfferteStatus.Besteld, 245.00m, 100m, WerkBonStatus.Afgehaald, vandaag);
+        // Nog te betalen: eerder afgehaald, rest staat open.
+        var wouters = O(405, K("Jan", "Wouters"), OfferteStatus.Besteld, 120.00m, 40m, WerkBonStatus.Afgehaald, vandaag.AddDays(-6));
+        // Niet op het beginscherm: klaar, maar pas morgen af te halen.
+        var morgen = O(424, K("Els", "Maes"), OfferteStatus.Afgewerkt, 80m, 0m, WerkBonStatus.Afgewerkt, vandaag.AddDays(1));
+        db.Offertes.AddRange(peeters, janssens, claes, wouters, morgen);
+        await db.SaveChangesAsync();
+
+        Factuur Bon(Offerte o, int volgNr, decimal voorschot) => new()
+        {
+            OfferteId = o.Id, WerkBonId = o.WerkBon!.Id, Jaar = 2026, VolgNr = volgNr, FactuurNummer = $"2026-{volgNr}",
+            KlantNaam = $"{o.Klant!.Voornaam} {o.Klant.Achternaam}", TotaalInclBtw = o.TotaalInclBtw,
+            VoorschotBedrag = voorschot, Status = FactuurStatus.KlaarVoorExport
+        };
+        db.Facturen.AddRange(Bon(claes, 23, 100m), Bon(wouters, 21, 40m));
         await db.SaveChangesAsync();
     }
 }
