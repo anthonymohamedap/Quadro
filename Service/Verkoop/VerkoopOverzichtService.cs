@@ -40,12 +40,63 @@ namespace QuadroApp.Service.Verkoop
             var s => VerkoopStapResolver.Titel(s.Huidig)
         };
 
+        /// <summary>Nummer van de bestelbon (2026-19); leeg zolang er geen (definitieve) bon is.</summary>
+        public string? BestelbonNummer { get; init; }
+
+        /// <summary>Openstaand bedrag (0 als alles betaald is).</summary>
+        public decimal NogTeBetalen => Stap.NogTeBetalen;
+
+        /// <summary>US-86 — tweede regel op het beginscherm: "Offerte 421 · Bestelbon 2026-23".</summary>
+        public string BonTekst => string.IsNullOrWhiteSpace(BestelbonNummer)
+            ? $"Offerte {OfferteNummer}"
+            : $"Offerte {OfferteNummer} · Bestelbon {BestelbonNummer}";
+
+        /// <summary>US-86 — bedrag rechts op het beginscherm.</summary>
+        public string NogTeBetalenTekst => NogTeBetalen > 0m ? $"nog € {NogTeBetalen:0.00}" : "betaald";
+
+        /// <summary>US-86 — korte stap onder het bedrag, zonder het bedrag te herhalen.</summary>
+        public string StapKortTekst => Stap.IsAfgehaaldNogTeBetalen ? "Al afgehaald" : FaseTekst;
+
+        /// <summary>US-86 — "afhaaldatum 25/10/2026" in het blok "Nog te betalen".</summary>
+        public string AfhaalDatumTekst => AfhaalDatum is { } d ? $"afhaaldatum {d:dd/MM/yyyy}" : "";
+
         public bool ToontAfhaalDatum => AfhaalDatum.HasValue && Fase is VerkoopFase.LopendeWerkbonnen or VerkoopFase.KlaarOmAfTeHalen;
     }
 
     public interface IVerkoopOverzichtService
     {
         Task<IReadOnlyList<VerkoopOverzichtRegel>> GetOverzichtAsync();
+    }
+
+    /// <summary>US-86 — de twee blokken van het beginscherm.</summary>
+    public sealed record BeginschermBlokken(
+        IReadOnlyList<VerkoopOverzichtRegel> VandaagAfTeHalen,
+        IReadOnlyList<VerkoopOverzichtRegel> NogTeBetalen)
+    {
+        /// <summary>
+        /// Vandaag af te halen: afhaaldatum vandaag en klaar om af te halen (of al afgehaald, maar
+        /// met een rest). Nog te betalen: afgehaald met een rest &gt; 0, oudste afhaaldatum eerst.
+        /// </summary>
+        public static BeginschermBlokken Bepaal(IEnumerable<VerkoopOverzichtRegel> regels, DateTime vandaag)
+        {
+            var lijst = regels.ToList();
+
+            var vandaagAf = lijst
+                .Where(r => r.AfhaalDatum?.Date == vandaag.Date
+                         && (r.Stap is { IsGeannuleerd: false, IsAfgerond: false, Huidig: VerkoopStap.KlaarOmAfTeHalen }
+                             || r.Stap.IsAfgehaaldNogTeBetalen))
+                .OrderBy(r => r.KlantNaam, StringComparer.CurrentCultureIgnoreCase)
+                .ThenBy(r => r.OfferteNummer)
+                .ToList();
+
+            var nogTeBetalen = lijst
+                .Where(r => r.Stap.IsAfgehaaldNogTeBetalen)
+                .OrderBy(r => r.AfhaalDatum ?? DateTime.MaxValue)
+                .ThenBy(r => r.OfferteNummer)
+                .ToList();
+
+            return new BeginschermBlokken(vandaagAf, nogTeBetalen);
+        }
     }
 
     /// <summary>
@@ -80,7 +131,7 @@ namespace QuadroApp.Service.Verkoop
                 .ToListAsync();
 
             var facturen = await db.Facturen.AsNoTracking()
-                .Select(f => new { f.Id, f.OfferteId, f.WerkBonId, f.Status, f.TotaalInclBtw, f.VoorschotBedrag })
+                .Select(f => new { f.Id, f.OfferteId, f.WerkBonId, f.Status, f.TotaalInclBtw, f.VoorschotBedrag, f.VolgNr, f.FactuurNummer })
                 .ToListAsync();
 
             // SQLite kan geen SUM op decimal → in het geheugen optellen (zelfde aanpak als OntvangstService).
@@ -111,7 +162,11 @@ namespace QuadroApp.Service.Verkoop
                 var klantNaam = o.Klant is null ? "" : $"{o.Klant.Voornaam} {o.Klant.Achternaam}".Trim();
                 regels.Add(new VerkoopOverzichtRegel(
                     o.Id, o.OfferteNummer, klantNaam, o.Klant?.Email, o.Datum, o.TotaalInclBtw,
-                    o.AfhaalDatum ?? o.WerkBon?.AfhaalDatum, stap));
+                    o.AfhaalDatum ?? o.WerkBon?.AfhaalDatum, stap)
+                {
+                    // Voorlopige bon (nog geen volgnummer) heeft geen nummer om te tonen.
+                    BestelbonNummer = factuur?.VolgNr is null ? null : factuur.FactuurNummer
+                });
             }
 
             return regels;

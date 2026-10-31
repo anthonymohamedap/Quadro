@@ -51,6 +51,10 @@ static class Schermen
         ["offerte-3-afgerond"] = f => OfferteAsync(f, 398),
         ["offertelijst"] = f => OffertelijstAsync(f, VerkoopFase.OpenOffertes),
         ["offertelijst-werkbonnen"] = f => OffertelijstAsync(f, VerkoopFase.LopendeWerkbonnen),
+        ["home"] = f => HomeAsync(f, metVandaag: true),
+        ["home-leeg"] = f => HomeAsync(f, metVandaag: false),
+        ["home-vol"] = async f => { await TestGegevens.SeedVeelAsync(f, 10); return await HomeAsync(f, metVandaag: false); },
+        ["home-druk"] = async f => { await TestGegevens.SeedWaarschuwingenAsync(f); return await HomeAsync(f, metVandaag: true); },
     };
 
     public static async Task AllesAsync(string uitvoer, HashSet<string> gekozen)
@@ -109,6 +113,22 @@ static class Schermen
         return new OffertesLijstView { DataContext = vm };
     }
 
+    static async Task<Control> HomeAsync(IDbContextFactory<AppDbContext> f, bool metVandaag)
+    {
+        if (metVandaag) await TestGegevens.SeedVandaagAsync(f);
+        var toast = new TestToastService();
+        var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
+        var vm = new HomeViewModel(new TestNavigationService(), f, new WerkBonWorkflowService(f, wf), toast, wf,
+            new GeenServices(), new VerkoopOverzichtService(f), new GeenOfferteNavigatie());
+        await vm.InitializeAsync();
+        return new HomeView { DataContext = vm };
+    }
+
+    sealed class GeenServices : IServiceProvider
+    {
+        public object? GetService(Type serviceType) => null;
+    }
+
     sealed class GeenOfferteNavigatie : IOfferteNavigationService
     {
         public Task OpenOfferteAsync(int offerteId) => Task.CompletedTask;
@@ -118,7 +138,7 @@ static class Schermen
 
 /// <summary>Vaste testgegevens: offerte 419 (concept), 418 (verzonden), 412 (bevestigd, werkbon gepland),
 /// 398 (afgehaald en betaald).</summary>
-static class TestGegevens
+static partial class TestGegevens
 {
     public static async Task SeedAsync(IDbContextFactory<AppDbContext> f)
     {
@@ -154,6 +174,92 @@ static class TestGegevens
             OfferteId = afgerond.Id, WerkBonId = afgerond.WerkBon!.Id, Jaar = 2026, VolgNr = 19, FactuurNummer = "2026-19",
             KlantNaam = "Test Quadro", TotaalInclBtw = 45m, Status = FactuurStatus.Betaald
         });
+        await db.SaveChangesAsync();
+    }
+}
+
+/// <summary>Extra voor het beginscherm (US-86): verkopen met afhaaldatum vandaag en afgehaalde
+/// bonnen met een rest.</summary>
+static partial class TestGegevens
+{
+    /// <summary>Open voorraadwaarschuwingen zoals VoorraadAlertService ze maakt (lijsten en leveringen).</summary>
+    public static async Task SeedWaarschuwingenAsync(IDbContextFactory<AppDbContext> f)
+    {
+        await using var db = await f.CreateDbContextAsync();
+        var nu = DateTime.UtcNow;
+        VoorraadAlert A(VoorraadAlertType t, string bericht, int minutenGeleden) =>
+            new() { AlertType = t, Bericht = bericht, AangemaaktOp = nu.AddMinutes(-minutenGeleden) };
+        db.VoorraadAlerts.AddRange(
+            A(VoorraadAlertType.BelowMinimum, "Voorraad onder minimum voor L-2045 (1,8 m beschikbaar).", 5),
+            A(VoorraadAlertType.LowStock, "Voorraad bijna op voor L-1180 (4,5 m beschikbaar).", 10),
+            A(VoorraadAlertType.LowStock, "Voorraad bijna op voor ALU-50Z (6 m beschikbaar).", 15),
+            A(VoorraadAlertType.OpenShortage, "Open tekort voor werktaak 87 (L-2045).", 20),
+            A(VoorraadAlertType.OrderOverdue, "Bestelling B-2026-031 voor leverancier Nielsen is over tijd.", 25),
+            A(VoorraadAlertType.PartialReceiptPending, "Bestelling B-2026-029 is deels ontvangen en nog niet afgerond.", 30),
+            A(VoorraadAlertType.OrderOverdue, "Bestelling B-2026-027 voor leverancier Larson-Juhl is over tijd.", 35));
+        await db.SaveChangesAsync();
+    }
+
+    /// <summary>Drukke dag: <paramref name="aantal"/> verkopen vandaag af te halen en evenveel afgehaald met een rest.</summary>
+    public static async Task SeedVeelAsync(IDbContextFactory<AppDbContext> f, int aantal)
+    {
+        await using var db = await f.CreateDbContextAsync();
+        var vandaag = DateTime.Today;
+        string[] voornamen = { "Marleen", "Luc", "Sofie", "Jan", "Els", "Tom", "An", "Pieter", "Lien", "Koen" };
+        string[] namen = { "Peeters", "Janssens", "Claes", "Wouters", "Maes", "Jacobs", "Mertens", "Willems", "Goossens", "Aerts" };
+        var lijst = new List<Offerte>();
+        for (var i = 0; i < aantal; i++)
+        {
+            var totaal = 60m + i * 23.5m;
+            lijst.Add(new Offerte
+            {
+                OfferteNummer = 430 + i, Datum = vandaag.AddDays(-14), Status = OfferteStatus.Afgewerkt,
+                Klant = new Klant { Voornaam = voornamen[i % 10], Achternaam = namen[i % 10] },
+                TotaalInclBtw = totaal, VoorschotBedrag = i % 3 == 0 ? 0m : 40m, AfhaalDatum = vandaag,
+                WerkBon = new WerkBon { Status = WerkBonStatus.Afgewerkt, TotaalPrijsIncl = totaal, AfhaalDatum = vandaag }
+            });
+            lijst.Add(new Offerte
+            {
+                OfferteNummer = 380 + i, Datum = vandaag.AddDays(-40), Status = OfferteStatus.Besteld,
+                Klant = new Klant { Voornaam = voornamen[(i + 3) % 10], Achternaam = namen[(i + 5) % 10] },
+                TotaalInclBtw = totaal + 40m, VoorschotBedrag = 40m, AfhaalDatum = vandaag.AddDays(-2 - i),
+                WerkBon = new WerkBon { Status = WerkBonStatus.Afgehaald, TotaalPrijsIncl = totaal + 40m, AfhaalDatum = vandaag.AddDays(-2 - i) }
+            });
+        }
+        db.Offertes.AddRange(lijst);
+        await db.SaveChangesAsync();
+    }
+
+    public static async Task SeedVandaagAsync(IDbContextFactory<AppDbContext> f)
+    {
+        await using var db = await f.CreateDbContextAsync();
+        var vandaag = DateTime.Today;
+        Klant K(string v, string a) => new() { Voornaam = v, Achternaam = a, Gemeente = "Aarschot" };
+        Offerte O(int nr, Klant k, OfferteStatus st, decimal totaal, decimal voorschot, WerkBonStatus wb, DateTime? afhaal) => new()
+        {
+            OfferteNummer = nr, Datum = vandaag.AddDays(-14), Klant = k, Status = st,
+            TotaalInclBtw = totaal, VoorschotBedrag = voorschot, AfhaalDatum = afhaal,
+            WerkBon = new WerkBon { Status = wb, TotaalPrijsIncl = totaal, AfhaalDatum = afhaal }
+        };
+
+        // Vandaag af te halen: klaar (met voorschot), klaar zonder voorschot, en al afgehaald met rest.
+        var peeters = O(421, K("Marleen", "Peeters"), OfferteStatus.Afgewerkt, 186.50m, 50m, WerkBonStatus.Afgewerkt, vandaag);
+        var janssens = O(422, K("Luc", "Janssens"), OfferteStatus.Afgewerkt, 64.00m, 0m, WerkBonStatus.Afgewerkt, vandaag.AddHours(15));
+        var claes = O(423, K("Sofie", "Claes"), OfferteStatus.Besteld, 245.00m, 100m, WerkBonStatus.Afgehaald, vandaag);
+        // Nog te betalen: eerder afgehaald, rest staat open.
+        var wouters = O(405, K("Jan", "Wouters"), OfferteStatus.Besteld, 120.00m, 40m, WerkBonStatus.Afgehaald, vandaag.AddDays(-6));
+        // Niet op het beginscherm: klaar, maar pas morgen af te halen.
+        var morgen = O(424, K("Els", "Maes"), OfferteStatus.Afgewerkt, 80m, 0m, WerkBonStatus.Afgewerkt, vandaag.AddDays(1));
+        db.Offertes.AddRange(peeters, janssens, claes, wouters, morgen);
+        await db.SaveChangesAsync();
+
+        Factuur Bon(Offerte o, int volgNr, decimal voorschot) => new()
+        {
+            OfferteId = o.Id, WerkBonId = o.WerkBon!.Id, Jaar = 2026, VolgNr = volgNr, FactuurNummer = $"2026-{volgNr}",
+            KlantNaam = $"{o.Klant!.Voornaam} {o.Klant.Achternaam}", TotaalInclBtw = o.TotaalInclBtw,
+            VoorschotBedrag = voorschot, Status = FactuurStatus.KlaarVoorExport
+        };
+        db.Facturen.AddRange(Bon(claes, 23, 100m), Bon(wouters, 21, 40m));
         await db.SaveChangesAsync();
     }
 }
