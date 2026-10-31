@@ -47,3 +47,6 @@ Releases/
 *.nupkg
 # Persoonlijke notities blijven lokaal
 docs/notities/
+
+# Uitvoer van Tools/SchermAfbeeldingen (standaardmap)
+schermafbeeldingen/

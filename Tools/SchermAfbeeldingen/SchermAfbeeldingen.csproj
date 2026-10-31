@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Hulpprogramma (niet in Quadro.sln): rendert schermen van de app buiten beeld naar PNG,
+       met testgegevens, zodat elke UI-wijziging visueel nagekeken kan worden. Zie CLAUDE.md. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- QuadroApp is self-contained; een project dat ernaar verwijst moet dat ook zijn. -->
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="$([MSBuild]::IsOSPlatform('OSX'))">osx-arm64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="$([MSBuild]::IsOSPlatform('Windows'))">win-x64</RuntimeIdentifier>
+    <NoWarn>$(NoWarn);NU1902;NU1903;CS1998</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless" Version="11.3.12" />
+    <PackageReference Include="Avalonia.Skia" Version="11.3.12" />
+    <ProjectReference Include="../../QuadroApp.csproj" />
+    <!-- Voor de test-fakes (dialogen, navigatie, toasts, auth) en de SQLite-testdatabase. -->
+    <ProjectReference Include="../../WorkflowService.Tests/WorkflowService.Tests.csproj" />
+  </ItemGroup>
+</Project>
