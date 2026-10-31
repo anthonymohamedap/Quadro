@@ -1,5 +1,6 @@
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Verkoop;
+using QuadroApp.ViewModels;
 using System;
 using System.Globalization;
 using System.Linq;
@@ -74,13 +75,14 @@ public class BeginschermTests
             var klaar = Regel(421, "Peeters", OfferteStatus.Afgewerkt, WerkBonStatus.Afgewerkt, null, 136.5m, Vandaag);
             Assert.Equal("Offerte 421", klaar.BonTekst);
             Assert.Equal("nog € 136,50", klaar.NogTeBetalenTekst);
-            Assert.Equal("Klaar om af te halen", klaar.StapKortTekst);
+            Assert.Equal("Klaar", klaar.StapKortTekst);
+            Assert.Equal("€ 136,50", klaar.BedragTekst);
 
             var afgehaald = Regel(423, "Claes", OfferteStatus.Besteld, WerkBonStatus.Afgehaald, FactuurStatus.Geexporteerd, 145m, Vandaag)
                 with { BestelbonNummer = "2026-23" };
             Assert.Equal("Offerte 423 · Bestelbon 2026-23", afgehaald.BonTekst);
             Assert.Equal("Al afgehaald", afgehaald.StapKortTekst);
-            Assert.Equal("afhaaldatum 12/11/2026", afgehaald.AfhaalDatumTekst);
+            Assert.Equal("afgehaald 12/11", afgehaald.AfhaalDatumTekst);
 
             var betaald = Regel(422, "Janssens", OfferteStatus.Afgewerkt, WerkBonStatus.Afgewerkt, null, 0m, Vandaag);
             Assert.Equal("betaald", betaald.NogTeBetalenTekst);
@@ -116,5 +118,47 @@ public class BeginschermTests
 
         Assert.Equal("2026-23", Assert.Single(regels, r => r.OfferteNummer == 423).BestelbonNummer);
         Assert.Null(Assert.Single(regels, r => r.OfferteNummer == 424).BestelbonNummer);
+    }
+
+    // ── US-105 — nieuwe indeling van het beginscherm ─────────────────────────────
+
+    [Theory]
+    [InlineData(7, "Goedemorgen")]
+    [InlineData(11, "Goedemorgen")]
+    [InlineData(12, "Goedemiddag")]
+    [InlineData(17, "Goedemiddag")]
+    [InlineData(18, "Goedenavond")]
+    public void Begroeting_volgt_het_uur(int uur, string verwacht)
+        => Assert.Equal(verwacht, Beginscherm.Begroeting(new DateTime(2026, 11, 12, uur, 30, 0)));
+
+    [Fact]
+    public void Datum_en_bedrag_in_het_Nederlands()
+    {
+        Assert.Equal("Donderdag 12 november 2026", Beginscherm.DatumTekst(Vandaag));
+        Assert.Equal("€ 1.417,50", Beginscherm.Bedrag(1417.5m));
+    }
+
+    [Theory]
+    [InlineData(0.5, "net")]
+    [InlineData(5, "5 min")]
+    [InlineData(180, "3 u")]
+    [InlineData(2 * 24 * 60 + 5, "2 d")]
+    public void Waarschuwing_toont_hoe_lang_geleden(double minuten, string verwacht)
+    {
+        var nu = new DateTime(2026, 11, 12, 10, 0, 0, DateTimeKind.Utc);
+        Assert.Equal(verwacht, Beginscherm.Geleden(nu.AddMinutes(-minuten), nu));
+    }
+
+    [Fact]
+    public void Waarschuwing_toont_het_label_niet_de_enumnaam()
+    {
+        var regel = WaarschuwingRegel.Van(new VoorraadAlert
+        {
+            AlertType = VoorraadAlertType.OrderOverdue, Bericht = "Bestelling B-1 is over tijd.",
+            AangemaaktOp = new DateTime(2026, 11, 12, 9, 0, 0, DateTimeKind.Utc)
+        }, new DateTime(2026, 11, 12, 10, 0, 0, DateTimeKind.Utc));
+
+        Assert.Equal("Leverancier te laat", regel.Soort);
+        Assert.Equal("1 u", regel.Wanneer);
     }
 }

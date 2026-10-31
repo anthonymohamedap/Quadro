@@ -55,6 +55,14 @@ static class Schermen
         ["home-leeg"] = f => HomeAsync(f, metVandaag: false),
         ["home-vol"] = async f => { await TestGegevens.SeedVeelAsync(f, 10); return await HomeAsync(f, metVandaag: false); },
         ["home-druk"] = async f => { await TestGegevens.SeedWaarschuwingenAsync(f); return await HomeAsync(f, metVandaag: true); },
+        ["home-druk-open"] = async f => { await TestGegevens.SeedWaarschuwingenAsync(f); return await HomeAsync(f, metVandaag: true, voorraadOpen: true); },
+        ["home-klein"] = async f => { await TestGegevens.SeedWaarschuwingenAsync(f); await TestGegevens.SeedVeelAsync(f, 10); return await HomeAsync(f, metVandaag: false); },
+    };
+
+    /// <summary>Scenario's met een ander venster dan 1440×900.</summary>
+    static readonly Dictionary<string, (int Breedte, int Hoogte)> Formaten = new()
+    {
+        ["home-klein"] = (1024, 768),
     };
 
     public static async Task AllesAsync(string uitvoer, HashSet<string> gekozen)
@@ -65,7 +73,8 @@ static class Schermen
             await TestGegevens.SeedAsync(scope.Factory);
             var scherm = await maak(scope.Factory);
             var pad = Path.Combine(uitvoer, naam + ".png");
-            await RenderAsync(scherm, pad);
+            var (b, h) = Formaten.GetValueOrDefault(naam, (1440, 900));
+            await RenderAsync(scherm, pad, b, h);
             Console.WriteLine(pad);
         }
     }
@@ -113,7 +122,7 @@ static class Schermen
         return new OffertesLijstView { DataContext = vm };
     }
 
-    static async Task<Control> HomeAsync(IDbContextFactory<AppDbContext> f, bool metVandaag)
+    static async Task<Control> HomeAsync(IDbContextFactory<AppDbContext> f, bool metVandaag, bool voorraadOpen = false)
     {
         if (metVandaag) await TestGegevens.SeedVandaagAsync(f);
         var toast = new TestToastService();
@@ -121,6 +130,7 @@ static class Schermen
         var vm = new HomeViewModel(new TestNavigationService(), f, new WerkBonWorkflowService(f, wf), toast, wf,
             new GeenServices(), new VerkoopOverzichtService(f), new GeenOfferteNavigatie());
         await vm.InitializeAsync();
+        vm.IsVoorraadOpen = voorraadOpen;
         return new HomeView { DataContext = vm };
     }
 
