@@ -18,7 +18,7 @@ public partial class FactuurInfoDialogViewModel : ObservableObject
 
     public Action<bool>? RequestClose { get; set; }
 
-    public string FactuurNummer => _factuur.FactuurNummer;
+    public string FactuurNummer => _factuur.NummerLabel;   // US-99: "2026-19" of "voorlopig (offerte 412)"
     public string KlantNaam => _factuur.KlantNaam;
     public bool HasValidatieFout => !string.IsNullOrWhiteSpace(ValidatieFout);
 
@@ -50,7 +50,7 @@ public partial class FactuurInfoDialogViewModel : ObservableObject
     {
         if (FactuurDatum is null)
         {
-            ValidatieFout = "Kies een factuurdatum.";
+            ValidatieFout = "Kies een besteldatum.";
             return;
         }
 
@@ -62,7 +62,7 @@ public partial class FactuurInfoDialogViewModel : ObservableObject
 
         if (VervalDatum.Value.Date < FactuurDatum.Value.Date)
         {
-            ValidatieFout = "De vervaldatum moet op of na de factuurdatum liggen.";
+            ValidatieFout = "De vervaldatum moet op of na de besteldatum liggen.";
             return;
         }
 
