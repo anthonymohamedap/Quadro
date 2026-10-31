@@ -35,7 +35,7 @@ public sealed class FactuurExportService : IFactuurExportService
         await using var db = await _factory.CreateDbContextAsync();
         var factuur = await db.Facturen.Include(x => x.Lijnen.OrderBy(l => l.Sortering)).FirstOrDefaultAsync(x => x.Id == factuurId);
         if (factuur is null)
-            throw new InvalidOperationException("Factuur niet gevonden.");
+            throw new InvalidOperationException("Bestelbon niet gevonden.");
 
         if (factuur.Status != FactuurStatus.KlaarVoorExport)
             throw new InvalidOperationException("Export mag enkel vanuit status KlaarVoorExport.");
@@ -68,7 +68,7 @@ public sealed class FactuurExportService : IFactuurExportService
         await using var db = await _factory.CreateDbContextAsync();
         var factuur = await db.Facturen.Include(x => x.Lijnen.OrderBy(l => l.Sortering)).FirstOrDefaultAsync(x => x.Id == factuurId);
         if (factuur is null)
-            throw new InvalidOperationException("Factuur niet gevonden.");
+            throw new InvalidOperationException("Bestelbon niet gevonden.");
 
         if (!_exporters.TryGetValue(formaat, out var exporter))
             throw new InvalidOperationException($"Geen exporter geregistreerd voor formaat {formaat}.");

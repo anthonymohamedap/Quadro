@@ -9,29 +9,28 @@ namespace QuadroApp.Service;
 
 public sealed partial class CentralExcelExportService
 {
-    // US-45 — Facturen/bestelbonnen als Excel-dataset (hoofdwerkblad + factuurregels).
+    // US-45 — bestelbonnen als Excel-dataset (hoofdwerkblad + lijnen). US-99: overal "bestelbon".
     private static DatasetDefinitie BuildFacturenDefinition()
     {
         return new DatasetDefinitie(
             ExcelExportDataset.Facturen,
-            "Facturen / bestelbonnen",
-            "Facturen en bestelbonnen met bedragen, status en optioneel hun regels.",
-            "Facturen",
-            "facturen-export",
+            "Bestelbonnen",
+            "Bestelbonnen met bedragen, status en optioneel hun lijnen.",
+            "Bestelbonnen",
+            "bestelbonnen-export",
             async db => (await db.Facturen.AsNoTracking()
                 .OrderByDescending(x => x.FactuurDatum)
                 .ThenByDescending(x => x.Id)
                 .ToListAsync()).Cast<object>().ToList(),
             row => ((Factuur)row).Id,
-            row => $"{((Factuur)row).DocumentType} {((Factuur)row).FactuurNummer}",
+            row => $"Bestelbon {((Factuur)row).NummerLabel}",
             row => $"{((Factuur)row).KlantNaam} - {FormatDate(((Factuur)row).FactuurDatum)}",
             [
-                Col("factuurNummer", "Nummer", "Basis", row => ((Factuur)row).FactuurNummer),
-                Col("documentType", "Type", "Basis", row => ((Factuur)row).DocumentType),
+                Col("factuurNummer", "Nummer", "Basis", row => ((Factuur)row).NummerLabel),
                 Col("klant", "Klant", "Klant", row => ((Factuur)row).KlantNaam),
-                Col("factuurDatum", "Datum", "Basis", row => FormatDate(((Factuur)row).FactuurDatum)),
+                Col("factuurDatum", "Besteldatum", "Basis", row => FormatDate(((Factuur)row).FactuurDatum)),
                 Col("vervalDatum", "Vervaldatum", "Basis", row => FormatDate(((Factuur)row).VervalDatum)),
-                Col("status", "Status", "Basis", row => ((Factuur)row).Status.ToString()),
+                Col("status", "Status", "Basis", row => ((Factuur)row).Status.Label()),
                 Col("subtotaalExcl", "Subtotaal excl. btw", "Financieel", row => ((Factuur)row).TotaalExclBtw),
                 Col("btwBedrag", "Btw-bedrag", "Financieel", row => ((Factuur)row).TotaalBtw),
                 Col("totaalIncl", "Totaal incl. btw", "Financieel", row => ((Factuur)row).TotaalInclBtw),
@@ -44,11 +43,11 @@ public sealed partial class CentralExcelExportService
             [
                 new RelatieDefinitie(
                     "factuur-regels",
-                    "Factuurregels",
-                    "Voeg de regels van elke factuur/bestelbon als apart werkblad toe.",
-                    "Facturen - Regels",
+                    "Bestelbonlijnen",
+                    "Voeg de lijnen van elke bestelbon als apart werkblad toe.",
+                    "Bestelbonnen - Lijnen",
                     [
-                        Col("factuurId", "FactuurId", "Koppeling", row => ((FactuurLijn)row).FactuurId),
+                        Col("factuurId", "Bestelbon-id", "Koppeling", row => ((FactuurLijn)row).FactuurId),
                         Col("omschrijving", "Omschrijving", "Basis", row => ((FactuurLijn)row).Omschrijving),
                         Col("aantal", "Aantal", "Basis", row => ((FactuurLijn)row).Aantal),
                         Col("eenheid", "Eenheid", "Basis", row => ((FactuurLijn)row).Eenheid),
