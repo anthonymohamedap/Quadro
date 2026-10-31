@@ -204,8 +204,12 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     // De automatische propagatie (OfferteStatusPropagation) blijft hier volledig los van.
     public bool KanNaarVerzonden      => Offerte?.Status == OfferteStatus.Concept;
     public bool KanNaarGoedgekeurd    => Offerte?.Status == OfferteStatus.Verzonden;
-    public bool KanTerugNaarConcept   => Offerte?.Status is OfferteStatus.Verzonden or OfferteStatus.Goedgekeurd;
-    public bool KanTerugNaarVerzonden => Offerte?.Status == OfferteStatus.Goedgekeurd;
+    // US-103 (P15): zodra er een werkbon is, kan de offerte niet meer met de hand terug naar
+    // Concept/Verzonden — dat ging buiten de statusmachine om en liet de werkbon gewoon bestaan.
+    private bool HeeftWerkBon => Workflow.GekoppeldeWerkBon is not null;
+    public bool KanTerugNaarConcept   => Offerte?.Status is OfferteStatus.Verzonden
+                                         || (Offerte?.Status == OfferteStatus.Goedgekeurd && !HeeftWerkBon);
+    public bool KanTerugNaarVerzonden => Offerte?.Status == OfferteStatus.Goedgekeurd && !HeeftWerkBon;
     public bool IsManueleStatusWijzigingZichtbaar =>
         Offerte is { Id: > 0 } &&
         Offerte.Status is OfferteStatus.Concept or OfferteStatus.Verzonden or OfferteStatus.Goedgekeurd;
@@ -1056,6 +1060,12 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             if (e.PropertyName is nameof(Workflow.GekoppeldeFactuur))
                 OnPropertyChanged(nameof(OfferteRest));
 
+            if (e.PropertyName is nameof(Workflow.GekoppeldeWerkBon))   // US-103
+            {
+                OnPropertyChanged(nameof(KanTerugNaarConcept));
+                OnPropertyChanged(nameof(KanTerugNaarVerzonden));
+            }
+
             // US-100/101
             if (e.PropertyName is nameof(Workflow.IsPrijsVast) or nameof(Workflow.IsVergrendeld))
             {
@@ -1333,7 +1343,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         {
             OfferteStatus.Concept     => nieuweStatus == OfferteStatus.Verzonden,
             OfferteStatus.Verzonden   => nieuweStatus is OfferteStatus.Concept or OfferteStatus.Goedgekeurd,
-            OfferteStatus.Goedgekeurd => nieuweStatus is OfferteStatus.Concept or OfferteStatus.Verzonden,
+            OfferteStatus.Goedgekeurd => !HeeftWerkBon && (nieuweStatus is OfferteStatus.Concept or OfferteStatus.Verzonden),
             _ => false
         };
         if (!toegelaten) return;
