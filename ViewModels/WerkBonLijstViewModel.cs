@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using QuadroApp.Data;
 using QuadroApp.Model.DB;
 using QuadroApp.Service.Interfaces;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -182,6 +183,24 @@ namespace QuadroApp.ViewModels
             var bewaardeId = wb.Id;
             await LoadAsync();
             SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == bewaardeId);
+        }
+
+        /// <summary>US-98 — weeklijst (werklijst van een week) openen en afdrukken vanuit Werkbonnen;
+        /// opent op de huidige week, in het venster kies je een andere week.</summary>
+        [RelayCommand]
+        private async Task OpenWeekLijstAsync()
+        {
+            var vandaag = DateTime.Today;
+            var vm = new WeekWerkLijstViewModel(_factory, _statusWorkflow, _toast);
+            await vm.InitializeAsync(System.Globalization.ISOWeek.GetYear(vandaag), System.Globalization.ISOWeek.GetWeekOfYear(vandaag));
+
+            var window = new QuadroApp.Views.WeekWerkLijstWindow { DataContext = vm };
+            if (App.Current?.ApplicationLifetime is
+                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                && desktop.MainWindow is { } owner)
+            {
+                await window.ShowDialog(owner);
+            }
         }
 
         [RelayCommand]
