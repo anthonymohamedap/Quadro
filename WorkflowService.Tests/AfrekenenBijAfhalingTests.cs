@@ -12,7 +12,7 @@ namespace WorkflowService.Tests;
 /// <summary>US-76 — afrekenen bij afhaling vanuit de werkbon.</summary>
 public class AfrekenenBijAfhalingTests
 {
-    private static async Task<(int WerkBonId, int FactuurId)> SeedAsync(
+    private static async Task<(int WerkBonId, int BestelbonId)> SeedAsync(
         IDbContextFactory<AppDbContext> factory, WerkBonStatus status = WerkBonStatus.Afgewerkt,
         decimal totaal = 300m, decimal voorschot = 100m)
     {
@@ -32,15 +32,15 @@ public class AfrekenenBijAfhalingTests
         db.WerkBonnen.Add(werkBon);
         await db.SaveChangesAsync();
 
-        var factuur = new Factuur
+        var bestelbon = new Bestelbon
         {
             OfferteId = offerte.Id, WerkBonId = werkBon.Id, Jaar = DateTime.Today.Year, VolgNr = 21,
-            FactuurNummer = "2026-21", KlantNaam = "Ann Afhaal", Status = FactuurStatus.KlaarVoorExport,
+            BestelbonNummer = "2026-21", KlantNaam = "Ann Afhaal", Status = BestelbonStatus.KlaarVoorExport,
             TotaalInclBtw = totaal, VoorschotBedrag = voorschot
         };
-        db.Facturen.Add(factuur);
+        db.Bestelbonnen.Add(bestelbon);
         await db.SaveChangesAsync();
-        return (werkBon.Id, factuur.Id);
+        return (werkBon.Id, bestelbon.Id);
     }
 
     private static OntvangstService Sut(IDbContextFactory<AppDbContext> f) => new(f, new TestAuthService());
@@ -60,12 +60,12 @@ public class AfrekenenBijAfhalingTests
 
         await using var db = await scope.Factory.CreateDbContextAsync();
         Assert.Equal(WerkBonStatus.Afgehaald, (await db.WerkBonnen.SingleAsync(w => w.Id == wbId)).Status);
-        var factuur = await db.Facturen.SingleAsync(f => f.Id == fId);
-        Assert.Equal(FactuurStatus.Betaald, factuur.Status);
-        Assert.Equal(OfferteStatus.Betaald, (await db.Offertes.SingleAsync(o => o.Id == factuur.OfferteId)).Status);
+        var bestelbon = await db.Bestelbonnen.SingleAsync(f => f.Id == fId);
+        Assert.Equal(BestelbonStatus.Betaald, bestelbon.Status);
+        Assert.Equal(OfferteStatus.Betaald, (await db.Offertes.SingleAsync(o => o.Id == bestelbon.OfferteId)).Status);
         var betaling = await db.Ontvangsten.SingleAsync();
         Assert.Equal(OntvangstSoort.Betaling, betaling.Soort);
-        Assert.Equal(fId, betaling.FactuurId);
+        Assert.Equal(fId, betaling.BestelbonId);
     }
 
     [Fact]
@@ -81,7 +81,7 @@ public class AfrekenenBijAfhalingTests
         await using (var db = await scope.Factory.CreateDbContextAsync())
         {
             Assert.Equal(WerkBonStatus.Afgehaald, (await db.WerkBonnen.SingleAsync(w => w.Id == wbId)).Status);
-            Assert.Equal(FactuurStatus.KlaarVoorExport, (await db.Facturen.SingleAsync(f => f.Id == fId)).Status);
+            Assert.Equal(BestelbonStatus.KlaarVoorExport, (await db.Bestelbonnen.SingleAsync(f => f.Id == fId)).Status);
         }
 
         var na2 = await sut.AfrekenenBijAfhalingAsync(wbId, 150m, DateTime.Today, Betaalwijze.CreditCard);

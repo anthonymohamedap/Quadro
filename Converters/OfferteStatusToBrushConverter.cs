@@ -9,7 +9,7 @@ namespace QuadroApp.Converters
     /// <summary>
     /// US-46 — kleurt een offerte-statusbadge naar de fase in de levenscyclus.
     /// Grijs = nog niet in productie, blauw = onderweg, amber = afgewerkt,
-    /// groen = gefactureerd/betaald, rood = geannuleerd.
+    /// groen = besteld/betaald, rood = geannuleerd.
     /// </summary>
     public sealed class OfferteStatusToBrushConverter : IValueConverter
     {

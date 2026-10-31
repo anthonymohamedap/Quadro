@@ -47,8 +47,8 @@ namespace QuadroApp.Model.DB
         public int? OfferteId { get; set; }
         public Offerte? Offerte { get; set; }
 
-        public int? FactuurId { get; set; }
-        public Factuur? Factuur { get; set; }
+        public int? BestelbonId { get; set; }
+        public Bestelbon? Bestelbon { get; set; }
 
         // ── winkelverkoop (kassa) ──
         [MaxLength(300)]

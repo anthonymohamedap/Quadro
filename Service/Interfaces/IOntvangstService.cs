@@ -23,15 +23,15 @@ public interface IOntvangstService
     // ── US-70: betalingen op een bestelbon ──
 
     /// <summary>Betalingen (geen voorschotten) op een bestelbon, nieuwste eerst.</summary>
-    Task<List<Ontvangst>> GetBetalingenAsync(int factuurId);
+    Task<List<Ontvangst>> GetBetalingenAsync(int bestelbonId);
 
     /// <summary>Totaal, voorschot, reeds betaald en rest voor een bestelbon.</summary>
-    Task<BetaalStand> GetBetaalStandAsync(int factuurId);
+    Task<BetaalStand> GetBetaalStandAsync(int bestelbonId);
 
     /// <summary>Registreert een betaling op een bestelbon (vooraf, bij afhalen of achteraf; meerdere
     /// betalingen mogelijk, bv. deels cash en deels kaart). Is de rest daarna 0, dan wordt de
     /// bestelbon op Betaald gezet. Geeft de nieuwe stand terug.</summary>
-    Task<BetaalStand> RegistreerBetalingAsync(int factuurId, decimal bedragIncl, DateTime datum, Betaalwijze betaalwijze);
+    Task<BetaalStand> RegistreerBetalingAsync(int bestelbonId, decimal bedragIncl, DateTime datum, Betaalwijze betaalwijze);
 
     // ── US-76: afrekenen bij afhaling vanuit de werkbon ──
 
@@ -47,7 +47,7 @@ public interface IOntvangstService
 }
 
 /// <summary>US-76 — bestelbon van een werkbon + zijn betaalstand.</summary>
-public sealed record AfrekenStand(int FactuurId, string FactuurNummer, BetaalStand Stand);
+public sealed record AfrekenStand(int BestelbonId, string BestelbonNummer, BetaalStand Stand);
 
 /// <summary>US-70 — betaalstand van een bestelbon.</summary>
 public sealed record BetaalStand(decimal TotaalIncl, decimal Voorschot, decimal Betaald, bool IsBetaaldStatus)

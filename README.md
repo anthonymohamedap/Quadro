@@ -1,6 +1,6 @@
 # QuadroApp update
 
-Desktop-applicatie voor inlijstwerkplaats **Quadro**: klantbeheer, offertes, werkbonnen, planning, facturatie/bestelbonnen en voorraadbeheer. Draait op Windows en macOS (Apple Silicon), met automatische updates via Velopack.
+Desktop-applicatie voor inlijstwerkplaats **Quadro**: klantbeheer, offertes, werkbonnen, planning, bestelbonnen en voorraadbeheer. Draait op Windows en macOS (Apple Silicon), met automatische updates via Velopack.
 
 ## Tech stack
 
@@ -48,7 +48,7 @@ Openen in Rider of Visual Studio kan via `Quadro.sln`. De app maakt bij de eerst
 QuadroApp.Data/  EF Core: AppDbContext, migratie-runner (SqliteSchemaPatcher), audit-writer, seeder,
                  SQLite-migraties in Migrations/ (Baseline-squash van juli 2026 + vervolg)
 QuadroApp.Migrations.Npgsql/  PostgreSQL-migraties + NpgsqlDesignTimeFactory (US-41)
-QuadroApp.Data/Model/DB/      Entiteiten (Klant, Offerte, WerkBon, Factuur, Gebruiker, AuditLog, ...)
+QuadroApp.Data/Model/DB/      Entiteiten (Klant, Offerte, WerkBon, Bestelbon, Gebruiker, AuditLog, ...)
 QuadroApp.Data/Model/Import/  Import-preview- en resultaatmodellen
 Service/        Businesslogica: workflows, pricing, export, backup, GDPR, security (auth)
 Validation/     ICrudValidator<T> per entiteit

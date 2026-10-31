@@ -11,7 +11,7 @@ namespace QuadroApp.Service;
 
 /// <summary>
 /// Genereert een A4 PDF van de (eventueel gefilterde) klantenlijst — bv. om af te drukken na
-/// een zoekopdracht op woonplaats. Zelfde QuestPDF-aanpak als PdfWeekLijstExporter/PdfFactuurExporter.
+/// een zoekopdracht op woonplaats. Zelfde QuestPDF-aanpak als PdfWeekLijstExporter/PdfBestelbonExporter.
 /// </summary>
 public sealed class PdfKlantenlijstExporter
 {
@@ -169,7 +169,7 @@ public sealed class PdfKlantenlijstExporter
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ASSET LOADER (zelfde als PdfWeekLijstExporter/PdfFactuurExporter)
+    // ASSET LOADER (zelfde als PdfWeekLijstExporter/PdfBestelbonExporter)
     // ══════════════════════════════════════════════════════════════════════════
     private static byte[]? LoadAsset(string relativePath)
     {

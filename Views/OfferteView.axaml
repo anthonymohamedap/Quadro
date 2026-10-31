@@ -967,8 +967,8 @@
 								Classes="AccentBtn"
 								Margin="0,0,12,6"/>
 
-						<Button Content="{Binding FactuurButtonText}"
-								Command="{Binding FactuurCommand}"
+						<Button Content="{Binding BestelbonButtonText}"
+								Command="{Binding BestelbonCommand}"
 								Background="{DynamicResource InfoBorder}"
 								Foreground="{DynamicResource InfoText}"
 								FontWeight="Bold"
@@ -1014,11 +1014,11 @@
 								IsVisible="{Binding KanTerugNaarVerzonden}"/>
 					</WrapPanel>
 
-					<TextBlock Text="{Binding FactuurStatusText}"
+					<TextBlock Text="{Binding BestelbonStatusText}"
 							   Classes="label"
 							   Foreground="{DynamicResource TextSecondary}"
 							   TextTrimming="CharacterEllipsis"
-							   ToolTip.Tip="{Binding FactuurStatusText}"/>
+							   ToolTip.Tip="{Binding BestelbonStatusText}"/>
 				</StackPanel>
 
 				<!-- RECHTS PRIJZEN -->

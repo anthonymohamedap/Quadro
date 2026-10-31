@@ -2,7 +2,7 @@
 
 Elke wijziging aan belangrijke gegevens wordt automatisch vastgelegd in de tabel `AuditLogs`: wie (ingelogde gebruiker), wat (entiteit + Id), welke actie (Toegevoegd/Gewijzigd/Verwijderd), welke velden (oud → nieuw, als JSON) en wanneer.
 
-**Gevolgde entiteiten:** offertes & regels, facturen & lijnen, lijsten, afwerkingen & varianten, leveranciers & bestellingen, klanten, gebruikers.
+**Gevolgde entiteiten:** offertes & regels, bestelbonnen & lijnen, lijsten, afwerkingen & varianten, leveranciers & bestellingen, klanten, gebruikers.
 
 **Niet gelogd:** wachtwoord-hashes, RowVersion, instellingen en importlogs.
 

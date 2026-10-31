@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace QuadroApp.Data;
 
-public static class FactuurSchemaUpgrade
+public static class BestelbonSchemaUpgrade
 {
     public static async Task EnsureAsync(AppDbContext db)
     {

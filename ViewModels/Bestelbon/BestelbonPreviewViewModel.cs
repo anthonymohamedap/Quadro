@@ -13,49 +13,49 @@ using System.Threading.Tasks;
 
 namespace QuadroApp.ViewModels;
 
-public partial class FactuurPreviewViewModel : ObservableObject
+public partial class BestelbonPreviewViewModel : ObservableObject
 {
-    private readonly int _factuurId;
-    private readonly IFactuurWorkflowService _workflow;
-    private readonly IFactuurExportService _exportService;
+    private readonly int _bestelbonId;
+    private readonly IBestelbonWorkflowService _workflow;
+    private readonly IBestelbonExportService _exportService;
     private readonly IFilePickerService _filePickerService;
     private readonly IToastService _toast;
 
-    [ObservableProperty] private Factuur factuur;
+    [ObservableProperty] private Bestelbon bestelbon;
     [ObservableProperty] private string? previewPad;
     [ObservableProperty] private bool isBusy;
 
-    public ObservableCollection<FactuurLijn> Lijnen { get; } = new();
+    public ObservableCollection<BestelbonLijn> Lijnen { get; } = new();
 
     public Action? RequestClose { get; set; }
 
-    public string Titel => $"Bestelbon {Factuur.NummerLabel}";   // US-85 (P1): nooit "Factuur"
-    public string StatusTekst => $"Status: {Factuur.Status.Label()}";
+    public string Titel => $"Bestelbon {Bestelbon.NummerLabel}";   // US-85 (P1): nooit "Bestelbon"
+    public string StatusTekst => $"Status: {Bestelbon.Status.Label()}";
 
-    public FactuurPreviewViewModel(
-        int factuurId,
-        Factuur factuur,
-        IFactuurWorkflowService workflow,
-        IFactuurExportService exportService,
+    public BestelbonPreviewViewModel(
+        int bestelbonId,
+        Bestelbon bestelbon,
+        IBestelbonWorkflowService workflow,
+        IBestelbonExportService exportService,
         IFilePickerService filePickerService,
         IToastService toast)
     {
-        _factuurId = factuurId;
+        _bestelbonId = bestelbonId;
         _workflow = workflow;
         _exportService = exportService;
         _filePickerService = filePickerService;
         _toast = toast;
-        this.factuur = factuur;
+        this.bestelbon = bestelbon;
         SyncLijnen();
     }
 
     public async Task InitializeAsync()
     {
-        await ReloadFactuurAsync();
+        await ReloadBestelbonAsync();
         await EnsurePreviewAsync();
     }
 
-    partial void OnFactuurChanged(Factuur value)
+    partial void OnBestelbonChanged(Bestelbon value)
     {
         SyncLijnen();
         OnPropertyChanged(nameof(Titel));
@@ -117,18 +117,18 @@ public partial class FactuurPreviewViewModel : ObservableObject
             }
 
             ExportResult result;
-            if (Factuur.Status is FactuurStatus.Draft && !Factuur.IsVoorlopig)
+            if (Bestelbon.Status is BestelbonStatus.Draft && !Bestelbon.IsVoorlopig)
             {
-                await _workflow.MarkeerKlaarVoorExportAsync(Factuur.Id);
-                result = await _exportService.ExportAsync(Factuur.Id, ExportFormaat.Pdf, exportFolder);
+                await _workflow.MarkeerKlaarVoorExportAsync(Bestelbon.Id);
+                result = await _exportService.ExportAsync(Bestelbon.Id, ExportFormaat.Pdf, exportFolder);
             }
-            else if (Factuur.Status is FactuurStatus.KlaarVoorExport)
+            else if (Bestelbon.Status is BestelbonStatus.KlaarVoorExport)
             {
-                result = await _exportService.ExportAsync(Factuur.Id, ExportFormaat.Pdf, exportFolder);
+                result = await _exportService.ExportAsync(Bestelbon.Id, ExportFormaat.Pdf, exportFolder);
             }
             else
             {
-                result = await _exportService.GeneratePreviewAsync(Factuur.Id, ExportFormaat.Pdf, exportFolder);
+                result = await _exportService.GeneratePreviewAsync(Bestelbon.Id, ExportFormaat.Pdf, exportFolder);
             }
 
             if (result.Success)
@@ -136,7 +136,7 @@ public partial class FactuurPreviewViewModel : ObservableObject
             else
                 _toast.Error(result.Message);
 
-            await ReloadFactuurAsync();
+            await ReloadBestelbonAsync();
             await EnsurePreviewAsync();
         }
         catch (Exception ex)
@@ -152,9 +152,9 @@ public partial class FactuurPreviewViewModel : ObservableObject
     [RelayCommand]
     private void Sluit() => RequestClose?.Invoke();
 
-    private async Task ReloadFactuurAsync()
+    private async Task ReloadBestelbonAsync()
     {
-        Factuur = await _workflow.GetFactuurAsync(_factuurId)
+        Bestelbon = await _workflow.GetBestelbonAsync(_bestelbonId)
             ?? throw new InvalidOperationException("Bestelbon niet gevonden.");
     }
 
@@ -164,7 +164,7 @@ public partial class FactuurPreviewViewModel : ObservableObject
         var previewFolder = Path.Combine(Path.GetTempPath(), "QuadroPreview");
         Directory.CreateDirectory(previewFolder);
 
-        var result = await _exportService.GeneratePreviewAsync(Factuur.Id, ExportFormaat.Pdf, previewFolder);
+        var result = await _exportService.GeneratePreviewAsync(Bestelbon.Id, ExportFormaat.Pdf, previewFolder);
         if (!result.Success)
             throw new InvalidOperationException(result.Message);
 
@@ -175,8 +175,8 @@ public partial class FactuurPreviewViewModel : ObservableObject
     {
         Lijnen.Clear();
         // US-26: de "Meerprijs"-regel wordt niet getoond (zoals op de bestelbon-PDF).
-        // De regel blijft wél in Factuur.Lijnen zodat het bedrag in het totaal verrekend blijft.
-        foreach (var lijn in Factuur.Lijnen
+        // De regel blijft wél in Bestelbon.Lijnen zodat het bedrag in het totaal verrekend blijft.
+        foreach (var lijn in Bestelbon.Lijnen
                      .Where(l => !l.Omschrijving.Equals("Meerprijs", StringComparison.OrdinalIgnoreCase))
                      .OrderBy(x => x.Sortering))
             Lijnen.Add(lijn);

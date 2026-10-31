@@ -292,7 +292,7 @@ public sealed partial class CentralExcelExportService : ICentralExcelExportServi
         ExcelExportDataset.Afwerkingen => "afwerkingen-families",
         ExcelExportDataset.Leveranciers => "leverancier-voorraadbundel",
         ExcelExportDataset.Offertes => "offertebundel",
-        ExcelExportDataset.Facturen => string.Empty, // geen standaardpreset → standaard geselecteerde kolommen
+        ExcelExportDataset.Bestelbonnen => string.Empty, // geen standaardpreset → standaard geselecteerde kolommen
         _ => throw new InvalidOperationException($"Onbekende exportdataset: {dataset}.")
     };
 
@@ -342,7 +342,7 @@ public sealed partial class CentralExcelExportService : ICentralExcelExportServi
         BuildAfwerkingenDefinition(),
         BuildLeveranciersDefinition(),
         BuildOffertesDefinition(),
-        BuildFacturenDefinition()
+        BuildBestelbonnenDefinition()
     ];
 
     private static ExportKolomDefinitie Col(string sleutel, string label, string groep, Func<object, object?> waarde, bool standaardGeselecteerd = true)
