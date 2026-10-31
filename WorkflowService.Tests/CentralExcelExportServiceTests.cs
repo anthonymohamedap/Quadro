@@ -21,7 +21,7 @@ public sealed class CentralExcelExportServiceTests
     [InlineData(ExcelExportDataset.Afwerkingen, "Afwerkingen", "Mat")]
     [InlineData(ExcelExportDataset.Leveranciers, "Leveranciers", "LEV")]
     [InlineData(ExcelExportDataset.Offertes, "Offertes", "Concept")]
-    [InlineData(ExcelExportDataset.Facturen, "Facturen", "BON-2026-0001")]
+    [InlineData(ExcelExportDataset.Facturen, "Bestelbonnen", "BON-2026-0001")]
     public async Task ExportAsync_MaaktExcelBestandMetVerwachteData(
         ExcelExportDataset dataset,
         string expectedWorksheet,
@@ -134,7 +134,7 @@ public sealed class CentralExcelExportServiceTests
             }, exportDirectory);
 
             using var workbook = new XLWorkbook(result.BestandPad);
-            AssertWorksheetContains(workbook, "Facturen - Regels", "Poster inlijsten");
+            AssertWorksheetContains(workbook, "Bestelbonnen - Lijnen", "Poster inlijsten");
         }
         finally
         {

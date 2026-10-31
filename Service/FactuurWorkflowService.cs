@@ -90,9 +90,9 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
     {
         _auth.VereisPermissie(Security.Permissie.Factureren);
         await using var db = await _factory.CreateDbContextAsync();
-        var factuur = await db.Facturen.FindAsync(factuurId) ?? throw new InvalidOperationException("Factuur niet gevonden.");
+        var factuur = await db.Facturen.FindAsync(factuurId) ?? throw new InvalidOperationException("Bestelbon niet gevonden.");
         if (factuur.Status != FactuurStatus.Draft)
-            throw new InvalidOperationException("Alleen draft facturen kunnen klaar gezet worden voor export.");
+            throw new InvalidOperationException("Alleen een open bestelbon kan klaargezet worden voor de boekhouding.");
         if (factuur.IsVoorlopig)
             throw new InvalidOperationException("Een voorlopige bestelbon (offerte nog niet bevestigd) gaat niet naar de boekhouding.");
         factuur.Status = FactuurStatus.KlaarVoorExport;
@@ -104,9 +104,9 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
     {
         _auth.VereisPermissie(Security.Permissie.Factureren);
         await using var db = await _factory.CreateDbContextAsync();
-        var factuur = await db.Facturen.FindAsync(factuurId) ?? throw new InvalidOperationException("Factuur niet gevonden.");
+        var factuur = await db.Facturen.FindAsync(factuurId) ?? throw new InvalidOperationException("Bestelbon niet gevonden.");
         if (factuur.Status is FactuurStatus.Geannuleerd)
-            throw new InvalidOperationException("Geannuleerde factuur kan niet betaald worden.");
+            throw new InvalidOperationException("Een geannuleerde bestelbon kan niet betaald worden.");
         factuur.Status = FactuurStatus.Betaald;
         factuur.BijgewerktOp = DateTime.UtcNow;
 
@@ -145,10 +145,10 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         _auth.VereisPermissie(Security.Permissie.Factureren);
         await using var db = await _factory.CreateDbContextAsync();
         var factuur = await db.Facturen.Include(x => x.Lijnen).FirstOrDefaultAsync(x => x.Id == updated.Id)
-            ?? throw new InvalidOperationException("Factuur niet gevonden.");
+            ?? throw new InvalidOperationException("Bestelbon niet gevonden.");
 
         if (factuur.Status != FactuurStatus.Draft)
-            throw new InvalidOperationException("Alleen draft facturen zijn bewerkbaar.");
+            throw new InvalidOperationException("Alleen een open bestelbon (nog niet afgedrukt of betaald) kan gewijzigd worden.");
 
         factuur.OfferteId = updated.OfferteId ?? factuur.OfferteId;
         factuur.WerkBonId = updated.WerkBonId ?? factuur.WerkBonId;
@@ -176,7 +176,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
     {
         await using var db = await _factory.CreateDbContextAsync();
         var factuur = await db.Facturen.Include(x => x.Lijnen).FirstOrDefaultAsync(x => x.Id == factuurId)
-            ?? throw new InvalidOperationException("Factuur niet gevonden.");
+            ?? throw new InvalidOperationException("Bestelbon niet gevonden.");
         HerberekenTotalen(factuur);
         await db.SaveChangesAsync();
     }

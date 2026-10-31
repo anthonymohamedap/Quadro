@@ -109,7 +109,7 @@ public partial class FactuurPreviewViewModel : ObservableObject
         {
             IsBusy = true;
 
-            var exportFolder = await _filePickerService.PickFolderAsync("Kies een map voor de factuur-PDF");
+            var exportFolder = await _filePickerService.PickFolderAsync("Kies een map voor de bestelbon-PDF");
             if (string.IsNullOrWhiteSpace(exportFolder))
             {
                 _toast.Info("Export geannuleerd.");
