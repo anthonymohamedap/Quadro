@@ -69,7 +69,7 @@
 				<StackPanel Spacing="20">
 
 					<!-- KLANT -->
-					<Border Classes="quadro-card">
+					<Border Classes="quadro-card" IsEnabled="{Binding !IsAlleenLezen}">
 						<Grid RowDefinitions="Auto,Auto"
                               ColumnDefinitions="*,Auto"
                               RowSpacing="10"
@@ -142,7 +142,7 @@
 					<Border Classes="quadro-card">
 						<StackPanel Spacing="12">
 
-							<Grid ColumnDefinitions="*,Auto,Auto,Auto"
+							<Grid IsEnabled="{Binding !IsAlleenLezen}" ColumnDefinitions="*,Auto,Auto,Auto"
                                   ColumnSpacing="8">
 
 								<TextBlock Text="Regels"
@@ -211,7 +211,8 @@
 
 				<!-- ===== LINKS: regel bewerken (eigen scroll) ===== -->
 				<ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-				<StackPanel
+				<!-- US-101: bij een afgeronde verkoop alleen-lezen (scrollen blijft mogelijk) -->
+				<StackPanel IsEnabled="{Binding !IsAlleenLezen}"
                             Spacing="20">
 
 					<!-- REGEL DETAILS -->
@@ -935,15 +936,34 @@
 
 				<!-- LINKS ACTIES -->
 				<StackPanel Spacing="6">
+					<!-- US-101: afgeronde verkoop is vergrendeld -->
+					<Border Background="{DynamicResource SuccessBg}" BorderBrush="{DynamicResource SuccessBorder}" BorderThickness="1"
+							CornerRadius="6" Padding="10,6" IsVisible="{Binding IsAlleenLezen}">
+						<StackPanel Orientation="Horizontal" Spacing="12">
+							<TextBlock VerticalAlignment="Center" TextWrapping="Wrap" Foreground="{DynamicResource Success}" FontWeight="SemiBold"
+									   Text="Afgehaald en volledig betaald: deze verkoop is afgerond en kan niet meer gewijzigd worden."/>
+							<Button Content="Ontgrendelen" Classes="GhostBtn" Padding="10,4"
+									Command="{Binding OntgrendelenCommand}"
+									IsVisible="{Binding IsOntgrendelenZichtbaar}"
+									ToolTip.Tip="Enkel voor een beheerder: om een fout recht te zetten"/>
+						</StackPanel>
+					</Border>
+					<!-- US-100: prijs vast sinds de bevestiging -->
+					<TextBlock IsVisible="{Binding IsPrijsVastMeldingZichtbaar}" Classes="caption" Foreground="{DynamicResource TextSecondary}"
+							   TextWrapping="Wrap"
+							   Text="De klant heeft bevestigd: de prijzen staan vast en worden niet meer automatisch herberekend."/>
 					<WrapPanel>
 
-						<Button Content="Berekenen"
+						<Button Content="{Binding BerekenKnopTekst}"
 								Command="{Binding BerekenCommand}"
+								IsEnabled="{Binding !IsAlleenLezen}"
 								Classes="GhostBtn"
-								Margin="0,0,12,6"/>
+								Margin="0,0,12,6"
+								ToolTip.Tip="Na de bevestiging door de klant staan de prijzen vast; herberekenen gebeurt enkel nog op jouw vraag."/>
 
 						<Button Content="Opslaan"
 								Command="{Binding SaveCommand}"
+								IsEnabled="{Binding !IsAlleenLezen}"
 								Classes="AccentBtn"
 								Margin="0,0,12,6"/>
 

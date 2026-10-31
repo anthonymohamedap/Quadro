@@ -19,6 +19,10 @@ public partial class OffertePrijsViewModel : AsyncViewModelBase
     private readonly Func<Offerte> _buildSnapshot;
     private readonly Action<Offerte> _applySnapshot;
 
+    /// <summary>US-100 — true zodra de klant bevestigd heeft: dan wordt de prijs niet meer
+    /// automatisch herberekend (enkel nog op uitdrukkelijke vraag, na bevestiging).</summary>
+    private readonly Func<bool> _isPrijsVast;
+
     private CancellationTokenSource? _recalcCts;
 
     /// <summary>US-77 — kwam er een wijziging binnen terwijl er al gerekend werd, dan wordt die
@@ -36,9 +40,11 @@ public partial class OffertePrijsViewModel : AsyncViewModelBase
         Func<bool, Task<bool>> runFullValidation,
         Func<Task> refreshLijstPrijzen,
         Func<Offerte> buildSnapshot,
-        Action<Offerte> applySnapshot)
+        Action<Offerte> applySnapshot,
+        Func<bool>? isPrijsVast = null)
         : base(toast)
     {
+        _isPrijsVast = isPrijsVast ?? (() => false);
         _pricing = pricing ?? throw new ArgumentNullException(nameof(pricing));
         _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
         _runFullValidation = runFullValidation;
@@ -78,6 +84,20 @@ public partial class OffertePrijsViewModel : AsyncViewModelBase
 
     private async Task BerekenAsync(bool showFeedback)
     {
+        // US-100: na de bevestiging blijft de afgesproken prijs staan. De automatische (stille)
+        // herberekening doet dan niets; de knop vraagt eerst of de prijzen echt opnieuw moeten.
+        if (_isPrijsVast())
+        {
+            if (!showFeedback) return;
+
+            var opnieuw = await _dialogs.ConfirmAsync(
+                "Prijzen herberekenen",
+                "De klant heeft deze offerte al bevestigd; de prijzen staan sindsdien vast.\n\n" +
+                "Wil je toch alle prijzen opnieuw berekenen met de huidige prijzen van lijsten, " +
+                "afwerkingen en standaardkaders? Het totaal kan daardoor veranderen.");
+            if (!opnieuw) return;
+        }
+
         if (IsBusy)
         {
             if (!showFeedback) _opnieuwBerekenen = true;

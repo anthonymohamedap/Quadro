@@ -83,6 +83,25 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
     /// <summary>US-83 — stappenbalk bovenaan de offerte.</summary>
     public StappenBalkViewModel StappenBalk { get; } = new();
 
+    /// <summary>US-100 — de klant heeft bevestigd (stap 2 of verder): de prijs staat vast en wordt
+    /// niet meer automatisch herberekend. Vóór de bevestiging rekent de offerte gewoon live mee.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsVergrendeld))]
+    private bool isPrijsVast;
+
+    /// <summary>US-101 — afgehaald én volledig betaald.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsVergrendeld))]
+    private bool isAfgerond;
+
+    /// <summary>US-101 — door een admin tijdelijk ontgrendeld (enkel zolang de offerte open staat).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsVergrendeld))]
+    private bool isOntgrendeld;
+
+    /// <summary>US-101 — afgeronde verkoop: alleen-lezen, geen herberekening en niet opslaan.</summary>
+    public bool IsVergrendeld => IsAfgerond && !IsOntgrendeld;
+
     public OfferteWorkflowViewModel(
         IDbContextFactory<AppDbContext> dbFactory,
         IOfferteWorkflowService workflow,
@@ -166,6 +185,8 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
     public void ToonStappen(OfferteStatus offerteStatus, decimal nogTeBetalen)
     {
         var info = VerkoopStapResolver.Bepaal(offerteStatus, GekoppeldeWerkBon?.Status, GekoppeldeFactuur?.Status, nogTeBetalen);
+        IsPrijsVast = IsPrijsVastNaBevestiging(info);
+        IsAfgerond = info.IsAfgerond;
 
         (string? tekst, IAsyncRelayCommand? command) volgende = info switch
         {
@@ -186,6 +207,10 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
 
         StappenBalk.Toon(info, volgende.tekst, volgende.command, bestelbon.tekst, bestelbon.command);
     }
+
+    /// <summary>US-100 — vanaf "Bevestigen als bestelling" (stap 2 en verder) staat de prijs vast.</summary>
+    public static bool IsPrijsVastNaBevestiging(VerkoopStapInfo info)
+        => !info.IsGeannuleerd && (info.IsAfgerond || info.Huidig >= VerkoopStap.Bestelling);
 
     /// <summary>US-83 — opent het werkbonvenster (inplannen, status, afrekenen bij afhalen).</summary>
     private async Task OpenWerkBonAsync()
@@ -379,11 +404,16 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         if (_getOfferteId() == 0)
             return; // opslaan lukte niet (bv. geen klant); de melding is al getoond
 
-        var pricingOk = await _runValidation(true);
-        if (!pricingOk) return;
+        // US-100/101: na de bevestiging wordt niet meer herberekend (BerekenSilentAsync doet dan
+        // niets); bij een afgeronde, vergrendelde verkoop wordt ook niet gevalideerd of opgeslagen.
+        if (!IsVergrendeld)
+        {
+            var pricingOk = await _runValidation(true);
+            if (!pricingOk) return;
 
-        await _berekenAsync();
-        await _saveAndReload();
+            await _berekenAsync();
+            await _saveAndReload();
+        }
 
         if (_getOfferteId() == 0)
         {
