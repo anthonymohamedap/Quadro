@@ -3,6 +3,7 @@
              xmlns:vm="using:QuadroApp.ViewModels"
              xmlns:m="clr-namespace:QuadroApp.Model.DB;assembly=QuadroApp.Data"
              xmlns:conv="using:QuadroApp.Converters"
+             xmlns:sv="using:QuadroApp.Service.Verkoop"
              x:Class="QuadroApp.Views.HomeView"
              x:DataType="vm:HomeViewModel"
              Background="{DynamicResource SurfaceMutedAlt}">
@@ -152,6 +153,76 @@
                                Foreground="{DynamicResource TextSecondary}"
                                TextWrapping="Wrap"/>
                 </StackPanel>
+
+				<!-- US-86 — vandaag af te halen / nog te betalen; klik opent de offerte -->
+				<Grid ColumnDefinitions="*,*" ColumnSpacing="24">
+					<Border Grid.Column="0" Classes="Card">
+						<StackPanel Spacing="10">
+							<StackPanel Spacing="2">
+								<TextBlock Text="{Binding VandaagAfTeHalenTitel}" Classes="h2"/>
+								<TextBlock Text="Klaar om af te halen met afhaaldatum vandaag" Classes="label" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+							</StackPanel>
+							<TextBlock Text="Niets gepland voor vandaag" IsVisible="{Binding !HeeftVandaagAfTeHalen}"
+									   Foreground="{DynamicResource TextSecondary}" FontStyle="Italic" Margin="0,4"/>
+							<ItemsControl ItemsSource="{Binding VandaagAfTeHalen}" IsVisible="{Binding HeeftVandaagAfTeHalen}">
+								<ItemsControl.ItemTemplate>
+									<DataTemplate x:DataType="sv:VerkoopOverzichtRegel">
+										<Button Classes="VerkoopRegel"
+												Command="{Binding $parent[ItemsControl].((vm:HomeViewModel)DataContext).OpenVerkoopCommand}"
+												CommandParameter="{Binding}"
+												ToolTip.Tip="Offerte openen">
+											<Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+												<StackPanel Spacing="2">
+													<TextBlock Text="{Binding KlantNaam}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis"/>
+													<TextBlock Text="{Binding BonTekst}" Classes="label" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+												</StackPanel>
+												<StackPanel Grid.Column="1" Spacing="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+													<Border Background="{DynamicResource StatBlueBg}" CornerRadius="10" Padding="8,2" HorizontalAlignment="Right">
+														<TextBlock Text="{Binding NogTeBetalenTekst}" Foreground="{DynamicResource StatBlueText}" FontWeight="SemiBold"/>
+													</Border>
+													<TextBlock Text="{Binding StapKortTekst}" Classes="label" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Right"/>
+												</StackPanel>
+											</Grid>
+										</Button>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
+						</StackPanel>
+					</Border>
+					<Border Grid.Column="1" Classes="Card">
+						<StackPanel Spacing="10">
+							<StackPanel Spacing="2">
+								<TextBlock Text="{Binding NogTeBetalenTitel}" Classes="h2"/>
+								<TextBlock Text="Afgehaald, maar nog niet volledig betaald" Classes="label" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+							</StackPanel>
+							<TextBlock Text="Alles is betaald" IsVisible="{Binding !HeeftNogTeBetalen}"
+									   Foreground="{DynamicResource TextSecondary}" FontStyle="Italic" Margin="0,4"/>
+							<ItemsControl ItemsSource="{Binding NogTeBetalen}" IsVisible="{Binding HeeftNogTeBetalen}">
+								<ItemsControl.ItemTemplate>
+									<DataTemplate x:DataType="sv:VerkoopOverzichtRegel">
+										<Button Classes="VerkoopRegel"
+												Command="{Binding $parent[ItemsControl].((vm:HomeViewModel)DataContext).OpenVerkoopCommand}"
+												CommandParameter="{Binding}"
+												ToolTip.Tip="Offerte openen">
+											<Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+												<StackPanel Spacing="2">
+													<TextBlock Text="{Binding KlantNaam}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis"/>
+													<TextBlock Text="{Binding BonTekst}" Classes="label" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+												</StackPanel>
+												<StackPanel Grid.Column="1" Spacing="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+													<Border Background="{DynamicResource StatOrangeBg}" CornerRadius="10" Padding="8,2" HorizontalAlignment="Right">
+														<TextBlock Text="{Binding NogTeBetalenTekst}" Foreground="{DynamicResource StatOrangeText}" FontWeight="SemiBold"/>
+													</Border>
+													<TextBlock Text="{Binding AfhaalDatumTekst}" Classes="label" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Right"/>
+												</StackPanel>
+											</Grid>
+										</Button>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
+						</StackPanel>
+					</Border>
+				</Grid>
 
 				<Border Classes="Card">
 					<StackPanel Spacing="12">
@@ -367,6 +438,22 @@
 
         <Style Selector="Button.NavButton:pointerover">
             <Setter Property="Background" Value="{DynamicResource BrandDarkHover}"/>
+        </Style>
+
+        <Style Selector="Button.VerkoopRegel">
+            <Setter Property="Background" Value="{DynamicResource SurfaceMutedAlt}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        </Style>
+
+        <Style Selector="Button.VerkoopRegel:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BrandYellowHover}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandYellow}"/>
         </Style>
 
         <Style Selector="Button.CardButton">
