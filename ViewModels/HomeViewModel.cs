@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using QuadroApp.Model.DB;
 using QuadroApp.Data;
 using QuadroApp.Service.Interfaces;
+using QuadroApp.Service.Verkoop;
 using QuadroApp.Views;
 using System;
 using System.Collections.ObjectModel;
@@ -22,12 +23,30 @@ namespace QuadroApp.ViewModels
         private readonly IToastService _toast;
         private readonly IWorkflowService _statusWorkflow;
         private readonly IServiceProvider _services;
+        private readonly IVerkoopOverzichtService _verkoop;
+        private readonly IOfferteNavigationService _offerteNav;
 
         [ObservableProperty] private int openAlertCount;
         [ObservableProperty] private int lowStockCount;
         [ObservableProperty] private int openShortageCount;
         [ObservableProperty] private int overdueOrderCount;
         [ObservableProperty] private ObservableCollection<VoorraadAlert> openAlerts = new();
+
+        // US-86 — vandaag af te halen / nog te betalen
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HeeftVandaagAfTeHalen), nameof(VandaagAfTeHalenTitel))]
+        private ObservableCollection<VerkoopOverzichtRegel> vandaagAfTeHalen = new();
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HeeftNogTeBetalen), nameof(NogTeBetalenTitel))]
+        private ObservableCollection<VerkoopOverzichtRegel> nogTeBetalen = new();
+
+        public bool HeeftVandaagAfTeHalen => VandaagAfTeHalen.Count > 0;
+        public bool HeeftNogTeBetalen => NogTeBetalen.Count > 0;
+        public string VandaagAfTeHalenTitel => HeeftVandaagAfTeHalen ? $"Vandaag af te halen ({VandaagAfTeHalen.Count})" : "Vandaag af te halen";
+        public string NogTeBetalenTitel => HeeftNogTeBetalen ? $"Nog te betalen ({NogTeBetalen.Count})" : "Nog te betalen";
+
+        public IAsyncRelayCommand<VerkoopOverzichtRegel> OpenVerkoopCommand { get; }
 
         public IAsyncRelayCommand OpenKlantenCommand { get; }
         public IAsyncRelayCommand OpenLijstenCommand { get; }
@@ -51,8 +70,12 @@ namespace QuadroApp.ViewModels
             IWerkBonWorkflowService workflow,
             IToastService toast,
             IWorkflowService statusWorkflow,
-            IServiceProvider services)
+            IServiceProvider services,
+            IVerkoopOverzichtService verkoop,
+            IOfferteNavigationService offerteNav)
         {
+            _verkoop = verkoop;
+            _offerteNav = offerteNav;
             _nav = nav;
             _factory = factory;
             _workflow = workflow;
@@ -76,9 +99,31 @@ namespace QuadroApp.ViewModels
             OpenFacturenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<FacturenViewModel>());
             OpenExportCenterCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<ExportCenterViewModel>());
             OpenArchiefCommand      = new AsyncRelayCommand(() => _nav.NavigateToAsync<ArchiefViewModel>());
+            OpenVerkoopCommand      = new AsyncRelayCommand<VerkoopOverzichtRegel>(
+                r => r is null ? Task.CompletedTask : _offerteNav.OpenOfferteAsync(r.OfferteId));
         }
 
-        public async Task InitializeAsync() => await LoadDashboardAsync();
+        public async Task InitializeAsync()
+        {
+            await LoadDashboardAsync();
+            await LoadVandaagAsync();
+        }
+
+        /// <summary>US-86 — vult de blokken "Vandaag af te halen" en "Nog te betalen".</summary>
+        private async Task LoadVandaagAsync()
+        {
+            try
+            {
+                var blokken = BeginschermBlokken.Bepaal(await _verkoop.GetOverzichtAsync(), DateTime.Today);
+                VandaagAfTeHalen = new ObservableCollection<VerkoopOverzichtRegel>(blokken.VandaagAfTeHalen);
+                NogTeBetalen = new ObservableCollection<VerkoopOverzichtRegel>(blokken.NogTeBetalen);
+            }
+            catch (Exception ex)
+            {
+                // Het beginscherm moet altijd openen; de blokken blijven dan leeg.
+                _toast.Error($"Overzicht van vandaag laden mislukt: {ex.Message}");
+            }
+        }
 
         private async Task LoadDashboardAsync()
         {
