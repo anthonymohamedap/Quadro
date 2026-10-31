@@ -53,6 +53,7 @@ static class Schermen
         ["offertelijst-werkbonnen"] = f => OffertelijstAsync(f, VerkoopFase.LopendeWerkbonnen),
         ["home"] = f => HomeAsync(f, metVandaag: true),
         ["home-leeg"] = f => HomeAsync(f, metVandaag: false),
+        ["home-vol"] = async f => { await TestGegevens.SeedVeelAsync(f, 10); return await HomeAsync(f, metVandaag: false); },
         ["home-druk"] = async f => { await TestGegevens.SeedWaarschuwingenAsync(f); return await HomeAsync(f, metVandaag: true); },
     };
 
@@ -196,6 +197,36 @@ static partial class TestGegevens
             A(VoorraadAlertType.OrderOverdue, "Bestelling B-2026-031 voor leverancier Nielsen is over tijd.", 25),
             A(VoorraadAlertType.PartialReceiptPending, "Bestelling B-2026-029 is deels ontvangen en nog niet afgerond.", 30),
             A(VoorraadAlertType.OrderOverdue, "Bestelling B-2026-027 voor leverancier Larson-Juhl is over tijd.", 35));
+        await db.SaveChangesAsync();
+    }
+
+    /// <summary>Drukke dag: <paramref name="aantal"/> verkopen vandaag af te halen en evenveel afgehaald met een rest.</summary>
+    public static async Task SeedVeelAsync(IDbContextFactory<AppDbContext> f, int aantal)
+    {
+        await using var db = await f.CreateDbContextAsync();
+        var vandaag = DateTime.Today;
+        string[] voornamen = { "Marleen", "Luc", "Sofie", "Jan", "Els", "Tom", "An", "Pieter", "Lien", "Koen" };
+        string[] namen = { "Peeters", "Janssens", "Claes", "Wouters", "Maes", "Jacobs", "Mertens", "Willems", "Goossens", "Aerts" };
+        var lijst = new List<Offerte>();
+        for (var i = 0; i < aantal; i++)
+        {
+            var totaal = 60m + i * 23.5m;
+            lijst.Add(new Offerte
+            {
+                OfferteNummer = 430 + i, Datum = vandaag.AddDays(-14), Status = OfferteStatus.Afgewerkt,
+                Klant = new Klant { Voornaam = voornamen[i % 10], Achternaam = namen[i % 10] },
+                TotaalInclBtw = totaal, VoorschotBedrag = i % 3 == 0 ? 0m : 40m, AfhaalDatum = vandaag,
+                WerkBon = new WerkBon { Status = WerkBonStatus.Afgewerkt, TotaalPrijsIncl = totaal, AfhaalDatum = vandaag }
+            });
+            lijst.Add(new Offerte
+            {
+                OfferteNummer = 380 + i, Datum = vandaag.AddDays(-40), Status = OfferteStatus.Besteld,
+                Klant = new Klant { Voornaam = voornamen[(i + 3) % 10], Achternaam = namen[(i + 5) % 10] },
+                TotaalInclBtw = totaal + 40m, VoorschotBedrag = 40m, AfhaalDatum = vandaag.AddDays(-2 - i),
+                WerkBon = new WerkBon { Status = WerkBonStatus.Afgehaald, TotaalPrijsIncl = totaal + 40m, AfhaalDatum = vandaag.AddDays(-2 - i) }
+            });
+        }
+        db.Offertes.AddRange(lijst);
         await db.SaveChangesAsync();
     }
 
