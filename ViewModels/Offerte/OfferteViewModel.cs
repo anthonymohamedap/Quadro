@@ -6,6 +6,7 @@ using QuadroApp.Model.DB;
 using QuadroApp.Service;
 using QuadroApp.Service.Import;
 using QuadroApp.Service.Interfaces;
+using QuadroApp.Service.Security;
 using QuadroApp.Validation;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     private readonly IDialogService _dialogs;
     private readonly IOfferteValidator _validator;
     private readonly IOntvangstService _ontvangsten;   // US-69
+    private readonly IAuthService _auth;               // US-101: ontgrendelen enkel voor admin
 
     // ── Root aggregate state ──
     [ObservableProperty] private Offerte? offerte;
@@ -910,9 +912,11 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         IKlantDialogService klantDialog,
         IOntvangstService ontvangsten,
         IPathOpener pathOpener,
-        IOfferteNavigationService offerteNav)
+        IOfferteNavigationService offerteNav,
+        IAuthService auth)
         : base(toast)
     {
+        _auth = auth ?? throw new ArgumentNullException(nameof(auth));
         _ontvangsten = ontvangsten ?? throw new ArgumentNullException(nameof(ontvangsten));
         _dbFactory = dbFactory ?? throw new ArgumentNullException(nameof(dbFactory));
         _nav = nav ?? throw new ArgumentNullException(nameof(nav));
@@ -937,7 +941,8 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                 o => validator.ValidateForPricingAsync(o), showFeedback),
             refreshLijstPrijzen: RefreshLijstPrijzenAsync,
             buildSnapshot: BuildSnapshotForPricing,
-            applySnapshot: ApplyPricingSnapshot);
+            applySnapshot: ApplyPricingSnapshot,
+            isPrijsVast: () => IsPrijsVast);
 
         Workflow = new OfferteWorkflowViewModel(
             dbFactory, workflow, werkBonWorkflow, statusWorkflow,
@@ -1037,6 +1042,17 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                                or nameof(Workflow.IsBevestigenZichtbaar)
                                or nameof(Workflow.IsPlanningZichtbaar))
                 OnPropertyChanged(e.PropertyName);
+
+            // US-100/101
+            if (e.PropertyName is nameof(Workflow.IsPrijsVast) or nameof(Workflow.IsVergrendeld))
+            {
+                OnPropertyChanged(nameof(IsPrijsVast));
+                OnPropertyChanged(nameof(IsAlleenLezen));
+                OnPropertyChanged(nameof(BerekenKnopTekst));
+                OnPropertyChanged(nameof(IsPrijsVastMeldingZichtbaar));
+                OnPropertyChanged(nameof(IsOntgrendelenZichtbaar));
+                OntgrendelenCommand.NotifyCanExecuteChanged();
+            }
         };
     }
 
@@ -1277,6 +1293,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         Regelbeheer.SelectedRegel = null;
         Workflow.GekoppeldeWerkBon = null;
         Workflow.GekoppeldeFactuur = null;
+        Workflow.IsOntgrendeld = false;
         Workflow.ToonStappen(OfferteStatus.Concept, nogTeBetalen: 0m);
         RefreshTotals();
         return Task.CompletedTask;
@@ -1346,6 +1363,37 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         }
     }
 
+    // ── US-100: prijs vast na bevestiging; US-101: afgeronde verkoop vergrendeld ──
+
+    /// <summary>De klant heeft bevestigd: geen automatische herberekening meer.</summary>
+    public bool IsPrijsVast => Workflow.IsPrijsVast;
+
+    /// <summary>Afgehaald en volledig betaald (en niet ontgrendeld): niets meer wijzigen.</summary>
+    public bool IsAlleenLezen => Workflow.IsVergrendeld;
+
+    public bool IsPrijsVastMeldingZichtbaar => IsPrijsVast && !IsAlleenLezen;
+
+    public string BerekenKnopTekst => IsPrijsVast ? "Prijzen herberekenen" : "Berekenen";
+
+    /// <summary>Een admin kan een afgeronde verkoop tijdelijk ontgrendelen om een fout recht te
+    /// zetten. Elke wijziging die daarna opgeslagen wordt, staat in het auditlogboek.</summary>
+    [RelayCommand(CanExecute = nameof(KanOntgrendelen))]
+    private async Task OntgrendelenAsync()
+    {
+        var ok = await _dialogs.ConfirmAsync(
+            "Afgeronde verkoop ontgrendelen",
+            "Deze verkoop is afgehaald en volledig betaald. Wil je hem toch aanpassen?\n\n" +
+            "De bestelbon (betaald) verandert niet mee. Wijzigingen worden in het auditlogboek bijgehouden.");
+        if (!ok) return;
+
+        Workflow.IsOntgrendeld = true;
+        Toast.Warning("Verkoop ontgrendeld — wijzigingen worden in het auditlogboek bijgehouden.");
+    }
+
+    private bool KanOntgrendelen() => IsAlleenLezen && _auth.HeeftPermissie(Permissie.GebruikersBeheren);
+
+    public bool IsOntgrendelenZichtbaar => KanOntgrendelen();
+
     // ── Save ──
     [RelayCommand]
     private async Task SaveAsync() => await SaveCoreAsync(reloadAfterSave: true);
@@ -1353,6 +1401,13 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     public async Task SaveCoreAsync(bool reloadAfterSave)
     {
         if (Offerte is null) return;
+
+        // US-101: een afgeronde verkoop blijft zoals hij is.
+        if (IsAlleenLezen)
+        {
+            Toast.Warning("Deze verkoop is afgehaald en betaald en kan niet meer gewijzigd worden.");
+            return;
+        }
         if (IsBusy) return;
 
         try
