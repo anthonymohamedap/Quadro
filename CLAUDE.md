@@ -34,7 +34,7 @@ Bekende valkuilen bij het renderen:
 
 - **Offerte**: de prijsberekening, met offertenummer (412).
 - **Bestelbon**: wat de klant krijgt; vóór het akkoord *voorlopig* (geen volgnummer), daarna 2026-19. Nooit "factuur" op het scherm (US-99).
-- **Werkbon**: de bon voor het atelier; menu en scherm heten "Werkbonnen".
-- **Bestelling**: enkel de stap "klant gaat akkoord" ("Bevestigen als bestelling").
+- **Werkbon**: de bon voor het atelier. Ontstaat als de klant akkoord gaat ("Bevestigen → Werkbon"); stap 2 in de stappenbalk heet "Werkbon", menu en scherm "Werkbonnen".
+- **Bestelling**: enkel nog een bestelling bij de leverancier (lijst bestellen). Niet gebruiken voor een bevestigde offerte.
 - Betaalwijzen: Bancontact, Cash, Credit card, Overschrijving.
 - Statussen op het scherm altijd via `StatusLabels` / `StatusLabelConverter`, nooit de enumnaam.

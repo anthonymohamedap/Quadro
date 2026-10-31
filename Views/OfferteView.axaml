@@ -975,7 +975,7 @@
 								Margin="0,0,12,6"/>
 
 						<!-- Bevestigen: alleen zichtbaar als er nog GEEN werkbon is -->
-						<Button Content="Bevestigen → Bestelling"
+						<Button Content="Bevestigen → Werkbon"
 								Command="{Binding BevestigenCommand}"
 								IsVisible="{Binding IsBevestigenZichtbaar}"
 								Classes="AccentBtn"
@@ -1004,10 +1004,6 @@
 						<Button Content="→ Verzonden" Classes="GhostBtn" FontSize="11" Padding="8,2"
 								Command="{Binding NaarVerzondenCommand}"
 								IsVisible="{Binding KanNaarVerzonden}"
-								Margin="0,0,6,0"/>
-						<Button Content="→ Goedgekeurd" Classes="GhostBtn" FontSize="11" Padding="8,2"
-								Command="{Binding NaarGoedgekeurdCommand}"
-								IsVisible="{Binding KanNaarGoedgekeurd}"
 								Margin="0,0,6,0"/>
 						<Button Content="↩ Concept" Classes="GhostBtn" FontSize="11" Padding="8,2"
 								Command="{Binding TerugNaarConceptCommand}"

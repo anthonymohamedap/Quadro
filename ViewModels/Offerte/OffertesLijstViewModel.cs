@@ -36,7 +36,7 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
     private static readonly (VerkoopFase Fase, string Titel)[] TabDefinities =
     {
         (VerkoopFase.OpenOffertes, "Open offertes"),
-        (VerkoopFase.LopendeBestellingen, "Lopende bestellingen"),
+        (VerkoopFase.LopendeWerkbonnen, "Lopende werkbonnen"),
         (VerkoopFase.KlaarOmAfTeHalen, "Klaar om af te halen"),
         (VerkoopFase.Afgerond, "Afgerond"),
         (VerkoopFase.Geannuleerd, "Geannuleerd")

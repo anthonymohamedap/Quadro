@@ -19,7 +19,7 @@ public class StappenBalkViewModelTests
         var vm = new StappenBalkViewModel();
         vm.Toon(VerkoopStapResolver.Bepaal(OfferteStatus.InProductie, WerkBonStatus.InUitvoering, null, 104.86m), "Werkbon openen", Volgende);
 
-        Assert.Equal(new[] { "Offerte", "Bestelling", "In productie", "Klaar om af te halen", "Afgehaald & betaald" },
+        Assert.Equal(new[] { "Offerte", "Werkbon", "In productie", "Klaar om af te halen", "Afgehaald & betaald" },
             vm.Stappen.Select(s => s.Titel));
         Assert.Equal(new[] { "✓", "✓", "3", "4", "5" }, vm.Stappen.Select(s => s.Bolletje));
         Assert.True(vm.Stappen[2].IsHuidig);
@@ -54,7 +54,7 @@ public class StappenBalkViewModelTests
     public void Geannuleerd_is_grijs_zonder_knop()
     {
         var vm = new StappenBalkViewModel();
-        vm.Toon(VerkoopStapResolver.Bepaal(OfferteStatus.Geannuleerd, null, null, 0m), "Bevestigen als bestelling", Volgende);
+        vm.Toon(VerkoopStapResolver.Bepaal(OfferteStatus.Geannuleerd, null, null, 0m), "Bevestigen → Werkbon", Volgende);
 
         Assert.True(vm.IsGeannuleerd);
         Assert.Equal("Geannuleerd", vm.StatusTekst);
@@ -68,7 +68,7 @@ public class StappenBalkViewModelTests
         var bestelbon = new AsyncRelayCommand(() => Task.CompletedTask);
         var vm = new StappenBalkViewModel();
         vm.Toon(VerkoopStapResolver.Bepaal(OfferteStatus.Concept, null, null, 154.86m),
-            "Bevestigen als bestelling", Volgende, "Bestelbon aanmaken", bestelbon);
+            "Bevestigen → Werkbon", Volgende, "Bestelbon aanmaken", bestelbon);
 
         Assert.True(vm.IsVolgendeStapZichtbaar);
         Assert.True(vm.IsNevenActieZichtbaar);

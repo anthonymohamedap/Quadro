@@ -11,8 +11,8 @@ public class VerkoopStapResolverTests
     [Theory]
     [InlineData(OfferteStatus.Concept, null, null, VerkoopStap.Offerte)]
     [InlineData(OfferteStatus.Verzonden, null, null, VerkoopStap.Offerte)]
-    [InlineData(OfferteStatus.Goedgekeurd, WerkBonStatus.Gepland, null, VerkoopStap.Bestelling)]
-    [InlineData(OfferteStatus.InProductie, WerkBonStatus.Gepland, null, VerkoopStap.Bestelling)] // P10: inplannen zette de offerte al op InProductie
+    [InlineData(OfferteStatus.Goedgekeurd, WerkBonStatus.Gepland, null, VerkoopStap.Werkbon)]
+    [InlineData(OfferteStatus.InProductie, WerkBonStatus.Gepland, null, VerkoopStap.Werkbon)] // P10: inplannen zette de offerte al op InProductie
     [InlineData(OfferteStatus.InProductie, WerkBonStatus.InUitvoering, null, VerkoopStap.InProductie)]
     [InlineData(OfferteStatus.Besteld, WerkBonStatus.Afgewerkt, FactuurStatus.Draft, VerkoopStap.KlaarOmAfTeHalen)]
     [InlineData(OfferteStatus.Betaald, WerkBonStatus.Afgewerkt, FactuurStatus.Betaald, VerkoopStap.KlaarOmAfTeHalen)] // al betaald, nog niet afgehaald
@@ -49,7 +49,7 @@ public class VerkoopStapResolverTests
         var info = VerkoopStapResolver.Bepaal(OfferteStatus.InProductie, WerkBonStatus.InUitvoering, null, 104.86m);
 
         Assert.Equal(StapToestand.Klaar, info.ToestandVan(VerkoopStap.Offerte));
-        Assert.Equal(StapToestand.Klaar, info.ToestandVan(VerkoopStap.Bestelling));
+        Assert.Equal(StapToestand.Klaar, info.ToestandVan(VerkoopStap.Werkbon));
         Assert.Equal(StapToestand.Huidig, info.ToestandVan(VerkoopStap.InProductie));
         Assert.Equal(StapToestand.NogTeDoen, info.ToestandVan(VerkoopStap.KlaarOmAfTeHalen));
     }

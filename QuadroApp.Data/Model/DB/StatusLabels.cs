@@ -11,7 +11,7 @@ namespace QuadroApp.Model.DB
         {
             OfferteStatus.Concept     => "Offerte (concept)",
             OfferteStatus.Verzonden   => "Offerte (verzonden)",
-            OfferteStatus.Goedgekeurd => "Bestelling",
+            OfferteStatus.Goedgekeurd => "Werkbon",
             OfferteStatus.InProductie => "In productie",
             OfferteStatus.Afgewerkt   => "Klaar om af te halen",
             OfferteStatus.Besteld     => "Klaar om af te halen",
