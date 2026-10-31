@@ -53,6 +53,7 @@ static class Schermen
         ["offertelijst-werkbonnen"] = f => OffertelijstAsync(f, VerkoopFase.LopendeWerkbonnen),
         ["home"] = f => HomeAsync(f, metVandaag: true),
         ["home-leeg"] = f => HomeAsync(f, metVandaag: false),
+        ["home-druk"] = async f => { await TestGegevens.SeedWaarschuwingenAsync(f); return await HomeAsync(f, metVandaag: true); },
     };
 
     public static async Task AllesAsync(string uitvoer, HashSet<string> gekozen)
@@ -180,6 +181,24 @@ static partial class TestGegevens
 /// bonnen met een rest.</summary>
 static partial class TestGegevens
 {
+    /// <summary>Open voorraadwaarschuwingen zoals VoorraadAlertService ze maakt (lijsten en leveringen).</summary>
+    public static async Task SeedWaarschuwingenAsync(IDbContextFactory<AppDbContext> f)
+    {
+        await using var db = await f.CreateDbContextAsync();
+        var nu = DateTime.UtcNow;
+        VoorraadAlert A(VoorraadAlertType t, string bericht, int minutenGeleden) =>
+            new() { AlertType = t, Bericht = bericht, AangemaaktOp = nu.AddMinutes(-minutenGeleden) };
+        db.VoorraadAlerts.AddRange(
+            A(VoorraadAlertType.BelowMinimum, "Voorraad onder minimum voor L-2045 (1,8 m beschikbaar).", 5),
+            A(VoorraadAlertType.LowStock, "Voorraad bijna op voor L-1180 (4,5 m beschikbaar).", 10),
+            A(VoorraadAlertType.LowStock, "Voorraad bijna op voor ALU-50Z (6 m beschikbaar).", 15),
+            A(VoorraadAlertType.OpenShortage, "Open tekort voor werktaak 87 (L-2045).", 20),
+            A(VoorraadAlertType.OrderOverdue, "Bestelling B-2026-031 voor leverancier Nielsen is over tijd.", 25),
+            A(VoorraadAlertType.PartialReceiptPending, "Bestelling B-2026-029 is deels ontvangen en nog niet afgerond.", 30),
+            A(VoorraadAlertType.OrderOverdue, "Bestelling B-2026-027 voor leverancier Larson-Juhl is over tijd.", 35));
+        await db.SaveChangesAsync();
+    }
+
     public static async Task SeedVandaagAsync(IDbContextFactory<AppDbContext> f)
     {
         await using var db = await f.CreateDbContextAsync();
