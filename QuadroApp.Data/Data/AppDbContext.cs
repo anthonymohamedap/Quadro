@@ -260,12 +260,6 @@ namespace QuadroApp.Data
 
             b.Entity<Bestelbon>(entity =>
             {
-                // US-99 fase B: in de code heet het document "bestelbon", de database houdt
-                // (tot fase C) de oude tabel- en kolomnamen. Geen schemawijziging.
-                entity.ToTable("Facturen");
-                entity.Property(x => x.BestelbonNummer).HasColumnName("FactuurNummer");
-                entity.Property(x => x.BestelbonDatum).HasColumnName("FactuurDatum");
-
                 // US-38: BestelbonNummer expliciet uniek maken. (Jaar, VolgNr) is al uniek
                 // via het [Index]-attribuut op de klasse; BestelbonNummer zelf was dat nog niet.
                 entity.HasIndex(x => x.BestelbonNummer).IsUnique();
@@ -301,8 +295,6 @@ namespace QuadroApp.Data
 
             b.Entity<BestelbonLijn>(entity =>
             {
-                entity.ToTable("FactuurLijnen");                                        // US-99 fase B
-                entity.Property(x => x.BestelbonId).HasColumnName("FactuurId");
                 entity.Property(x => x.Omschrijving).HasMaxLength(500).IsRequired();
                 entity.Property(x => x.Eenheid).HasMaxLength(20);
                 entity.Property(x => x.Aantal).HasPrecision(18, 2);
@@ -328,7 +320,6 @@ namespace QuadroApp.Data
             // ───────── Ontvangst (US-66): centraal ontvangstenregister ─────────
             b.Entity<Ontvangst>(entity =>
             {
-                entity.Property(x => x.BestelbonId).HasColumnName("FactuurId");          // US-99 fase B
                 entity.Property(x => x.Soort).HasConversion<string>().HasMaxLength(20);
                 entity.Property(x => x.Betaalwijze).HasConversion<string>().HasMaxLength(20);
                 entity.Property(x => x.BedragIncl).HasPrecision(18, 2);
