@@ -33,7 +33,7 @@ public class Factuur
 
     /// <summary>Doorlopend volgnummer voor de boekhouding. Leeg (null) zolang de klant de offerte
     /// nog niet bevestigd heeft: dan is het een voorlopige bon ("V412" = bij offerte 412).
-    /// Het nummer wordt toegekend bij "Bevestigen als bestelling", zodat klanten die niet
+    /// Het nummer wordt toegekend bij "Bevestigen → Werkbon", zodat klanten die niet
     /// bestellen geen gaten in de nummering laten.</summary>
     public int? VolgNr { get; set; }
 

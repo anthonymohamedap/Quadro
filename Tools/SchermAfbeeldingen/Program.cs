@@ -46,9 +46,11 @@ static class Schermen
     static readonly Dictionary<string, Func<IDbContextFactory<AppDbContext>, Task<Control>>> Scenarios = new()
     {
         ["offerte-1-concept"] = f => OfferteAsync(f, 419),
+        ["offerte-1b-verzonden"] = f => OfferteAsync(f, 418),
         ["offerte-2-bevestigd"] = f => OfferteAsync(f, 412),
         ["offerte-3-afgerond"] = f => OfferteAsync(f, 398),
-        ["offertelijst"] = OffertelijstAsync,
+        ["offertelijst"] = f => OffertelijstAsync(f, VerkoopFase.OpenOffertes),
+        ["offertelijst-werkbonnen"] = f => OffertelijstAsync(f, VerkoopFase.LopendeWerkbonnen),
     };
 
     public static async Task AllesAsync(string uitvoer, HashSet<string> gekozen)
@@ -97,12 +99,13 @@ static class Schermen
         return new OfferteView { DataContext = vm };
     }
 
-    static async Task<Control> OffertelijstAsync(IDbContextFactory<AppDbContext> f)
+    static async Task<Control> OffertelijstAsync(IDbContextFactory<AppDbContext> f, VerkoopFase tabblad)
     {
         var vm = new OffertesLijstViewModel(f, new GeenOfferteNavigatie(), new TestDialogService(),
             new TestNavigationService(), new TestToastService(),
             new OfferteArchiefService(f, new TestAuthService(), NullLogger<OfferteArchiefService>.Instance), new VerkoopOverzichtService(f));
         await vm.LoadAsync();
+        vm.GeselecteerdeFase = tabblad;
         return new OffertesLijstView { DataContext = vm };
     }
 
@@ -113,7 +116,8 @@ static class Schermen
     }
 }
 
-/// <summary>Vaste testgegevens: offerte 419 (concept), 412 (bevestigd, werkbon gepland), 398 (afgehaald en betaald).</summary>
+/// <summary>Vaste testgegevens: offerte 419 (concept), 418 (verzonden), 412 (bevestigd, werkbon gepland),
+/// 398 (afgehaald en betaald).</summary>
 static class TestGegevens
 {
     public static async Task SeedAsync(IDbContextFactory<AppDbContext> f)
@@ -137,11 +141,12 @@ static class TestGegevens
         };
 
         var concept = Offerte(419, OfferteStatus.Concept);
+        var verzonden = Offerte(418, OfferteStatus.Verzonden);
         var bevestigd = Offerte(412, OfferteStatus.Goedgekeurd);
         bevestigd.WerkBon = new WerkBon { Status = WerkBonStatus.Gepland, TotaalPrijsIncl = 45m };
         var afgerond = Offerte(398, OfferteStatus.Betaald);
         afgerond.WerkBon = new WerkBon { Status = WerkBonStatus.Afgehaald, TotaalPrijsIncl = 45m };
-        db.Offertes.AddRange(concept, bevestigd, afgerond);
+        db.Offertes.AddRange(concept, verzonden, bevestigd, afgerond);
         await db.SaveChangesAsync();
 
         db.Facturen.Add(new Factuur

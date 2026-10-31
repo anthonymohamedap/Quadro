@@ -18,7 +18,7 @@ public sealed record StapWeergave(int Nummer, string Titel, string Uitleg, StapT
 }
 
 /// <summary>
-/// US-83 — de stappenbalk Offerte → Bestelling → In productie → Klaar om af te halen →
+/// US-83 — de stappenbalk Offerte → Werkbon → In productie → Klaar om af te halen →
 /// Afgehaald &amp; betaald, met één knop voor de volgende stap. Herbruikbaar: de offerte
 /// gebruikt hem nu, het verkoopdossier (US-90) later.
 /// </summary>
