@@ -20,7 +20,7 @@ public class OntvangstServiceBetalingTests
     {
         var auth = new TestAuthService();
         var pricing = new PricingService(factory, new VasteInstellingen(), new PricingEngine(), NullLogger<PricingService>.Instance);
-        var workflow = new FactuurWorkflowService(factory, pricing, auth);
+        var workflow = new BestelbonWorkflowService(factory, pricing, auth);
         return new OntvangstService(factory, auth, workflow);
     }
 
@@ -38,55 +38,55 @@ public class OntvangstServiceBetalingTests
         db.Offertes.Add(offerte);
         await db.SaveChangesAsync();
 
-        var factuur = new Factuur
+        var bestelbon = new Bestelbon
         {
             OfferteId = offerte.Id,
             Jaar = DateTime.Today.Year,
             VolgNr = 7,
-            FactuurNummer = "B-7",
+            BestelbonNummer = "B-7",
             KlantNaam = "Els Betaalt",
-            Status = FactuurStatus.KlaarVoorExport,
+            Status = BestelbonStatus.KlaarVoorExport,
             TotaalInclBtw = totaal,
             VoorschotBedrag = voorschot
         };
-        db.Facturen.Add(factuur);
+        db.Bestelbonnen.Add(bestelbon);
         await db.SaveChangesAsync();
-        return factuur.Id;
+        return bestelbon.Id;
     }
 
     [Fact]
     public async Task Gesplitste_betaling_cash_en_kaart_zet_bestelbon_op_betaald()
     {
         await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
-        var factuurId = await SeedBestelbonAsync(scope.Factory);
+        var bestelbonId = await SeedBestelbonAsync(scope.Factory);
         var sut = CreateSut(scope.Factory);
 
-        var na1 = await sut.RegistreerBetalingAsync(factuurId, 50m, DateTime.Today, Betaalwijze.Cash);
+        var na1 = await sut.RegistreerBetalingAsync(bestelbonId, 50m, DateTime.Today, Betaalwijze.Cash);
         Assert.Equal(150m, na1.Rest);
         Assert.False(na1.IsBetaaldStatus);
 
-        var na2 = await sut.RegistreerBetalingAsync(factuurId, 150m, DateTime.Today, Betaalwijze.Bancontact);
+        var na2 = await sut.RegistreerBetalingAsync(bestelbonId, 150m, DateTime.Today, Betaalwijze.Bancontact);
         Assert.Equal(0m, na2.Rest);
         Assert.True(na2.IsBetaaldStatus);
 
         await using var db = await scope.Factory.CreateDbContextAsync();
-        var factuur = await db.Facturen.AsNoTracking().SingleAsync(f => f.Id == factuurId);
-        Assert.Equal(FactuurStatus.Betaald, factuur.Status);
+        var bestelbon = await db.Bestelbonnen.AsNoTracking().SingleAsync(f => f.Id == bestelbonId);
+        Assert.Equal(BestelbonStatus.Betaald, bestelbon.Status);
 
-        var betalingen = await sut.GetBetalingenAsync(factuurId);
+        var betalingen = await sut.GetBetalingenAsync(bestelbonId);
         Assert.Equal(2, betalingen.Count);
-        Assert.All(betalingen, b => Assert.Equal(factuur.OfferteId, b.OfferteId));
+        Assert.All(betalingen, b => Assert.Equal(bestelbon.OfferteId, b.OfferteId));
     }
 
     [Fact]
     public async Task Meer_dan_de_rest_betalen_wordt_geweigerd()
     {
         await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
-        var factuurId = await SeedBestelbonAsync(scope.Factory);
+        var bestelbonId = await SeedBestelbonAsync(scope.Factory);
         var sut = CreateSut(scope.Factory);
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => sut.RegistreerBetalingAsync(factuurId, 250m, DateTime.Today, Betaalwijze.CreditCard));
+            () => sut.RegistreerBetalingAsync(bestelbonId, 250m, DateTime.Today, Betaalwijze.CreditCard));
         Assert.Contains("hoger dan wat nog te betalen is", ex.Message);
     }
 
@@ -94,13 +94,13 @@ public class OntvangstServiceBetalingTests
     public async Task Vooraf_betaald_per_overschrijving_telt_mee()
     {
         await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
-        var factuurId = await SeedBestelbonAsync(scope.Factory, totaal: 120m, voorschot: 0m);
+        var bestelbonId = await SeedBestelbonAsync(scope.Factory, totaal: 120m, voorschot: 0m);
         var sut = CreateSut(scope.Factory);
 
-        var stand = await sut.RegistreerBetalingAsync(factuurId, 120m, DateTime.Today.AddDays(-3), Betaalwijze.Overschrijving);
+        var stand = await sut.RegistreerBetalingAsync(bestelbonId, 120m, DateTime.Today.AddDays(-3), Betaalwijze.Overschrijving);
 
         Assert.Equal(0m, stand.Rest);
-        var b = Assert.Single(await sut.GetBetalingenAsync(factuurId));
+        var b = Assert.Single(await sut.GetBetalingenAsync(bestelbonId));
         Assert.Equal(Betaalwijze.Overschrijving, b.Betaalwijze);
         Assert.Equal(DateTime.Today.AddDays(-3), b.Datum);
     }
@@ -109,23 +109,23 @@ public class OntvangstServiceBetalingTests
     public async Task Betaling_verwijderen_zet_betaalde_bestelbon_terug_open_US72()
     {
         await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
-        var factuurId = await SeedBestelbonAsync(scope.Factory);
+        var bestelbonId = await SeedBestelbonAsync(scope.Factory);
         var sut = CreateSut(scope.Factory);
 
-        await sut.RegistreerBetalingAsync(factuurId, 120m, DateTime.Today, Betaalwijze.Cash);
-        await sut.RegistreerBetalingAsync(factuurId, 80m, DateTime.Today, Betaalwijze.CreditCard);
-        var visa = (await sut.GetBetalingenAsync(factuurId)).Single(b => b.Betaalwijze == Betaalwijze.CreditCard);
+        await sut.RegistreerBetalingAsync(bestelbonId, 120m, DateTime.Today, Betaalwijze.Cash);
+        await sut.RegistreerBetalingAsync(bestelbonId, 80m, DateTime.Today, Betaalwijze.CreditCard);
+        var visa = (await sut.GetBetalingenAsync(bestelbonId)).Single(b => b.Betaalwijze == Betaalwijze.CreditCard);
 
         await sut.VerwijderAsync(visa.Id);
 
-        var stand = await sut.GetBetaalStandAsync(factuurId);
+        var stand = await sut.GetBetaalStandAsync(bestelbonId);
         Assert.Equal(80m, stand.Rest);
         Assert.False(stand.IsBetaaldStatus);
 
         await using var db = await scope.Factory.CreateDbContextAsync();
-        var factuur = await db.Facturen.AsNoTracking().SingleAsync(f => f.Id == factuurId);
-        Assert.Equal(FactuurStatus.KlaarVoorExport, factuur.Status);
-        var offerte = await db.Offertes.AsNoTracking().SingleAsync(o => o.Id == factuur.OfferteId);
+        var bestelbon = await db.Bestelbonnen.AsNoTracking().SingleAsync(f => f.Id == bestelbonId);
+        Assert.Equal(BestelbonStatus.KlaarVoorExport, bestelbon.Status);
+        var offerte = await db.Offertes.AsNoTracking().SingleAsync(o => o.Id == bestelbon.OfferteId);
         Assert.Equal(OfferteStatus.Besteld, offerte.Status);
     }
 

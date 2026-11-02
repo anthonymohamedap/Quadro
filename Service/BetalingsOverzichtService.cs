@@ -46,15 +46,15 @@ public sealed class BetalingsOverzichtService : IBetalingsOverzichtService
                 o.BedragIncl,
                 o.Omschrijving,
                 o.OfferteId,
-                FactuurNummer = o.Factuur != null ? o.Factuur.FactuurNummer : null,
-                FactuurJaar = o.Factuur != null ? (int?)o.Factuur.Jaar : null,
+                BestelbonNummer = o.Bestelbon != null ? o.Bestelbon.BestelbonNummer : null,
+                BestelbonJaar = o.Bestelbon != null ? (int?)o.Bestelbon.Jaar : null,
                 OfferteNummer = o.Offerte != null ? (int?)o.Offerte.OfferteNummer : null
             })
             .ToListAsync();
 
         // Voorschotten (enkel aan een offerte gekoppeld): zoek de bestelbon van die offerte op.
         var offerteIdsZonderBon = ontvangsten
-            .Where(o => o.FactuurNummer is null && o.OfferteId.HasValue)
+            .Where(o => o.BestelbonNummer is null && o.OfferteId.HasValue)
             .Select(o => o.OfferteId!.Value)
             .Distinct()
             .ToList();
@@ -62,12 +62,12 @@ public sealed class BetalingsOverzichtService : IBetalingsOverzichtService
         var bonPerOfferte = new Dictionary<int, (string Nummer, int Jaar)>();
         if (offerteIdsZonderBon.Count > 0)
         {
-            var bons = await db.Facturen.AsNoTracking()
+            var bons = await db.Bestelbonnen.AsNoTracking()
                 .Where(f => f.OfferteId.HasValue && offerteIdsZonderBon.Contains(f.OfferteId.Value))
-                .Select(f => new { OfferteId = f.OfferteId!.Value, f.FactuurNummer, f.Jaar })
+                .Select(f => new { OfferteId = f.OfferteId!.Value, f.BestelbonNummer, f.Jaar })
                 .ToListAsync();
             foreach (var b in bons)
-                bonPerOfferte[b.OfferteId] = (b.FactuurNummer, b.Jaar);
+                bonPerOfferte[b.OfferteId] = (b.BestelbonNummer, b.Jaar);
         }
 
         var regels = ontvangsten.Select(o =>
@@ -75,10 +75,10 @@ public sealed class BetalingsOverzichtService : IBetalingsOverzichtService
             string bon = string.Empty;
             int? jaar = null;
 
-            if (o.FactuurNummer is not null)
+            if (o.BestelbonNummer is not null)
             {
-                bon = o.FactuurNummer;
-                jaar = o.FactuurJaar;
+                bon = o.BestelbonNummer;
+                jaar = o.BestelbonJaar;
             }
             else if (o.OfferteId is int offerteId)
             {

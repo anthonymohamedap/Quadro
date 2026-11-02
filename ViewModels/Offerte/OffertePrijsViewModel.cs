@@ -63,7 +63,7 @@ public partial class OffertePrijsViewModel : AsyncViewModelBase
 
     /// <summary>
     /// Directe (niet-debounced) berekening zonder UI-feedback.
-    /// Gebruikt door OfferteWorkflowViewModel vóór factuur aanmaken.
+    /// Gebruikt door OfferteWorkflowViewModel vóór bestelbon aanmaken.
     /// </summary>
     public Task BerekenSilentAsync() => BerekenAsync(showFeedback: false);
 

@@ -3,12 +3,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace QuadroApp.Model.DB;
 
-public class FactuurLijn
+public class BestelbonLijn
 {
     public int Id { get; set; }
 
-    public int FactuurId { get; set; }
-    public Factuur Factuur { get; set; } = null!;
+    public int BestelbonId { get; set; }
+    public Bestelbon Bestelbon { get; set; } = null!;
 
     [MaxLength(500)]
     public string Omschrijving { get; set; } = string.Empty;

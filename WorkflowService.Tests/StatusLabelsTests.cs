@@ -11,12 +11,12 @@ namespace WorkflowService.Tests;
 public class StatusLabelsTests
 {
     [Theory]
-    [InlineData(FactuurStatus.Draft, "Open")]
-    [InlineData(FactuurStatus.KlaarVoorExport, "Open")]
-    [InlineData(FactuurStatus.Geexporteerd, "Open")]
-    [InlineData(FactuurStatus.Betaald, "Betaald")]
-    [InlineData(FactuurStatus.Geannuleerd, "Geannuleerd")]
-    public void Bestelbon(FactuurStatus status, string verwacht) => Assert.Equal(verwacht, status.Label());
+    [InlineData(BestelbonStatus.Draft, "Open")]
+    [InlineData(BestelbonStatus.KlaarVoorExport, "Open")]
+    [InlineData(BestelbonStatus.Geexporteerd, "Open")]
+    [InlineData(BestelbonStatus.Betaald, "Betaald")]
+    [InlineData(BestelbonStatus.Geannuleerd, "Geannuleerd")]
+    public void Bestelbon(BestelbonStatus status, string verwacht) => Assert.Equal(verwacht, status.Label());
 
     [Theory]
     [InlineData(WerkBonStatus.Gepland, "Gepland")]
@@ -37,7 +37,7 @@ public class StatusLabelsTests
     {
         var labels = Enum.GetValues<OfferteStatus>().Select(s => s.Label())
             .Concat(Enum.GetValues<WerkBonStatus>().Select(s => s.Label()))
-            .Concat(Enum.GetValues<FactuurStatus>().Select(s => s.Label()))
+            .Concat(Enum.GetValues<BestelbonStatus>().Select(s => s.Label()))
             .Concat(Enum.GetValues<VoorraadAlertType>().Select(s => s.Label()))
             .Concat(Enum.GetValues<LeverancierBestellingStatus>().Select(s => s.Label()));
 
@@ -50,8 +50,8 @@ public class StatusLabelsTests
     public void Converter_gebruikt_dezelfde_woorden_en_optioneel_een_formaat()
     {
         var c = StatusLabelConverter.Instance;
-        Assert.Equal("Open", c.Convert(FactuurStatus.KlaarVoorExport, typeof(string), null, CultureInfo.InvariantCulture));
-        Assert.Equal("Status: Betaald", c.Convert(FactuurStatus.Betaald, typeof(string), "Status: {0}", CultureInfo.InvariantCulture));
+        Assert.Equal("Open", c.Convert(BestelbonStatus.KlaarVoorExport, typeof(string), null, CultureInfo.InvariantCulture));
+        Assert.Equal("Status: Betaald", c.Convert(BestelbonStatus.Betaald, typeof(string), "Status: {0}", CultureInfo.InvariantCulture));
         Assert.Equal("Klaar om af te halen", WerkBonStatusToLabelConverter.Instance.Convert(WerkBonStatus.Afgewerkt, typeof(string), null, CultureInfo.InvariantCulture));
     }
 }

@@ -61,7 +61,7 @@ namespace QuadroApp.ViewModels
 
         public string AfrekenTitel => AfrekenStand is null
             ? string.Empty
-            : $"Afrekenen bestelbon {AfrekenStand.FactuurNummer}: nog € {AfrekenRest:0.00} te betalen";
+            : $"Afrekenen bestelbon {AfrekenStand.BestelbonNummer}: nog € {AfrekenRest:0.00} te betalen";
 
         public string AfrekenDetail => AfrekenStand is null
             ? string.Empty
@@ -170,7 +170,7 @@ namespace QuadroApp.ViewModels
 
         [ObservableProperty] private WerkBon? werkBon;
         [ObservableProperty] private ObservableCollection<WerkTaak> taken = new();
-        [ObservableProperty] private Factuur? bestelbon;
+        [ObservableProperty] private Bestelbon? bestelbon;
 
         [ObservableProperty] private string kopTitel = "Werkbon";
         [ObservableProperty] private string klantNaam = "";
@@ -187,7 +187,7 @@ namespace QuadroApp.ViewModels
         public bool HeeftBestelbon => Bestelbon is not null;
         public bool HeeftAfhaalDatum => WerkBon?.AfhaalDatum is not null;
 
-        partial void OnBestelbonChanged(Factuur? value) => OnPropertyChanged(nameof(HeeftBestelbon));
+        partial void OnBestelbonChanged(Bestelbon? value) => OnPropertyChanged(nameof(HeeftBestelbon));
         partial void OnWerkBonChanged(WerkBon? value)
         {
             OnPropertyChanged(nameof(HeeftAfhaalDatum));
@@ -229,7 +229,7 @@ namespace QuadroApp.ViewModels
             await LaadAfrekenStandAsync();   // US-76
             Taken = new ObservableCollection<WerkTaak>(wb.Taken.OrderBy(t => t.GeplandVan));
 
-            Bestelbon = await db.Facturen
+            Bestelbon = await db.Bestelbonnen
                 .AsNoTracking()
                 .FirstOrDefaultAsync(f => f.WerkBonId == _werkBonId);
 

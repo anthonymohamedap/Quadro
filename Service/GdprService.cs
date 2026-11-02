@@ -50,9 +50,9 @@ public sealed class GdprService : IGdprService
             .ToListAsync();
 
         var offerteIds = offertes.Select(o => o.Id).ToList();
-        var facturen = await db.Facturen
+        var bestelbonnen = await db.Bestelbonnen
             .Where(f => f.OfferteId != null && offerteIds.Contains(f.OfferteId.Value))
-            .Select(f => new { f.Id, f.FactuurNummer, f.DocumentType, f.FactuurDatum, f.KlantNaam, f.KlantAdres, f.KlantBtwNummer, f.TotaalInclBtw })
+            .Select(f => new { f.Id, f.BestelbonNummer, f.DocumentType, f.BestelbonDatum, f.KlantNaam, f.KlantAdres, f.KlantBtwNummer, f.TotaalInclBtw })
             .ToListAsync();
 
         var export = new
@@ -65,7 +65,7 @@ public sealed class GdprService : IGdprService
                 klant.BtwNummer, klant.Opmerking, klant.IsGearchiveerd
             },
             Offertes = offertes,
-            FacturenEnBestelbonnen = facturen
+            Bestelbonnen = bestelbonnen
         };
 
         _logger.LogInformation("[GDPR] Inzage-export voor klant {KlantId} door '{User}'.",
@@ -85,7 +85,7 @@ public sealed class GdprService : IGdprService
             ?? throw new InvalidOperationException($"Klant {klantId} niet gevonden.");
 
         // 1. Persoonsgegevens op de klant onherstelbaar vervangen.
-        //    Facturen/bestelbonnen blijven ongewijzigd (wettelijke bewaarplicht) —
+        //    Bestelbonnen/bestelbonnen blijven ongewijzigd (wettelijke bewaarplicht) —
         //    zij dragen hun eigen naam-snapshot als onderdeel van het boekhouddocument.
         klant.Voornaam = Geanonimiseerd;
         klant.Achternaam = $"{Geanonimiseerd}-{klantId}";

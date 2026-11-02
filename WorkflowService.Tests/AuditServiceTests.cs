@@ -130,7 +130,7 @@ public class AuditServiceTests
         db.AuditLogs.AddRange(
             new AuditLog { Tijdstip = basis.AddMinutes(1), Gebruiker = "anna", EntiteitType = "Offerte", EntiteitId = "1", Actie = "Toegevoegd", Wijzigingen = "{\"Titel\":{\"nieuw\":\"A\"}}" },
             new AuditLog { Tijdstip = basis.AddMinutes(2), Gebruiker = "anna", EntiteitType = "Offerte", EntiteitId = "1", Actie = "Gewijzigd", Wijzigingen = "{\"Titel\":{\"oud\":\"A\",\"nieuw\":\"B\"}}" },
-            new AuditLog { Tijdstip = basis.AddMinutes(3), Gebruiker = "bram", EntiteitType = "Factuur", EntiteitId = "9", Actie = "Gewijzigd", Wijzigingen = "{\"Status\":{\"oud\":\"Draft\",\"nieuw\":\"Betaald\"}}" },
+            new AuditLog { Tijdstip = basis.AddMinutes(3), Gebruiker = "bram", EntiteitType = "Bestelbon", EntiteitId = "9", Actie = "Gewijzigd", Wijzigingen = "{\"Status\":{\"oud\":\"Draft\",\"nieuw\":\"Betaald\"}}" },
             new AuditLog { Tijdstip = basis.AddMinutes(4), Gebruiker = "bram", EntiteitType = "Klant", EntiteitId = "3", Actie = "Verwijderd", Wijzigingen = "{}" },
             new AuditLog { Tijdstip = basis.AddMinutes(5), Gebruiker = "bram", EntiteitType = "TypeLijst", EntiteitId = "7", Actie = "Gewijzigd", Wijzigingen = "{\"PrijsPerMeter\":{\"oud\":\"10\",\"nieuw\":\"11\"}}" });
         await db.SaveChangesAsync();

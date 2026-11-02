@@ -16,13 +16,13 @@ public interface IGdprService
     /// <summary>
     /// Definitieve anonimisering (GDPR art. 17): persoonsgegevens op de klant
     /// en in audit-records worden onherstelbaar vervangen. Boekhoudkundig
-    /// verplichte documenten (facturen/bestelbonnen) blijven ongewijzigd —
+    /// verplichte documenten (bestelbonnen/bestelbonnen) blijven ongewijzigd —
     /// die vallen onder de wettelijke bewaarplicht.
     /// </summary>
     Task AnonimiseerKlantAsync(int klantId);
 
     /// <summary>
-    /// Klanten waarvan de laatste activiteit (offerte/factuur) ouder is dan
+    /// Klanten waarvan de laatste activiteit (offerte/bestelbon) ouder is dan
     /// het retentiebeleid — kandidaten voor anonimisering. Beslissing blijft
     /// bij de zaakvoerder; er wordt nooit automatisch geanonimiseerd.
     /// </summary>

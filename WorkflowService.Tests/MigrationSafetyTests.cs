@@ -70,7 +70,7 @@ public class MigrationSafetyTests : IDisposable
         _ = await db.Offertes.CountAsync();
         _ = await db.OfferteRegels.CountAsync();
         _ = await db.WerkBonnen.CountAsync();
-        _ = await db.Facturen.CountAsync();
+        _ = await db.Bestelbonnen.CountAsync();
         _ = await db.VoorraadAlerts.CountAsync();
         _ = await db.LeverancierBestellingen.CountAsync();
         _ = await db.Gebruikers.CountAsync();

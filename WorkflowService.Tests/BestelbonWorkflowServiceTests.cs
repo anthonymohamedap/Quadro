@@ -13,35 +13,35 @@ using Xunit;
 
 namespace WorkflowService.Tests;
 
-public class FactuurWorkflowServiceTests
+public class BestelbonWorkflowServiceTests
 {
     [Fact]
-    public async Task MaakFactuurVanOfferteAsync_creates_factuur_without_werkbon()
+    public async Task MaakBestelbonVanOfferteAsync_creates_bestelbon_without_werkbon()
     {
         await using var dbScope = await DbFactoryBuilder.CreateSqliteAsync();
         var factory = dbScope.Factory;
         var offerteId = await SeedOfferteAsync(factory);
         var sut = CreateSut(factory);
 
-        var factuur = await sut.MaakFactuurVanOfferteAsync(offerteId);
+        var bestelbon = await sut.MaakBestelbonVanOfferteAsync(offerteId);
 
-        Assert.Equal(offerteId, factuur.OfferteId);
-        Assert.Null(factuur.WerkBonId);
-        Assert.Equal(FactuurStatus.Draft, factuur.Status);
-        Assert.NotEmpty(factuur.Lijnen);
-        Assert.Equal("Bestelbon", factuur.DocumentType);
+        Assert.Equal(offerteId, bestelbon.OfferteId);
+        Assert.Null(bestelbon.WerkBonId);
+        Assert.Equal(BestelbonStatus.Draft, bestelbon.Status);
+        Assert.NotEmpty(bestelbon.Lijnen);
+        Assert.Equal("Bestelbon", bestelbon.DocumentType);
     }
 
     [Fact]
-    public async Task GetFactuurVoorOfferteAsync_returns_factuur_created_from_offerte()
+    public async Task GetBestelbonVoorOfferteAsync_returns_bestelbon_created_from_offerte()
     {
         await using var dbScope = await DbFactoryBuilder.CreateSqliteAsync();
         var factory = dbScope.Factory;
         var offerteId = await SeedOfferteAsync(factory);
         var sut = CreateSut(factory);
 
-        var created = await sut.MaakFactuurVanOfferteAsync(offerteId);
-        var loaded = await sut.GetFactuurVoorOfferteAsync(offerteId);
+        var created = await sut.MaakBestelbonVanOfferteAsync(offerteId);
+        var loaded = await sut.GetBestelbonVoorOfferteAsync(offerteId);
 
         Assert.NotNull(loaded);
         Assert.Equal(created.Id, loaded!.Id);
@@ -49,7 +49,7 @@ public class FactuurWorkflowServiceTests
     }
 
     [Fact]
-    public async Task MaakFactuurVanWerkBonAsync_backfills_offerte_link()
+    public async Task MaakBestelbonVanWerkBonAsync_backfills_offerte_link()
     {
         await using var dbScope = await DbFactoryBuilder.CreateSqliteAsync();
         var factory = dbScope.Factory;
@@ -60,26 +60,26 @@ public class FactuurWorkflowServiceTests
         var werkBonId = await db.WerkBonnen.Where(x => x.OfferteId == offerteId).Select(x => x.Id).SingleAsync();
         await db.DisposeAsync();
 
-        var factuur = await sut.MaakFactuurVanWerkBonAsync(werkBonId);
+        var bestelbon = await sut.MaakBestelbonVanWerkBonAsync(werkBonId);
 
-        Assert.Equal(offerteId, factuur.OfferteId);
-        Assert.Equal(werkBonId, factuur.WerkBonId);
+        Assert.Equal(offerteId, bestelbon.OfferteId);
+        Assert.Equal(werkBonId, bestelbon.WerkBonId);
     }
 
     [Fact]
-    public async Task MaakFactuurVanOfferteAsync_recalculates_when_offerte_totals_are_zero()
+    public async Task MaakBestelbonVanOfferteAsync_recalculates_when_offerte_totals_are_zero()
     {
         await using var dbScope = await DbFactoryBuilder.CreateSqliteAsync();
         var factory = dbScope.Factory;
         var offerteId = await SeedOfferteAsync(factory, zeroOutTotals: true);
         var sut = CreateSut(factory);
 
-        var factuur = await sut.MaakFactuurVanOfferteAsync(offerteId);
+        var bestelbon = await sut.MaakBestelbonVanOfferteAsync(offerteId);
 
         // Afgesproken prijs (25) is incl. BTW → regel-incl. = 25, excl. = 25 / 1,21 = 20,66.
-        Assert.Equal(20.66m, factuur.TotaalExclBtw);
-        Assert.Equal(25m, factuur.TotaalInclBtw);
-        var lijn = Assert.Single(factuur.Lijnen);
+        Assert.Equal(20.66m, bestelbon.TotaalExclBtw);
+        Assert.Equal(25m, bestelbon.TotaalInclBtw);
+        var lijn = Assert.Single(bestelbon.Lijnen);
         Assert.Equal(20.66m, lijn.TotaalExcl);
         Assert.Equal(25m, lijn.TotaalIncl);
     }
@@ -92,19 +92,19 @@ public class FactuurWorkflowServiceTests
         var offerteId = await SeedOfferteAsync(factory, meerPrijsIncl: 50m);
         var sut = CreateSut(factory);
 
-        var factuur = await sut.MaakFactuurVanOfferteAsync(offerteId);
+        var bestelbon = await sut.MaakBestelbonVanOfferteAsync(offerteId);
 
         // De meerprijs-regel bestaat wél in de data (zodat het totaal klopt),
         // maar wordt op de bestelbon-PDF én in de preview niet getoond (US-26).
-        var meerprijsLijn = factuur.Lijnen.SingleOrDefault(
+        var meerprijsLijn = bestelbon.Lijnen.SingleOrDefault(
             l => l.Omschrijving.Equals("Meerprijs", StringComparison.OrdinalIgnoreCase));
         Assert.NotNull(meerprijsLijn);
 
         // Het bedrag zit verrekend in het eindtotaal: totaal incl. bevat de 50 meerprijs.
-        var totaalVanZichtbareLijnen = factuur.Lijnen
+        var totaalVanZichtbareLijnen = bestelbon.Lijnen
             .Where(l => !l.Omschrijving.Equals("Meerprijs", StringComparison.OrdinalIgnoreCase))
             .Sum(l => l.TotaalIncl);
-        Assert.Equal(totaalVanZichtbareLijnen + meerprijsLijn!.TotaalIncl, factuur.TotaalInclBtw);
+        Assert.Equal(totaalVanZichtbareLijnen + meerprijsLijn!.TotaalIncl, bestelbon.TotaalInclBtw);
     }
 
     [Fact]
@@ -115,10 +115,10 @@ public class FactuurWorkflowServiceTests
         var offerteId = await SeedOfferteAsync(factory, extraRegelKortingPct: 10m);
         var sut = CreateSut(factory);
 
-        var factuur = await sut.MaakFactuurVanOfferteAsync(offerteId);
+        var bestelbon = await sut.MaakBestelbonVanOfferteAsync(offerteId);
 
         // De regel met korting draagt de tag; de afgesproken-prijs-regel niet.
-        var metKorting = factuur.Lijnen.Where(l => l.Omschrijving.Contains("korting:10")).ToList();
+        var metKorting = bestelbon.Lijnen.Where(l => l.Omschrijving.Contains("korting:10")).ToList();
         Assert.Single(metKorting);
         Assert.Equal(90m, metKorting[0].TotaalExcl);   // lijnbedrag is al NA korting
     }
@@ -131,9 +131,9 @@ public class FactuurWorkflowServiceTests
         var offerteId = await SeedOfferteAsync(factory, metInleg: true);
         var sut = CreateSut(factory);
 
-        var factuur = await sut.MaakFactuurVanOfferteAsync(offerteId);
+        var bestelbon = await sut.MaakBestelbonVanOfferteAsync(offerteId);
 
-        Assert.Single(factuur.Lijnen, l => l.Omschrijving.Contains("inleg:20×30 cm · nr. INL-7"));
+        Assert.Single(bestelbon.Lijnen, l => l.Omschrijving.Contains("inleg:20×30 cm · nr. INL-7"));
     }
 
     [Fact]
@@ -144,9 +144,9 @@ public class FactuurWorkflowServiceTests
         var offerteId = await SeedOfferteAsync(factory, metStandaardkader: true);
         var sut = CreateSut(factory);
 
-        var factuur = await sut.MaakFactuurVanOfferteAsync(offerteId);
+        var bestelbon = await sut.MaakBestelbonVanOfferteAsync(offerteId);
 
-        var lijn = Assert.Single(factuur.Lijnen, l => l.Omschrijving.StartsWith("Classic A4 zwart | standaardkader"));
+        var lijn = Assert.Single(bestelbon.Lijnen, l => l.Omschrijving.StartsWith("Classic A4 zwart | standaardkader"));
         Assert.DoesNotContain("Lijstwerk", lijn.Omschrijving);
     }
 
@@ -155,14 +155,14 @@ public class FactuurWorkflowServiceTests
     {
         await using var dbScope = await DbFactoryBuilder.CreateSqliteAsync();
         var factory = dbScope.Factory;
-        // Totalen op 0 → MaakFactuurVanOfferteAsync herberekent vanuit de DB; zonder Include van
+        // Totalen op 0 → MaakBestelbonVanOfferteAsync herberekent vanuit de DB; zonder Include van
         // KantKlaarKader zou de stukprijs wegvallen (lijnprijs 0).
         var offerteId = await SeedOfferteAsync(factory, zeroOutTotals: true, metStandaardkader: true);
         var sut = CreateSut(factory);
 
-        var factuur = await sut.MaakFactuurVanOfferteAsync(offerteId);
+        var bestelbon = await sut.MaakBestelbonVanOfferteAsync(offerteId);
 
-        var lijn = Assert.Single(factuur.Lijnen, l => l.Omschrijving.Contains("standaardkader"));
+        var lijn = Assert.Single(bestelbon.Lijnen, l => l.Omschrijving.Contains("standaardkader"));
         Assert.Equal(20m, lijn.TotaalExcl);
     }
 
@@ -181,10 +181,10 @@ public class FactuurWorkflowServiceTests
             InlegTypeLijst = nr is null ? null : new TypeLijst { Artikelnummer = nr, Levcode = "TST" }
         };
 
-        Assert.Equal(verwacht, FactuurWorkflowService.InlegOmschrijving(regel));
+        Assert.Equal(verwacht, BestelbonWorkflowService.InlegOmschrijving(regel));
     }
 
-    private static FactuurWorkflowService CreateSut(IDbContextFactory<AppDbContext> factory)
+    private static BestelbonWorkflowService CreateSut(IDbContextFactory<AppDbContext> factory)
     {
         var pricing = new PricingService(
             factory,
@@ -192,7 +192,7 @@ public class FactuurWorkflowServiceTests
             new PricingEngine(),
             NullLogger<PricingService>.Instance);
 
-        return new FactuurWorkflowService(factory, pricing, new TestAuthService());
+        return new BestelbonWorkflowService(factory, pricing, new TestAuthService());
     }
 
     private static async Task<int> SeedOfferteAsync(IDbContextFactory<AppDbContext> factory, bool createWerkBon = false, bool zeroOutTotals = false, decimal meerPrijsIncl = 0m, decimal? extraRegelKortingPct = null, bool metInleg = false, bool metStandaardkader = false)

@@ -33,7 +33,7 @@ public class StappenBalkViewModelTests
     public void Afgehaald_met_rest_toont_het_bedrag()
     {
         var vm = new StappenBalkViewModel();
-        vm.Toon(VerkoopStapResolver.Bepaal(OfferteStatus.Besteld, WerkBonStatus.Afgehaald, FactuurStatus.Geexporteerd, 26.2m), "Afrekenen", Volgende);
+        vm.Toon(VerkoopStapResolver.Bepaal(OfferteStatus.Besteld, WerkBonStatus.Afgehaald, BestelbonStatus.Geexporteerd, 26.2m), "Afrekenen", Volgende);
 
         Assert.Equal("Afgehaald — nog € 26,20 te betalen", vm.StatusTekst.Replace('.', ','));
         Assert.Equal("Afrekenen", vm.VolgendeStapTekst);
@@ -43,7 +43,7 @@ public class StappenBalkViewModelTests
     public void Afgerond_heeft_geen_volgende_stap()
     {
         var vm = new StappenBalkViewModel();
-        vm.Toon(VerkoopStapResolver.Bepaal(OfferteStatus.Betaald, WerkBonStatus.Afgehaald, FactuurStatus.Betaald, 0m), null, null);
+        vm.Toon(VerkoopStapResolver.Bepaal(OfferteStatus.Betaald, WerkBonStatus.Afgehaald, BestelbonStatus.Betaald, 0m), null, null);
 
         Assert.Equal("Afgehaald en volledig betaald", vm.StatusTekst);
         Assert.False(vm.IsVolgendeStapZichtbaar);

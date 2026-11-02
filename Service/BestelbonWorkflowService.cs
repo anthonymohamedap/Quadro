@@ -10,31 +10,31 @@ using System.Threading.Tasks;
 
 namespace QuadroApp.Service;
 
-public sealed class FactuurWorkflowService : IFactuurWorkflowService
+public sealed class BestelbonWorkflowService : IBestelbonWorkflowService
 {
     private readonly IDbContextFactory<AppDbContext> _factory;
     private readonly IPricingService _pricing;
     private readonly IAuthService _auth;
 
-    public FactuurWorkflowService(IDbContextFactory<AppDbContext> factory, IPricingService pricing, IAuthService auth)
+    public BestelbonWorkflowService(IDbContextFactory<AppDbContext> factory, IPricingService pricing, IAuthService auth)
     {
         _factory = factory;
         _pricing = pricing;
         _auth = auth;
     }
 
-    public async Task<Factuur> MaakFactuurVanOfferteAsync(int offerteId)
+    public async Task<Bestelbon> MaakBestelbonVanOfferteAsync(int offerteId)
     {
-        _auth.VereisPermissie(Security.Permissie.Factureren);
+        _auth.VereisPermissie(Security.Permissie.Bestelbonnen);
         await using var db = await _factory.CreateDbContextAsync();
 
         var offerte = await LoadOfferteAsync(db, offerteId);
-        return await GetOrCreateFactuurAsync(db, offerte, werkBonId: null);
+        return await GetOrCreateBestelbonAsync(db, offerte, werkBonId: null);
     }
 
-    public async Task<Factuur> MaakFactuurVanWerkBonAsync(int werkBonId)
+    public async Task<Bestelbon> MaakBestelbonVanWerkBonAsync(int werkBonId)
     {
-        _auth.VereisPermissie(Security.Permissie.Factureren);
+        _auth.VereisPermissie(Security.Permissie.Bestelbonnen);
         await using var db = await _factory.CreateDbContextAsync();
 
         var werkbon = await db.WerkBonnen
@@ -60,71 +60,71 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             throw new InvalidOperationException("Werkbon niet gevonden.");
 
         var offerte = werkbon.Offerte ?? throw new InvalidOperationException("Werkbon heeft geen offerte.");
-        return await GetOrCreateFactuurAsync(db, offerte, werkBonId);
+        return await GetOrCreateBestelbonAsync(db, offerte, werkBonId);
     }
 
-    public async Task<Factuur?> GetFactuurAsync(int factuurId)
+    public async Task<Bestelbon?> GetBestelbonAsync(int bestelbonId)
     {
         await using var db = await _factory.CreateDbContextAsync();
-        return await db.Facturen.Include(x => x.Lijnen.OrderBy(l => l.Sortering)).FirstOrDefaultAsync(x => x.Id == factuurId);
+        return await db.Bestelbonnen.Include(x => x.Lijnen.OrderBy(l => l.Sortering)).FirstOrDefaultAsync(x => x.Id == bestelbonId);
     }
 
-    public async Task<Factuur?> GetFactuurVoorOfferteAsync(int offerteId)
+    public async Task<Bestelbon?> GetBestelbonVoorOfferteAsync(int offerteId)
     {
         await using var db = await _factory.CreateDbContextAsync();
 
-        var factuur = await db.Facturen
+        var bestelbon = await db.Bestelbonnen
             .Include(x => x.Lijnen.OrderBy(l => l.Sortering))
             .FirstOrDefaultAsync(x => x.OfferteId == offerteId || (x.WerkBon != null && x.WerkBon.OfferteId == offerteId));
 
-        if (factuur is not null && factuur.OfferteId != offerteId)
+        if (bestelbon is not null && bestelbon.OfferteId != offerteId)
         {
-            factuur.OfferteId = offerteId;
+            bestelbon.OfferteId = offerteId;
             await db.SaveChangesAsync();
         }
 
-        return factuur;
+        return bestelbon;
     }
 
-    public async Task MarkeerKlaarVoorExportAsync(int factuurId)
+    public async Task MarkeerKlaarVoorExportAsync(int bestelbonId)
     {
-        _auth.VereisPermissie(Security.Permissie.Factureren);
+        _auth.VereisPermissie(Security.Permissie.Bestelbonnen);
         await using var db = await _factory.CreateDbContextAsync();
-        var factuur = await db.Facturen.FindAsync(factuurId) ?? throw new InvalidOperationException("Bestelbon niet gevonden.");
-        if (factuur.Status != FactuurStatus.Draft)
+        var bestelbon = await db.Bestelbonnen.FindAsync(bestelbonId) ?? throw new InvalidOperationException("Bestelbon niet gevonden.");
+        if (bestelbon.Status != BestelbonStatus.Draft)
             throw new InvalidOperationException("Alleen een open bestelbon kan klaargezet worden voor de boekhouding.");
-        if (factuur.IsVoorlopig)
+        if (bestelbon.IsVoorlopig)
             throw new InvalidOperationException("Een voorlopige bestelbon (offerte nog niet bevestigd) gaat niet naar de boekhouding.");
-        factuur.Status = FactuurStatus.KlaarVoorExport;
-        factuur.BijgewerktOp = DateTime.UtcNow;
+        bestelbon.Status = BestelbonStatus.KlaarVoorExport;
+        bestelbon.BijgewerktOp = DateTime.UtcNow;
         await db.SaveChangesAsync();
     }
 
-    public async Task MarkeerBetaaldAsync(int factuurId)
+    public async Task MarkeerBetaaldAsync(int bestelbonId)
     {
-        _auth.VereisPermissie(Security.Permissie.Factureren);
+        _auth.VereisPermissie(Security.Permissie.Bestelbonnen);
         await using var db = await _factory.CreateDbContextAsync();
-        var factuur = await db.Facturen.FindAsync(factuurId) ?? throw new InvalidOperationException("Bestelbon niet gevonden.");
-        if (factuur.Status is FactuurStatus.Geannuleerd)
+        var bestelbon = await db.Bestelbonnen.FindAsync(bestelbonId) ?? throw new InvalidOperationException("Bestelbon niet gevonden.");
+        if (bestelbon.Status is BestelbonStatus.Geannuleerd)
             throw new InvalidOperationException("Een geannuleerde bestelbon kan niet betaald worden.");
-        factuur.Status = FactuurStatus.Betaald;
-        factuur.BijgewerktOp = DateTime.UtcNow;
+        bestelbon.Status = BestelbonStatus.Betaald;
+        bestelbon.BijgewerktOp = DateTime.UtcNow;
 
         // US-42: bestelbon betaald → offerte volgt naar Betaald (in dezelfde SaveChanges = atomair).
-        await PropageerOfferteAsync(db, factuur, OfferteStatus.Betaald);
+        await PropageerOfferteAsync(db, bestelbon, OfferteStatus.Betaald);
 
         await db.SaveChangesAsync();
     }
 
     /// <summary>
-    /// US-42 — zet de bij de factuur horende offerte vooruit naar <paramref name="target"/>
+    /// US-42 — zet de bij de bestelbon horende offerte vooruit naar <paramref name="target"/>
     /// (idempotent/lenient via <see cref="OfferteStatusPropagation"/>). De offerte-id komt van
-    /// de factuur zelf of anders via de gekoppelde werkbon.
+    /// de bestelbon zelf of anders via de gekoppelde werkbon.
     /// </summary>
-    private static async Task PropageerOfferteAsync(AppDbContext db, Factuur factuur, OfferteStatus target)
+    private static async Task PropageerOfferteAsync(AppDbContext db, Bestelbon bestelbon, OfferteStatus target)
     {
-        var offerteId = factuur.OfferteId;
-        if (offerteId is null && factuur.WerkBonId is int wid)
+        var offerteId = bestelbon.OfferteId;
+        if (offerteId is null && bestelbon.WerkBonId is int wid)
         {
             offerteId = await db.WerkBonnen
                 .Where(w => w.Id == wid)
@@ -140,50 +140,50 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         }
     }
 
-    public async Task SaveDraftAsync(Factuur updated)
+    public async Task SaveDraftAsync(Bestelbon updated)
     {
-        _auth.VereisPermissie(Security.Permissie.Factureren);
+        _auth.VereisPermissie(Security.Permissie.Bestelbonnen);
         await using var db = await _factory.CreateDbContextAsync();
-        var factuur = await db.Facturen.Include(x => x.Lijnen).FirstOrDefaultAsync(x => x.Id == updated.Id)
+        var bestelbon = await db.Bestelbonnen.Include(x => x.Lijnen).FirstOrDefaultAsync(x => x.Id == updated.Id)
             ?? throw new InvalidOperationException("Bestelbon niet gevonden.");
 
-        if (factuur.Status != FactuurStatus.Draft)
+        if (bestelbon.Status != BestelbonStatus.Draft)
             throw new InvalidOperationException("Alleen een open bestelbon (nog niet afgedrukt of betaald) kan gewijzigd worden.");
 
-        factuur.OfferteId = updated.OfferteId ?? factuur.OfferteId;
-        factuur.WerkBonId = updated.WerkBonId ?? factuur.WerkBonId;
-        factuur.FactuurDatum = updated.FactuurDatum;
-        factuur.VervalDatum = updated.VervalDatum;
-        factuur.GeplandeDatum = updated.GeplandeDatum;
-        factuur.AfhaalDatum = updated.AfhaalDatum;
-        factuur.Opmerking = updated.Opmerking;
-        factuur.AangenomenDoorInitialen = updated.AangenomenDoorInitialen;
-        factuur.VoorschotBedrag = updated.VoorschotBedrag;
+        bestelbon.OfferteId = updated.OfferteId ?? bestelbon.OfferteId;
+        bestelbon.WerkBonId = updated.WerkBonId ?? bestelbon.WerkBonId;
+        bestelbon.BestelbonDatum = updated.BestelbonDatum;
+        bestelbon.VervalDatum = updated.VervalDatum;
+        bestelbon.GeplandeDatum = updated.GeplandeDatum;
+        bestelbon.AfhaalDatum = updated.AfhaalDatum;
+        bestelbon.Opmerking = updated.Opmerking;
+        bestelbon.AangenomenDoorInitialen = updated.AangenomenDoorInitialen;
+        bestelbon.VoorschotBedrag = updated.VoorschotBedrag;
 
         foreach (var lijn in updated.Lijnen.Where(l => l.Id == 0))
         {
-            lijn.FactuurId = factuur.Id;
-            lijn.Sortering = factuur.Lijnen.Count == 0 ? 1 : factuur.Lijnen.Max(x => x.Sortering) + 1;
-            db.FactuurLijnen.Add(lijn);
+            lijn.BestelbonId = bestelbon.Id;
+            lijn.Sortering = bestelbon.Lijnen.Count == 0 ? 1 : bestelbon.Lijnen.Max(x => x.Sortering) + 1;
+            db.BestelbonLijnen.Add(lijn);
         }
 
-        HerberekenTotalen(factuur);
-        factuur.BijgewerktOp = DateTime.UtcNow;
+        HerberekenTotalen(bestelbon);
+        bestelbon.BijgewerktOp = DateTime.UtcNow;
         await db.SaveChangesAsync();
     }
 
-    public async Task HerberekenTotalenAsync(int factuurId)
+    public async Task HerberekenTotalenAsync(int bestelbonId)
     {
         await using var db = await _factory.CreateDbContextAsync();
-        var factuur = await db.Facturen.Include(x => x.Lijnen).FirstOrDefaultAsync(x => x.Id == factuurId)
+        var bestelbon = await db.Bestelbonnen.Include(x => x.Lijnen).FirstOrDefaultAsync(x => x.Id == bestelbonId)
             ?? throw new InvalidOperationException("Bestelbon niet gevonden.");
-        HerberekenTotalen(factuur);
+        HerberekenTotalen(bestelbon);
         await db.SaveChangesAsync();
     }
 
-    private static List<FactuurLijn> BuildLijnen(Offerte offerte, decimal btwPct, bool vrijgesteld)
+    private static List<BestelbonLijn> BuildLijnen(Offerte offerte, decimal btwPct, bool vrijgesteld)
     {
-        var lijnen = new List<FactuurLijn>();
+        var lijnen = new List<BestelbonLijn>();
         var effectiefBtw = vrijgesteld ? 0m : btwPct;
         var sort = 1;
 
@@ -326,14 +326,14 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             : $"{o.Naam} ({kleur})";
     }
 
-    private static FactuurLijn CreateLijn(string omschrijving, decimal aantal, string eenheid, decimal prijsExcl, decimal btwPct, int sortering)
+    private static BestelbonLijn CreateLijn(string omschrijving, decimal aantal, string eenheid, decimal prijsExcl, decimal btwPct, int sortering)
     {
         // BTW = bruto − netto: bereken de incl. prijs uit de (volledige-precisie) netto
         // prijs en leid de BTW af als het verschil. Hierdoor blijft een afgesproken
         // incl.-prijs (bv. € 100) exact behouden i.p.v. te verliezen op afronding (€ 99,99).
         var excl = Math.Round(aantal * prijsExcl, 2);
         var incl = Math.Round(aantal * prijsExcl * (1m + (btwPct / 100m)), 2);
-        return new FactuurLijn
+        return new BestelbonLijn
         {
             Omschrijving = omschrijving,
             Aantal = aantal,
@@ -347,9 +347,9 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         };
     }
 
-    private static void HerberekenTotalen(Factuur factuur)
+    private static void HerberekenTotalen(Bestelbon bestelbon)
     {
-        foreach (var lijn in factuur.Lijnen)
+        foreach (var lijn in bestelbon.Lijnen)
         {
             // BTW = bruto − netto (incl. uit volledige-precisie netto), zodat een
             // afgesproken incl.-prijs exact behouden blijft (zie CreateLijn).
@@ -358,36 +358,36 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             lijn.TotaalBtw = lijn.TotaalIncl - lijn.TotaalExcl;
         }
 
-        var brutoExcl = Math.Round(factuur.Lijnen.Sum(l => l.TotaalExcl), 2);
-        var brutoBtw = Math.Round(factuur.Lijnen.Sum(l => l.TotaalBtw), 2);
+        var brutoExcl = Math.Round(bestelbon.Lijnen.Sum(l => l.TotaalExcl), 2);
+        var brutoBtw = Math.Round(bestelbon.Lijnen.Sum(l => l.TotaalBtw), 2);
 
         // US-28: korting wordt berekend op het incl.-BTW-bedrag (brutoIncl).
         // KortingBedragExcl slaat het incl.-kortingbedrag op voor weergave op de PDF.
         // De effectieve BTW-factor wordt afgeleid van de lijnen zodat geen aparte
-        // BtwPercent-kolom nodig is op Factuur — werkt ook correct bij gemengde tarieven
+        // BtwPercent-kolom nodig is op Bestelbon — werkt ook correct bij gemengde tarieven
         // en BTW-vrijstelling (btwFactor = 0 → TotaalExclBtw = TotaalInclBtw).
-        if (factuur.KortingPct > 0m && brutoExcl > 0m)
+        if (bestelbon.KortingPct > 0m && brutoExcl > 0m)
         {
             var brutoIncl = Math.Round(brutoExcl + brutoBtw, 2);
-            var kortingIncl = Math.Round(brutoIncl * (factuur.KortingPct / 100m), 2);
+            var kortingIncl = Math.Round(brutoIncl * (bestelbon.KortingPct / 100m), 2);
             if (kortingIncl > brutoIncl) kortingIncl = brutoIncl;
 
             // Gewogen gemiddelde BTW-factor over alle lijnen.
             var btwFactor = brutoExcl > 0m ? brutoBtw / brutoExcl : 0m;
 
-            factuur.KortingBedragExcl = kortingIncl;            // incl.-bedrag bewaard voor PDF (US-28)
-            factuur.TotaalInclBtw     = Math.Round(brutoIncl - kortingIncl, 2);
-            factuur.TotaalExclBtw     = btwFactor > 0m
-                ? Math.Round(factuur.TotaalInclBtw / (1m + btwFactor), 2)
-                : factuur.TotaalInclBtw;
-            factuur.TotaalBtw         = factuur.TotaalInclBtw - factuur.TotaalExclBtw;
+            bestelbon.KortingBedragExcl = kortingIncl;            // incl.-bedrag bewaard voor PDF (US-28)
+            bestelbon.TotaalInclBtw     = Math.Round(brutoIncl - kortingIncl, 2);
+            bestelbon.TotaalExclBtw     = btwFactor > 0m
+                ? Math.Round(bestelbon.TotaalInclBtw / (1m + btwFactor), 2)
+                : bestelbon.TotaalInclBtw;
+            bestelbon.TotaalBtw         = bestelbon.TotaalInclBtw - bestelbon.TotaalExclBtw;
         }
         else
         {
-            factuur.KortingBedragExcl = 0m;
-            factuur.TotaalExclBtw = brutoExcl;
-            factuur.TotaalBtw = brutoBtw;
-            factuur.TotaalInclBtw = Math.Round(brutoExcl + brutoBtw, 2);
+            bestelbon.KortingBedragExcl = 0m;
+            bestelbon.TotaalExclBtw = brutoExcl;
+            bestelbon.TotaalBtw = brutoBtw;
+            bestelbon.TotaalInclBtw = Math.Round(brutoExcl + brutoBtw, 2);
         }
     }
 
@@ -439,9 +439,9 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         return offerte ?? throw new InvalidOperationException("Offerte niet gevonden.");
     }
 
-    private async Task<Factuur> GetOrCreateFactuurAsync(AppDbContext db, Offerte offerte, int? werkBonId)
+    private async Task<Bestelbon> GetOrCreateBestelbonAsync(AppDbContext db, Offerte offerte, int? werkBonId)
     {
-        var existing = await db.Facturen
+        var existing = await db.Bestelbonnen
             .Include(x => x.Lijnen)
             .FirstOrDefaultAsync(x => x.OfferteId == offerte.Id || (werkBonId.HasValue && x.WerkBonId == werkBonId.Value));
 
@@ -480,7 +480,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             }
 
             // Voorlopige bon van een intussen bevestigde offerte → nu het volgnummer toekennen.
-            if (existing.IsVoorlopig && existing.Status != FactuurStatus.Geannuleerd
+            if (existing.IsVoorlopig && existing.Status != BestelbonStatus.Geannuleerd
                 && await IsBevestigdAsync(db, offerte, werkBonId))
             {
                 await KenVolgnummerToeAsync(db, existing);
@@ -510,7 +510,7 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         var vrijgesteld = await IsBtwVrijgesteldAsync(db);
         var klant = offerte.Klant;
 
-        var factuur = new Factuur
+        var bestelbon = new Bestelbon
         {
             OfferteId = offerte.Id,
             WerkBonId = werkBonId,
@@ -519,32 +519,32 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
             KlantNaam = BuildKlantNaam(klant),
             KlantAdres = BuildAdres(klant),
             KlantBtwNummer = klant?.BtwNummer,
-            FactuurDatum = now,
+            BestelbonDatum = now,
             VervalDatum = now.AddDays(30),
             GeplandeDatum = offerte.GeplandeDatum,
             AfhaalDatum = offerte.AfhaalDatum,
             IsBtwVrijgesteld = vrijgesteld,
             VoorschotBedrag = offerte.VoorschotBedrag,
             KortingPct = offerte.KortingPct,   // US-23
-            Status = FactuurStatus.Draft,
+            Status = BestelbonStatus.Draft,
             Lijnen = BuildLijnen(offerte, btwPct, vrijgesteld)
         };
 
-        HerberekenTotalen(factuur);
-        db.Facturen.Add(factuur);
+        HerberekenTotalen(bestelbon);
+        db.Bestelbonnen.Add(bestelbon);
 
         if (await IsBevestigdAsync(db, offerte, werkBonId))
         {
-            await KenVolgnummerToeAsync(db, factuur);
+            await KenVolgnummerToeAsync(db, bestelbon);
         }
         else
         {
             // Prijsvoorstel vóór het akkoord van de klant: nog geen volgnummer.
-            factuur.FactuurNummer = VoorlopigNummer(offerte);
+            bestelbon.BestelbonNummer = VoorlopigNummer(offerte);
             await db.SaveChangesAsync();
         }
 
-        return factuur;
+        return bestelbon;
     }
 
     /// <summary>"V412": voorlopige bon bij offerte 412 (uniek, want één bon per offerte).</summary>
@@ -559,23 +559,23 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
 
     /// <summary>
     /// Kent het doorlopende volgnummer toe (en zet de besteldatum op vandaag).
-    /// US-38: met retry. De unieke index op (Jaar, VolgNr) / FactuurNummer laat een gelijktijdige
+    /// US-38: met retry. De unieke index op (Jaar, VolgNr) / BestelbonNummer laat een gelijktijdige
     /// toekenning falen (DbUpdateException); dan herberekenen we het volgnummer en proberen opnieuw
     /// i.p.v. stil een duplicaat nummer weg te schrijven.
     /// </summary>
-    private static async Task KenVolgnummerToeAsync(AppDbContext db, Factuur factuur)
+    private static async Task KenVolgnummerToeAsync(AppDbContext db, Bestelbon bestelbon)
     {
         var vandaag = DateTime.Today;
-        factuur.Jaar = vandaag.Year;
-        factuur.FactuurDatum = vandaag;
-        factuur.VervalDatum = vandaag.AddDays(30);
+        bestelbon.Jaar = vandaag.Year;
+        bestelbon.BestelbonDatum = vandaag;
+        bestelbon.VervalDatum = vandaag.AddDays(30);
 
         const int maxPogingen = 5;
         for (var poging = 1; ; poging++)
         {
-            factuur.VolgNr = (await db.Facturen.Where(f => f.Jaar == factuur.Jaar)
+            bestelbon.VolgNr = (await db.Bestelbonnen.Where(f => f.Jaar == bestelbon.Jaar)
                                                .MaxAsync(f => f.VolgNr) ?? 0) + 1;
-            factuur.FactuurNummer = $"{factuur.Jaar}-{factuur.VolgNr}";
+            bestelbon.BestelbonNummer = $"{bestelbon.Jaar}-{bestelbon.VolgNr}";
 
             try
             {
@@ -593,11 +593,11 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
     public async Task KenVolgnummerToeBijBevestigingAsync(int offerteId)
     {
         await using var db = await _factory.CreateDbContextAsync();
-        var factuur = await db.Facturen.FirstOrDefaultAsync(f => f.OfferteId == offerteId && f.VolgNr == null);
-        if (factuur is null || factuur.Status == FactuurStatus.Geannuleerd)
+        var bestelbon = await db.Bestelbonnen.FirstOrDefaultAsync(f => f.OfferteId == offerteId && f.VolgNr == null);
+        if (bestelbon is null || bestelbon.Status == BestelbonStatus.Geannuleerd)
             return;
 
-        await KenVolgnummerToeAsync(db, factuur);
+        await KenVolgnummerToeAsync(db, bestelbon);
     }
 
     private async Task EnsureOfferteCalculatedAsync(Offerte offerte)
@@ -615,19 +615,19 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         await _pricing.BerekenAsync(offerte);
     }
 
-    private static bool NeedsDraftPrijsRefresh(Factuur factuur)
+    private static bool NeedsDraftPrijsRefresh(Bestelbon bestelbon)
     {
         // Rebuild for Draft: prices or offerte content may have changed.
-        if (factuur.Status == FactuurStatus.Draft)
+        if (bestelbon.Status == BestelbonStatus.Draft)
             return true;
 
         // Also rebuild for KlaarVoorExport when afwerking tags are missing from
-        // stored Omschrijving — happens when the factuur was created before
+        // stored Omschrijving — happens when the bestelbon was created before
         // afwerkingen were set on the offerte, or before tagged format was added.
         // Safe: we never change the status here, only refresh the line content.
-        if (factuur.Status == FactuurStatus.KlaarVoorExport)
+        if (bestelbon.Status == BestelbonStatus.KlaarVoorExport)
         {
-            return factuur.Lijnen.Any(l =>
+            return bestelbon.Lijnen.Any(l =>
                 l.Omschrijving != null &&
                 l.Omschrijving.Contains('|') &&          // tagged format is present
                 !l.Omschrijving.Contains("glas:")   &&  // but afwerking tags are missing
@@ -641,21 +641,21 @@ public sealed class FactuurWorkflowService : IFactuurWorkflowService
         return false;
     }
 
-    private async Task RebuildDraftLijnenAsync(AppDbContext db, Factuur factuur, Offerte offerte, decimal btwPct, bool vrijgesteld)
+    private async Task RebuildDraftLijnenAsync(AppDbContext db, Bestelbon bestelbon, Offerte offerte, decimal btwPct, bool vrijgesteld)
     {
         await EnsureOfferteCalculatedAsync(offerte);
 
-        if (factuur.Lijnen.Count > 0)
-            db.FactuurLijnen.RemoveRange(factuur.Lijnen);
+        if (bestelbon.Lijnen.Count > 0)
+            db.BestelbonLijnen.RemoveRange(bestelbon.Lijnen);
 
-        factuur.Lijnen.Clear();
+        bestelbon.Lijnen.Clear();
 
-        factuur.KortingPct = offerte.KortingPct;   // US-23: korting up-to-date houden voor drafts
+        bestelbon.KortingPct = offerte.KortingPct;   // US-23: korting up-to-date houden voor drafts
 
         foreach (var lijn in BuildLijnen(offerte, btwPct, vrijgesteld))
-            factuur.Lijnen.Add(lijn);
+            bestelbon.Lijnen.Add(lijn);
 
-        HerberekenTotalen(factuur);
-        factuur.BijgewerktOp = DateTime.UtcNow;
+        HerberekenTotalen(bestelbon);
+        bestelbon.BijgewerktOp = DateTime.UtcNow;
     }
 }

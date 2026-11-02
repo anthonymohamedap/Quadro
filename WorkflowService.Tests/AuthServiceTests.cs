@@ -135,7 +135,7 @@ public class AuthServiceTests
         await sut.LoginAsync("mede", "wachtwoord2");
         Assert.False(sut.HeeftPermissie(Permissie.LeverancierVerwijderen));
         Assert.False(sut.HeeftPermissie(Permissie.PrijzenWijzigen));
-        Assert.True(sut.HeeftPermissie(Permissie.Factureren)); // dagelijkse workflow blijft
+        Assert.True(sut.HeeftPermissie(Permissie.Bestelbonnen)); // dagelijkse workflow blijft
 
         Assert.Throws<OnvoldoendeRechtenException>(() => sut.VereisPermissie(Permissie.PrijzenWijzigen));
     }
@@ -151,7 +151,7 @@ public class AuthServiceTests
         sut.Logout();
 
         Assert.Null(sut.CurrentUser);
-        Assert.False(sut.HeeftPermissie(Permissie.Factureren));
+        Assert.False(sut.HeeftPermissie(Permissie.Bestelbonnen));
     }
 
     [Fact]

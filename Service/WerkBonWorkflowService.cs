@@ -397,7 +397,7 @@ namespace QuadroApp.Service
         /// <summary>
         /// US-27: Slaat de geplande dag op als <see cref="OfferteRegel.AfhaalDatum"/> en
         /// propageert de laatste afhaaldatum over alle regels naar <see cref="Offerte.AfhaalDatum"/>,
-        /// zodat <c>FactuurWorkflowService.GetOrCreateFactuurAsync</c> de factuur automatisch bijwerkt.
+        /// zodat <c>BestelbonWorkflowService.GetOrCreateBestelbonAsync</c> de bestelbon automatisch bijwerkt.
         /// EF Core identity-mapping zorgt dat de zojuist gewijzigde regel consistent is in de
         /// Max()-berekening (change tracker heeft de bijgewerkte waarde al).
         /// </summary>

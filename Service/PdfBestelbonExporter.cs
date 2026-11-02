@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace QuadroApp.Service;
 
-public sealed class PdfFactuurExporter : IFactuurExporter
+public sealed class PdfBestelbonExporter : IBestelbonExporter
 {
     private const float Margin = 36;
     private const float ItemHeightEstimate = 140;
@@ -26,20 +26,20 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     private const string OpeningsUren =
         "Di t/m Vr 10-12 & 13-18u  —  Za 10-17u doorlopend  —  Zo & Ma gesloten";
 
-    private readonly ILogger<PdfFactuurExporter>? _logger;
+    private readonly ILogger<PdfBestelbonExporter>? _logger;
 
-    public PdfFactuurExporter(ILogger<PdfFactuurExporter>? logger = null)
+    public PdfBestelbonExporter(ILogger<PdfBestelbonExporter>? logger = null)
     {
         _logger = logger;
     }
 
     public ExportFormaat Formaat => ExportFormaat.Pdf;
 
-    public Task<ExportResult> ExportAsync(Factuur factuur, string exportFolder)
+    public Task<ExportResult> ExportAsync(Bestelbon bestelbon, string exportFolder)
     {
         Directory.CreateDirectory(exportFolder);
-        var safeNumber = factuur.FactuurNummer.Replace('/', '-');
-        // Altijd "Bestelbon-…" (ook voor oude bonnen met DocumentType "Factuur"; US-82/US-85).
+        var safeNumber = bestelbon.BestelbonNummer.Replace('/', '-');
+        // Altijd "Bestelbon-…" (US-82/US-85; oude bonnen met een ander DocumentType zijn omgezet in US-99 fase C).
         var path = Path.Combine(exportFolder, $"Bestelbon-{safeNumber}.pdf");
         _logger?.LogInformation("PDF export map gegarandeerd: {Folder}", exportFolder);
 
@@ -49,21 +49,21 @@ public sealed class PdfFactuurExporter : IFactuurExporter
         var guildLogoBytes = LoadAsset("Assets/Guild Certified Framer logo 125px.png");
 
         // US-26: de meerprijs-lijn wordt NIET afgedrukt als aparte regel. De lijn blijft
-        // in factuur.Lijnen zodat HerberekenTotalen de meerprijs wél meeneemt in de totalen.
-        var items = factuur.Lijnen
+        // in bestelbon.Lijnen zodat HerberekenTotalen de meerprijs wél meeneemt in de totalen.
+        var items = bestelbon.Lijnen
             .OrderBy(x => x.Sortering)
             .Where(lijn => !lijn.Omschrijving.Equals("Meerprijs", StringComparison.OrdinalIgnoreCase))
             .Select((lijn, index) => BuildRenderItem(lijn, index + 1))
             .ToList();
 
-        var voorschot = factuur.VoorschotBedrag;
-        var betalingen = factuur.GeregistreerdeBetalingen ?? new List<Ontvangst>();
-        var (teBetalenBijAfhalen, isBetaald) = BerekenTeBetalen(factuur);
+        var voorschot = bestelbon.VoorschotBedrag;
+        var betalingen = bestelbon.GeregistreerdeBetalingen ?? new List<Ontvangst>();
+        var (teBetalenBijAfhalen, isBetaald) = BerekenTeBetalen(bestelbon);
 
         // Bruto (vóór korting) excl./BTW uit de lijnsommen — zo toont de bon altijd de
         // volledige excl -> BTW -> incl splitsing, ook wanneer korting van toepassing is.
-        var brutoExcl = Math.Round(factuur.Lijnen.Sum(l => l.TotaalExcl), 2);
-        var brutoBtw  = Math.Round(factuur.Lijnen.Sum(l => l.TotaalBtw), 2);
+        var brutoExcl = Math.Round(bestelbon.Lijnen.Sum(l => l.TotaalExcl), 2);
+        var brutoBtw  = Math.Round(bestelbon.Lijnen.Sum(l => l.TotaalBtw), 2);
 
         var doc = Document.Create(container =>
         {
@@ -77,9 +77,9 @@ public sealed class PdfFactuurExporter : IFactuurExporter
                 {
                     col.Spacing(5);
 
-                    DrawHeader(col, factuur, logoBytes);
-                    DrawKlantHeader(col, factuur);
-                    DrawSpecialeMededeling(col, factuur.Opmerking);
+                    DrawHeader(col, bestelbon, logoBytes);
+                    DrawKlantHeader(col, bestelbon);
+                    DrawSpecialeMededeling(col, bestelbon.Opmerking);
 
                     float currentY = 300;
                     for (var i = 0; i < items.Count; i++)
@@ -87,7 +87,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
                         DrawItemBlock(col, items[i], i + 1, ref currentY);
                     }
 
-                    DrawTotals(col, brutoExcl, brutoBtw, factuur.TotaalInclBtw, voorschot, teBetalenBijAfhalen, factuur.IsBtwVrijgesteld, factuur.KortingPct, factuur.KortingBedragExcl, betalingen, isBetaald);
+                    DrawTotals(col, brutoExcl, brutoBtw, bestelbon.TotaalInclBtw, voorschot, teBetalenBijAfhalen, bestelbon.IsBtwVrijgesteld, bestelbon.KortingPct, bestelbon.KortingBedragExcl, betalingen, isBetaald);
                     DrawSignature(col);
                 });
 
@@ -110,7 +110,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     // ═══════════════════ HEADER ═══════════════════
     // US-25: alleen logo links + bonnummer/datum rechts. De Quadro-bedrijfsgegevens
     // staan enkel nog in de footer (DrawFooter), niet meer bovenaan.
-    private static void DrawHeader(ColumnDescriptor col, Factuur factuur, byte[]? logoBytes)
+    private static void DrawHeader(ColumnDescriptor col, Bestelbon bestelbon, byte[]? logoBytes)
     {
         col.Item().Row(row =>
         {
@@ -123,27 +123,27 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             row.ConstantItem(220).AlignRight().Column(right =>
             {
                 right.Spacing(2);
-                if (factuur.IsVoorlopig)
+                if (bestelbon.IsVoorlopig)
                 {
                     // Prijsvoorstel vóór het akkoord: nog geen volgnummer en nog geen besteldatum.
                     right.Item().AlignRight().Text("voorlopige bestelbon").SemiBold();
-                    right.Item().AlignRight().Text($"bij offerte {factuur.FactuurNummer.TrimStart('V')}");
-                    right.Item().AlignRight().Text($"datum {factuur.FactuurDatum:dd/MM/yyyy}");
+                    right.Item().AlignRight().Text($"bij offerte {bestelbon.BestelbonNummer.TrimStart('V')}");
+                    right.Item().AlignRight().Text($"datum {bestelbon.BestelbonDatum:dd/MM/yyyy}");
                 }
                 else
                 {
-                    right.Item().AlignRight().Text($"bestelbonnr. {factuur.FactuurNummer}").SemiBold();
-                    right.Item().AlignRight().Text($"besteldatum {factuur.FactuurDatum:dd/MM/yyyy}");
+                    right.Item().AlignRight().Text($"bestelbonnr. {bestelbon.BestelbonNummer}").SemiBold();
+                    right.Item().AlignRight().Text($"besteldatum {bestelbon.BestelbonDatum:dd/MM/yyyy}");
                 }
-                if (factuur.GeplandeDatum.HasValue)
-                    right.Item().AlignRight().Text($"gepland op: {factuur.GeplandeDatum.Value:dd/MM/yyyy}").SemiBold();
+                if (bestelbon.GeplandeDatum.HasValue)
+                    right.Item().AlignRight().Text($"gepland op: {bestelbon.GeplandeDatum.Value:dd/MM/yyyy}").SemiBold();
             });
         });
 
         col.Item().PaddingTop(2).Text(OpeningsUren).Italic().FontSize(9);
     }
 
-    // ═══════════════════ SPECIALE MEDEDELING (Factuur.Opmerking) ═══════════════════
+    // ═══════════════════ SPECIALE MEDEDELING (Bestelbon.Opmerking) ═══════════════════
     private static void DrawSpecialeMededeling(ColumnDescriptor col, string? opmerking)
     {
         if (string.IsNullOrWhiteSpace(opmerking))
@@ -162,19 +162,19 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     // ═══════════════════ KLANTBLOK ═══════════════════
     // US-25: klantadres prominent (groot) net onder het logo. Bedrijfsgegevens
     // van Quadro staan enkel in de footer.
-    private static void DrawKlantHeader(ColumnDescriptor col, Factuur factuur)
+    private static void DrawKlantHeader(ColumnDescriptor col, Bestelbon bestelbon)
     {
         col.Item().PaddingTop(6).PaddingBottom(6).Column(c =>
         {
             c.Spacing(1);
-            c.Item().Text(factuur.KlantNaam).Bold().FontSize(13);
-            if (!string.IsNullOrWhiteSpace(factuur.KlantAdres))
-                foreach (var regel in factuur.KlantAdres.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            c.Item().Text(bestelbon.KlantNaam).Bold().FontSize(13);
+            if (!string.IsNullOrWhiteSpace(bestelbon.KlantAdres))
+                foreach (var regel in bestelbon.KlantAdres.Split('\n', StringSplitOptions.RemoveEmptyEntries))
                     c.Item().Text(regel).FontSize(11);
-            if (!string.IsNullOrWhiteSpace(factuur.KlantBtwNummer))
-                c.Item().Text($"BTW: {factuur.KlantBtwNummer}").FontSize(11);
-            if (!string.IsNullOrWhiteSpace(factuur.AangenomenDoorInitialen))
-                c.Item().Text($"initialen: {factuur.AangenomenDoorInitialen}").FontSize(10);
+            if (!string.IsNullOrWhiteSpace(bestelbon.KlantBtwNummer))
+                c.Item().Text($"BTW: {bestelbon.KlantBtwNummer}").FontSize(11);
+            if (!string.IsNullOrWhiteSpace(bestelbon.AangenomenDoorInitialen))
+                c.Item().Text($"initialen: {bestelbon.AangenomenDoorInitialen}").FontSize(10);
         });
     }
 
@@ -298,16 +298,16 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     // het totaal afgetrokken. Onderaan altijd "Te betalen". (kortingBedragIncl = incl-bedrag, US-28.)
     /// <summary>US-73 — wat er nog te betalen is: totaal − voorschot − geregistreerde betalingen
     /// (nooit negatief). Betaald = niets meer open én er is iets betaald, of de bestelbon staat op
-    /// <see cref="FactuurStatus.Betaald"/> (ook oude bonnen die zonder betalingsregels betaald werden).</summary>
-    public static (decimal TeBetalen, bool IsBetaald) BerekenTeBetalen(Factuur factuur)
+    /// <see cref="BestelbonStatus.Betaald"/> (ook oude bonnen die zonder betalingsregels betaald werden).</summary>
+    public static (decimal TeBetalen, bool IsBetaald) BerekenTeBetalen(Bestelbon bestelbon)
     {
-        var betaald = (factuur.GeregistreerdeBetalingen ?? new List<Ontvangst>()).Sum(b => b.BedragIncl);
-        var rest = Math.Max(0m, Math.Round(factuur.TotaalInclBtw - factuur.VoorschotBedrag - betaald, 2));
+        var betaald = (bestelbon.GeregistreerdeBetalingen ?? new List<Ontvangst>()).Sum(b => b.BedragIncl);
+        var rest = Math.Max(0m, Math.Round(bestelbon.TotaalInclBtw - bestelbon.VoorschotBedrag - betaald, 2));
 
-        if (factuur.Status == FactuurStatus.Betaald)
+        if (bestelbon.Status == BestelbonStatus.Betaald)
             return (0m, true);
 
-        var isBetaald = rest == 0m && (betaald > 0m || factuur.VoorschotBedrag > 0m);
+        var isBetaald = rest == 0m && (betaald > 0m || bestelbon.VoorschotBedrag > 0m);
         return (rest, isBetaald);
     }
 
@@ -430,7 +430,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
     }
 
     // ═══════════════════ BuildRenderItem — tagged parsing ═══════════════════
-    private static RenderItem BuildRenderItem(FactuurLijn lijn, int index, string? afhalenOp = null)
+    private static RenderItem BuildRenderItem(BestelbonLijn lijn, int index, string? afhalenOp = null)
     {
         var parts = lijn.Omschrijving
             .Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
@@ -519,11 +519,11 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             }
         }
 
-        // "Lijstwerk volgens bestelbon." fallback removed — not needed on factuur.
+        // "Lijstwerk volgens bestelbon." fallback removed — not needed on bestelbon.
 
         // US-68/US-80: standaardkader-lijn: "Standaardkader <naam – omschrijving>"; de afmeting
         // (indien ingegeven) staat achter de markering en is hierboven al uitgelezen.
-        var isStandaardkader = FactuurWorkflowService.IsStandaardkaderSegment(dimsPart);
+        var isStandaardkader = BestelbonWorkflowService.IsStandaardkaderSegment(dimsPart);
         if (isStandaardkader && !string.IsNullOrWhiteSpace(artikelnummer))
             artikelnummer = $"Standaardkader {artikelnummer}";
 
@@ -532,7 +532,7 @@ public sealed class PdfFactuurExporter : IFactuurExporter
             ? titel
             : !string.IsNullOrWhiteSpace(artikelnummer) ? artikelnummer : $"Werkstuk {index}";
 
-        // Per-regel AfhaalDatum heeft voorrang op factuur-niveau datum
+        // Per-regel AfhaalDatum heeft voorrang op bestelbon-niveau datum
         var effectiefAfhalen = regelAfhaalOp ?? afhalenOp;
 
         return new RenderItem(

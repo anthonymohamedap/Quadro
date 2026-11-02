@@ -120,41 +120,41 @@ public class OfferteStatusSyncTests
         await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
         var factory = scope.Factory;
 
-        int offerteId, factuurId;
+        int offerteId, bestelbonId;
         await using (var db = await factory.CreateDbContextAsync())
         {
             var offerte = new Offerte { Datum = DateTime.UtcNow, Status = OfferteStatus.Besteld, TotaalInclBtw = 100m };
             db.Offertes.Add(offerte);
             await db.SaveChangesAsync();
 
-            var factuur = new Factuur
+            var bestelbon = new Bestelbon
             {
                 OfferteId = offerte.Id,
                 Jaar = 2026,
                 VolgNr = 1,
-                FactuurNummer = "B2026-0001",
-                Status = FactuurStatus.KlaarVoorExport,
+                BestelbonNummer = "B2026-0001",
+                Status = BestelbonStatus.KlaarVoorExport,
                 KlantNaam = "Test",
-                FactuurDatum = DateTime.UtcNow,
+                BestelbonDatum = DateTime.UtcNow,
                 VervalDatum = DateTime.UtcNow
             };
-            db.Facturen.Add(factuur);
+            db.Bestelbonnen.Add(bestelbon);
             await db.SaveChangesAsync();
 
             offerteId = offerte.Id;
-            factuurId = factuur.Id;
+            bestelbonId = bestelbon.Id;
         }
 
-        var sut = new FactuurWorkflowService(
+        var sut = new BestelbonWorkflowService(
             factory,
             new PricingService(factory, new FixedPricing(), new PricingEngine(),
                 NullLogger<PricingService>.Instance),
             new TestAuthService());
 
-        await sut.MarkeerBetaaldAsync(factuurId);
+        await sut.MarkeerBetaaldAsync(bestelbonId);
 
         await using var check = await factory.CreateDbContextAsync();
-        Assert.Equal(FactuurStatus.Betaald, (await check.Facturen.FindAsync(factuurId))!.Status);
+        Assert.Equal(BestelbonStatus.Betaald, (await check.Bestelbonnen.FindAsync(bestelbonId))!.Status);
         Assert.Equal(OfferteStatus.Betaald, (await check.Offertes.FindAsync(offerteId))!.Status);
     }
 

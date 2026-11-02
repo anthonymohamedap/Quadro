@@ -94,16 +94,16 @@ namespace QuadroApp.Service
             db.OfferteArchieven.Add(archief);
             await db.SaveChangesAsync(); // archief opslaan vóór verwijdering
 
-            // ── Ontkoppel Facturen die naar deze offerte / werkbon wijzen ────────
-            // Factuur.OfferteId en WerkBonId zijn nullable met Restrict-delete;
+            // ── Ontkoppel Bestelbonnen die naar deze offerte / werkbon wijzen ────────
+            // Bestelbon.OfferteId en WerkBonId zijn nullable met Restrict-delete;
             // ze moeten op null gezet worden vóór we de offerte verwijderen.
             var werkBonId = offerte.WerkBon?.Id;
-            var facturen = await db.Facturen
+            var bestelbonnen = await db.Bestelbonnen
                 .Where(f => f.OfferteId == offerte.Id ||
                             (werkBonId != null && f.WerkBonId == werkBonId))
                 .ToListAsync();
 
-            foreach (var f in facturen)
+            foreach (var f in bestelbonnen)
             {
                 if (f.OfferteId == offerte.Id)
                     f.OfferteId = null;
@@ -111,7 +111,7 @@ namespace QuadroApp.Service
                     f.WerkBonId = null;
             }
 
-            if (facturen.Count > 0)
+            if (bestelbonnen.Count > 0)
                 await db.SaveChangesAsync();
 
             // ── Verwijder originele offerte (cascade verwijdert regels/werkbon/taken) ──

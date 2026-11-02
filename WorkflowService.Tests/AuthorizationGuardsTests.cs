@@ -46,12 +46,12 @@ public class AuthorizationGuardsTests
     }
 
     [Fact]
-    public async Task Factuur_maken_vereist_recht()
+    public async Task Bestelbon_maken_vereist_recht()
     {
         var factory = DbFactoryBuilder.CreateInMemoryFactory();
         // pricing wordt niet bereikt: de permissie-check gooit als eerste.
-        var sut = new FactuurWorkflowService(factory, null!, Deny());
+        var sut = new BestelbonWorkflowService(factory, null!, Deny());
 
-        await Assert.ThrowsAsync<OnvoldoendeRechtenException>(() => sut.MaakFactuurVanOfferteAsync(1));
+        await Assert.ThrowsAsync<OnvoldoendeRechtenException>(() => sut.MaakBestelbonVanOfferteAsync(1));
     }
 }

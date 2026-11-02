@@ -12,7 +12,7 @@ namespace QuadroApp.Service;
 
 /// <summary>
 /// Genereert een A4 PDF van de weekwerklijst (gegroepeerd per klant).
-/// Gebruikt QuestPDF — zelfde aanpak als PdfFactuurExporter.
+/// Gebruikt QuestPDF — zelfde aanpak als PdfBestelbonExporter.
 /// </summary>
 public sealed class PdfWeekLijstExporter
 {
@@ -253,7 +253,7 @@ public sealed class PdfWeekLijstExporter
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ASSET LOADER (zelfde als PdfFactuurExporter)
+    // ASSET LOADER (zelfde als PdfBestelbonExporter)
     // ══════════════════════════════════════════════════════════════════════════
     private static byte[]? LoadAsset(string relativePath)
     {

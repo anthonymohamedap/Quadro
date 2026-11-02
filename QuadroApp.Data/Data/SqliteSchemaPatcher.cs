@@ -132,14 +132,19 @@ public static class SqliteSchemaPatcher
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Offertes\" ADD COLUMN \"RowVersion\" BLOB NULL");
 
-        if (!await ColumnExistsAsync(conn, "Facturen", "GeplandeDatum"))
+        // US-99 fase C: "Facturen" heet na de migratie HernoemFactuurNaarBestelbon "Bestelbonnen".
+        // De healer brengt enkel oude databases naar de Baseline-vorm (met "Facturen"); is de tabel
+        // al hernoemd, dan zijn deze kolommen er gegarandeerd en mag hier niets meer gebeuren.
+        var heeftOudeBestelbonTabel = await TableExistsAsync(conn, "Facturen");
+
+        if (heeftOudeBestelbonTabel && !await ColumnExistsAsync(conn, "Facturen", "GeplandeDatum"))
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Facturen\" ADD COLUMN \"GeplandeDatum\" TEXT NULL");
 
-        if (!await ColumnExistsAsync(conn, "Facturen", "KortingPct"))
+        if (heeftOudeBestelbonTabel && !await ColumnExistsAsync(conn, "Facturen", "KortingPct"))
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Facturen\" ADD COLUMN \"KortingPct\" TEXT NOT NULL DEFAULT '0'");
-        if (!await ColumnExistsAsync(conn, "Facturen", "KortingBedragExcl"))
+        if (heeftOudeBestelbonTabel && !await ColumnExistsAsync(conn, "Facturen", "KortingBedragExcl"))
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Facturen\" ADD COLUMN \"KortingBedragExcl\" TEXT NOT NULL DEFAULT '0'");
 
@@ -170,7 +175,7 @@ WHERE NOT EXISTS (
         if (!await ColumnExistsAsync(conn, "Offertes", "AfhaalDatum"))
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Offertes\" ADD COLUMN \"AfhaalDatum\" TEXT NULL");
-        if (!await ColumnExistsAsync(conn, "Facturen", "AfhaalDatum"))
+        if (heeftOudeBestelbonTabel && !await ColumnExistsAsync(conn, "Facturen", "AfhaalDatum"))
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Facturen\" ADD COLUMN \"AfhaalDatum\" TEXT NULL");
         if (!await ColumnExistsAsync(conn, "OfferteRegels", "AfhaalDatum"))
@@ -252,8 +257,8 @@ CREATE TABLE IF NOT EXISTS ""VoorraadAlerts"" (
         await db.Database.ExecuteSqlRawAsync(
             @"CREATE INDEX IF NOT EXISTS ""IX_VoorraadAlerts_TypeLijstId"" ON ""VoorraadAlerts"" (""TypeLijstId"")");
 
-        // Factuur-schema patches (voorheen FactuurSchemaUpgrade)
-        await FactuurSchemaUpgrade.EnsureAsync(db);
+        // Bestelbon-schema patches op de oude tabel "Facturen" (doet niets meer na US-99 fase C)
+        await BestelbonSchemaUpgrade.EnsureAsync(db);
 #pragma warning restore EF1002
     }
 

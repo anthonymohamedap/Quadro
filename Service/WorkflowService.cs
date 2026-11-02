@@ -16,29 +16,29 @@ namespace QuadroApp.Service
         private readonly IDbContextFactory<AppDbContext> _factory;
         private readonly ILogger<WorkflowService> _logger;
         private readonly IToastService _toast;
-        private readonly IFactuurWorkflowService _factuurWorkflow;
+        private readonly IBestelbonWorkflowService _bestelbonWorkflow;
         private readonly IStockService _stock;
         private readonly IWerkBonArchiefService _archief;
 
-        private sealed class NoOpFactuurWorkflowService : IFactuurWorkflowService
+        private sealed class NoOpBestelbonWorkflowService : IBestelbonWorkflowService
         {
-            public Task<Factuur> MaakFactuurVanOfferteAsync(int offerteId) =>
-                Task.FromResult(new Factuur { OfferteId = offerteId });
+            public Task<Bestelbon> MaakBestelbonVanOfferteAsync(int offerteId) =>
+                Task.FromResult(new Bestelbon { OfferteId = offerteId });
 
-            public Task<Factuur> MaakFactuurVanWerkBonAsync(int werkBonId) =>
-                Task.FromResult(new Factuur { WerkBonId = werkBonId });
+            public Task<Bestelbon> MaakBestelbonVanWerkBonAsync(int werkBonId) =>
+                Task.FromResult(new Bestelbon { WerkBonId = werkBonId });
 
-            public Task<Factuur?> GetFactuurAsync(int factuurId) => Task.FromResult<Factuur?>(null);
+            public Task<Bestelbon?> GetBestelbonAsync(int bestelbonId) => Task.FromResult<Bestelbon?>(null);
 
-            public Task<Factuur?> GetFactuurVoorOfferteAsync(int offerteId) => Task.FromResult<Factuur?>(null);
+            public Task<Bestelbon?> GetBestelbonVoorOfferteAsync(int offerteId) => Task.FromResult<Bestelbon?>(null);
 
-            public Task MarkeerKlaarVoorExportAsync(int factuurId) => Task.CompletedTask;
+            public Task MarkeerKlaarVoorExportAsync(int bestelbonId) => Task.CompletedTask;
 
-            public Task MarkeerBetaaldAsync(int factuurId) => Task.CompletedTask;
+            public Task MarkeerBetaaldAsync(int bestelbonId) => Task.CompletedTask;
 
-            public Task SaveDraftAsync(Factuur factuur) => Task.CompletedTask;
+            public Task SaveDraftAsync(Bestelbon bestelbon) => Task.CompletedTask;
 
-            public Task HerberekenTotalenAsync(int factuurId) => Task.CompletedTask;
+            public Task HerberekenTotalenAsync(int bestelbonId) => Task.CompletedTask;
 
             public Task KenVolgnummerToeBijBevestigingAsync(int offerteId) => Task.CompletedTask;
         }
@@ -88,14 +88,14 @@ namespace QuadroApp.Service
             IDbContextFactory<AppDbContext> factory,
             ILogger<WorkflowService> logger,
             IToastService toast,
-            IFactuurWorkflowService factuurWorkflow,
+            IBestelbonWorkflowService bestelbonWorkflow,
             IStockService stock,
             IWerkBonArchiefService archief)
         {
             _factory        = factory        ?? throw new ArgumentNullException(nameof(factory));
             _logger         = logger         ?? throw new ArgumentNullException(nameof(logger));
             _toast          = toast          ?? throw new ArgumentNullException(nameof(toast));
-            _factuurWorkflow= factuurWorkflow ?? throw new ArgumentNullException(nameof(factuurWorkflow));
+            _bestelbonWorkflow= bestelbonWorkflow ?? throw new ArgumentNullException(nameof(bestelbonWorkflow));
             _stock          = stock          ?? throw new ArgumentNullException(nameof(stock));
             _archief        = archief        ?? throw new ArgumentNullException(nameof(archief));
         }
@@ -106,7 +106,7 @@ namespace QuadroApp.Service
             ILogger<WorkflowService> logger,
             IToastService toast)
             : this(factory, logger, toast,
-                   new NoOpFactuurWorkflowService(),
+                   new NoOpBestelbonWorkflowService(),
                    new FallbackStockService(factory, toast),
                    new NoOpWerkBonArchiefService())
         { }
@@ -115,8 +115,8 @@ namespace QuadroApp.Service
             IDbContextFactory<AppDbContext> factory,
             ILogger<WorkflowService> logger,
             IToastService toast,
-            IFactuurWorkflowService factuurWorkflow)
-            : this(factory, logger, toast, factuurWorkflow,
+            IBestelbonWorkflowService bestelbonWorkflow)
+            : this(factory, logger, toast, bestelbonWorkflow,
                    new FallbackStockService(factory, toast),
                    new NoOpWerkBonArchiefService())
         { }
@@ -125,9 +125,9 @@ namespace QuadroApp.Service
             IDbContextFactory<AppDbContext> factory,
             ILogger<WorkflowService> logger,
             IToastService toast,
-            IFactuurWorkflowService factuurWorkflow,
+            IBestelbonWorkflowService bestelbonWorkflow,
             IStockService stock)
-            : this(factory, logger, toast, factuurWorkflow, stock,
+            : this(factory, logger, toast, bestelbonWorkflow, stock,
                    new NoOpWerkBonArchiefService())
         { }
 
@@ -223,7 +223,7 @@ namespace QuadroApp.Service
 
             // Een voorlopige bestelbon (prijsvoorstel) krijgt pas bij de bevestiging zijn volgnummer.
             if (newStatus == OfferteStatus.Goedgekeurd)
-                await _factuurWorkflow.KenVolgnummerToeBijBevestigingAsync(offerteId);
+                await _bestelbonWorkflow.KenVolgnummerToeBijBevestigingAsync(offerteId);
 
             _logger.LogInformation(
                 "Offerte {OfferteId} status changed from {OldStatus} to {NewStatus} at {Timestamp}",
@@ -256,7 +256,7 @@ namespace QuadroApp.Service
             if (newStatus == WerkBonStatus.Afgewerkt)
             {
                 await _stock.ConsumeReservationsForWerkBonAsync(werkBonId);
-                await _factuurWorkflow.MaakFactuurVanWerkBonAsync(werkBonId);
+                await _bestelbonWorkflow.MaakBestelbonVanWerkBonAsync(werkBonId);
 
                 // US-42: de bestelbon bestaat nu → offerte door naar Besteld
                 // (Afgewerkt wordt overgeslagen, zoals afgesproken). Pas ná het aanmaken

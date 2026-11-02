@@ -17,16 +17,16 @@ public class OffertelijstPerFaseTests
     [InlineData(OfferteStatus.Verzonden, null, null, VerkoopFase.OpenOffertes)]
     [InlineData(OfferteStatus.Goedgekeurd, WerkBonStatus.Gepland, null, VerkoopFase.LopendeWerkbonnen)]
     [InlineData(OfferteStatus.InProductie, WerkBonStatus.InUitvoering, null, VerkoopFase.LopendeWerkbonnen)]
-    [InlineData(OfferteStatus.Besteld, WerkBonStatus.Afgewerkt, FactuurStatus.Draft, VerkoopFase.KlaarOmAfTeHalen)]
-    [InlineData(OfferteStatus.Betaald, WerkBonStatus.Afgehaald, FactuurStatus.Betaald, VerkoopFase.Afgerond)]
+    [InlineData(OfferteStatus.Besteld, WerkBonStatus.Afgewerkt, BestelbonStatus.Draft, VerkoopFase.KlaarOmAfTeHalen)]
+    [InlineData(OfferteStatus.Betaald, WerkBonStatus.Afgehaald, BestelbonStatus.Betaald, VerkoopFase.Afgerond)]
     [InlineData(OfferteStatus.Geannuleerd, null, null, VerkoopFase.Geannuleerd)]
-    public void Fase_volgt_de_stap(OfferteStatus offerte, WerkBonStatus? werkbon, FactuurStatus? bon, VerkoopFase verwacht)
+    public void Fase_volgt_de_stap(OfferteStatus offerte, WerkBonStatus? werkbon, BestelbonStatus? bon, VerkoopFase verwacht)
         => Assert.Equal(verwacht, VerkoopOverzichtService.FaseVan(VerkoopStapResolver.Bepaal(offerte, werkbon, bon, 0m)));
 
     [Fact]
     public void Afgehaald_maar_niet_betaald_staat_bij_klaar_om_af_te_halen()
         => Assert.Equal(VerkoopFase.KlaarOmAfTeHalen,
-            VerkoopOverzichtService.FaseVan(VerkoopStapResolver.Bepaal(OfferteStatus.Besteld, WerkBonStatus.Afgehaald, FactuurStatus.Geexporteerd, 26.2m)));
+            VerkoopOverzichtService.FaseVan(VerkoopStapResolver.Bepaal(OfferteStatus.Besteld, WerkBonStatus.Afgehaald, BestelbonStatus.Geexporteerd, 26.2m)));
 
     [Fact]
     public async Task Overzicht_leest_stap_afhaaldatum_en_rest_uit_de_database()
@@ -47,14 +47,14 @@ public class OffertelijstPerFaseTests
             db.Offertes.Add(afgehaald);
             await db.SaveChangesAsync();
 
-            var bon = new Factuur
+            var bon = new Bestelbon
             {
-                OfferteId = afgehaald.Id, WerkBonId = afgehaald.WerkBon!.Id, Jaar = 2026, VolgNr = 7, FactuurNummer = "2026-7",
-                KlantNaam = "Test Quadro", TotaalInclBtw = 76.20m, VoorschotBedrag = 50m, Status = FactuurStatus.Geexporteerd
+                OfferteId = afgehaald.Id, WerkBonId = afgehaald.WerkBon!.Id, Jaar = 2026, VolgNr = 7, BestelbonNummer = "2026-7",
+                KlantNaam = "Test Quadro", TotaalInclBtw = 76.20m, VoorschotBedrag = 50m, Status = BestelbonStatus.Geexporteerd
             };
-            db.Facturen.Add(bon);
+            db.Bestelbonnen.Add(bon);
             await db.SaveChangesAsync();
-            db.Ontvangsten.Add(new Ontvangst { Soort = OntvangstSoort.Betaling, FactuurId = bon.Id, OfferteId = afgehaald.Id, BedragIncl = 10m });
+            db.Ontvangsten.Add(new Ontvangst { Soort = OntvangstSoort.Betaling, BestelbonId = bon.Id, OfferteId = afgehaald.Id, BedragIncl = 10m });
             await db.SaveChangesAsync();
         }
 

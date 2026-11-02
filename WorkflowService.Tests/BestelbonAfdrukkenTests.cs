@@ -21,31 +21,31 @@ public class BestelbonAfdrukkenTests : IDisposable
         if (Directory.Exists(_map)) Directory.Delete(_map, recursive: true);
     }
 
-    private static async Task<int> MaakBonAsync(SqliteTestDatabase scope, FactuurStatus status)
+    private static async Task<int> MaakBonAsync(SqliteTestDatabase scope, BestelbonStatus status)
     {
         await using var db = await scope.Factory.CreateDbContextAsync();
-        var bon = new Factuur
+        var bon = new Bestelbon
         {
-            Jaar = 2026, VolgNr = 19, FactuurNummer = "2026-19", KlantNaam = "Test Quadro",
-            FactuurDatum = new DateTime(2026, 10, 28), VervalDatum = new DateTime(2026, 11, 27),
+            Jaar = 2026, VolgNr = 19, BestelbonNummer = "2026-19", KlantNaam = "Test Quadro",
+            BestelbonDatum = new DateTime(2026, 10, 28), VervalDatum = new DateTime(2026, 11, 27),
             TotaalInclBtw = 154.86m, VoorschotBedrag = 50m, Status = status,
-            Lijnen = { new FactuurLijn { Omschrijving = "Standaardkader C2 | titel:Trouwfoto", Aantal = 1, Sortering = 1 } }
+            Lijnen = { new BestelbonLijn { Omschrijving = "Standaardkader C2 | titel:Trouwfoto", Aantal = 1, Sortering = 1 } }
         };
-        db.Facturen.Add(bon);
+        db.Bestelbonnen.Add(bon);
         await db.SaveChangesAsync();
         return bon.Id;
     }
 
-    private static FactuurExportService Sut(SqliteTestDatabase scope)
-        => new(scope.Factory, new[] { new PdfFactuurExporter() });
+    private static BestelbonExportService Sut(SqliteTestDatabase scope)
+        => new(scope.Factory, new[] { new PdfBestelbonExporter() });
 
     [Theory]
-    [InlineData(FactuurStatus.Draft, FactuurStatus.Geexporteerd)]
-    [InlineData(FactuurStatus.KlaarVoorExport, FactuurStatus.Geexporteerd)]
-    [InlineData(FactuurStatus.Geexporteerd, FactuurStatus.Geexporteerd)]
-    [InlineData(FactuurStatus.Betaald, FactuurStatus.Betaald)]
-    [InlineData(FactuurStatus.Geannuleerd, FactuurStatus.Geannuleerd)]
-    public async Task Afdrukken_lukt_in_elke_status(FactuurStatus voor, FactuurStatus na)
+    [InlineData(BestelbonStatus.Draft, BestelbonStatus.Geexporteerd)]
+    [InlineData(BestelbonStatus.KlaarVoorExport, BestelbonStatus.Geexporteerd)]
+    [InlineData(BestelbonStatus.Geexporteerd, BestelbonStatus.Geexporteerd)]
+    [InlineData(BestelbonStatus.Betaald, BestelbonStatus.Betaald)]
+    [InlineData(BestelbonStatus.Geannuleerd, BestelbonStatus.Geannuleerd)]
+    public async Task Afdrukken_lukt_in_elke_status(BestelbonStatus voor, BestelbonStatus na)
     {
         await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
         var id = await MaakBonAsync(scope, voor);
@@ -57,7 +57,7 @@ public class BestelbonAfdrukkenTests : IDisposable
         Assert.True(File.Exists(result.BestandPad));
 
         await using var db = await scope.Factory.CreateDbContextAsync();
-        var bon = await db.Facturen.FindAsync(id);
+        var bon = await db.Bestelbonnen.FindAsync(id);
         Assert.Equal(na, bon!.Status);
         Assert.Equal(result.BestandPad, bon.ExportPad);
     }
@@ -66,7 +66,7 @@ public class BestelbonAfdrukkenTests : IDisposable
     public async Task Opnieuw_afdrukken_overschrijft_dezelfde_pdf()
     {
         await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
-        var id = await MaakBonAsync(scope, FactuurStatus.Betaald);
+        var id = await MaakBonAsync(scope, BestelbonStatus.Betaald);
 
         var eerste = await Sut(scope).AfdrukkenAsync(id, _map);
         var tweede = await Sut(scope).AfdrukkenAsync(id, _map);
@@ -78,5 +78,5 @@ public class BestelbonAfdrukkenTests : IDisposable
 
     [Fact]
     public void Vaste_map_is_Documenten_QuadroApp_Bestelbonnen()
-        => Assert.EndsWith(Path.Combine("QuadroApp", "Bestelbonnen"), FactuurExportService.BestelbonnenMap);
+        => Assert.EndsWith(Path.Combine("QuadroApp", "Bestelbonnen"), BestelbonExportService.BestelbonnenMap);
 }

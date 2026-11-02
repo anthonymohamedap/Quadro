@@ -15,16 +15,16 @@ namespace QuadroApp.Service
     {
         private static readonly Regex AfhaalTag = new(@"afhaal:(\d{4}-\d{2}-\d{2})", RegexOptions.Compiled);
 
-        public static DateTime? VroegsteAfhaalDatum(Factuur factuur)
+        public static DateTime? VroegsteAfhaalDatum(Bestelbon bestelbon)
         {
-            var perLijn = (factuur.Lijnen ?? Enumerable.Empty<FactuurLijn>())
+            var perLijn = (bestelbon.Lijnen ?? Enumerable.Empty<BestelbonLijn>())
                 .Select(l => AfhaalTag.Match(l.Omschrijving ?? string.Empty))
                 .Where(m => m.Success)
                 .Select(m => DateTime.TryParseExact(m.Groups[1].Value, "yyyy-MM-dd", CultureInfo.InvariantCulture,
                     DateTimeStyles.None, out var d) ? d : (DateTime?)null)
                 .Where(d => d.HasValue);
 
-            var alle = perLijn.Append(factuur.AfhaalDatum?.Date).Where(d => d.HasValue).ToList();
+            var alle = perLijn.Append(bestelbon.AfhaalDatum?.Date).Where(d => d.HasValue).ToList();
             return alle.Count == 0 ? null : alle.Min();
         }
 
