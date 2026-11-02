@@ -25,7 +25,7 @@ Bekende valkuilen bij het renderen:
 ## Werkwijze
 
 - Eén story per branch: `feature/usNN-korte-naam` (docs: `docs/…`, fixes los van een story: `fix/…`). Nooit rechtstreeks op `main`.
-- **Verkoopdossier (US-87 → US-95, US-102)**: branch vanaf `dev`, PR naar `dev` (niet naar `main`). `dev` gaat pas naar `main` na akkoord van Anthony. Prijslogica (`PricingEngine`) niet wijzigen. Plan + beslissingen: `docs/backlog/US-87-95_Verkoopdossier_Plan.md`, mock: `docs/backlog/mock-verkoopdossier/`.
+- **Verkoopdossier (US-87 → US-95, US-102)**: branch vanaf `dev`, PR naar `dev` (niet naar `main`). `dev` gaat pas naar `main` na akkoord van Anthony. Prijslogica (`PricingEngine`) niet wijzigen. **Functies blijven zoals nu, niets uit de huidige schermen mag verdwijnen; enkel de flow wordt duidelijker** (geen extra functies zonder akkoord). Plan + beslissingen: `docs/backlog/US-87-95_Verkoopdossier_Plan.md`, mock: `docs/backlog/mock-verkoopdossier/`.
 - Commits in het Nederlands, conventional: `feat(scope): … (US-NN)`, `fix(scope): …`, `docs(backlog): …`.
 - Stories en plannen staan in `docs/backlog/` (bv. `Sprint_2026-11_US-79-86.md`, `US-87-95_Verkoopdossier_Plan.md`). Nieuwe story = nieuw bestand of sectie daar.
 - Vóór push: `dotnet build Quadro.sln` en `dotnet test WorkflowService.Tests/WorkflowService.Tests.csproj` groen, en `dotnet list Quadro.sln package --vulnerable --include-transitive` zonder kwetsbare pakketten (CI faalt anders).

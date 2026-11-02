@@ -308,7 +308,7 @@ Alle open vragen zijn beantwoord; de oorspronkelijke vragen staan hieronder ter 
 | 4 | Printer en exemplaren | **Printvenster van het systeem**: voorbeeld in de app, daarna het gewone printvenster (macOS/Windows). Geen printerkeuze in de app. |
 | 5 | Bestelbon bij overslaan | **Pas bij "Klaar"**. Alleen als Bestelling én Productie overgeslagen worden, komt de bestelbon meteen. |
 | 6 | Afhaaldatum vóór besteldatum | Al opgelost in US-81 (waarschuwing) en US-96 (niet plannen in het verleden). |
-| 7 | Verzonden | Vervallen: de handmatige statusknoppen zijn weg sinds US-103. |
+| 7 | Verzonden | **Blijft zoals nu**: "→ Verzonden" en "↩ Concept" bestaan nog zolang er geen werkbon is (US-103 haalde enkel het terugzetten ná de werkbon weg). In het dossier staan ze in het menu ⋯. |
 | 8 | Werkbonvenster | **Verdwijnt na de test door Veerle**: eerst het dossier naast de oude schermen (fase B), pas na haar akkoord weg (US-95). |
 | 9 | Annuleren na Klaar | **Ja, iedereen**, met verplichte reden. De bestelbon wordt "Geannuleerd"; het nummer blijft bestaan voor de boekhouding. Transitietabel uitbreiden (Afgewerkt/Besteld → Geannuleerd). |
 | 10 | — | Beslist: volgnummer pas na bevestiging. |
@@ -334,6 +334,19 @@ Verder:
 - **Prijslogica blijft exact zoals nu** (`PricingEngine` niet wijzigen): afgesproken prijs en meerprijs ingegeven incl. btw; extra kost en standaardkaderprijs excl.; meerprijs niet als aparte regel op de bestelbon (US-26), wel in het totaal; korting op totaal ook over inlijstingen met een afgesproken prijs. Het dossier verandert enkel de schermen (o.a. een paneel "Prijsopbouw" dat de bestaande berekening toont).
 
 Mock: `docs/backlog/mock-verkoopdossier/` (HTML, in de browser openen).
+
+### Grondregel (Anthony, 02/11/2026)
+
+**De functies veranderen niet; enkel de flow wordt duidelijker en logischer.** Niets uit de huidige versie mag verdwijnen en er komt niet te veel extra bij. Elk veld en elke knop van de huidige schermen (offerte, werkbon, planning, bestelbon) moet in het dossier terug te vinden zijn. De mock van stap 1 is daarom herzien: alle velden van `OfferteView` (o.a. inleg B × H en inleg nr., 6 afwerkingen met type + variant, afwerkingscode Toepassen/Genereren, ✏/📋 bij de lijst, afhaaldatum en opmerking per regel, prijs deze inlijsting) staan erin; toevoegingen die er vandaag niet zijn (prijsopbouw-paneel, extra werk/extra kost op het scherm, eerdere verkopen, verkoop dupliceren, heropenen) zijn eruit.
+
+**Indeling stap 1** (Anthony, 02/11): links **"Inlijsting details"** (vroeger "Regel details": duidelijker voor de gebruiker), rechts klant, inlijstingen, prijsaanpassingen/voorschot en totalen.
+
+### Stap 2 Werkbon (02/11/2026)
+
+- **Offerte aanpassen na het akkoord**: ja, zoals nu ("Offerte aanpassen…" opent stap 1; "Prijzen herberekenen" vraagt bevestiging; werkbon, planning en reservaties volgen).
+- **In productie**: met de knop "Start productie", of vanzelf wanneer de **weeklijst** van die week wordt afgedrukt (alle volledig geplande verkopen op die lijst). Inplannen alleen zet de offerte niet meer op In productie.
+- **Start productie zonder volledige planning**: nee. Verplicht: alle inlijstingen gepland en een afhaaldatum. Stap overslaan kan daarom enkel rechtstreeks naar "Klaar".
+- Planning blijft zoals nu (8 u/dag, niet in het verleden, Plan op dag / Plan per regel / slepen, herplannen, taak verwijderen, afhaaldatum = laatste plandag, weeklijst).
 
 ### Werkwijze (02/11/2026)
 
