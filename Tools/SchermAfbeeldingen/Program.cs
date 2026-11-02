@@ -49,6 +49,7 @@ static class Schermen
         ["offerte-1b-verzonden"] = f => OfferteAsync(f, 418),
         ["offerte-2-bevestigd"] = f => OfferteAsync(f, 412),
         ["offerte-3-afgerond"] = f => OfferteAsync(f, 398),
+        ["offerte-4-overgeslagen"] = OvergeslagenAsync,
         ["offertelijst"] = f => OffertelijstAsync(f, VerkoopFase.OpenOffertes),
         ["offertelijst-werkbonnen"] = f => OffertelijstAsync(f, VerkoopFase.LopendeWerkbonnen),
         ["bestelbonnen"] = BestelbonnenAsync,
@@ -111,6 +112,21 @@ static class Schermen
         await vm.LoadAsync(id);
         await Task.Delay(300);
         return new OfferteView { DataContext = vm };
+    }
+
+    /// <summary>US-87 — verkoop 412 met overgeslagen stappen (standaardkader uit voorraad): Klaar om af te halen.</summary>
+    static async Task<Control> OvergeslagenAsync(IDbContextFactory<AppDbContext> f)
+    {
+        await using (var db = await f.CreateDbContextAsync())
+        {
+            var offerte = await db.Offertes.Include(o => o.WerkBon).SingleAsync(o => o.OfferteNummer == 412);
+            offerte.Status = OfferteStatus.Besteld;
+            offerte.OvergeslagenStappen = VerkoopStapFlags.Werkbon | VerkoopStapFlags.Productie;
+            offerte.OverslaanReden = "Standaardkader uit voorraad";
+            offerte.WerkBon!.Status = WerkBonStatus.Afgewerkt;
+            await db.SaveChangesAsync();
+        }
+        return await OfferteAsync(f, 412);
     }
 
     static async Task<Control> OffertelijstAsync(IDbContextFactory<AppDbContext> f, VerkoopFase tabblad)

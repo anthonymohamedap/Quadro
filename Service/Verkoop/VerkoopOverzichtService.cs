@@ -165,7 +165,7 @@ namespace QuadroApp.Service.Verkoop
                     ? o.TotaalInclBtw - o.VoorschotBedrag
                     : bestelbon.TotaalInclBtw - bestelbon.VoorschotBedrag - betalingen.GetValueOrDefault(bestelbon.Id);
 
-                var stap = VerkoopStapResolver.Bepaal(o.Status, o.WerkBon?.Status, bestelbon?.Status, Math.Round(rest, 2));
+                var stap = VerkoopStapResolver.Bepaal(o.Status, o.WerkBon?.Status, bestelbon?.Status, Math.Round(rest, 2), o.OvergeslagenStappen);
 
                 var klantNaam = o.Klant is null ? "" : $"{o.Klant.Voornaam} {o.Klant.Achternaam}".Trim();
                 regels.Add(new VerkoopOverzichtRegel(

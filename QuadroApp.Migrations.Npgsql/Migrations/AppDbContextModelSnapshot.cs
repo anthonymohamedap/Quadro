@@ -762,6 +762,10 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.Property<DateTime?>("AfhaalDatum")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("AnnuleerReden")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
                     b.Property<decimal>("BtwBedrag")
                         .HasColumnType("decimal(18,2)");
 
@@ -769,6 +773,9 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("DeadlineDatum")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("GeannuleerdOp")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("GeplandeDatum")
@@ -794,6 +801,13 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
 
                     b.Property<string>("Opmerking")
                         .HasColumnType("text");
+
+                    b.Property<int>("OvergeslagenStappen")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("OverslaanReden")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
