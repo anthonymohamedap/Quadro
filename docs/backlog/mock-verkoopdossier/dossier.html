@@ -1,0 +1,177 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>Verkoopdossier mock</title>
+<style>
+:root{--dark:#444A50;--dark2:#50575e;--yellow:#F5C242;--yellowh:#FFECB3;--txt:#222;--sec:#6B7280;--bd:#E5E7EB;--bg:#F4F5F7;--card:#fff;--muted:#F9FAFB;
+--blueBg:#EFF6FF;--blue:#1D4ED8;--orBg:#FFF7ED;--or:#9A3412;--redBg:#FEF2F2;--red:#991B1B;--puBg:#FDF4FF;--pu:#7E22CE;--grBg:#ECFDF5;--gr:#047857;--grD:#16A34A}
+*{box-sizing:border-box}body{margin:0;font-family:"Inter","Segoe UI",system-ui,sans-serif;color:var(--txt);background:var(--bg);font-size:14px}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+aside{background:var(--dark);color:#fff;padding:16px 12px;display:flex;flex-direction:column;gap:2px}
+aside .logo{background:#fff;border-radius:6px;padding:8px;width:120px;margin:4px 0 18px 6px}aside .logo img{width:100%;display:block}
+aside .grp{font-size:11px;letter-spacing:.06em;color:#B8BEC4;margin:14px 10px 4px}
+aside a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#fff;text-decoration:none}
+aside a.on{background:var(--dark2);box-shadow:inset 3px 0 0 var(--yellow)}aside a .i{width:18px;text-align:center}
+main{padding:24px 28px;display:flex;flex-direction:column;gap:16px;min-width:0}
+h1{font-size:24px;margin:0}h2{font-size:16px;margin:0}.sec{color:var(--sec)}.sm{font-size:12.5px}
+.btn{border:1px solid var(--bd);background:#fff;border-radius:8px;padding:8px 14px;font-weight:600;display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.btn.pri{background:var(--yellow);border-color:var(--yellow)}.btn.dan{color:var(--red)}.btn.sm2{padding:5px 10px;font-size:12.5px}
+.card{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:16px 18px}
+.row{display:flex;gap:12px;align-items:center}.sp{flex:1}
+.pill{font-weight:700;border-radius:10px;padding:1px 9px;display:inline-block;font-size:12.5px}
+.chip{border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:600;white-space:nowrap;border:1px solid var(--bd);background:#fff}
+.chip.weg{color:#A0A6AD;text-decoration:line-through;background:var(--muted)}
+/* lijst */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.tab{padding:8px 12px;border-bottom:3px solid transparent;color:var(--sec);font-weight:600}.tab.on{border-color:var(--yellow);color:var(--txt)}
+.tab .n{background:var(--muted);border-radius:8px;padding:0 6px;margin-left:4px;font-size:12px}
+table{width:100%;border-collapse:collapse}th{text-align:left;font-size:12px;color:var(--sec);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--bd)}
+td{padding:9px 10px;border-bottom:1px solid var(--bd)}tr:hover td{background:var(--yellowh)}
+.dots{display:inline-flex;gap:3px;margin-right:8px;vertical-align:middle}.dots i{width:9px;height:9px;border-radius:50%;background:#D1D5DB;display:inline-block}
+.dots i.k{background:var(--grD)}.dots i.h{background:var(--yellow);box-shadow:0 0 0 2px #FDE68A}.dots i.o{background:repeating-linear-gradient(45deg,#D1D5DB 0 2px,#fff 2px 4px)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.kpi{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:12px 14px}.kpi b{font-size:20px;display:block}
+/* dossier */
+.kop{display:flex;align-items:flex-start;gap:16px}.kop .r{text-align:right}
+.balk{display:grid;grid-template-columns:repeat(5,1fr);gap:0;background:#fff;border:1px solid var(--bd);border-radius:14px;padding:14px 10px}
+.st{display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;text-align:center}
+.st:not(:last-child)::after{content:"";position:absolute;top:14px;left:calc(50% + 18px);right:calc(-50% + 18px);height:2px;background:#D1D5DB}
+.st.k:not(:last-child)::after{background:var(--grD)}
+.st .b{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:#E5E7EB;color:#6B7280;z-index:1}
+.st.k .b{background:var(--grD);color:#fff}.st.h .b{background:var(--yellow);color:#222;box-shadow:0 0 0 4px #FEF3C7}
+.st.o .b{background:repeating-linear-gradient(45deg,#E5E7EB 0 3px,#fff 3px 6px);color:#9CA3AF}.st.o .t{text-decoration:line-through;color:#9CA3AF}
+.st .t{font-weight:600;font-size:13px}.st .d{font-size:11.5px;color:var(--sec)}.st.h .d{color:#92400E;font-weight:600}
+.voet{position:sticky;bottom:0;background:#fff;border:1px solid var(--bd);border-radius:14px;padding:12px 16px;display:flex;gap:10px;align-items:center}
+.g2{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.inl{border:1px solid var(--bd);border-radius:10px;padding:10px 12px;background:var(--muted);margin-bottom:8px}.inl.sel{border-color:var(--yellow);background:#FFFBEB;box-shadow:0 0 0 2px #FDE68A}
+.inl .t{font-weight:600}.lbl{font-size:12px;color:var(--sec);margin-bottom:3px}
+.inp{border:1px solid var(--bd);border-radius:8px;padding:7px 10px;background:#fff}
+.seg{display:inline-flex;border:1px solid var(--bd);border-radius:8px;overflow:hidden}.seg span{padding:6px 12px;white-space:nowrap}.seg .on{background:var(--yellow);font-weight:600}
+.sum div{display:flex;justify-content:space-between;padding:3px 0}.sum .tot{font-weight:700;font-size:16px;border-top:1px solid var(--bd);margin-top:4px;padding-top:6px}
+.chk{display:flex;gap:8px;align-items:center;padding:4px 0}.chk i{width:16px;height:16px;border-radius:4px;border:1.5px solid #9CA3AF;display:inline-grid;place-items:center;font-style:normal;font-size:11px}
+.chk i.v{background:var(--grD);border-color:var(--grD);color:#fff}.chk .w{color:var(--sec);font-size:12px;margin-left:auto}
+.note{border-radius:10px;padding:10px 12px;font-size:13px}.note.i{background:var(--blueBg);color:var(--blue)}.note.ok{background:var(--grBg);color:var(--gr)}.note.w{background:#FFFBEB;color:#92400E}
+.overlay{position:fixed;inset:0;background:rgba(17,24,39,.45);display:grid;place-items:center}
+.dlg{background:#fff;border-radius:16px;width:560px;padding:20px 22px;box-shadow:0 20px 50px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:12px}
+.opt{border:1px solid var(--bd);border-radius:10px;padding:10px 12px;display:flex;gap:10px}.opt.on{border-color:var(--yellow);background:#FFFBEB}
+.rad{width:16px;height:16px;border-radius:50%;border:2px solid #9CA3AF;margin-top:2px;flex:none}.on .rad{border:5px solid #D97706}
+.tl div{display:flex;gap:10px;padding:4px 0}.tl b{width:90px;color:var(--sec);font-weight:500}
+.lock{display:inline-flex;gap:6px;align-items:center;background:var(--grBg);color:var(--gr);border-radius:999px;padding:3px 10px;font-weight:600;font-size:12.5px}
+.tag{background:#FEF3C7;color:#92400E;border-radius:6px;padding:1px 8px;font-size:12px;font-weight:600}
+</style></head><body>
+<div class="app">
+<aside>
+ <div class="logo"><img src="../../../Assets/Quadro_logo2012_ZW1.jpg"></div>
+ <a><span class="i">⌂</span>Beginscherm</a>
+ <div class="grp">VERKOOP</div>
+ <a class="on"><span class="i">◧</span>Verkopen</a><a><span class="i">🛒</span>Winkelverkopen</a><a><span class="i">▦</span>Planning</a><a><span class="i">€</span>Overzicht betalingen</a>
+ <div class="grp">ATELIER</div>
+ <a><span class="i">≡</span>Lijsten</a><a><span class="i">□</span>Standaardkaders</a><a><span class="i">⊕</span>Afwerkingen</a>
+ <div class="grp">BEHEER</div>
+ <a><span class="i">👥</span>Klanten</a><a><span class="i">🚚</span>Leveranciers</a><a><span class="i">⚙</span>Instellingen</a>
+</aside>
+<main id="m"></main></div>
+<script>
+const S=new URLSearchParams(location.search).get('s')||'lijst';
+const m=document.getElementById('m');
+const kop=(stap)=>`
+ <div class="kop">
+  <div><div class="sec sm">◀ Verkopen</div><h1>Verkoop 423 · Sofie Claes</h1>
+   <div class="sec">Leuvensestraat 12, Aarschot · 0478 12 34 56 · gestart 19/10/2026 · ${stap>5?'afgehaald op <b style="color:#222">2/11</b>':'afhalen <b style="color:#222">vandaag 2/11</b>'}</div></div>
+  <span class="sp"></span>
+  <div class="r"><div class="sec sm">Totaal</div><div style="font-size:22px;font-weight:700">€ 245,00</div><div class="pill" style="background:var(--orBg);color:var(--or)">nog te betalen € 145,00</div></div>
+  <span class="btn" title="Meer">⋯</span>
+ </div>
+ <div class="row" style="flex-wrap:wrap"><span class="sec sm">In deze verkoop:</span>
+  <span class="chip">Offerte 423</span><span class="chip ${stap<2?'weg':''}">Werkbon</span>
+  <span class="chip">${stap<2?'Bestelbon voorlopig (V423)':'Bestelbon 2026-23'}</span><span class="chip">Voorschot € 100,00</span></div>
+ <div class="balk">${[['Offerte','19/10'],['Werkbon','21/10'],['In productie','28/10'],['Klaar om af te halen','31/10'],['Afgehaald & betaald','']].map((x,i)=>{
+   const n=i+1;const c=n<stap?'k':n==stap?'h':'';return `<div class="st ${c}"><div class="b">${n<stap?'✓':n}</div><div class="t">${x[0]}</div><div class="d">${n<stap?x[1]:n==stap?'hier ben je':''}</div></div>`}).join('')}</div>`;
+
+const scr={
+lijst:()=>`
+ <div class="row"><div><h1>Verkopen</h1><div class="sec">Alle verkopen op één plek. Eén klik opent het dossier.</div></div><span class="sp"></span>
+  <span class="inp" style="width:280px;color:#9CA3AF">🔍 Zoek op nummer, klant of bestelbon</span><span class="btn pri">＋ Nieuwe verkoop</span></div>
+ <div class="kpis">
+  <div class="kpi"><span class="sec sm">Vandaag af te halen</span><b>3</b><span class="sm sec">nog te ontvangen € 345,50</span></div>
+  <div class="kpi"><span class="sec sm">Afgehaald, nog te betalen</span><b>2</b><span class="sm sec">totaal € 225,00</span></div>
+  <div class="kpi"><span class="sec sm">In productie</span><b>4</b><span class="sm sec">waarvan 1 te laat</span></div>
+  <div class="kpi"><span class="sec sm">Open offertes</span><b>6</b><span class="sm sec">2 ouder dan 14 dagen</span></div></div>
+ <div class="card" style="padding:0 0 6px">
+ <div class="tabs" style="padding:4px 12px 0">${[['Lopend',17,1],['Offerte',6],['Werkbon',3],['In productie',4],['Klaar',2],['Afhalen / te betalen',2],['Afgerond',41],['Geannuleerd',3]].map(t=>`<span class="tab ${t[2]?'on':''}">${t[0]}<span class="n">${t[1]}</span></span>`).join('')}</div>
+ <table><tr><th>Verkoop</th><th>Klant</th><th>Gestart</th><th>Fase</th><th>Afhalen</th><th style="text-align:right">Totaal</th><th style="text-align:right">Nog te betalen</th></tr>
+ ${[[423,'Sofie Claes','19/10',[2,2,2,2,1],'Afgehaald — nog te betalen','vandaag',245,145],
+    [421,'Marleen Peeters','16/10',[2,2,2,1,0],'Klaar om af te halen','vandaag',186.5,136.5],
+    [422,'Luc Janssens','17/10',[2,3,3,1,0],'Klaar (standaardkader, stappen overgeslagen)','vandaag',64,64],
+    [426,'Tom Jacobs','24/10',[2,2,1,0,0],'In productie','05/11',137.5,97.5],
+    [427,'An Mertens','26/10',[2,1,0,0,0],'Werkbon — inplannen','07/11',201,201],
+    [428,'Pieter Willems','30/10',[1,0,0,0,0],'Offerte','—',184.5,184.5],
+    [405,'Jan Wouters','02/10',[2,2,2,2,1],'Afgehaald — nog te betalen','27/10',120,80]]
+   .map(r=>`<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td class="sec">${r[2]}</td><td><span class="dots">${r[3].map(d=>`<i class="${d==2?'k':d==1?'h':d==3?'o':''}"></i>`).join('')}</span><span class="sm">${r[4]}</span></td>
+   <td>${r[5]=='vandaag'?'<b>vandaag</b>':r[5]}</td><td style="text-align:right">€ ${r[6].toFixed(2).replace('.',',')}</td><td style="text-align:right">${r[7]?`<span class="pill" style="background:var(--orBg);color:var(--or)">€ ${r[7].toFixed(2).replace('.',',')}</span>`:'—'}</td></tr>`).join('')}
+ </table></div>`,
+stap1:()=>kop(1).replace('Totaal','Totaal (berekend)')+`
+ <div class="g2">
+  <div class="card"><div class="row" style="margin-bottom:10px"><h2>Inlijstingen</h2><span class="sp"></span><span class="btn sm2">＋ Inlijsting</span></div>
+   <div class="inl sel"><div class="row"><span class="t">Trouwfoto</span><span class="sp"></span><b>€ 185,00</b></div><div class="sec sm">50 × 70 cm · lijst L-2045 eik naturel · ontspiegeld glas · passe-partout wit 6 cm</div></div>
+   <div class="inl"><div class="row"><span class="t">Poster A3</span><span class="sp"></span><b>€ 60,00</b></div><div class="sec sm">Standaardkader C2 – Alu zwart 30 × 42 · gewoon glas</div></div>
+   <div class="sum" style="margin-top:12px"><div><span class="sec">Subtotaal excl. btw</span><span>€ 202,48</span></div><div><span class="sec">Btw 21 %</span><span>€ 42,52</span></div>
+    <div class="tot"><span>Totaal</span><span>€ 245,00</span></div><div><span class="sec">Voorschot ontvangen (Bancontact, 19/10)</span><span>− € 100,00</span></div><div><b>Nog te betalen</b><b>€ 145,00</b></div></div></div>
+  <div class="card"><h2 style="margin-bottom:12px">Trouwfoto</h2>
+   <div class="g3" style="grid-template-columns:2fr 1fr 1fr"><div><div class="lbl">Titel</div><div class="inp">Trouwfoto</div></div><div><div class="lbl">Breedte</div><div class="inp">50 cm</div></div><div><div class="lbl">Hoogte</div><div class="inp">70 cm</div></div></div>
+   <div style="margin:12px 0"><div class="lbl">Soort</div><span class="seg"><span class="on">Lijst op maat</span><span>Standaardkader</span></span></div>
+   <div class="lbl">Lijst</div><div class="inp" style="margin-bottom:12px">L-2045 · eik naturel 4 cm · € 38,50/m</div>
+   <div class="lbl">Afwerkingen</div><div class="row" style="flex-wrap:wrap;margin-bottom:12px"><span class="chip">Glas: ontspiegeld</span><span class="chip">Passe-partout: wit 6 cm</span><span class="chip">Rug: MDF</span><span class="chip" style="border-style:dashed">＋</span></div>
+   <div class="g3"><div><div class="lbl">Berekend</div><div class="inp">€ 192,40</div></div><div><div class="lbl">Afgesproken prijs</div><div class="inp" style="border-color:var(--yellow)">€ 185,00</div></div><div><div class="lbl">Korting</div><div class="inp">0 %</div></div></div>
+   <div class="sec sm" style="margin-top:10px">Wijzigingen worden meteen bewaard. De prijs rekent mee tot de klant akkoord gaat.</div></div>
+ </div>
+ <div class="voet"><span class="sec">Stap 1 van 5</span><span class="sp"></span><span class="btn">€ Voorschot ontvangen</span><span class="btn">🖨 Bestelbon afdrukken (prijsvoorstel)</span><span class="btn pri">Klant akkoord: Bevestigen → Werkbon ▶</span></div>`,
+stap3:()=>kop(3)+`
+ <div class="g2">
+  <div class="card"><h2 style="margin-bottom:10px">Voortgang per inlijsting</h2>
+   <div class="inl"><div class="row"><span class="t">Trouwfoto · 50 × 70</span><span class="sp"></span><span class="tag">bezig</span></div>
+    <div class="chk"><i class="v">✓</i>Lijst L-2045 besteld<span class="w">Nielsen · 22/10 · VK</span></div>
+    <div class="chk"><i class="v">✓</i>Lijst binnen<span class="w">27/10 · VK</span></div>
+    <div class="chk"><i class="v">✓</i>Ingelijst<span class="w">30/10 · KB</span></div>
+    <div class="chk"><i></i>Nagekeken</div></div>
+   <div class="inl"><div class="row"><span class="t">Poster A3 · standaardkader C2</span><span class="sp"></span><span class="lock">✓ klaar</span></div>
+    <div class="chk"><i class="v">✓</i>Uit voorraad genomen<span class="w">28/10 · VK</span></div>
+    <div class="chk"><i class="v">✓</i>Ingelijst en nagekeken<span class="w">28/10 · VK</span></div></div></div>
+  <div style="display:flex;flex-direction:column;gap:16px">
+   <div class="card"><h2 style="margin-bottom:8px">Planning</h2><div class="sec sm">Trouwfoto: di 28/10 – vr 31/10 · Poster A3: di 28/10</div><div class="row" style="margin-top:8px"><span class="btn sm2">▦ Openen in de planning</span></div></div>
+   <div class="card"><h2 style="margin-bottom:8px">Lijsten bij de leverancier</h2><div class="row sm"><span>L-2045 eik naturel · 3,2 m</span><span class="sp"></span><span class="pill" style="background:var(--grBg);color:var(--gr)">ontvangen 27/10</span></div></div>
+   <div class="card"><h2 style="margin-bottom:8px">Notitie voor het atelier</h2><div class="inp" style="height:62px;color:#555">Foto heeft een witte rand: passe-partout 2 mm over de foto laten vallen.</div></div></div>
+ </div>
+ <div class="voet"><span class="btn">◀ Vorige stap</span><span class="sec">Stap 3 van 5</span><span class="sp"></span><span class="btn">🖨 Werkbon afdrukken</span><span class="btn pri">Klaar om af te halen ▶</span><span class="sec sm">bestelbon afdrukken, klant verwittigen</span></div>`,
+stap5:()=>kop(5)+`
+ <div class="g2">
+  <div class="card"><h2 style="margin-bottom:10px">Afrekenen</h2>
+   <div class="sum"><div><span class="sec">Totaal</span><span>€ 245,00</span></div><div><span class="sec">Voorschot (Bancontact, 19/10)</span><span>− € 100,00</span></div><div><span class="sec">Al betaald</span><span>€ 0,00</span></div><div class="tot"><span>Nog te betalen</span><span>€ 145,00</span></div></div>
+   <div class="g3" style="margin-top:14px"><div><div class="lbl">Bedrag nu</div><div class="inp" style="border-color:var(--yellow)">€ 145,00</div></div>
+    <div style="grid-column:span 2"><div class="lbl">Betaalwijze</div><span class="seg"><span>Bancontact</span><span class="on">Cash</span><span>Credit card</span><span>Overschrijving</span></span></div></div>
+   <div class="g3" style="margin-top:10px"><div><div class="lbl">Ontvangen (cash)</div><div class="inp">€ 150,00</div></div><div><div class="lbl">Terug te geven</div><div class="inp" style="background:var(--grBg);color:var(--gr);font-weight:700">€ 5,00</div></div></div>
+   <div class="sec sm" style="margin-top:8px">Deel betalen mag: de rest blijft dan open en de verkoop staat bij "Nog te betalen".</div></div>
+  <div style="display:flex;flex-direction:column;gap:16px">
+   <div class="card"><h2 style="margin-bottom:8px">Meegeven</h2><div class="chk"><i class="v">✓</i>Trouwfoto 50 × 70</div><div class="chk"><i></i>Poster A3 (standaardkader C2)</div><div class="chk"><i></i>Bestelbon 2026-23 (afgedrukt)</div></div>
+   <div class="card"><h2 style="margin-bottom:8px">Betalingen in deze verkoop</h2><div class="row sm"><span>19/10 · Voorschot · Bancontact</span><span class="sp"></span><b>€ 100,00</b></div></div></div>
+ </div>
+ <div class="voet"><span class="btn">◀ Vorige stap</span><span class="sec">Stap 5 van 5</span><span class="sp"></span><span class="btn">Afgehaald, later betalen</span><span class="btn pri">Betalen en afhalen ▶</span></div>`,
+annuleren:()=>scr.stap3()+`<div class="overlay"><div class="dlg">
+  <h2 style="font-size:18px">Verkoop 423 annuleren?</h2>
+  <div class="note w">Het werk is al bezig. De werkbon en de planning vervallen, gereserveerde lijsten gaan terug naar de voorraad. Bestelbon 2026-23 wordt "Geannuleerd"; het nummer blijft bestaan voor de boekhouding.</div>
+  <div><div class="lbl">Reden (verplicht)</div><div class="inp">Klant heeft andere foto gekozen</div></div>
+  <div class="lbl" style="margin:0">Er werd een voorschot van <b style="color:#222">€ 100,00</b> betaald (Bancontact, 19/10).</div>
+  <div class="opt on"><span class="rad"></span><div><b>Voorschot terugbetalen</b><div class="sec sm">Er komt een terugbetaling van − € 100,00 bij in Overzicht betalingen.</div>
+   <div class="row" style="margin-top:6px"><span class="seg"><span class="on">Bancontact</span><span>Cash</span><span>Overschrijving</span></span></div></div></div>
+  <div class="opt"><span class="rad"></span><div><b>Voorschot laten staan</b><div class="sec sm">Bv. als annuleringskost. Het blijft geboekt als ontvangst.</div></div></div>
+  <div class="row" style="justify-content:flex-end;margin-top:4px"><span class="btn">Niet annuleren</span><span class="btn" style="background:#DC2626;border-color:#DC2626;color:#fff">Verkoop annuleren</span></div></div></div>`,
+afgerond:()=>kop(6).replace('<div class="pill" style="background:var(--orBg);color:var(--or)">nog te betalen € 145,00</div>','<span class="lock">✓ volledig betaald</span>')+`
+ <div class="note ok">Afgehaald en volledig betaald op 2/11/2026. Deze verkoop is afgerond: wat hier staat is een momentopname van dat moment en verandert niet meer, ook niet als een lijst, afwerking of klant later gewijzigd wordt.</div>
+ <div class="g2">
+  <div class="card"><h2 style="margin-bottom:8px">Verloop</h2><div class="tl sm">
+   <div><b>19/10</b>Offerte opgemaakt · voorschot € 100,00 (Bancontact)</div><div><b>21/10</b>Klant akkoord → werkbon, bestelbon 2026-23</div>
+   <div><b>22/10</b>Lijst L-2045 besteld bij Nielsen</div><div><b>28/10</b>In productie</div><div><b>31/10</b>Klaar om af te halen</div><div><b>2/11</b>Afgehaald · € 145,00 cash</div></div></div>
+  <div style="display:flex;flex-direction:column;gap:16px">
+   <div class="card"><h2 style="margin-bottom:8px">Documenten</h2><div class="row sm"><span>Bestelbon 2026-23 · betaald</span><span class="sp"></span><span class="btn sm2">🖨 Afdrukken</span></div><div class="row sm" style="margin-top:6px"><span>Werkbon 423</span><span class="sp"></span><span class="btn sm2">🖨 Afdrukken</span></div></div>
+   <div class="card"><h2 style="margin-bottom:8px">Betalingen</h2><div class="row sm"><span>19/10 · Voorschot · Bancontact</span><span class="sp"></span>€ 100,00</div><div class="row sm"><span>2/11 · Afrekening · Cash</span><span class="sp"></span>€ 145,00</div></div></div>
+ </div>
+ <div class="voet"><span class="sec">Afgerond</span><span class="sp"></span><span class="btn">＋ Nieuwe verkoop voor Sofie Claes</span></div>`
+};
+m.innerHTML=scr[S]();
+</script></body></html>
