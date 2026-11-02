@@ -81,6 +81,18 @@ namespace QuadroApp.Model.DB
         [Column(TypeName = "decimal(18,2)")]
         public decimal VoorschotBedrag { get; set; } = 0m;
 
+        /// <summary>US-87 — stappen die bewust overgeslagen werden (bv. standaardkader uit voorraad).</summary>
+        public VerkoopStapFlags OvergeslagenStappen { get; set; } = VerkoopStapFlags.Geen;
+
+        /// <summary>US-87 — reden bij het overslaan ("Standaardkader uit voorraad", …).</summary>
+        public string? OverslaanReden { get; set; }
+
+        /// <summary>US-87 — wanneer de verkoop geannuleerd werd.</summary>
+        public DateTime? GeannuleerdOp { get; set; }
+
+        /// <summary>US-87 — verplichte reden bij annuleren.</summary>
+        public string? AnnuleerReden { get; set; }
+
         // 🔹 Restbedrag (niet in DB nodig maar mag)
         [NotMapped]
         public decimal RestTeBetalen =>

@@ -162,6 +162,14 @@ Na de sprint krimpt US-87 tot datamodel + `VerkoopDossierService`, en US-89 tot 
 
 ### US-87 — Fundament: stapbepaling, datamodel, dossierservice
 
+> ✅ **Gebouwd 02/11/2026** (`feature/us87-fundament-verkoopdossier`, PR naar `dev`):
+> - Datamodel: `Offerte.OvergeslagenStappen` (`VerkoopStapFlags`: Werkbon, Productie), `OverslaanReden`, `GeannuleerdOp`, `AnnuleerReden`; migratie `Verkoopdossier` (SQLite + Npgsql, enkel AddColumn).
+> - `VerkoopStapResolver`/stappenbalk: toestand **Overgeslagen** (doorgestreept, ⤼).
+> - `VerkoopDossierService`: `WatOntbreektVoorProductieAsync`, `StartProductieAsync` (alles gepland + afhaaldatum), `ZetWeekInProductieAsync` (weeklijst afgedrukt), `MeldKlaarAsync`, `SlaOverNaarKlaarAsync` (met reden), `AnnuleerAsync` (reden + voorschot terugbetalen/houden).
+> - Gedragswijzigingen (beslist): inplannen zet de offerte niet meer op In productie (was US-51); de weeklijst afdrukken zet volledig geplande verkopen van die week op In productie; annuleren kan ook na Klaar (niet na afhalen/betalen), bestelbon gaat mee op Geannuleerd, reden bij het archief.
+> - Prijslogica en schermen ongewijzigd (behalve de stappenbalk-weergave en een melding na het afdrukken van de weeklijst). Nog niet gedaan: `StartVerkoopAsync` (nummer bij aanmaken bestaat al sinds US-81) en `RekenAfEnHaalAfAsync` (bestaat als `AfrekenenBijAfhalingAsync`, wordt in US-93 gebruikt).
+
+
 **Als** ontwikkelaar **wil ik** één plek die bepaalt in welke stap een verkoop zit en die elke stapovergang uitvoert, **zodat** offerte, werkbon en bestelbon nooit meer uit de pas lopen.
 
 Acceptatiecriteria:

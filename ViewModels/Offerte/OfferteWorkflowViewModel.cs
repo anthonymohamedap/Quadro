@@ -171,20 +171,20 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         // US-83: stap bepalen uit offerte-, werkbon- en bestelbonstatus.
         var offerte = await db.Offertes.AsNoTracking()
             .Where(o => o.Id == offerteId)
-            .Select(o => new { o.Status, o.TotaalInclBtw, o.VoorschotBedrag })
+            .Select(o => new { o.Status, o.TotaalInclBtw, o.VoorschotBedrag, o.OvergeslagenStappen })
             .FirstOrDefaultAsync();
 
         var nogTeBetalen = bestelbon is not null
             ? (await _ontvangsten.GetBetaalStandAsync(bestelbon.Id)).Rest
             : Math.Max(0m, (offerte?.TotaalInclBtw ?? 0m) - (offerte?.VoorschotBedrag ?? 0m));
 
-        ToonStappen(offerte?.Status ?? OfferteStatus.Concept, nogTeBetalen);
+        ToonStappen(offerte?.Status ?? OfferteStatus.Concept, nogTeBetalen, offerte?.OvergeslagenStappen ?? VerkoopStapFlags.Geen);
     }
 
     /// <summary>US-83 — werkt de stappenbalk en de knop voor de volgende stap bij.</summary>
-    public void ToonStappen(OfferteStatus offerteStatus, decimal nogTeBetalen)
+    public void ToonStappen(OfferteStatus offerteStatus, decimal nogTeBetalen, VerkoopStapFlags overgeslagen = VerkoopStapFlags.Geen)
     {
-        var info = VerkoopStapResolver.Bepaal(offerteStatus, GekoppeldeWerkBon?.Status, GekoppeldeBestelbon?.Status, nogTeBetalen);
+        var info = VerkoopStapResolver.Bepaal(offerteStatus, GekoppeldeWerkBon?.Status, GekoppeldeBestelbon?.Status, nogTeBetalen, overgeslagen);
         IsPrijsVast = IsPrijsVastNaBevestiging(info);
         IsAfgerond = info.IsAfgerond;
 

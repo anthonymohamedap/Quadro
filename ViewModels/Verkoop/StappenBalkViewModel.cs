@@ -12,9 +12,10 @@ public sealed record StapWeergave(int Nummer, string Titel, string Uitleg, StapT
     public bool IsKlaar => Toestand == StapToestand.Klaar;
     public bool IsHuidig => Toestand == StapToestand.Huidig;
     public bool IsNogTeDoen => Toestand == StapToestand.NogTeDoen;
+    public bool IsOvergeslagen => Toestand == StapToestand.Overgeslagen;   // US-87
 
     /// <summary>Tekst in het bolletje: een vinkje als de stap klaar is, anders het nummer.</summary>
-    public string Bolletje => IsKlaar ? "✓" : Nummer.ToString();
+    public string Bolletje => IsKlaar ? "✓" : IsOvergeslagen ? "⤼" : Nummer.ToString();
 }
 
 /// <summary>
