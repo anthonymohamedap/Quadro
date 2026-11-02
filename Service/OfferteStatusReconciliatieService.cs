@@ -61,15 +61,30 @@ public sealed class OfferteStatusReconciliatieService : IOfferteStatusReconcilia
     /// Leidt de offerte-doelstatus af uit de werkbon + bestelbon. <c>null</c> = geen productie
     /// gestart (offerte blijft zoals ze is). Alleen omhoog toepassen door de aanroeper.
     /// </summary>
+    /// <remarks>
+    /// Sinds de bestelbon als prijsvoorstel dient, bestaat er al een <b>voorlopige</b> bon
+    /// (zonder volgnummer) bij een offerte in Concept/Verzonden, en krijgt de bon zijn
+    /// volgnummer al bij "Bevestigen → Werkbon". Een bon telt daarom enkel voor "Besteld"
+    /// als het werk klaar is (werkbon Afgewerkt/Afgehaald), of — bij oude gegevens zonder
+    /// werkbon — als de bon genummerd is. Een voorlopige bon verhoogt de status nooit.
+    /// </remarks>
     public static OfferteStatus? BepaalDoelStatus(WerkBon? werkbon, Bestelbon? bestelbon)
     {
+        // Een voorlopige bon (prijsvoorstel) of geannuleerde bon telt niet mee.
+        var geldigeBon = bestelbon is { IsVoorlopig: false } && bestelbon.Status != BestelbonStatus.Geannuleerd
+            ? bestelbon
+            : null;
+
         // Bestelbon betaald → Betaald.
-        if (bestelbon is { Status: BestelbonStatus.Betaald })
+        if (geldigeBon is { Status: BestelbonStatus.Betaald })
             return OfferteStatus.Betaald;
 
-        // Bestelbon bestaat (niet geannuleerd) of werkbon afgewerkt/afgehaald → Besteld.
-        if ((bestelbon is not null && bestelbon.Status != BestelbonStatus.Geannuleerd)
-            || werkbon is { Status: WerkBonStatus.Afgewerkt or WerkBonStatus.Afgehaald })
+        // Werk klaar → Besteld.
+        if (werkbon is { Status: WerkBonStatus.Afgewerkt or WerkBonStatus.Afgehaald })
+            return OfferteStatus.Besteld;
+
+        // Oude gegevens: genummerde bon zonder werkbon → Besteld.
+        if (werkbon is null && geldigeBon is not null)
             return OfferteStatus.Besteld;
 
         // Werkbon in uitvoering → InProductie.
