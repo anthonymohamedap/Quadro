@@ -354,6 +354,13 @@ Mock: `docs/backlog/mock-verkoopdossier/` (HTML, in de browser openen).
 - "Klaar om af te halen ▶" = status Afgewerkt (nu via statuskeuze + "Opslaan status"); gevolgen zoals nu (voorraad verbruikt, bestelbon, offerte → Besteld). Status terugzetten kan niet (zoals nu).
 - "Open offerte" wordt "Offerte aanpassen…". Geen afvinklijst/initialen (bestaat vandaag niet).
 
+### Stap 4 en 5 (mock 02/11/2026)
+
+- Stap 4 = Bestelbonnen-scherm in het dossier: besteldatum, vervaldatum, initialen, opmerking, lijnen, "Bestelbon gegevens…" (met waarschuwing US-81), afdrukken in elke status, betalingen (✕, registreren, Rest betaald).
+- "Klant komt afhalen ▶" = status Afgehaald en opent het afrekenen van vandaag (US-76): bedrag, betaalwijze, datum, gesplitst betalen, Annuleren / Later betalen / Betalen en afhalen.
+- Stap 5: afgehaald met rest → betalen zoals op het Bestelbonnen-scherm; alles betaald → afgerond en vergrendeld, "Ontgrendelen" enkel beheerder (US-101). Momentopname = US-102.
+- Niet toegevoegd (bestaat vandaag niet): wisselgeld bij afrekenen, tijdlijn, "Nieuwe verkoop voor deze klant", afvinklijst "meegeven".
+
 ### Werkwijze (02/11/2026)
 
 Alle stories van het verkoopdossier (US-87 → US-95, US-102) gaan naar de branch **`dev`**: feature-branch vanaf `dev`, PR naar `dev`. Pas als Anthony (en Veerle) akkoord zijn, gaat `dev` in één keer naar `main`. Andere werk (fixes, losse stories) blijft rechtstreeks naar `main` gaan; `dev` wordt dan regelmatig bijgewerkt met `main`.
