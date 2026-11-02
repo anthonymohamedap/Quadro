@@ -370,6 +370,12 @@ Mock: `docs/backlog/mock-verkoopdossier/` (HTML, in de browser openen).
 - Menu: **Werkbonnen en Bestelbonnen blijven** tot Anthony en Veerle akkoord zijn (US-95). Geen kaartjes bovenaan (staan al op het beginscherm, US-86/105).
 - Eerste schets `dossier.html` verwijderd (bevatte toevoegingen).
 
+### Nummers (Anthony, 02/11/2026)
+
+- **Werkbon = verkoopnummer**: verkoop 423 heeft werkbon 423, overal (lijst, dossier, werkbon-PDF, weeklijst, planning). Vandaag toont de werkbonlijst "Werkbon #57" (het interne `WerkBon.Id`); dat wordt het `OfferteNummer`. Enkel weergave, geen databasewijziging.
+- **Bestelbon houdt zijn eigen volgnummer** (2026-24): wettelijk doorlopend per jaar voor de boekhouding; vóór het akkoord voorlopig V423. Waar nuttig staat erbij "bij verkoop 423".
+- Verkoopnummer = offertenummer: hoogste ooit uitgereikte nummer + 1 (`OfferteNummering`), ook over het archief.
+
 ### Werkwijze (02/11/2026)
 
 Alle stories van het verkoopdossier (US-87 → US-95, US-102) gaan naar de branch **`dev`**: feature-branch vanaf `dev`, PR naar `dev`. Pas als Anthony (en Veerle) akkoord zijn, gaat `dev` in één keer naar `main`. Andere werk (fixes, losse stories) blijft rechtstreeks naar `main` gaan; `dev` wordt dan regelmatig bijgewerkt met `main`.
