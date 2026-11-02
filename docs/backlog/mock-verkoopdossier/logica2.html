@@ -25,11 +25,11 @@ code{background:#F3F4F6;border-radius:4px;padding:0 4px;font-size:12px}
   <div class="arr">→<small>indien nodig</small></div>
   <div class="box"><b>Lijsten bestellen</b><span class="sec">te weinig voorraad → bestelling bij de leverancier</span></div>
   <div class="arr">→</div>
-  <div class="box g"><b>Start productie</b><span class="sec">werkbon "In uitvoering", offerte "In productie"</span></div>
+  <div class="box g"><b>Start productie</b><span class="sec">knop, of vanzelf bij het afdrukken van de weeklijst</span></div>
   <div class="arr">→</div>
   <div class="box"><b>Stap 3 In productie</b><span class="sec">afvinken per inlijsting</span></div>
  </div>
- <div class="flow" style="margin-top:10px"><div style="width:244px"></div><div class="box" style="width:300px"><b>Stap overslaan</b><span class="sec">⤼ naar Klaar of naar In productie, met reden</span></div><div style="width:20px"></div><div class="box r" style="width:300px"><b>Klant haakt af</b><span class="sec">⋯ → Annuleren: werkbon, planning, voorraad, leverancier, bon, voorschot</span></div></div>
+ <div class="flow" style="margin-top:10px"><div style="width:244px"></div><div class="box" style="width:300px"><b>Stap overslaan</b><span class="sec">⤼ meteen naar Klaar (bv. standaardkader uit voorraad), met reden</span></div><div style="width:20px"></div><div class="box r" style="width:300px"><b>Klant haakt af</b><span class="sec">⋯ → Annuleren: werkbon, planning, voorraad, leverancier, bon, voorschot</span></div></div>
 </div>
 
 <div class="g2">
@@ -37,7 +37,7 @@ code{background:#F3F4F6;border-radius:4px;padding:0 4px;font-size:12px}
  <table>
   <tr><td>Duur</td><td>som van de werkminuten (lijst + afwerkingen + extra werk) × aantal; minstens 15 min</td></tr>
   <tr><td>Capaciteit</td><td>8 u per dag; past het niet, dan loopt het door naar de volgende dag</td></tr>
-  <tr><td>Hoe</td><td>inlijstingen aanvinken + "Plan op [dag]" (start 9:00), of slepen naar een dag; herplannen en taak verwijderen kan</td></tr>
+  <tr><td>Hoe</td><td>inlijstingen aanvinken + "Plan op [dag]" (start 9:00), "Plan per regel", of slepen naar een dag; herplannen en taak verwijderen kan</td></tr>
   <tr><td>Verleden</td><td>niet plannen vóór vandaag (US-96)</td></tr>
   <tr><td>Afhaaldatum</td><td>wordt de <b>laatste plandag</b> (US-27, overschrijft); daarna met de hand wijzigen mag</td></tr>
   <tr><td>Weeklijst</td><td>afdrukken vanuit de planning (US-98)</td></tr>
@@ -56,17 +56,18 @@ code{background:#F3F4F6;border-radius:4px;padding:0 4px;font-size:12px}
 </div>
 
 <div class="g2">
-<div class="card"><h2>Start productie</h2>
+<div class="card"><h2>Start productie (beslist 02/11)</h2>
  <table>
-  <tr><td>Verplicht</td><td><b>afhaaldatum</b> ingevuld (beslist 02/11); anders blijft de knop grijs met uitleg</td></tr>
-  <tr><td>Waarschuwing (niet blokkerend)</td><td>niet alle inlijstingen gepland · lijst besteld maar nog niet binnen</td></tr>
+  <tr><td>Verplicht</td><td><b>alle inlijstingen gepland</b> én afhaaldatum ingevuld; anders blijft de knop grijs met uitleg</td></tr>
+  <tr><td>Wanneer</td><td>knop "Start productie", <b>of vanzelf wanneer de weeklijst van die week wordt afgedrukt</b> (US-98): alle volledig geplande verkopen op die lijst gaan naar In productie</td></tr>
+  <tr><td>Waarschuwing</td><td>lijst besteld maar nog niet binnen — starten mag wel (zoals nu)</td></tr>
   <tr><td>Gevolg</td><td>werkbon → In uitvoering, offerte → In productie, dossier naar stap 3</td></tr>
-  <tr><td style="color:var(--blue)">Verschil met nu</td><td style="color:var(--blue)">nu zet al het <b>inplannen</b> de offerte op "In productie" (US-51); in het dossier gebeurt dat pas bij "Start productie" (plan P10) — <b>open vraag 2</b></td></tr>
+  <tr><td>Verschil met nu</td><td>nu zet het <b>inplannen</b> de offerte al op In productie (US-51); dat verschuift naar het afdrukken van de weeklijst / de knop</td></tr>
  </table></div>
 <div class="card"><h2>Stap overslaan</h2>
  <table>
   <tr><td>Werkbon + In productie</td><td>→ meteen Klaar om af te halen; voorraad verbruikt; bon (bestaat al of wordt nu gemaakt)</td></tr>
-  <tr><td>Enkel inplannen</td><td>→ In productie zonder planning; afhaaldatum zelf invullen</td></tr>
+  <tr><td>Enkel inplannen</td><td><b>niet</b> mogelijk: productie vraagt een volledige planning (beslist 02/11)</td></tr>
   <tr><td>Reden</td><td>Standaardkader uit voorraad · Klant neemt meteen mee · Andere</td></tr>
   <tr><td>Stappenbalk</td><td>overgeslagen stappen gestreept</td></tr>
   <tr><td>Wanneer</td><td>vanuit stap 2 en 3</td></tr>
@@ -91,9 +92,11 @@ code{background:#F3F4F6;border-radius:4px;padding:0 4px;font-size:12px}
  </table></div>
 </div>
 
-<div class="card"><h2>Open vragen voor stap 2</h2>
- <div class="q"><b>1. Offerte aanpassen na het akkoord?</b> Nu kan je in het offertescherm na bevestigen nog inlijstingen wijzigen (+ "Prijzen herberekenen" met bevestiging). Voorstel: in het dossier een knop "Offerte aanpassen…" die stap 1 met een waarschuwing opent; werkbon, planning en reservaties volgen.</div>
- <div class="q"><b>2. Offerte pas "In productie" bij Start productie?</b> Nu doet het inplannen dat al (US-51). Het plan (P10) verschuift het naar "Start productie", zodat stap en status gelijk lopen. Akkoord, of zoals nu?</div>
- <div class="q"><b>3. Start productie zonder (volledige) planning</b> toelaten met een waarschuwing, zoals in de mock?</div>
-</div>
+<div class="card"><h2>Beslist (02/11)</h2>
+ <table>
+  <tr><td>Offerte aanpassen na akkoord</td><td><b>ja</b>, zoals nu: "Offerte aanpassen…" opent stap 1; "Prijzen herberekenen" vraagt bevestiging; werkbon, planning en reservaties volgen</td></tr>
+  <tr><td>In productie</td><td>bij het afdrukken van de weeklijst van die week (of met de knop)</td></tr>
+  <tr><td>Start zonder volledige planning</td><td><b>nee</b></td></tr>
+  <tr><td>Algemeen</td><td>functies blijven zoals nu; niets uit de huidige versie verdwijnt; enkel de flow wordt duidelijker</td></tr>
+ </table></div>
 </body></html>

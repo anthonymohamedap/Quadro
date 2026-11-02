@@ -17,24 +17,24 @@ const kalender=(sel,plan,afh=6)=>`<div class="card"><div class="row" style="marg
   <div class="kal">${dagen.map((d,i)=>{const p=plan&&plan[i];const vol=Math.min(1,d[2]+(p?p[1]:0));return `<div class="dag ${i==sel?'sel':''} ${i==0?'vd':''}"><div class="row" style="gap:4px"><b>${d[0]} ${d[1]}</b><span class="sp"></span><span class="sec sm">${Math.round(vol*8*10)/10} u</span></div>
    <div class="bar"><i style="width:${d[2]*100}%"></i>${p?`<i class="mine" style="width:${p[1]*100}%"></i>`:''}</div>
    ${p?`<div class="taak">${p[0]}</div>`:''}${i===afh?'<div class="afh">afhalen</div>':''}</div>`}).join('')}</div>
-  <div class="row sm sec" style="margin-top:8px;gap:14px"><span><i class="lg"></i> ander werk</span><span><i class="lg mine"></i> deze verkoop</span><span>max. 8 u per dag · niet in het verleden</span><span class="sp"></span><span class="btn sm2">🗓 Weeklijst afdrukken</span></div></div>`;
+  <div class="row sm sec" style="margin-top:8px;gap:14px"><span><i class="lg"></i> ander werk</span><span><i class="lg mine"></i> deze verkoop</span><span>max. 8 u per dag · niet in het verleden</span><span class="sp"></span><span class="btn sm2" title="Zet de verkopen van die week op In productie">🗓 Weeklijst afdrukken</span></div></div>`;
 
 const regels=(st)=>`<div class="card"><div class="row" style="margin-bottom:10px"><h2>Werkbon · inlijstingen</h2><span class="sp"></span><span class="sec sm">${st=='gepland'?'alles ingepland':'2 nog te plannen'}</span></div>
    <div class="inl ${st=='leeg'?'sel':''}"><div class="row"><span class="chk" style="padding:0"><i class="${st=='leeg'?'v':''}">${st=='leeg'?'✓':''}</i></span><span class="t">Trouwfoto · 50 × 70</span><span class="sp"></span><span class="sec sm">± 33 min</span></div>
     <div class="sec sm" style="margin-left:24px">L-2045 eik naturel · ontspiegeld glas · pp wit 6 cm · rug MDF</div>
-    <div class="row sm" style="margin:6px 0 0 24px;gap:8px">${st=='gepland'?'<span class="pill" style="background:var(--grBg);color:var(--gr)">gepland di 10/11</span><span class="btn sm2" style="padding:1px 8px">herplannen</span>':'<span class="pill" style="background:#F3F4F6;color:#374151">nog niet gepland</span>'}
+    <div class="row sm" style="margin:6px 0 0 24px;gap:8px">${st=='gepland'?'<span class="pill" style="background:var(--grBg);color:var(--gr)">gepland di 10/11</span><span class="btn sm2" style="padding:1px 8px">herplannen</span><span class="btn sm2" style="padding:1px 6px" title="Taak verwijderen">✕</span>':'<span class="pill" style="background:#F3F4F6;color:#374151">nog niet gepland</span>'}
      <span class="sp"></span>${st=='besteld'||st=='gepland'?'<span class="pill" style="background:var(--blueBg);color:var(--blue)">lijst besteld 2/11 · Nielsen</span>':'<span class="pill" style="background:var(--orBg);color:var(--or)">lijst: 3,1 m nodig · 1,8 m voorraad</span><span class="btn sm2" style="padding:1px 8px;border-color:var(--yellow)">Bestellen…</span>'}</div></div>
    <div class="inl ${st=='leeg'?'sel':''}"><div class="row"><span class="chk" style="padding:0"><i class="${st=='leeg'?'v':''}">${st=='leeg'?'✓':''}</i></span><span class="t">Poster A3 · standaardkader C2</span><span class="sp"></span><span class="sec sm">± 15 min</span></div>
     <div class="sec sm" style="margin-left:24px">Alu zwart 30 × 42 · gewoon glas</div>
-    <div class="row sm" style="margin:6px 0 0 24px;gap:8px">${st=='gepland'?'<span class="pill" style="background:var(--grBg);color:var(--gr)">gepland di 10/11</span><span class="btn sm2" style="padding:1px 8px">herplannen</span>':'<span class="pill" style="background:#F3F4F6;color:#374151">nog niet gepland</span>'}
+    <div class="row sm" style="margin:6px 0 0 24px;gap:8px">${st=='gepland'?'<span class="pill" style="background:var(--grBg);color:var(--gr)">gepland di 10/11</span><span class="btn sm2" style="padding:1px 8px">herplannen</span><span class="btn sm2" style="padding:1px 6px" title="Taak verwijderen">✕</span>':'<span class="pill" style="background:#F3F4F6;color:#374151">nog niet gepland</span>'}
      <span class="sp"></span><span class="pill" style="background:var(--grBg);color:var(--gr)">uit voorraad · gereserveerd (3 over)</span></div></div>
-   ${st=='gepland'?'':`<div class="row" style="margin-top:8px"><span class="sec sm">${st=='leeg'?'2 geselecteerd · ± 48 min':'Selecteer inlijstingen en kies een dag, of sleep ze naar de kalender.'}</span><span class="sp"></span><span class="btn ${st=='leeg'?'pri':''}">Plan op di 10/11</span></div>`}
-   <div style="margin-top:12px"><div class="lbl">Notitie voor het atelier</div><div class="inp" style="color:#555">Foto heeft een witte rand: passe-partout 2 mm over de foto laten vallen.</div></div></div>`;
+   ${st=='gepland'?'':`<div class="row" style="margin-top:8px"><span class="sec sm">${st=='leeg'?'2 geselecteerd · ± 48 min':'Selecteer inlijstingen en kies een dag, of sleep ze naar de kalender.'}</span><span class="sp"></span><span class="btn">Plan per regel</span><span class="btn ${st=='leeg'?'pri':''}">Plan op di 10/11</span></div>`}
+   <div class="sec sm" style="margin-top:10px">Opmerking Trouwfoto: passe-partout 2 mm over de foto laten vallen.</div></div>`;
 
 const voet=(dis,why)=>`<div class="voet"><span class="btn">◀ Vorige stap</span><span class="sec" style="white-space:nowrap">Stap 2 van 5</span><span class="sp"></span>${why?`<span class="sm" style="color:#B91C1C;max-width:260px;text-align:right">${why}</span>`:''}<span class="btn">🖨 Werkbon afdrukken</span><span class="btn">⤼ Stap overslaan</span><span class="btn pri" ${dis?'style="opacity:.45"':''}>Start productie ▶</span></div>`;
 
 const scr={
-hoofd:()=>kop({afhaal:'<span style="color:#9CA3AF">nog niet gekozen</span> <span class="sec sm">(wordt de laatste plandag)</span>'})+`<div class="g2" style="grid-template-columns:1.25fr 1fr">${kalender(6,null,-1)}${regels('open')}</div>${voet(true,'Kies eerst een afhaaldatum (plan de inlijstingen of vul hem in)')}`,
+hoofd:()=>kop({afhaal:'<span style="color:#9CA3AF">nog niet gekozen</span> <span class="sec sm">(wordt de laatste plandag)</span>'})+`<div class="g2" style="grid-template-columns:1.25fr 1fr">${kalender(6,null,-1)}${regels('open')}</div>${voet(true,'Plan eerst alle inlijstingen (2 nog te plannen)')}`,
 inplannen:()=>kop()+`<div class="g2" style="grid-template-columns:1.25fr 1fr">${kalender(6,{6:['Trouwfoto · Poster',0.1]})}${regels('leeg')}</div>${voet()}
  <div class="toast">✓ 2 inlijstingen gepland op di 10/11 (± 48 min). Afhaaldatum wordt di 10/11 (laatste plandag) — <u>wijzigen</u></div>`,
 bestellen:()=>kop()+`<div class="g2" style="grid-template-columns:1.25fr 1fr">${kalender(6,{6:['Trouwfoto · Poster',0.1]})}${regels('gepland').replace('lijst besteld 2/11 · Nielsen','lijst: 3,1 m nodig · 1,8 m voorraad')}</div>${voet()}
@@ -52,8 +52,9 @@ start:()=>kop()+`<div class="g2" style="grid-template-columns:1.25fr 1fr">${kale
  <div class="overlay"><div class="dlg" style="width:560px">
   <h2 style="font-size:18px">Start productie?</h2>
   <div class="tl sm"><div><b>Werkbon</b><span>gaat naar "In uitvoering"; de offerte volgt naar "In productie"</span></div>
-   <div><b>Afhalen</b><span>di 10/11/2026 ✓</span></div><div><b>Planning</b><span>2 van 2 inlijstingen gepland ✓</span></div></div>
-  <div class="note w">⚠ De lijst L-2045 is besteld maar nog niet binnen (verwacht ± ma 9/11). Je kan toch starten; "lijst binnen" volgt in stap 3.</div>
+   <div><b>Planning</b><span>2 van 2 inlijstingen gepland ✓ (verplicht)</span></div><div><b>Afhalen</b><span>di 10/11/2026 ✓ (verplicht)</span></div></div>
+  <div class="note i">Gebeurt ook vanzelf wanneer de <b>weeklijst</b> van die week wordt afgedrukt.</div>
+  <div class="note w">⚠ De lijst L-2045 is besteld maar nog niet binnen (verwacht ± ma 9/11). Starten mag wel (zoals nu).</div>
   <div class="row" style="justify-content:flex-end"><span class="btn">Nog niet</span><span class="btn pri">Start productie ▶</span></div></div></div>`,
 afdrukken:()=>`<div class="pv">
   <div class="row" style="padding:12px 18px;background:#fff;border-bottom:1px solid var(--bd)"><h2>Werkbon 423 — voor het atelier</h2><span class="sp"></span><label class="sm row" style="gap:6px"><span class="chk" style="padding:0"><i></i></span>Prijzen tonen</label><span class="btn">Sluiten</span><span class="btn">⤓ Bewaren als PDF</span><span class="btn pri">🖨 Afdrukken…</span></div>
@@ -73,9 +74,8 @@ afdrukken:()=>`<div class="pv">
 overslaan:()=>kop({afhaal:'<span style="color:#9CA3AF">nog niet gekozen</span>'})+`<div class="g2" style="grid-template-columns:1.25fr 1fr">${kalender(6,null,-1)}${regels('open')}</div>${voet()}
  <div class="overlay"><div class="dlg" style="width:600px">
   <h2 style="font-size:18px">Stap overslaan</h2>
-  <div class="lbl">Wat sla je over?</div>
+  <div class="lbl">Je slaat over:</div>
   <div class="opt on"><span class="rad"></span><div><b>Werkbon én In productie → meteen Klaar om af te halen</b><div class="sec sm">Bv. standaardkader uit voorraad dat de klant meteen meeneemt. Bestelbon 2026-24 blijft; voorraad wordt verbruikt.</div></div></div>
-  <div class="opt"><span class="rad"></span><div><b>Enkel inplannen overslaan → In productie</b><div class="sec sm">Werk start meteen zonder planning; de afhaaldatum vul je dan zelf in (verplicht vóór productie).</div></div></div>
   <div><div class="lbl">Reden</div><span class="seg"><span class="on">Standaardkader uit voorraad</span><span>Klant neemt meteen mee</span><span>Andere…</span></span></div>
   <div class="lbl">Zo ziet de stappenbalk er daarna uit</div>
   <div class="row" style="gap:6px">${['✓ Offerte','⤼ Werkbon','⤼ In productie','● Klaar','○ Afgehaald'].map((t,i)=>`<span class="chip" style="${i==1||i==2?'text-decoration:line-through;color:#9CA3AF':i==3?'background:#FEF3C7;border-color:var(--yellow)':''}">${t}</span>`).join('')}</div>
@@ -101,8 +101,8 @@ terugkijken:()=>kop().replace('<div class="d">2/11</div>','<div class="d" style=
   <div class="inl"><div class="row"><span class="t">Trouwfoto</span><span class="sp"></span><b>€ 185,00</b></div><div class="sec sm">1 × 50 × 70 cm · lijst L-2045 eik naturel · ontspiegeld glas · passe-partout wit 6 cm</div></div>
   <div class="inl"><div class="row"><span class="t">Poster A3</span><span class="sp"></span><b>€ 60,00</b></div><div class="sec sm">1 × standaardkader C2 – Alu zwart 30 × 42 · gewoon glas</div></div>
   <div class="sum"><div class="tot"><span>Totaal incl. btw</span><span>€ 245,00</span></div></div></div>
-  <div class="card"><h2 style="margin-bottom:8px">Iets wijzigen na het akkoord?</h2><div class="sec sm">Vandaag kan dat nog in het offertescherm: wijzigen + "Prijzen herberekenen" (met bevestiging, US-100). De werkbon volgt de nieuwe inlijstingen.</div>
-   <div class="row" style="margin-top:10px"><span class="btn">✎ Offerte aanpassen…</span><span class="tag">open vraag</span></div></div></div>
+  <div class="card"><h2 style="margin-bottom:8px">Iets wijzigen na het akkoord?</h2><div class="sec sm">Zoals nu: wijzigen kan, met "Prijzen herberekenen" (met bevestiging, US-100). De werkbon volgt de nieuwe inlijstingen.</div>
+   <div class="row" style="margin-top:10px"><span class="btn">✎ Offerte aanpassen…</span></div></div></div>
  <div class="voet"><span class="sec">Terug gekeken · stap 1 van 5</span><span class="sp"></span><span class="btn pri">Terug naar stap 2 ▶</span></div>`
 };
 m.innerHTML=scr[S]();
