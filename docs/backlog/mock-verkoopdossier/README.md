@@ -8,6 +8,8 @@ achter de bestandsnaam.
 | `dossier.html` | `lijst` (Verkopen) · `stap1` · `stap3` · `stap5` · `annuleren` · `afgerond` |
 | `stap1.html` | `nieuw` · `leeg` · `maat` · `lijstkiezen` · `kader` · `fouten` · `voorschot` · `afdrukken` · `bevestigen` · `menu` · `annuleren` · `geannuleerd` · `prijs` |
 | `logica.html` | logica van stap 1: verloop, controles, bevestigen, prijsberekening (ongewijzigd), annuleren, beslissingen |
+| `stap2.html` | `hoofd` · `inplannen` · `bestellen` · `gepland` · `start` · `afdrukken` · `overslaan` · `annuleren` · `terugkijken` |
+| `logica2.html` | logica van stap 2: inplannen, voorraad en lijsten bestellen, start productie, overslaan, annuleren, afdrukken, open vragen |
 
 Testgegevens: verkoop 423, Sofie Claes, € 245 met € 100 voorschot. Beslissingen: zie
 `../US-87-95_Verkoopdossier_Plan.md`, sectie "Beslissingen".
