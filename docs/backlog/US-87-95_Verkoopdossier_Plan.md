@@ -201,6 +201,13 @@ Technisch: `Betaalwijze.cs` + weergavenaam (`BetaalwijzeLabels`), dezelfde migra
 
 ### US-89 — Scherm Verkopen + Nieuwe verkoop
 
+> ✅ **Gebouwd 02/11/2026** (`feature/us89-scherm-verkopen`, PR naar `dev`) volgens de mock `verkopen.html` (gaat vóór de AC hieronder):
+> - De offertelijst heet nu **Verkopen** (menu en tegel op het beginscherm); zelfde 5 tabbladen, zoeken, jaarfilter, "Zoek in alle tabbladen", Openen (dubbelklik), Vernieuwen, Naar archief, Archief bekijken.
+> - Nieuw in de lijst: kolom **Bestelbon** (2026-24, "voorlopig" of —), onder de fase de werkbon zoals in de Werkbonnenlijst ("Werkbon 426 · In uitvoering · 2 taken · 1/2 besteld"), zoeken ook op bestelbonnummer.
+> - Tabblad Lopende werkbonnen: ook **Planning openen** en **Weeklijst afdrukken** (zelfde vensters als in Werkbonnen).
+> - **Werkbon = verkoopnummer** in de Werkbonnenlijst (ook zoeken), het werkbonvenster, de planning en de weeklijst (`bonnr.`). Enkel weergave.
+> - "+ Nieuwe verkoop" opent zoals vandaag een nieuwe offerte (geen aparte dialoog K02: zou een extra functie zijn). Werkbonnen en Bestelbonnen blijven in het menu. Geen kaarten bovenaan.
+
 **Als** medewerker **wil ik** alle verkopen op één plek zien, per fase, **zodat** ik meteen zie wat vandaag af te halen of nog te betalen is.
 
 1. Kaarten bovenaan: "Vandaag af te halen" (afhaaldatum = vandaag, stap 4/5) en "Afgehaald, nog te betalen" (met bedrag).

@@ -98,4 +98,51 @@ public class OffertelijstPerFaseTests
         // Zonder zoekterm toont "zoek in alle" gewoon het gekozen tabblad.
         Assert.Equal(2, OffertesLijstViewModel.Filter(regels, VerkoopFase.OpenOffertes, "", zoekInAlle: true).Count());
     }
+
+    [Fact]
+    public void Zoeken_op_bestelbonnummer_US89()
+    {
+        var regels = new[]
+        {
+            Regel(421, "Marleen Peeters", OfferteStatus.Besteld, WerkBonStatus.Afgewerkt) with { BestelbonNummer = "2026-20" },
+            Regel(422, "Luc Janssens", OfferteStatus.Besteld, WerkBonStatus.Afgewerkt) with { BestelbonNummer = "2026-21" }
+        };
+
+        Assert.Equal(new[] { 422 },
+            OffertesLijstViewModel.Filter(regels, VerkoopFase.OpenOffertes, "2026-21", zoekInAlle: true).Select(r => r.OfferteNummer));
+    }
+
+    [Fact]
+    public void Werkbon_en_bestelbon_in_de_lijst_US89()
+    {
+        var wb = Regel(426, "Tom Jacobs", OfferteStatus.InProductie, WerkBonStatus.InUitvoering)
+            with { WerkBonStatus = WerkBonStatus.InUitvoering, AantalTaken = 2, AantalBesteldOfKlaar = 1 };
+        Assert.Equal("Werkbon 426 · In uitvoering · 2 taken · 1/2 besteld", wb.WerkbonInfo);
+        Assert.Equal("—", wb.BestelbonKolomTekst);
+
+        var offerte = Regel(427, "An Mertens", OfferteStatus.Concept) with { HeeftVoorlopigeBon = true };
+        Assert.False(offerte.ToontWerkbonInfo);
+        Assert.Equal("voorlopig", offerte.BestelbonKolomTekst);
+
+        Assert.Equal("2026-24", (offerte with { BestelbonNummer = "2026-24" }).BestelbonKolomTekst);
+    }
+
+    [Fact]
+    public async Task Overzicht_telt_werktaken_per_werkbon_US89()
+    {
+        await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
+        await using (var db = await scope.Factory.CreateDbContextAsync())
+        {
+            var klant = new Klant { Voornaam = "Tom", Achternaam = "Jacobs" };
+            var offerte = new Offerte { OfferteNummer = 426, Klant = klant, Status = OfferteStatus.InProductie, Datum = DateTime.Today };
+            var werkBon = new WerkBon { Offerte = offerte, Status = WerkBonStatus.InUitvoering };
+            werkBon.Taken.Add(new WerkTaak { Omschrijving = "a", GeplandVan = DateTime.Today, IsBesteld = true });
+            werkBon.Taken.Add(new WerkTaak { Omschrijving = "b", GeplandVan = DateTime.Today });
+            db.WerkBonnen.Add(werkBon);
+            await db.SaveChangesAsync();
+        }
+
+        var regel = Assert.Single(await new VerkoopOverzichtService(scope.Factory).GetOverzichtAsync());
+        Assert.Equal("Werkbon 426 · In uitvoering · 2 taken · 1/2 besteld", regel.WerkbonInfo);
+    }
 }

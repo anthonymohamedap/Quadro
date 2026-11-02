@@ -28,6 +28,8 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
     private readonly IOfferteArchiefService _archiefService;
     private readonly IToastService _toast;
     private readonly IVerkoopOverzichtService _overzicht;
+    private readonly IWerkBonWorkflowService? _werkBonWorkflow;
+    private readonly IWorkflowService? _workflow;
 
     private List<VerkoopOverzichtRegel> _alle = new();
     public ObservableCollection<VerkoopOverzichtRegel> FilteredOffertes { get; } = new();
@@ -73,8 +75,12 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
         INavigationService nav,
         IToastService toast,
         IOfferteArchiefService archiefService,
-        IVerkoopOverzichtService overzicht)
+        IVerkoopOverzichtService overzicht,
+        IWerkBonWorkflowService? werkBonWorkflow = null,
+        IWorkflowService? workflow = null)
     {
+        _werkBonWorkflow = werkBonWorkflow;
+        _workflow       = workflow;
         _overzicht      = overzicht;
         _dbFactory      = dbFactory;
         _offerteNav     = offerteNav;
@@ -88,7 +94,14 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
 
     partial void OnZoektermChanged(string? value) => ApplyFilter();
     partial void OnGeselecteerdJaarChanged(int value) => ApplyFilter();
-    partial void OnGeselecteerdeFaseChanged(VerkoopFase value) => ApplyFilter();
+    partial void OnGeselecteerdeFaseChanged(VerkoopFase value)
+    {
+        ApplyFilter();
+        OnPropertyChanged(nameof(IsWerkbonTab));
+    }
+
+    /// <summary>US-89 — tabblad "Lopende werkbonnen": ook Planning en Werklijst van een week (zoals de Werkbonnenlijst).</summary>
+    public bool IsWerkbonTab => GeselecteerdeFase == VerkoopFase.LopendeWerkbonnen;
     partial void OnZoekInAlleChanged(bool value) => ApplyFilter();
 
     partial void OnGeselecteerdeTabChanged(FaseTab? value)
@@ -167,7 +180,7 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
     }
 
     /// <summary>US-84 — zoeken binnen het gekozen tabblad, of in alle tabbladen als <paramref name="zoekInAlle"/>
-    /// aan staat en er een zoekterm is. Zoekt op offertenummer en klantnaam.</summary>
+    /// aan staat en er een zoekterm is. Zoekt op offertenummer, klantnaam en bestelbonnummer (US-89).</summary>
     public static IEnumerable<VerkoopOverzichtRegel> Filter(
         IEnumerable<VerkoopOverzichtRegel> regels, VerkoopFase fase, string? zoekterm, bool zoekInAlle)
     {
@@ -179,7 +192,8 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
         if (heeftTerm)
             q = q.Where(o =>
                 o.OfferteNummer.ToString().Contains(term!, StringComparison.OrdinalIgnoreCase) ||
-                o.KlantNaam.Contains(term!, StringComparison.OrdinalIgnoreCase));
+                o.KlantNaam.Contains(term!, StringComparison.OrdinalIgnoreCase) ||
+                (o.BestelbonNummer ?? "").Contains(term!, StringComparison.OrdinalIgnoreCase));
 
         return q;
     }
@@ -194,6 +208,45 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
     {
         if (SelectedOfferte is null) return;
         await _offerteNav.OpenOfferteAsync(SelectedOfferte.OfferteId);
+    }
+
+    // ── US-89: knoppen van de Werkbonnenlijst ────────────────────────────────
+
+    /// <summary>Planning openen voor de werkbon van de gekozen verkoop (zelfde venster als in Werkbonnen).</summary>
+    [RelayCommand]
+    private async Task OpenPlanningAsync()
+    {
+        if (SelectedOfferte?.WerkBonId is not int werkBonId || _werkBonWorkflow is null || _workflow is null)
+        {
+            _toast.Warning("Kies eerst een verkoop met een werkbon.");
+            return;
+        }
+
+        var vm = new PlanningCalendarViewModel(_dbFactory, _werkBonWorkflow, _toast, _workflow);
+        await vm.InitializeAsync(werkBonId);
+        var window = new QuadroApp.Views.PlanningCalendarWindow { DataContext = vm };
+        if (App.Current?.ApplicationLifetime is
+            Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime { MainWindow: { } owner })
+            await window.ShowDialog(owner);
+
+        await LoadAsync();
+    }
+
+    /// <summary>Werklijst van een week (US-98), opent op de huidige week.</summary>
+    [RelayCommand]
+    private async Task OpenWeekLijstAsync()
+    {
+        if (_workflow is null) return;
+        var vandaag = DateTime.Today;
+        var vm = new WeekWerkLijstViewModel(_dbFactory, _workflow, _toast);
+        await vm.InitializeAsync(System.Globalization.ISOWeek.GetYear(vandaag), System.Globalization.ISOWeek.GetWeekOfYear(vandaag));
+        var window = new QuadroApp.Views.WeekWerkLijstWindow { DataContext = vm };
+        if (App.Current?.ApplicationLifetime is
+            Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime { MainWindow: { } owner })
+            await window.ShowDialog(owner);
+
+        // Afdrukken van de weeklijst kan verkopen op In productie zetten (US-87).
+        await LoadAsync();
     }
 
     // ── Verwijderen = archiveren ──────────────────────────────────────────────
