@@ -296,6 +296,27 @@ Technisch: `IDocumentAfdrukService` + `DocumentPreviewWindow` (QuestPDF `Generat
 - **Fase D (US-95)**: pas na akkoord van Veerle de oude schermen weg.
 - Bestaande data: elke bestaande offerte krijgt automatisch een stap via de resolver; geen datamigratie nodig behalve betaalwijzen. Offertes die vandaag op InProductie staan met werkbon Gepland (P10) tonen stap 2 — klopt met de werkelijkheid.
 
+## Beslissingen (Anthony, 02/11/2026)
+
+Alle open vragen zijn beantwoord; de oorspronkelijke vragen staan hieronder ter referentie.
+
+| # | Vraag | Beslist |
+|---|---|---|
+| 1 | Vorige stap | **Enkel bekijken** (alleen-lezen, label "Terug gekeken"). Na het akkoord iets wijzigen kan via "Prijzen herberekenen" (US-100); niet terug naar Concept na een werkbon (US-103). |
+| 2 | — | Beslist in US-79 (Cheque/Proton → Cash). |
+| 3 | Annuleren met voorschot | **Kiezen bij het annuleren**: voorschot terugbetalen (negatieve betaling, met betaalwijze) of laten staan (bv. annuleringskost). |
+| 4 | Printer en exemplaren | **Printvenster van het systeem**: voorbeeld in de app, daarna het gewone printvenster (macOS/Windows). Geen printerkeuze in de app. |
+| 5 | Bestelbon bij overslaan | **Pas bij "Klaar"**. Alleen als Bestelling én Productie overgeslagen worden, komt de bestelbon meteen. |
+| 6 | Afhaaldatum vóór besteldatum | Al opgelost in US-81 (waarschuwing) en US-96 (niet plannen in het verleden). |
+| 7 | Verzonden | Vervallen: de handmatige statusknoppen zijn weg sinds US-103. |
+| 8 | Werkbonvenster | **Verdwijnt na de test door Veerle**: eerst het dossier naast de oude schermen (fase B), pas na haar akkoord weg (US-95). |
+| 9 | Annuleren na Klaar | **Ja, iedereen**, met verplichte reden. De bestelbon wordt "Geannuleerd"; het nummer blijft bestaan voor de boekhouding. Transitietabel uitbreiden (Afgewerkt/Besteld → Geannuleerd). |
+| 10 | — | Beslist: volgnummer pas na bevestiging. |
+
+Verder:
+- **US-102** (momentopname bij afronden) wordt gebouwd **samen met de stap "Afgerond" (US-93, K13)**.
+- **Aanpak**: eerst een **mock** van het scherm Verkopen en het dossier (zoals bij het beginscherm, US-105), daarna US-87 en per fase.
+
 ## Open vragen (voor Veerle / Anthony)
 
 1. **Vorige stap**: alleen terug *bekijken* (zoals het prototype), of moet een stap ook echt teruggezet kunnen worden (bv. bestelling terug naar offerte omdat de klant nog iets wijzigt)? Dit plan gaat uit van alleen bekijken; wijzigen van de offerte na bevestigen → aparte story.
