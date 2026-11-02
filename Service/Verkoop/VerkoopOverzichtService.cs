@@ -55,10 +55,18 @@ namespace QuadroApp.Service.Verkoop
         public string NogTeBetalenTekst => NogTeBetalen > 0m ? $"nog € {NogTeBetalen:0.00}" : "betaald";
 
         /// <summary>US-86 — korte stap onder het bedrag, zonder het bedrag te herhalen.</summary>
-        public string StapKortTekst => Stap.IsAfgehaaldNogTeBetalen ? "Al afgehaald" : FaseTekst;
+        public string StapKortTekst => Stap switch
+        {
+            { IsAfgehaaldNogTeBetalen: true } => "Al afgehaald",
+            { IsGeannuleerd: false, IsAfgerond: false, Huidig: VerkoopStap.KlaarOmAfTeHalen } => "Klaar",
+            _ => FaseTekst
+        };
 
-        /// <summary>US-86 — "afhaaldatum 25/10/2026" in het blok "Nog te betalen".</summary>
-        public string AfhaalDatumTekst => AfhaalDatum is { } d ? $"afhaaldatum {d:dd/MM/yyyy}" : "";
+        /// <summary>US-105 — "afgehaald 25/10" in het blok "Nog te betalen".</summary>
+        public string AfhaalDatumTekst => AfhaalDatum is { } d ? $"afgehaald {d:dd/MM}" : "";
+
+        /// <summary>US-105 — bedrag in de compacte rij: "€ 136,50".</summary>
+        public string BedragTekst => $"€ {NogTeBetalen:#,##0.00}";
 
         public bool ToontAfhaalDatum => AfhaalDatum.HasValue && Fase is VerkoopFase.LopendeWerkbonnen or VerkoopFase.KlaarOmAfTeHalen;
     }
