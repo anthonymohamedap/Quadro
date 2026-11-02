@@ -379,7 +379,7 @@
 											<StackPanel Spacing="6">
 <Grid ColumnDefinitions="*,Auto">
 												<StackPanel Spacing="3">
-													<TextBlock Text="{Binding WerkBon.Id, StringFormat='WerkBon #{0}'}"
+													<TextBlock Text="{Binding WerkBon.Offerte.OfferteNummer, StringFormat='Werkbon {0}'}"
 															   Classes="body"
 															   FontWeight="Bold"/>
 													<TextBlock Text="{Binding WerkBon.Offerte.Klant.Achternaam}"

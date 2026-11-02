@@ -105,7 +105,7 @@
 
 											<!-- Bon-nr + status-badge -->
 											<StackPanel Grid.Column="0" Spacing="5" MinWidth="72" VerticalAlignment="Center">
-												<TextBlock Text="{Binding Id, StringFormat='Werkbon #{0}'}" FontWeight="Bold"/>
+												<TextBlock Text="{Binding Offerte.OfferteNummer, StringFormat='Werkbon {0}'}" FontWeight="Bold"/>
 												<Border Background="{Binding Status, Converter={x:Static conv:WerkBonStatusToBrushConverter.Instance}}"
 														CornerRadius="10" Padding="9,2" HorizontalAlignment="Left">
 													<TextBlock Text="{Binding Status, Converter={x:Static conv:WerkBonStatusToLabelConverter.Instance}}"

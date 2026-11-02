@@ -52,6 +52,8 @@ static class Schermen
         ["offerte-4-overgeslagen"] = OvergeslagenAsync,
         ["offertelijst"] = f => OffertelijstAsync(f, VerkoopFase.OpenOffertes),
         ["offertelijst-werkbonnen"] = f => OffertelijstAsync(f, VerkoopFase.LopendeWerkbonnen),
+        ["offertelijst-klaar"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await OffertelijstAsync(f, VerkoopFase.KlaarOmAfTeHalen); },
+        ["werkbonnenlijst"] = WerkbonnenlijstAsync,
         ["bestelbonnen"] = BestelbonnenAsync,
         ["home"] = f => HomeAsync(f, metVandaag: true),
         ["home-leeg"] = f => HomeAsync(f, metVandaag: false),
@@ -137,6 +139,17 @@ static class Schermen
         await vm.LoadAsync();
         vm.GeselecteerdeFase = tabblad;
         return new OffertesLijstView { DataContext = vm };
+    }
+
+    /// <summary>US-89 — de Werkbonnenlijst (blijft in het menu): werkbon = verkoopnummer.</summary>
+    static async Task<Control> WerkbonnenlijstAsync(IDbContextFactory<AppDbContext> f)
+    {
+        var toast = new TestToastService();
+        var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
+        var vm = new WerkBonLijstViewModel(f, new TestNavigationService(), new GeenOfferteNavigatie(),
+            new WerkBonWorkflowService(f, wf), wf, toast);
+        await vm.LoadAsync();
+        return new WerkBonLijstView { DataContext = vm };
     }
 
     static async Task<Control> BestelbonnenAsync(IDbContextFactory<AppDbContext> f)
