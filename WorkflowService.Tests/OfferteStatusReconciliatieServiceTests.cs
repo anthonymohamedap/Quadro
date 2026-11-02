@@ -15,7 +15,7 @@ public class OfferteStatusReconciliatieServiceTests
     // ── Mapping (unit) ──────────────────────────────────────────────────────
 
     [Fact]
-    public void Mapping_geen_werkbon_geen_factuur_is_null()
+    public void Mapping_geen_werkbon_geen_bestelbon_is_null()
         => Assert.Null(OfferteStatusReconciliatieService.BepaalDoelStatus(null, null));
 
     [Fact]
@@ -36,19 +36,19 @@ public class OfferteStatusReconciliatieServiceTests
     [Fact]
     public void Mapping_bestelbon_bestaat_is_Besteld()
         => Assert.Equal(OfferteStatus.Besteld,
-            OfferteStatusReconciliatieService.BepaalDoelStatus(null, new Factuur { Status = FactuurStatus.KlaarVoorExport }));
+            OfferteStatusReconciliatieService.BepaalDoelStatus(null, new Bestelbon { Status = BestelbonStatus.KlaarVoorExport }));
 
     [Fact]
     public void Mapping_bestelbon_betaald_is_Betaald()
         => Assert.Equal(OfferteStatus.Betaald,
             OfferteStatusReconciliatieService.BepaalDoelStatus(new WerkBon { Status = WerkBonStatus.Afgewerkt },
-                new Factuur { Status = FactuurStatus.Betaald }));
+                new Bestelbon { Status = BestelbonStatus.Betaald }));
 
     [Fact]
     public void Mapping_geannuleerde_bestelbon_telt_niet()
         => Assert.Equal(OfferteStatus.Goedgekeurd,
             OfferteStatusReconciliatieService.BepaalDoelStatus(new WerkBon { Status = WerkBonStatus.Gepland },
-                new Factuur { Status = FactuurStatus.Geannuleerd }));
+                new Bestelbon { Status = BestelbonStatus.Geannuleerd }));
 
     // ── Reconciliatie (integratie) ──────────────────────────────────────────
 
@@ -89,7 +89,7 @@ public class OfferteStatusReconciliatieServiceTests
     {
         await using var db = await factory.CreateDbContextAsync();
 
-        // o1: Concept + werkbon Afgewerkt + factuur Betaald  -> Betaald
+        // o1: Concept + werkbon Afgewerkt + bestelbon Betaald  -> Betaald
         var o1 = new Offerte { Datum = System.DateTime.Today, Status = OfferteStatus.Concept, TotaalInclBtw = 100m };
         // o2: Geannuleerd + werkbon Afgewerkt                 -> ongemoeid
         var o2 = new Offerte { Datum = System.DateTime.Today, Status = OfferteStatus.Geannuleerd, TotaalInclBtw = 100m };
@@ -110,11 +110,11 @@ public class OfferteStatusReconciliatieServiceTests
             new WerkBon { OfferteId = o4.Id, Status = WerkBonStatus.Gepland, TotaalPrijsIncl = 100m },
             new WerkBon { OfferteId = o5.Id, Status = WerkBonStatus.Gepland, TotaalPrijsIncl = 100m });
 
-        db.Facturen.Add(new Factuur
+        db.Bestelbonnen.Add(new Bestelbon
         {
-            OfferteId = o1.Id, Jaar = 2026, VolgNr = 1, FactuurNummer = "B-1",
-            KlantNaam = "X", FactuurDatum = System.DateTime.Today, VervalDatum = System.DateTime.Today,
-            Status = FactuurStatus.Betaald
+            OfferteId = o1.Id, Jaar = 2026, VolgNr = 1, BestelbonNummer = "B-1",
+            KlantNaam = "X", BestelbonDatum = System.DateTime.Today, VervalDatum = System.DateTime.Today,
+            Status = BestelbonStatus.Betaald
         });
 
         await db.SaveChangesAsync();

@@ -7,7 +7,7 @@ using System.Linq;
 namespace QuadroApp.Converters
 {
     /// <summary>
-    /// Zet de getagde pipe-omschrijving van een FactuurLijn om naar leesbare,
+    /// Zet de getagde pipe-omschrijving van een BestelbonLijn om naar leesbare,
     /// meerregelige tekst. Bv:
     ///   "001002/A2 | 30x40 cm | titel:ww | glas:Helder glas 2 mm | lijst_opm:Witte lijst | afhaal:2026-05-08"
     /// wordt:
@@ -16,9 +16,9 @@ namespace QuadroApp.Converters
     ///   Lijst: Witte lijst
     ///   Afhalen: 08/05/2026
     /// </summary>
-    public class FactuurOmschrijvingConverter : IValueConverter
+    public class BestelbonOmschrijvingConverter : IValueConverter
     {
-        public static readonly FactuurOmschrijvingConverter Instance = new();
+        public static readonly BestelbonOmschrijvingConverter Instance = new();
 
         private static readonly Dictionary<string, string> TagLabels = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -47,10 +47,10 @@ namespace QuadroApp.Converters
             var afmeting = parts.ElementAtOrDefault(1);
 
             // US-68/US-80: standaardkader-lijn → "Standaardkader <naam – omschrijving>", afmeting achter de markering
-            if (QuadroApp.Service.FactuurWorkflowService.IsStandaardkaderSegment(afmeting))
+            if (QuadroApp.Service.BestelbonWorkflowService.IsStandaardkaderSegment(afmeting))
             {
                 artikel = $"Standaardkader {artikel}";
-                var maat = afmeting![QuadroApp.Service.FactuurWorkflowService.StandaardkaderMarker.Length..].Trim();
+                var maat = afmeting![QuadroApp.Service.BestelbonWorkflowService.StandaardkaderMarker.Length..].Trim();
                 afmeting = maat.Length > 0 ? maat : null;
             }
 

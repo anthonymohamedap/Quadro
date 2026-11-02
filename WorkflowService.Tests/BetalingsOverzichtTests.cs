@@ -70,19 +70,19 @@ public class BetalingsOverzichtTests
             db.Offertes.AddRange(metBon, zonderBon);
             await db.SaveChangesAsync();
 
-            var factuur = new Factuur
+            var bestelbon = new Bestelbon
             {
-                OfferteId = metBon.Id, Jaar = 2026, VolgNr = 12, FactuurNummer = "2026-012",
-                KlantNaam = "An Bon", Status = FactuurStatus.KlaarVoorExport, TotaalInclBtw = 300m
+                OfferteId = metBon.Id, Jaar = 2026, VolgNr = 12, BestelbonNummer = "2026-012",
+                KlantNaam = "An Bon", Status = BestelbonStatus.KlaarVoorExport, TotaalInclBtw = 300m
             };
-            db.Facturen.Add(factuur);
+            db.Bestelbonnen.Add(bestelbon);
             await db.SaveChangesAsync();
 
             db.Ontvangsten.AddRange(
                 // Voorschot enkel aan de offerte gekoppeld → toont het nummer van de bestelbon.
                 new Ontvangst { Soort = OntvangstSoort.Voorschot, OfferteId = metBon.Id, Datum = dag, Betaalwijze = Betaalwijze.Cash, BedragIncl = 100m },
                 // Betaling op de bestelbon.
-                new Ontvangst { Soort = OntvangstSoort.Betaling, FactuurId = factuur.Id, OfferteId = metBon.Id, Datum = dag, Betaalwijze = Betaalwijze.Bancontact, BedragIncl = 200m },
+                new Ontvangst { Soort = OntvangstSoort.Betaling, BestelbonId = bestelbon.Id, OfferteId = metBon.Id, Datum = dag, Betaalwijze = Betaalwijze.Bancontact, BedragIncl = 200m },
                 // Voorschot zonder bestelbon → offertenummer.
                 new Ontvangst { Soort = OntvangstSoort.Voorschot, OfferteId = zonderBon.Id, Datum = dag, Betaalwijze = Betaalwijze.CreditCard, BedragIncl = 50m },
                 // Winkelverkoop → geen bon.

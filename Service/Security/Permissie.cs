@@ -9,7 +9,7 @@ public enum Permissie
     LeverancierVerwijderen,
     LijstVerwijderen,
     PrijzenWijzigen,
-    Factureren,
+    Bestelbonnen,
     GebruikersBeheren,
     GdprBeheer,
     ArchiefVerwijderen,
@@ -25,7 +25,7 @@ public static class RolPermissies
         GebruikersRol.Admin => true,
         GebruikersRol.Medewerker => permissie switch
         {
-            Permissie.Factureren => true, // dagelijkse workflow blijft mogelijk
+            Permissie.Bestelbonnen => true, // dagelijkse workflow blijft mogelijk
             _ => false
         },
         _ => false

@@ -6,11 +6,11 @@ using System;
 
 namespace QuadroApp.ViewModels;
 
-public partial class FactuurInfoDialogViewModel : ObservableObject
+public partial class BestelbonGegevensDialogViewModel : ObservableObject
 {
-    private readonly Factuur _factuur;
+    private readonly Bestelbon _bestelbon;
 
-    [ObservableProperty] private DateTimeOffset? factuurDatum;
+    [ObservableProperty] private DateTimeOffset? bestelbonDatum;
     [ObservableProperty] private DateTimeOffset? vervalDatum;
     [ObservableProperty] private string? opmerking;
     [ObservableProperty] private string? aangenomenDoorInitialen;
@@ -18,28 +18,28 @@ public partial class FactuurInfoDialogViewModel : ObservableObject
 
     public Action<bool>? RequestClose { get; set; }
 
-    public string FactuurNummer => _factuur.NummerLabel;   // US-99: "2026-19" of "voorlopig (offerte 412)"
-    public string KlantNaam => _factuur.KlantNaam;
+    public string BestelbonNummer => _bestelbon.NummerLabel;   // US-99: "2026-19" of "voorlopig (offerte 412)"
+    public string KlantNaam => _bestelbon.KlantNaam;
     public bool HasValidatieFout => !string.IsNullOrWhiteSpace(ValidatieFout);
 
     /// <summary>US-81 — niet-blokkerende waarschuwing als er afgehaald wordt vóór de besteldatum.</summary>
-    public string? AfhaalWaarschuwing => FactuurDatum is null
+    public string? AfhaalWaarschuwing => BestelbonDatum is null
         ? null
-        : AfhaalDatumControle.Waarschuwing(FactuurDatum.Value.Date, AfhaalDatumControle.VroegsteAfhaalDatum(_factuur));
+        : AfhaalDatumControle.Waarschuwing(BestelbonDatum.Value.Date, AfhaalDatumControle.VroegsteAfhaalDatum(_bestelbon));
     public bool HasAfhaalWaarschuwing => !string.IsNullOrWhiteSpace(AfhaalWaarschuwing);
 
-    public FactuurInfoDialogViewModel(Factuur factuur)
+    public BestelbonGegevensDialogViewModel(Bestelbon bestelbon)
     {
-        _factuur = factuur;
-        FactuurDatum = new DateTimeOffset(factuur.FactuurDatum == default ? DateTime.Today : factuur.FactuurDatum);
-        VervalDatum = new DateTimeOffset(factuur.VervalDatum == default ? DateTime.Today.AddDays(30) : factuur.VervalDatum);
-        Opmerking = factuur.Opmerking;
-        AangenomenDoorInitialen = factuur.AangenomenDoorInitialen;
+        _bestelbon = bestelbon;
+        BestelbonDatum = new DateTimeOffset(bestelbon.BestelbonDatum == default ? DateTime.Today : bestelbon.BestelbonDatum);
+        VervalDatum = new DateTimeOffset(bestelbon.VervalDatum == default ? DateTime.Today.AddDays(30) : bestelbon.VervalDatum);
+        Opmerking = bestelbon.Opmerking;
+        AangenomenDoorInitialen = bestelbon.AangenomenDoorInitialen;
     }
 
     partial void OnValidatieFoutChanged(string? value) => OnPropertyChanged(nameof(HasValidatieFout));
 
-    partial void OnFactuurDatumChanged(DateTimeOffset? value)
+    partial void OnBestelbonDatumChanged(DateTimeOffset? value)
     {
         OnPropertyChanged(nameof(AfhaalWaarschuwing));
         OnPropertyChanged(nameof(HasAfhaalWaarschuwing));
@@ -48,7 +48,7 @@ public partial class FactuurInfoDialogViewModel : ObservableObject
     [RelayCommand]
     private void Bevestig()
     {
-        if (FactuurDatum is null)
+        if (BestelbonDatum is null)
         {
             ValidatieFout = "Kies een besteldatum.";
             return;
@@ -60,7 +60,7 @@ public partial class FactuurInfoDialogViewModel : ObservableObject
             return;
         }
 
-        if (VervalDatum.Value.Date < FactuurDatum.Value.Date)
+        if (VervalDatum.Value.Date < BestelbonDatum.Value.Date)
         {
             ValidatieFout = "De vervaldatum moet op of na de besteldatum liggen.";
             return;
@@ -73,14 +73,14 @@ public partial class FactuurInfoDialogViewModel : ObservableObject
     [RelayCommand]
     private void Annuleer() => RequestClose?.Invoke(false);
 
-    public Factuur ToFactuur()
+    public Bestelbon ToBestelbon()
     {
-        _factuur.FactuurDatum = (FactuurDatum ?? DateTimeOffset.Now).Date;
-        _factuur.VervalDatum = (VervalDatum ?? DateTimeOffset.Now).Date;
-        _factuur.Opmerking = string.IsNullOrWhiteSpace(Opmerking) ? null : Opmerking.Trim();
-        _factuur.AangenomenDoorInitialen = string.IsNullOrWhiteSpace(AangenomenDoorInitialen)
+        _bestelbon.BestelbonDatum = (BestelbonDatum ?? DateTimeOffset.Now).Date;
+        _bestelbon.VervalDatum = (VervalDatum ?? DateTimeOffset.Now).Date;
+        _bestelbon.Opmerking = string.IsNullOrWhiteSpace(Opmerking) ? null : Opmerking.Trim();
+        _bestelbon.AangenomenDoorInitialen = string.IsNullOrWhiteSpace(AangenomenDoorInitialen)
             ? null
             : AangenomenDoorInitialen.Trim();
-        return _factuur;
+        return _bestelbon;
     }
 }

@@ -18,10 +18,10 @@ namespace QuadroApp.Service
     /// nieuw nummer getrokken) — zie OfferteArchiefService.HerstellenAsync.
     ///
     /// Concurrency: er is bewust geen DB-unique-constraint op dit veld (in tegenstelling tot
-    /// Factuur.FactuurNummer, dat wettelijk uniek moet zijn). Twee offertes op exact hetzelfde
+    /// Bestelbon.BestelbonNummer, dat wettelijk uniek moet zijn). Twee offertes op exact hetzelfde
     /// moment vanaf twee verschillende pc's aanmaken kan in theorie hetzelfde nummer opleveren;
     /// dat risico is aanvaard omdat offertenummers geen wettelijke/boekhoudkundige eis hebben
-    /// (in tegenstelling tot facturen).
+    /// (in tegenstelling tot bestelbonnen).
     /// </summary>
     public static class OfferteNummering
     {

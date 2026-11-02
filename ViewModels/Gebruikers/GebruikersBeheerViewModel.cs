@@ -35,7 +35,7 @@ public partial class GebruikersBeheerViewModel : ObservableObject
     {
         var omschrijvingen = new Dictionary<Permissie, string>
         {
-            [Permissie.Factureren] = "Bestelbonnen maken en betalingen registreren",
+            [Permissie.Bestelbonnen] = "Bestelbonnen maken en betalingen registreren",
             [Permissie.PrijzenWijzigen] = "Prijzen wijzigen (lijsten & afwerkingen)",
             [Permissie.LijstVerwijderen] = "Lijsten archiveren/verwijderen",
             [Permissie.LeverancierVerwijderen] = "Leveranciers verwijderen",

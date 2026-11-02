@@ -188,7 +188,7 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.ToTable("AuditLogs");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.DB.Factuur", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.Bestelbon", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -206,6 +206,14 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.Property<DateTime?>("AfhaalDatum")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime>("BestelbonDatum")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("BestelbonNummer")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<DateTime?>("BijgewerktOp")
                         .HasColumnType("timestamp with time zone");
 
@@ -217,14 +225,6 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.Property<string>("ExportPad")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
-
-                    b.Property<DateTime>("FactuurDatum")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("FactuurNummer")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
 
                     b.Property<DateTime?>("GeplandeDatum")
                         .HasColumnType("timestamp with time zone");
@@ -304,7 +304,7 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FactuurNummer")
+                    b.HasIndex("BestelbonNummer")
                         .IsUnique();
 
                     b.HasIndex("OfferteId")
@@ -316,10 +316,10 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.HasIndex("Jaar", "VolgNr")
                         .IsUnique();
 
-                    b.ToTable("Facturen");
+                    b.ToTable("Bestelbonnen");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.DB.FactuurLijn", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.BestelbonLijn", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -331,6 +331,9 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<int>("BestelbonId")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("BtwPct")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)");
@@ -339,9 +342,6 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
-
-                    b.Property<int>("FactuurId")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Omschrijving")
                         .IsRequired()
@@ -369,9 +369,9 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FactuurId");
+                    b.HasIndex("BestelbonId");
 
-                    b.ToTable("FactuurLijnen");
+                    b.ToTable("BestelbonLijnen");
                 });
 
             modelBuilder.Entity("QuadroApp.Model.DB.GeblokkeerdeDag", b =>
@@ -1050,6 +1050,71 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.ToTable("OfferteRegels");
                 });
 
+            modelBuilder.Entity("QuadroApp.Model.DB.Ontvangst", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AangemaaktDoor")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("AangemaaktOp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("Aantal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("BedragIncl")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int?>("BestelbonId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Betaalwijze")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("Datum")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("KortingPct")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<int?>("OfferteId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Omschrijving")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<decimal>("PrijsPerStukIncl")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Soort")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BestelbonId");
+
+                    b.HasIndex("Datum");
+
+                    b.HasIndex("OfferteId");
+
+                    b.ToTable("Ontvangsten");
+                });
+
             modelBuilder.Entity("QuadroApp.Model.DB.TypeLijst", b =>
                 {
                     b.Property<int>("Id")
@@ -1442,71 +1507,6 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.ToTable("WerkTaken");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.DB.Ontvangst", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AangemaaktDoor")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTime>("AangemaaktOp")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("Aantal")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<decimal>("BedragIncl")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<string>("Betaalwijze")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<DateTime>("Datum")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("FactuurId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("KortingPct")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
-
-                    b.Property<int?>("OfferteId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Omschrijving")
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)");
-
-                    b.Property<decimal>("PrijsPerStukIncl")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<string>("Soort")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Datum");
-
-                    b.HasIndex("FactuurId");
-
-                    b.HasIndex("OfferteId");
-
-                    b.ToTable("Ontvangsten");
-                });
-
             modelBuilder.Entity("QuadroApp.Model.DB.AfwerkingsOptie", b =>
                 {
                     b.HasOne("QuadroApp.Model.DB.AfwerkingsGroep", "AfwerkingsGroep")
@@ -1536,16 +1536,16 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.Navigation("Optie");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.DB.Factuur", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.Bestelbon", b =>
                 {
                     b.HasOne("QuadroApp.Model.DB.Offerte", "Offerte")
                         .WithOne()
-                        .HasForeignKey("QuadroApp.Model.DB.Factuur", "OfferteId")
+                        .HasForeignKey("QuadroApp.Model.DB.Bestelbon", "OfferteId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("QuadroApp.Model.DB.WerkBon", "WerkBon")
                         .WithOne()
-                        .HasForeignKey("QuadroApp.Model.DB.Factuur", "WerkBonId")
+                        .HasForeignKey("QuadroApp.Model.DB.Bestelbon", "WerkBonId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Offerte");
@@ -1553,32 +1553,15 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.Navigation("WerkBon");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.DB.Ontvangst", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.BestelbonLijn", b =>
                 {
-                    b.HasOne("QuadroApp.Model.DB.Factuur", "Factuur")
-                        .WithMany()
-                        .HasForeignKey("FactuurId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("QuadroApp.Model.DB.Offerte", "Offerte")
-                        .WithMany()
-                        .HasForeignKey("OfferteId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Factuur");
-
-                    b.Navigation("Offerte");
-                });
-
-            modelBuilder.Entity("QuadroApp.Model.DB.FactuurLijn", b =>
-                {
-                    b.HasOne("QuadroApp.Model.DB.Factuur", "Factuur")
+                    b.HasOne("QuadroApp.Model.DB.Bestelbon", "Bestelbon")
                         .WithMany("Lijnen")
-                        .HasForeignKey("FactuurId")
+                        .HasForeignKey("BestelbonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Factuur");
+                    b.Navigation("Bestelbon");
                 });
 
             modelBuilder.Entity("QuadroApp.Model.DB.ImportRowLog", b =>
@@ -1753,6 +1736,23 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.Navigation("TypeLijst");
                 });
 
+            modelBuilder.Entity("QuadroApp.Model.DB.Ontvangst", b =>
+                {
+                    b.HasOne("QuadroApp.Model.DB.Bestelbon", "Bestelbon")
+                        .WithMany()
+                        .HasForeignKey("BestelbonId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("QuadroApp.Model.DB.Offerte", "Offerte")
+                        .WithMany()
+                        .HasForeignKey("OfferteId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Bestelbon");
+
+                    b.Navigation("Offerte");
+                });
+
             modelBuilder.Entity("QuadroApp.Model.DB.TypeLijst", b =>
                 {
                     b.HasOne("QuadroApp.Model.DB.Leverancier", "Leverancier")
@@ -1850,7 +1850,7 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.Navigation("Varianten");
                 });
 
-            modelBuilder.Entity("QuadroApp.Model.DB.Factuur", b =>
+            modelBuilder.Entity("QuadroApp.Model.DB.Bestelbon", b =>
                 {
                     b.Navigation("Lijnen");
                 });

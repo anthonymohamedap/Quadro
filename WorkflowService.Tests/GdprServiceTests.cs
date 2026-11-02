@@ -30,11 +30,11 @@ public class GdprServiceTests
         ctx.Offertes.Add(offerte);
         await ctx.SaveChangesAsync();
 
-        ctx.Facturen.Add(new Factuur
+        ctx.Bestelbonnen.Add(new Bestelbon
         {
-            OfferteId = offerte.Id, Jaar = 2025, VolgNr = 1, FactuurNummer = "2025-001",
+            OfferteId = offerte.Id, Jaar = 2025, VolgNr = 1, BestelbonNummer = "2025-001",
             KlantNaam = "Griet Vermeulen", KlantAdres = "Kerkstraat 12, 9000 Gent",
-            FactuurDatum = DateTime.Now.AddYears(-1), VervalDatum = DateTime.Now.AddYears(-1).AddDays(30),
+            BestelbonDatum = DateTime.Now.AddYears(-1), VervalDatum = DateTime.Now.AddYears(-1).AddDays(30),
             TotaalInclBtw = 250m
         });
         await ctx.SaveChangesAsync();
@@ -45,7 +45,7 @@ public class GdprServiceTests
         new(db.Factory, auth ?? new TestAuthService(), NullLogger<GdprService>.Instance);
 
     [Fact]
-    public async Task Export_BevatKlantOffertesEnFacturen()
+    public async Task Export_BevatKlantOffertesEnBestelbonnen()
     {
         await using var db = await DbFactoryBuilder.CreateSqliteAsync();
         var id = await SeedKlantMetDocumentenAsync(db);
@@ -59,7 +59,7 @@ public class GdprServiceTests
     }
 
     [Fact]
-    public async Task Anonimiseer_ScrubtKlant_MaarFactuurBlijftIntact()
+    public async Task Anonimiseer_ScrubtKlant_MaarBestelbonBlijftIntact()
     {
         await using var db = await DbFactoryBuilder.CreateSqliteAsync();
         var id = await SeedKlantMetDocumentenAsync(db);
@@ -74,9 +74,9 @@ public class GdprServiceTests
         Assert.Null(klant.Straat);
         Assert.True(klant.IsGearchiveerd);
 
-        // Factuur = boekhouddocument: naam-snapshot blijft (wettelijke bewaarplicht)
-        var factuur = await ctx.Facturen.SingleAsync();
-        Assert.Equal("Griet Vermeulen", factuur.KlantNaam);
+        // Bestelbon = boekhouddocument: naam-snapshot blijft (wettelijke bewaarplicht)
+        var bestelbon = await ctx.Bestelbonnen.SingleAsync();
+        Assert.Equal("Griet Vermeulen", bestelbon.KlantNaam);
     }
 
     [Fact]

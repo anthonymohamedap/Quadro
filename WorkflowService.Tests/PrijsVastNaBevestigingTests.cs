@@ -71,17 +71,17 @@ public class PrijsVastNaBevestigingTests
     [InlineData(OfferteStatus.Verzonden, null, null, false)]
     [InlineData(OfferteStatus.Goedgekeurd, WerkBonStatus.Gepland, null, true)]
     [InlineData(OfferteStatus.InProductie, WerkBonStatus.InUitvoering, null, true)]
-    [InlineData(OfferteStatus.Besteld, WerkBonStatus.Afgewerkt, FactuurStatus.Draft, true)]
-    [InlineData(OfferteStatus.Betaald, WerkBonStatus.Afgehaald, FactuurStatus.Betaald, true)]
+    [InlineData(OfferteStatus.Besteld, WerkBonStatus.Afgewerkt, BestelbonStatus.Draft, true)]
+    [InlineData(OfferteStatus.Betaald, WerkBonStatus.Afgehaald, BestelbonStatus.Betaald, true)]
     [InlineData(OfferteStatus.Geannuleerd, null, null, false)]
-    public void Prijs_vast_vanaf_stap_2(OfferteStatus offerte, WerkBonStatus? werkbon, FactuurStatus? bon, bool vast)
+    public void Prijs_vast_vanaf_stap_2(OfferteStatus offerte, WerkBonStatus? werkbon, BestelbonStatus? bon, bool vast)
         => Assert.Equal(vast, OfferteWorkflowViewModel.IsPrijsVastNaBevestiging(
             VerkoopStapResolver.Bepaal(offerte, werkbon, bon, 0m)));
 
     [Fact]
     public void Voorlopige_bestelbon_voor_bevestiging_zet_de_prijs_niet_vast()
         => Assert.False(OfferteWorkflowViewModel.IsPrijsVastNaBevestiging(
-            VerkoopStapResolver.Bepaal(OfferteStatus.Concept, null, FactuurStatus.Draft, 100m)));
+            VerkoopStapResolver.Bepaal(OfferteStatus.Concept, null, BestelbonStatus.Draft, 100m)));
 }
 
 /// <summary>US-101 — een verkoop die afgehaald en volledig betaald is, is vergrendeld.</summary>
@@ -104,8 +104,8 @@ public class AfgerondeVerkoopVergrendeldTests
             new QuadroApp.Service.OfferteWorkflowService(factory, workflow),
             new QuadroApp.Service.WerkBonWorkflowService(factory, workflow),
             workflow,
-            new FakeFactuurWorkflow(),
-            new QuadroApp.Service.FactuurExportService(factory, System.Array.Empty<IFactuurExporter>()),
+            new FakeBestelbonWorkflow(),
+            new QuadroApp.Service.BestelbonExportService(factory, System.Array.Empty<IBestelbonExporter>()),
             new TestFilePickerService(),
             new TestDialogService(),
             toast,
@@ -118,16 +118,16 @@ public class AfgerondeVerkoopVergrendeldTests
             runValidation: _ => Task.FromResult(true));
     }
 
-    private sealed class FakeFactuurWorkflow : IFactuurWorkflowService
+    private sealed class FakeBestelbonWorkflow : IBestelbonWorkflowService
     {
-        public Task<Factuur> MaakFactuurVanOfferteAsync(int offerteId) => Task.FromResult(new Factuur());
-        public Task<Factuur> MaakFactuurVanWerkBonAsync(int werkBonId) => Task.FromResult(new Factuur());
-        public Task<Factuur?> GetFactuurAsync(int factuurId) => Task.FromResult<Factuur?>(null);
-        public Task<Factuur?> GetFactuurVoorOfferteAsync(int offerteId) => Task.FromResult<Factuur?>(null);
-        public Task MarkeerKlaarVoorExportAsync(int factuurId) => Task.CompletedTask;
-        public Task MarkeerBetaaldAsync(int factuurId) => Task.CompletedTask;
-        public Task SaveDraftAsync(Factuur factuur) => Task.CompletedTask;
-        public Task HerberekenTotalenAsync(int factuurId) => Task.CompletedTask;
+        public Task<Bestelbon> MaakBestelbonVanOfferteAsync(int offerteId) => Task.FromResult(new Bestelbon());
+        public Task<Bestelbon> MaakBestelbonVanWerkBonAsync(int werkBonId) => Task.FromResult(new Bestelbon());
+        public Task<Bestelbon?> GetBestelbonAsync(int bestelbonId) => Task.FromResult<Bestelbon?>(null);
+        public Task<Bestelbon?> GetBestelbonVoorOfferteAsync(int offerteId) => Task.FromResult<Bestelbon?>(null);
+        public Task MarkeerKlaarVoorExportAsync(int bestelbonId) => Task.CompletedTask;
+        public Task MarkeerBetaaldAsync(int bestelbonId) => Task.CompletedTask;
+        public Task SaveDraftAsync(Bestelbon bestelbon) => Task.CompletedTask;
+        public Task HerberekenTotalenAsync(int bestelbonId) => Task.CompletedTask;
         public Task KenVolgnummerToeBijBevestigingAsync(int offerteId) => Task.CompletedTask;
     }
 
@@ -148,7 +148,7 @@ public class AfgerondeVerkoopVergrendeldTests
     {
         var vm = Maak();
         vm.GekoppeldeWerkBon = new WerkBon { Status = WerkBonStatus.Afgehaald };
-        vm.GekoppeldeFactuur = new Factuur { Status = FactuurStatus.Betaald, VolgNr = 19, FactuurNummer = "2026-19" };
+        vm.GekoppeldeBestelbon = new Bestelbon { Status = BestelbonStatus.Betaald, VolgNr = 19, BestelbonNummer = "2026-19" };
         vm.ToonStappen(OfferteStatus.Betaald, 0m);
 
         Assert.True(vm.IsAfgerond);
@@ -163,7 +163,7 @@ public class AfgerondeVerkoopVergrendeldTests
     {
         var vm = Maak();
         vm.GekoppeldeWerkBon = new WerkBon { Status = WerkBonStatus.Afgehaald };
-        vm.GekoppeldeFactuur = new Factuur { Status = FactuurStatus.Geexporteerd, VolgNr = 19, FactuurNummer = "2026-19" };
+        vm.GekoppeldeBestelbon = new Bestelbon { Status = BestelbonStatus.Geexporteerd, VolgNr = 19, BestelbonNummer = "2026-19" };
         vm.ToonStappen(OfferteStatus.Besteld, 26.20m);
 
         Assert.False(vm.IsVergrendeld);

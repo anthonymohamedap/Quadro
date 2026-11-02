@@ -20,7 +20,7 @@ namespace WorkflowService.Tests;
 /// </summary>
 public class BestelbonVolgnummerTests
 {
-    private static FactuurWorkflowService Sut(IDbContextFactory<QuadroApp.Data.AppDbContext> factory)
+    private static BestelbonWorkflowService Sut(IDbContextFactory<QuadroApp.Data.AppDbContext> factory)
         => new(factory,
             new PricingService(factory, new VastePrijsInstellingen(), new PricingEngine(), NullLogger<PricingService>.Instance),
             new TestAuthService());
@@ -45,11 +45,11 @@ public class BestelbonVolgnummerTests
         await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
         var id = await SeedAsync(scope, 412);
 
-        var bon = await Sut(scope.Factory).MaakFactuurVanOfferteAsync(id);
+        var bon = await Sut(scope.Factory).MaakBestelbonVanOfferteAsync(id);
 
         Assert.True(bon.IsVoorlopig);
         Assert.Null(bon.VolgNr);
-        Assert.Equal("V412", bon.FactuurNummer);
+        Assert.Equal("V412", bon.BestelbonNummer);
         Assert.Equal("voorlopig (offerte 412)", bon.NummerLabel);
     }
 
@@ -61,12 +61,12 @@ public class BestelbonVolgnummerTests
         var nietBesteld = await SeedAsync(scope, 410);
         var besteld = await SeedAsync(scope, 411, OfferteStatus.Goedgekeurd);
 
-        await sut.MaakFactuurVanOfferteAsync(nietBesteld);
-        var bon = await sut.MaakFactuurVanOfferteAsync(besteld);
+        await sut.MaakBestelbonVanOfferteAsync(nietBesteld);
+        var bon = await sut.MaakBestelbonVanOfferteAsync(besteld);
 
         Assert.False(bon.IsVoorlopig);
         Assert.Equal(1, bon.VolgNr);
-        Assert.Equal($"{DateTime.Today.Year}-1", bon.FactuurNummer);
+        Assert.Equal($"{DateTime.Today.Year}-1", bon.BestelbonNummer);
     }
 
     [Fact]
@@ -75,12 +75,12 @@ public class BestelbonVolgnummerTests
         await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
         var sut = Sut(scope.Factory);
         var id = await SeedAsync(scope, 412);
-        var voorlopig = await sut.MaakFactuurVanOfferteAsync(id);
+        var voorlopig = await sut.MaakBestelbonVanOfferteAsync(id);
 
         await using (var db = await scope.Factory.CreateDbContextAsync())
         {
-            var f = await db.Facturen.FindAsync(voorlopig.Id);
-            f!.FactuurDatum = DateTime.Today.AddDays(-5);   // prijsvoorstel van een paar dagen geleden
+            var f = await db.Bestelbonnen.FindAsync(voorlopig.Id);
+            f!.BestelbonDatum = DateTime.Today.AddDays(-5);   // prijsvoorstel van een paar dagen geleden
             await db.SaveChangesAsync();
         }
 
@@ -88,27 +88,27 @@ public class BestelbonVolgnummerTests
         await sut.KenVolgnummerToeBijBevestigingAsync(id);   // tweede keer: niets meer te doen
 
         await using var check = await scope.Factory.CreateDbContextAsync();
-        var bon = await check.Facturen.SingleAsync();
+        var bon = await check.Bestelbonnen.SingleAsync();
         Assert.False(bon.IsVoorlopig);
         Assert.Equal(1, bon.VolgNr);
-        Assert.Equal($"{DateTime.Today.Year}-1", bon.FactuurNummer);
-        Assert.Equal(DateTime.Today, bon.FactuurDatum);
+        Assert.Equal($"{DateTime.Today.Year}-1", bon.BestelbonNummer);
+        Assert.Equal(DateTime.Today, bon.BestelbonDatum);
     }
 
     [Fact]
     public async Task Bevestigen_via_de_workflow_nummert_de_voorlopige_bon()
     {
         await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
-        var factuurWorkflow = Sut(scope.Factory);
+        var bestelbonWorkflow = Sut(scope.Factory);
         var id = await SeedAsync(scope, 412, OfferteStatus.Verzonden);
-        await factuurWorkflow.MaakFactuurVanOfferteAsync(id);
+        await bestelbonWorkflow.MaakBestelbonVanOfferteAsync(id);
 
         var workflow = new QuadroApp.Service.WorkflowService(
-            scope.Factory, NullLogger<QuadroApp.Service.WorkflowService>.Instance, new TestToastService(), factuurWorkflow);
+            scope.Factory, NullLogger<QuadroApp.Service.WorkflowService>.Instance, new TestToastService(), bestelbonWorkflow);
         await workflow.ChangeOfferteStatusAsync(id, OfferteStatus.Goedgekeurd);
 
         await using var check = await scope.Factory.CreateDbContextAsync();
-        Assert.False((await check.Facturen.SingleAsync()).IsVoorlopig);
+        Assert.False((await check.Bestelbonnen.SingleAsync()).IsVoorlopig);
     }
 
     [Fact]
@@ -117,16 +117,16 @@ public class BestelbonVolgnummerTests
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
         var id = await SeedAsync(scope, 412);
-        var bon = await Sut(scope.Factory).MaakFactuurVanOfferteAsync(id);
+        var bon = await Sut(scope.Factory).MaakBestelbonVanOfferteAsync(id);
         var map = Path.Combine(Path.GetTempPath(), "quadro-voorlopig-" + Guid.NewGuid().ToString("N"));
         try
         {
-            var result = await new FactuurExportService(scope.Factory, new[] { new PdfFactuurExporter() }).AfdrukkenAsync(bon.Id, map);
+            var result = await new BestelbonExportService(scope.Factory, new[] { new PdfBestelbonExporter() }).AfdrukkenAsync(bon.Id, map);
 
             Assert.True(result.Success, result.Message);
             Assert.Equal("Bestelbon-V412.pdf", Path.GetFileName(result.BestandPad));
             await using var check = await scope.Factory.CreateDbContextAsync();
-            Assert.Equal(FactuurStatus.Draft, (await check.Facturen.SingleAsync()).Status);
+            Assert.Equal(BestelbonStatus.Draft, (await check.Bestelbonnen.SingleAsync()).Status);
         }
         finally
         {

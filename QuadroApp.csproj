@@ -94,8 +94,8 @@
     <Compile Update="Views\PlanningTijdDialog.axaml.cs">
       <DependentUpon>PlanningTijdDialog.axaml</DependentUpon>
     </Compile>
-    <Compile Update="Views\FactuurInfoDialog.axaml.cs">
-      <DependentUpon>FactuurInfoDialog.axaml</DependentUpon>
+    <Compile Update="Views\BestelbonGegevensDialog.axaml.cs">
+      <DependentUpon>BestelbonGegevensDialog.axaml</DependentUpon>
     </Compile>
     <Compile Update="Views\LijstenWindow.axaml.cs">
       <DependentUpon>LijstenWindow.axaml</DependentUpon>

@@ -103,7 +103,7 @@ namespace QuadroApp.ViewModels
         public IAsyncRelayCommand OpenWerkBonCommand { get; }
         public IAsyncRelayCommand OpenAfwerkingsOptiesCommand { get; }
         public IAsyncRelayCommand OpenLeveranciersCommand { get; }
-        public IAsyncRelayCommand OpenFacturenCommand { get; }
+        public IAsyncRelayCommand OpenBestelbonnenCommand { get; }
         public IAsyncRelayCommand OpenExportCenterCommand { get; }
         public IAsyncRelayCommand OpenInstellingenCommand { get; }
         public IAsyncRelayCommand OpenArchiefCommand { get; }
@@ -140,7 +140,7 @@ namespace QuadroApp.ViewModels
             OpenLeveranciersCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<LeveranciersViewModel>());
             OpenOfferteCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OfferteViewModel>());
             OpenOffertesLijstCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OffertesLijstViewModel>());
-            OpenFacturenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<FacturenViewModel>());
+            OpenBestelbonnenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<BestelbonnenViewModel>());
             OpenExportCenterCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<ExportCenterViewModel>());
             OpenArchiefCommand      = new AsyncRelayCommand(() => _nav.NavigateToAsync<ArchiefViewModel>());
             NieuweOfferteCommand    = new AsyncRelayCommand(() => _offerteNav.NewOfferteAsync());

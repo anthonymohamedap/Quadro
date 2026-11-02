@@ -14,29 +14,29 @@ using System.Threading.Tasks;
 
 namespace QuadroApp.ViewModels;
 
-public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
+public partial class BestelbonnenViewModel : AsyncViewModelBase, IAsyncInitializable
 {
     private readonly IDbContextFactory<AppDbContext> _factory;
-    private readonly IFactuurWorkflowService _workflow;
-    private readonly IFactuurExportService _exportService;
+    private readonly IBestelbonWorkflowService _workflow;
+    private readonly IBestelbonExportService _exportService;
     private readonly IPathOpener _pathOpener;
     private readonly IToastService _toast;
     private readonly INavigationService _nav;
     private readonly IOntvangstService _ontvangsten;   // US-70
 
-    [ObservableProperty] private ObservableCollection<Factuur> facturen = new();
-    [ObservableProperty] private Factuur? geselecteerdeFactuur;
+    [ObservableProperty] private ObservableCollection<Bestelbon> bestelbonnen = new();
+    [ObservableProperty] private Bestelbon? geselecteerdeBestelbon;
     [ObservableProperty] private string filterTekst = string.Empty;
 
-    [ObservableProperty] private DateTimeOffset? factuurDatum;
+    [ObservableProperty] private DateTimeOffset? bestelbonDatum;
     [ObservableProperty] private DateTimeOffset? vervalDatum;
     [ObservableProperty] private string? opmerking;
     [ObservableProperty] private string? aangenomenDoorInitialen;
 
-    public ObservableCollection<FactuurLijn> Lijnen { get; } = new();
-    public Array Statussen => Enum.GetValues(typeof(FactuurStatus));
+    public ObservableCollection<BestelbonLijn> Lijnen { get; } = new();
+    public Array Statussen => Enum.GetValues(typeof(BestelbonStatus));
 
-    public bool IsDraft => GeselecteerdeFactuur?.Status == FactuurStatus.Draft;
+    public bool IsDraft => GeselecteerdeBestelbon?.Status == BestelbonStatus.Draft;
 
     public IAsyncRelayCommand RefreshCommand { get; }
     public IAsyncRelayCommand SaveCommand { get; }
@@ -44,10 +44,10 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
     public IAsyncRelayCommand MarkeerBetaaldCommand { get; }
     public IAsyncRelayCommand GaTerugCommand { get; }
 
-    public FacturenViewModel(
+    public BestelbonnenViewModel(
         IDbContextFactory<AppDbContext> factory,
-        IFactuurWorkflowService workflow,
-        IFactuurExportService exportService,
+        IBestelbonWorkflowService workflow,
+        IBestelbonExportService exportService,
         IToastService toast,
         INavigationService nav,
         IOntvangstService ontvangsten,
@@ -72,27 +72,27 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
     public async Task InitializeAsync()
     {
         await using var db = await _factory.CreateDbContextAsync();
-        var query = db.Facturen.Include(x => x.Lijnen).AsQueryable();
+        var query = db.Bestelbonnen.Include(x => x.Lijnen).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(FilterTekst))
         {
             var ft = FilterTekst.Trim();
-            query = query.Where(x => x.FactuurNummer.Contains(ft) || x.KlantNaam.Contains(ft) || x.Status.ToString().Contains(ft));
+            query = query.Where(x => x.BestelbonNummer.Contains(ft) || x.KlantNaam.Contains(ft) || x.Status.ToString().Contains(ft));
         }
 
         var items = await query.OrderByDescending(x => x.Id).ToListAsync();
-        Facturen = new ObservableCollection<Factuur>(items);
+        Bestelbonnen = new ObservableCollection<Bestelbon>(items);
     }
 
     partial void OnFilterTekstChanged(string value) => RunAsync(InitializeAsync);
 
-    partial void OnGeselecteerdeFactuurChanged(Factuur? value)
+    partial void OnGeselecteerdeBestelbonChanged(Bestelbon? value)
     {
         Lijnen.Clear();
         if (value is null)
             return;
 
-        FactuurDatum = new DateTimeOffset(value.FactuurDatum);
+        BestelbonDatum = new DateTimeOffset(value.BestelbonDatum);
         VervalDatum = new DateTimeOffset(value.VervalDatum);
         Opmerking = value.Opmerking;
         AangenomenDoorInitialen = value.AangenomenDoorInitialen;
@@ -131,7 +131,7 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
     {
         Betalingen.Clear();
         Stand = null;
-        if (GeselecteerdeFactuur is not { Id: > 0 } f) return;
+        if (GeselecteerdeBestelbon is not { Id: > 0 } f) return;
 
         foreach (var b in await _ontvangsten.GetBetalingenAsync(f.Id))
             Betalingen.Add(b);
@@ -142,7 +142,7 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
     [RelayCommand]
     private async Task RegistreerBetalingAsync()
     {
-        if (GeselecteerdeFactuur is null) return;
+        if (GeselecteerdeBestelbon is null) return;
         if (NieuweBetalingBedrag is not > 0m)
         {
             _toast.Warning("Geef een bedrag groter dan 0 in.");
@@ -153,15 +153,15 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
         {
             var bedrag = NieuweBetalingBedrag.Value;
             var nieuw = await _ontvangsten.RegistreerBetalingAsync(
-                GeselecteerdeFactuur.Id, bedrag, (NieuweBetalingDatum ?? DateTimeOffset.Now).Date, NieuweBetalingBetaalwijze);
+                GeselecteerdeBestelbon.Id, bedrag, (NieuweBetalingDatum ?? DateTimeOffset.Now).Date, NieuweBetalingBetaalwijze);
 
             _toast.Success(nieuw.Rest == 0m
                 ? $"Betaling van € {bedrag:0.00} geregistreerd — bestelbon volledig betaald."
                 : $"Betaling van € {bedrag:0.00} geregistreerd — nog te betalen: € {nieuw.Rest:0.00}.");
 
-            var id = GeselecteerdeFactuur.Id;
+            var id = GeselecteerdeBestelbon.Id;
             await InitializeAsync();
-            GeselecteerdeFactuur = Facturen.FirstOrDefault(x => x.Id == id);
+            GeselecteerdeBestelbon = Bestelbonnen.FirstOrDefault(x => x.Id == id);
         }
         catch (Exception ex)
         {
@@ -179,9 +179,9 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
             _toast.Success("Betaling verwijderd.");
 
             // US-72: de status van de bestelbon kan terug open gegaan zijn → lijst herladen.
-            var id = GeselecteerdeFactuur?.Id;
+            var id = GeselecteerdeBestelbon?.Id;
             await InitializeAsync();
-            GeselecteerdeFactuur = id is null ? null : Facturen.FirstOrDefault(x => x.Id == id);
+            GeselecteerdeBestelbon = id is null ? null : Bestelbonnen.FirstOrDefault(x => x.Id == id);
         }
         catch (Exception ex)
         {
@@ -191,14 +191,14 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
 
     private async Task SaveAsync()
     {
-        if (GeselecteerdeFactuur is null) return;
-        GeselecteerdeFactuur.FactuurDatum = (FactuurDatum ?? DateTimeOffset.Now).Date;
-        GeselecteerdeFactuur.VervalDatum = (VervalDatum ?? DateTimeOffset.Now).Date;
-        GeselecteerdeFactuur.Opmerking = Opmerking;
-        GeselecteerdeFactuur.AangenomenDoorInitialen = AangenomenDoorInitialen;
-        GeselecteerdeFactuur.Lijnen = Lijnen;
+        if (GeselecteerdeBestelbon is null) return;
+        GeselecteerdeBestelbon.BestelbonDatum = (BestelbonDatum ?? DateTimeOffset.Now).Date;
+        GeselecteerdeBestelbon.VervalDatum = (VervalDatum ?? DateTimeOffset.Now).Date;
+        GeselecteerdeBestelbon.Opmerking = Opmerking;
+        GeselecteerdeBestelbon.AangenomenDoorInitialen = AangenomenDoorInitialen;
+        GeselecteerdeBestelbon.Lijnen = Lijnen;
 
-        await _workflow.SaveDraftAsync(GeselecteerdeFactuur);
+        await _workflow.SaveDraftAsync(GeselecteerdeBestelbon);
         _toast.Success("Bestelbon opgeslagen.");
         await InitializeAsync();
     }
@@ -207,11 +207,11 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
     /// in elke status (ook Betaald).</summary>
     private async Task AfdrukkenAsync()
     {
-        if (GeselecteerdeFactuur is null) return;
+        if (GeselecteerdeBestelbon is null) return;
 
         try
         {
-            var result = await _exportService.AfdrukkenAsync(GeselecteerdeFactuur.Id);
+            var result = await _exportService.AfdrukkenAsync(GeselecteerdeBestelbon.Id);
             if (!result.Success)
             {
                 _toast.Error(result.Message);
@@ -232,9 +232,9 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
     /// betaalwijze), zodat het mee in het overzicht betalingen komt. Geen rest meer → enkel status.</summary>
     private async Task MarkeerBetaaldAsync()
     {
-        if (GeselecteerdeFactuur is null) return;
+        if (GeselecteerdeBestelbon is null) return;
 
-        var stand = await _ontvangsten.GetBetaalStandAsync(GeselecteerdeFactuur.Id);
+        var stand = await _ontvangsten.GetBetaalStandAsync(GeselecteerdeBestelbon.Id);
         if (stand.Rest > 0m)
         {
             NieuweBetalingBedrag = stand.Rest;
@@ -242,7 +242,7 @@ public partial class FacturenViewModel : AsyncViewModelBase, IAsyncInitializable
             return;
         }
 
-        await _workflow.MarkeerBetaaldAsync(GeselecteerdeFactuur.Id);
+        await _workflow.MarkeerBetaaldAsync(GeselecteerdeBestelbon.Id);
         _toast.Success("Bestelbon gemarkeerd als betaald.");
         await InitializeAsync();
     }

@@ -4,8 +4,8 @@
     xmlns:vm="clr-namespace:QuadroApp.ViewModels"
     xmlns:m="clr-namespace:QuadroApp.Model.DB;assembly=QuadroApp.Data"
     xmlns:conv="clr-namespace:QuadroApp.Converters"
-    x:Class="QuadroApp.Views.FactuurPreviewWindow"
-    x:DataType="vm:FactuurPreviewViewModel"
+    x:Class="QuadroApp.Views.BestelbonPreviewWindow"
+    x:DataType="vm:BestelbonPreviewViewModel"
     Width="860"
     Height="620"
     MinWidth="720"
@@ -51,10 +51,10 @@
                     <ScrollViewer Grid.Row="2" Margin="0,4,0,0">
                         <ItemsControl ItemsSource="{Binding Lijnen}">
                             <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="m:FactuurLijn">
+                                <DataTemplate x:DataType="m:BestelbonLijn">
                                     <Border BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="0,0,0,1" Padding="0,6">
                                         <Grid ColumnDefinitions="*,60,90,100">
-                                            <TextBlock Text="{Binding Omschrijving, Converter={x:Static conv:FactuurOmschrijvingConverter.Instance}}"
+                                            <TextBlock Text="{Binding Omschrijving, Converter={x:Static conv:BestelbonOmschrijvingConverter.Instance}}"
                                                        Classes="body"
                                                        TextWrapping="Wrap"
                                                        Margin="0,0,8,0"/>
@@ -77,22 +77,22 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Spacing="10">
                         <TextBlock Text="Samenvatting" Classes="h3"/>
-                        <TextBlock Text="{Binding Factuur.KlantNaam}" Classes="body" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Factuur.KlantNaam}"/>
-                        <TextBlock Text="{Binding Factuur.KlantAdres}" Classes="body" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding Bestelbon.KlantNaam}" Classes="body" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Bestelbon.KlantNaam}"/>
+                        <TextBlock Text="{Binding Bestelbon.KlantAdres}" Classes="body" TextWrapping="Wrap"/>
                         <Separator/>
                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
                             <TextBlock Text="BestelBon datum" Classes="body"/>
-                            <TextBlock Grid.Column="1" Classes="body" Text="{Binding Factuur.FactuurDatum, StringFormat={}{0:dd/MM/yyyy}}"/>
+                            <TextBlock Grid.Column="1" Classes="body" Text="{Binding Bestelbon.BestelbonDatum, StringFormat={}{0:dd/MM/yyyy}}"/>
 
                             <TextBlock Grid.Row="1" Text="Vervaldatum" Classes="body"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Classes="body" Text="{Binding Factuur.VervalDatum, StringFormat={}{0:dd/MM/yyyy}}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Classes="body" Text="{Binding Bestelbon.VervalDatum, StringFormat={}{0:dd/MM/yyyy}}"/>
 
                             <TextBlock Grid.Row="2" Text="Initialen" Classes="body"/>
-                            <TextBlock Grid.Row="2" Grid.Column="1" Classes="body" Text="{Binding Factuur.AangenomenDoorInitialen, TargetNullValue='-'}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Classes="body" Text="{Binding Bestelbon.AangenomenDoorInitialen, TargetNullValue='-'}"/>
                         </Grid>
                         <Separator/>
                         <TextBlock Text="Opmerking" Classes="body" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding Factuur.Opmerking, TargetNullValue='Geen extra opmerking'}"
+                        <TextBlock Text="{Binding Bestelbon.Opmerking, TargetNullValue='Geen extra opmerking'}"
                                    Classes="body"
                                    TextWrapping="Wrap"/>
                         <Separator/>
@@ -101,42 +101,42 @@
                         <StackPanel Spacing="6">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Text="Subtotaal (excl. BTW)" Classes="body"/>
-                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Factuur.BrutoExclBtw, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Bestelbon.BrutoExclBtw, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
                             </Grid>
 
-                            <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding !Factuur.IsBtwVrijgesteld}">
+                            <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding !Bestelbon.IsBtwVrijgesteld}">
                                 <TextBlock Text="BTW (21%)" Classes="body"/>
-                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Factuur.BrutoBtw, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Bestelbon.BrutoBtw, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
                             </Grid>
 
                             <!-- Alleen bij korting: incl-subtotaal + kortingregel -->
                             <Grid ColumnDefinitions="*,Auto"
-                                  IsVisible="{Binding Factuur.KortingPct, Converter={x:Static conv:BooleanConverters.IsPositive}}">
+                                  IsVisible="{Binding Bestelbon.KortingPct, Converter={x:Static conv:BooleanConverters.IsPositive}}">
                                 <TextBlock Text="Subtotaal (incl. BTW)" Classes="body"/>
-                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Factuur.BrutoInclBtw, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Bestelbon.BrutoInclBtw, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
                             </Grid>
                             <Grid ColumnDefinitions="*,Auto"
-                                  IsVisible="{Binding Factuur.KortingPct, Converter={x:Static conv:BooleanConverters.IsPositive}}">
-                                <TextBlock Text="{Binding Factuur.KortingPct, StringFormat='Korting {0:0.##}%'}" Classes="body" Foreground="{DynamicResource Danger}"/>
-                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Factuur.KortingBedragExcl, StringFormat=- € {0:N2}}" Foreground="{DynamicResource Danger}" HorizontalAlignment="Right"/>
+                                  IsVisible="{Binding Bestelbon.KortingPct, Converter={x:Static conv:BooleanConverters.IsPositive}}">
+                                <TextBlock Text="{Binding Bestelbon.KortingPct, StringFormat='Korting {0:0.##}%'}" Classes="body" Foreground="{DynamicResource Danger}"/>
+                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Bestelbon.KortingBedragExcl, StringFormat=- € {0:N2}}" Foreground="{DynamicResource Danger}" HorizontalAlignment="Right"/>
                             </Grid>
 
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Text="Totaal (incl. BTW)" Classes="body" FontWeight="Bold"/>
-                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Factuur.TotaalInclBtw, StringFormat=€ {0:N2}}" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Bestelbon.TotaalInclBtw, StringFormat=€ {0:N2}}" FontWeight="Bold" HorizontalAlignment="Right"/>
                             </Grid>
 
                             <!-- Alleen bij voorschot -->
                             <Grid ColumnDefinitions="*,Auto"
-                                  IsVisible="{Binding Factuur.VoorschotBedrag, Converter={x:Static conv:BooleanConverters.IsPositive}}">
+                                  IsVisible="{Binding Bestelbon.VoorschotBedrag, Converter={x:Static conv:BooleanConverters.IsPositive}}">
                                 <TextBlock Text="Voorschot betaald" Classes="body"/>
-                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Factuur.VoorschotBedrag, StringFormat=- € {0:N2}}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="1" Classes="body" Text="{Binding Bestelbon.VoorschotBedrag, StringFormat=- € {0:N2}}" HorizontalAlignment="Right"/>
                             </Grid>
 
                             <Separator/>
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Text="Te betalen bij afhalen" Classes="h3"/>
-                                <TextBlock Grid.Column="1" Classes="h3" Text="{Binding Factuur.RestTeBetalen, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="1" Classes="h3" Text="{Binding Bestelbon.RestTeBetalen, StringFormat=€ {0:N2}}" HorizontalAlignment="Right"/>
                             </Grid>
                         </StackPanel>
                     </StackPanel>

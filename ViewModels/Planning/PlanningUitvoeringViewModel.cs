@@ -325,7 +325,7 @@ public partial class PlanningUitvoeringViewModel : ObservableObject
     {
         if (ShowTijdDialogAsync is null) return;
 
-        // US-49 — een afgewerkte/afgehaalde werkbon (gefactureerde/betaalde offerte)
+        // US-49 — een afgewerkte/afgehaalde werkbon (bestelde/betaalde offerte)
         // mag niet meer herpland worden.
         await using (var dbStatus = await _factory.CreateDbContextAsync())
         {

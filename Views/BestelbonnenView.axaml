@@ -4,8 +4,8 @@
              xmlns:vm="using:QuadroApp.ViewModels"
              xmlns:conv="clr-namespace:QuadroApp.Converters"
              xmlns:m="clr-namespace:QuadroApp.Model.DB;assembly=QuadroApp.Data"
-             x:Class="QuadroApp.Views.FacturenView"
-             x:DataType="vm:FacturenViewModel"
+             x:Class="QuadroApp.Views.BestelbonnenView"
+             x:DataType="vm:BestelbonnenViewModel"
              Background="{DynamicResource SurfaceMutedAlt}"
              Foreground="{DynamicResource TextPrimary}">
 
@@ -23,8 +23,8 @@
         <TextBlock Text="Bestelbonnen" Classes="h1" TextTrimming="CharacterEllipsis"/>
         <TextBox Grid.Row="1" Watermark="Filter op nummer / klant / status" Text="{Binding FilterTekst, Mode=TwoWay}"/>
         <ListBox Grid.Row="2"
-                 ItemsSource="{Binding Facturen}"
-                 SelectedItem="{Binding GeselecteerdeFactuur, Mode=TwoWay}"
+                 ItemsSource="{Binding Bestelbonnen}"
+                 SelectedItem="{Binding GeselecteerdeBestelbon, Mode=TwoWay}"
                  MinHeight="120">
           <ListBox.ItemTemplate>
             <DataTemplate>
@@ -49,7 +49,7 @@
 
           <Grid Grid.Row="1" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
             <TextBlock Text="Besteldatum" VerticalAlignment="Center"/>
-            <DatePicker Grid.Column="1" SelectedDate="{Binding FactuurDatum, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
+            <DatePicker Grid.Column="1" SelectedDate="{Binding BestelbonDatum, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
 
             <TextBlock Grid.Row="1" Text="Vervaldatum" VerticalAlignment="Center"/>
             <DatePicker Grid.Row="1" Grid.Column="1" SelectedDate="{Binding VervalDatum, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
@@ -72,7 +72,7 @@
               <ListBox.ItemTemplate>
                 <DataTemplate>
                   <Grid ColumnDefinitions="2.6*,0.7*,0.9*,0.7*,0.9*" Margin="0,2">
-                    <TextBlock Text="{Binding Omschrijving, Converter={x:Static conv:FactuurOmschrijvingConverter.Instance}}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding Omschrijving, Converter={x:Static conv:BestelbonOmschrijvingConverter.Instance}}" TextWrapping="Wrap"/>
                     <TextBlock Grid.Column="1" Text="{Binding Aantal, StringFormat='{}{0:0.##}'}" HorizontalAlignment="Right"/>
                     <TextBlock Grid.Column="2" Text="{Binding PrijsExcl}" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
                     <TextBlock Grid.Column="3" Text="{Binding BtwPct}" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
@@ -89,7 +89,7 @@
                   BorderThickness="1"
                   CornerRadius="8"
                   Padding="10"
-                  IsVisible="{Binding GeselecteerdeFactuur, Converter={x:Static ObjectConverters.IsNotNull}}">
+                  IsVisible="{Binding GeselecteerdeBestelbon, Converter={x:Static ObjectConverters.IsNotNull}}">
             <StackPanel Spacing="8">
               <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Text="Betalingen" Classes="h3"/>
@@ -116,7 +116,7 @@
                               HorizontalContentAlignment="Center"
                               Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
                               ToolTip.Tip="Betaling verwijderen"
-                              Command="{Binding $parent[ItemsControl].((vm:FacturenViewModel)DataContext).VerwijderBetalingCommand}"
+                              Command="{Binding $parent[ItemsControl].((vm:BestelbonnenViewModel)DataContext).VerwijderBetalingCommand}"
                               CommandParameter="{Binding}"/>
                     </Grid>
                   </DataTemplate>

@@ -78,16 +78,16 @@ public class StandaardkaderTests
         }
 
         var pricing = new PricingService(scope.Factory, new FixedPricingSettingsProvider(), new PricingEngine(), NullLogger<PricingService>.Instance);
-        var factuur = await new FactuurWorkflowService(scope.Factory, pricing, new TestAuthService()).MaakFactuurVanOfferteAsync(offerteId);
+        var bestelbon = await new BestelbonWorkflowService(scope.Factory, pricing, new TestAuthService()).MaakBestelbonVanOfferteAsync(offerteId);
 
-        var lijn = Assert.Single(factuur.Lijnen, l => l.Omschrijving.Contains("standaardkader"));
+        var lijn = Assert.Single(bestelbon.Lijnen, l => l.Omschrijving.Contains("standaardkader"));
         Assert.StartsWith("C2 – Alu zwart 50×70 | standaardkader 50x70 cm", lijn.Omschrijving);
         Assert.Contains("titel:Trouwfoto", lijn.Omschrijving);
         Assert.Contains("glas:", lijn.Omschrijving);
         Assert.True(lijn.TotaalExcl > 45m, "Glas telt mee bovenop de stukprijs van het kader.");
 
         // Bestelbonscherm: leesbare omschrijving.
-        var tekst = (string)new FactuurOmschrijvingConverter().Convert(lijn.Omschrijving, typeof(string), null, CultureInfo.InvariantCulture)!;
+        var tekst = (string)new BestelbonOmschrijvingConverter().Convert(lijn.Omschrijving, typeof(string), null, CultureInfo.InvariantCulture)!;
         Assert.Contains("Standaardkader C2 – Alu zwart 50×70", tekst);
         Assert.Contains("50x70 cm", tekst);
         Assert.DoesNotContain("standaardkader 50x70", tekst);
@@ -96,12 +96,12 @@ public class StandaardkaderTests
     [Fact]
     public void Oude_bestelbonlijn_zonder_afmeting_blijft_leesbaar()
     {
-        var tekst = (string)new FactuurOmschrijvingConverter()
+        var tekst = (string)new BestelbonOmschrijvingConverter()
             .Convert("Classic A4 zwart | standaardkader | titel:Foto", typeof(string), null, CultureInfo.InvariantCulture)!;
         Assert.Contains("Standaardkader Classic A4 zwart", tekst);
-        Assert.False(FactuurWorkflowService.IsStandaardkaderSegment("40x50 cm"));
-        Assert.True(FactuurWorkflowService.IsStandaardkaderSegment("standaardkader"));
-        Assert.True(FactuurWorkflowService.IsStandaardkaderSegment("standaardkader 50x70 cm"));
+        Assert.False(BestelbonWorkflowService.IsStandaardkaderSegment("40x50 cm"));
+        Assert.True(BestelbonWorkflowService.IsStandaardkaderSegment("standaardkader"));
+        Assert.True(BestelbonWorkflowService.IsStandaardkaderSegment("standaardkader 50x70 cm"));
     }
 
     private sealed class FixedPricingSettingsProvider : IPricingSettingsProvider

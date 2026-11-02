@@ -29,14 +29,14 @@ public class OntvangstServiceVoorschotTests
 
         if (metBestelbon)
         {
-            db.Facturen.Add(new Factuur
+            db.Bestelbonnen.Add(new Bestelbon
             {
                 OfferteId = offerte.Id,
                 Jaar = DateTime.Today.Year,
                 VolgNr = 1,
-                FactuurNummer = "T-1",
+                BestelbonNummer = "T-1",
                 KlantNaam = "Jan Voorschot",
-                Status = FactuurStatus.Draft,
+                Status = BestelbonStatus.Draft,
                 TotaalInclBtw = 300m,
                 VoorschotBedrag = legacyVoorschot
             });
@@ -90,7 +90,7 @@ public class OntvangstServiceVoorschotTests
         await sut.RegistreerVoorschotAsync(id, 20m, DateTime.Today, Betaalwijze.Cash);
 
         await using (var db = await scope.Factory.CreateDbContextAsync())
-            Assert.Equal(100m, (await db.Facturen.AsNoTracking().SingleAsync(f => f.OfferteId == id)).VoorschotBedrag);
+            Assert.Equal(100m, (await db.Bestelbonnen.AsNoTracking().SingleAsync(f => f.OfferteId == id)).VoorschotBedrag);
 
         var eerste = (await sut.GetVoorschottenAsync(id)).Single(v => v.BedragIncl == 80m);
         var nieuw = await sut.VerwijderAsync(eerste.Id);
@@ -99,7 +99,7 @@ public class OntvangstServiceVoorschotTests
         await using (var db = await scope.Factory.CreateDbContextAsync())
         {
             Assert.Equal(20m, (await db.Offertes.AsNoTracking().SingleAsync(o => o.Id == id)).VoorschotBedrag);
-            Assert.Equal(20m, (await db.Facturen.AsNoTracking().SingleAsync(f => f.OfferteId == id)).VoorschotBedrag);
+            Assert.Equal(20m, (await db.Bestelbonnen.AsNoTracking().SingleAsync(f => f.OfferteId == id)).VoorschotBedrag);
             Assert.Single(await db.Ontvangsten.AsNoTracking().ToListAsync());
         }
     }

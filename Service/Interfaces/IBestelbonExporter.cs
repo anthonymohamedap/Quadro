@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 
 namespace QuadroApp.Service.Interfaces;
 
-public interface IFactuurExporter
+public interface IBestelbonExporter
 {
     ExportFormaat Formaat { get; }
-    Task<ExportResult> ExportAsync(Factuur factuur, string exportFolder);
+    Task<ExportResult> ExportAsync(Bestelbon bestelbon, string exportFolder);
 }
