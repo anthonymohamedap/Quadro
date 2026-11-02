@@ -317,6 +317,21 @@ Verder:
 - **US-102** (momentopname bij afronden) wordt gebouwd **samen met de stap "Afgerond" (US-93, K13)**.
 - **Aanpak**: eerst een **mock** van het scherm Verkopen en het dossier (zoals bij het beginscherm, US-105), daarna US-87 en per fase.
 
+### Stap 1 Offerte (mock goedgekeurd 02/11/2026)
+
+- **Afhaaldatum**: niet verplicht om te bevestigen; wel verplicht vóór "Start productie" (stap 2 → 3).
+- **Voorlopige bestelbon**: kan altijd gemaakt en afgedrukt worden zolang de klant niet bevestigd heeft (V423, geen volgnummer).
+- **Bewaren**: automatisch (± 0,8 s na de laatste wijziging, "bewaard ✓" in de kop); de knop "Opslaan" verdwijnt.
+- **Verwijderen vervalt**: een verkoop wordt altijd **geannuleerd**, ook een lege ("per vergissing aangemaakt"). Afhandeling:
+  - reden verplicht (Klant ziet af · Te duur · Per vergissing aangemaakt · Andere);
+  - offerte → Geannuleerd, alleen-lezen; het nummer blijft (geen gaten); datum, wie en reden bewaard;
+  - voorlopige bon vervalt (had geen volgnummer, dus niets in de boekhouding);
+  - voorschot: kiezen tussen terugbetalen (negatieve betaling met betaalwijze en datum) of houden (annuleringskost);
+  - daarna: "Dupliceren als nieuwe verkoop" (nieuw nummer) of "Heropenen" (enkel beheerder, zolang er geen werkbon was).
+- **Controle vóór Bevestigen**: alle meldingen samen naast de grijze knop ("2 dingen te doen: …").
+- **Bevestigen** springt naar stap 2 in het dossier (geen planning-popup meer), met optioneel "bon meteen afdrukken".
+- Nog open: bevestigt de klant zonder voorlopige bon, maakt "Bevestigen" dan meteen de definitieve bon 2026-…, of pas bij "Klaar" (zoals nu)?
+
 ## Open vragen (voor Veerle / Anthony)
 
 1. **Vorige stap**: alleen terug *bekijken* (zoals het prototype), of moet een stap ook echt teruggezet kunnen worden (bv. bestelling terug naar offerte omdat de klant nog iets wijzigt)? Dit plan gaat uit van alleen bekijken; wijzigen van de offerte na bevestigen → aparte story.
