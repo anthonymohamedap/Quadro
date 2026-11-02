@@ -210,6 +210,8 @@ namespace QuadroApp.Data
                 // Doorlopend zichtbaar offertenummer (zie OfferteNummering) — geen unique
                 // constraint (in tegenstelling tot Bestelbon.BestelbonNummer), enkel voor snel opzoeken.
                 entity.HasIndex(o => o.OfferteNummer);
+                entity.Property(o => o.OverslaanReden).HasMaxLength(200);      // US-87
+                entity.Property(o => o.AnnuleerReden).HasMaxLength(300);       // US-87
 
                 entity.Property(o => o.SubtotaalExBtw).HasColumnType("decimal(18,2)");
                 entity.Property(o => o.BtwBedrag).HasColumnType("decimal(18,2)");

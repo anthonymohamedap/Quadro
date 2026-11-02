@@ -70,8 +70,10 @@ namespace QuadroApp.Service
                 [OfferteStatus.Verzonden]   = new() { OfferteStatus.Goedgekeurd, OfferteStatus.Geannuleerd },
                 [OfferteStatus.Goedgekeurd] = new() { OfferteStatus.InProductie, OfferteStatus.Geannuleerd },
                 [OfferteStatus.InProductie] = new() { OfferteStatus.Afgewerkt, OfferteStatus.Geannuleerd },
-                [OfferteStatus.Afgewerkt]   = new() { OfferteStatus.Besteld },
-                [OfferteStatus.Besteld]= new() { OfferteStatus.Betaald }
+                // US-87 (beslist 02/11): ook na "Klaar om af te halen" mag een verkoop nog geannuleerd
+                // worden (niet meer na het afhalen — zie de controle in ChangeOfferteStatusAsync).
+                [OfferteStatus.Afgewerkt]   = new() { OfferteStatus.Besteld, OfferteStatus.Geannuleerd },
+                [OfferteStatus.Besteld]= new() { OfferteStatus.Betaald, OfferteStatus.Geannuleerd }
             };
 
         private static readonly IReadOnlyDictionary<WerkBonStatus, HashSet<WerkBonStatus>> WerkBonTransitions =
@@ -133,7 +135,17 @@ namespace QuadroApp.Service
 
         // ── ChangeOfferteStatusAsync ────────────────────────────────────────
 
-        public async Task ChangeOfferteStatusAsync(int offerteId, OfferteStatus newStatus)
+        public Task ChangeOfferteStatusAsync(int offerteId, OfferteStatus newStatus)
+            => ChangeOfferteStatusCoreAsync(offerteId, newStatus, annuleringsReden: null);
+
+        public Task AnnuleerOfferteAsync(int offerteId, string reden)
+        {
+            if (string.IsNullOrWhiteSpace(reden))
+                throw new InvalidOperationException("Geef een reden op om de verkoop te annuleren.");
+            return ChangeOfferteStatusCoreAsync(offerteId, OfferteStatus.Geannuleerd, reden.Trim());
+        }
+
+        private async Task ChangeOfferteStatusCoreAsync(int offerteId, OfferteStatus newStatus, string? annuleringsReden)
         {
             await using var db = await _factory.CreateDbContextAsync();
 
@@ -158,6 +170,27 @@ namespace QuadroApp.Service
 
                 int? annuleerWbId = null;
                 var createdWbId = 0;
+
+                // ── US-87: annuleren — niet meer na het afhalen; bestelbon(nen) mee op Geannuleerd ──
+                if (newStatus == OfferteStatus.Geannuleerd)
+                {
+                    if (offerte.WerkBon?.Status == WerkBonStatus.Afgehaald)
+                        throw new InvalidOperationException("Een afgehaalde verkoop kan niet meer geannuleerd worden.");
+
+                    var werkBonId = offerte.WerkBon?.Id;
+                    var bonnen = await db.Bestelbonnen
+                        .Where(b => b.OfferteId == offerteId || (werkBonId != null && b.WerkBonId == werkBonId))
+                        .ToListAsync();
+                    if (bonnen.Any(b => b.Status == BestelbonStatus.Betaald))
+                        throw new InvalidOperationException("Een betaalde verkoop kan niet meer geannuleerd worden.");
+                    foreach (var bon in bonnen)
+                        bon.Status = BestelbonStatus.Geannuleerd;
+                    if (annuleringsReden is not null)
+                    {
+                        offerte.AnnuleerReden = annuleringsReden.Length > 300 ? annuleringsReden[..300] : annuleringsReden;
+                        offerte.GeannuleerdOp = DateTime.Now;
+                    }
+                }
 
                 // ── Annulering: werkbon markeren voor stock-vrijgave + archivering (erna) ──
                 if (newStatus == OfferteStatus.Geannuleerd && offerte.WerkBon is not null)
@@ -200,7 +233,7 @@ namespace QuadroApp.Service
                 // Archiveer — mag de annulering zelf NIET blokkeren
                 try
                 {
-                    await _archief.ArchiveerAsync(annulWerkBonId, annuleringsReden: null);
+                    await _archief.ArchiveerAsync(annulWerkBonId, annuleringsReden: annuleringsReden);
                 }
                 catch (Exception ex)
                 {

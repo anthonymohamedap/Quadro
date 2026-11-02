@@ -17,7 +17,9 @@ namespace QuadroApp.Service.Verkoop
     {
         NogTeDoen,
         Huidig,
-        Klaar
+        Klaar,
+        /// <summary>US-87 — bewust overgeslagen (stappenbalk: gestreept).</summary>
+        Overgeslagen
     }
 
     /// <summary>Resultaat van <see cref="VerkoopStapResolver.Bepaal"/>.</summary>
@@ -27,11 +29,22 @@ namespace QuadroApp.Service.Verkoop
     /// <param name="NogTeBetalen">Openstaand bedrag (0 als onbekend of alles betaald).</param>
     public sealed record VerkoopStapInfo(VerkoopStap Huidig, bool IsGeannuleerd, bool IsAfgerond, decimal NogTeBetalen)
     {
+        /// <summary>US-87 — overgeslagen stappen (Werkbon en/of In productie).</summary>
+        public VerkoopStapFlags Overgeslagen { get; init; } = VerkoopStapFlags.Geen;
+
+        public bool IsOvergeslagen(VerkoopStap stap) => stap switch
+        {
+            VerkoopStap.Werkbon => Overgeslagen.HasFlag(VerkoopStapFlags.Werkbon),
+            VerkoopStap.InProductie => Overgeslagen.HasFlag(VerkoopStapFlags.Productie),
+            _ => false
+        };
+
         /// <summary>Afgehaald, maar er staat nog een rest open.</summary>
         public bool IsAfgehaaldNogTeBetalen => Huidig == VerkoopStap.AfgehaaldEnBetaald && !IsAfgerond && NogTeBetalen > 0m;
 
         public StapToestand ToestandVan(VerkoopStap stap)
         {
+            if (stap < Huidig && IsOvergeslagen(stap)) return StapToestand.Overgeslagen;
             if (IsAfgerond) return StapToestand.Klaar;
             if (stap < Huidig) return StapToestand.Klaar;
             return stap == Huidig ? StapToestand.Huidig : StapToestand.NogTeDoen;
@@ -49,12 +62,13 @@ namespace QuadroApp.Service.Verkoop
             OfferteStatus offerteStatus,
             WerkBonStatus? werkBonStatus,
             BestelbonStatus? bestelbonStatus,
-            decimal nogTeBetalen)
+            decimal nogTeBetalen,
+            VerkoopStapFlags overgeslagen = VerkoopStapFlags.Geen)
         {
             var rest = nogTeBetalen < 0m ? 0m : nogTeBetalen;
 
             if (offerteStatus == OfferteStatus.Geannuleerd)
-                return new VerkoopStapInfo(VerkoopStap.Offerte, IsGeannuleerd: true, IsAfgerond: false, rest);
+                return new VerkoopStapInfo(VerkoopStap.Offerte, IsGeannuleerd: true, IsAfgerond: false, rest) { Overgeslagen = overgeslagen };
 
             var stap = werkBonStatus switch
             {
@@ -77,7 +91,7 @@ namespace QuadroApp.Service.Verkoop
                 || (stap == VerkoopStap.AfgehaaldEnBetaald && werkBonStatus is null && offerteStatus == OfferteStatus.Betaald);
             var afgerond = stap == VerkoopStap.AfgehaaldEnBetaald && betaald;
 
-            return new VerkoopStapInfo(stap, IsGeannuleerd: false, afgerond, afgerond ? 0m : rest);
+            return new VerkoopStapInfo(stap, IsGeannuleerd: false, afgerond, afgerond ? 0m : rest) { Overgeslagen = overgeslagen };
         }
 
         public static string Titel(VerkoopStap stap) => stap switch
