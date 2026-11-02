@@ -50,12 +50,11 @@ public class OfferteNummerNulTests : IDisposable
         var migrator = db.GetInfrastructure().GetRequiredService<IMigrator>();
         await migrator.MigrateAsync(migraties[index - 1]);
 
-        db.Offertes.AddRange(
-            new Offerte { OfferteNummer = 7, Datum = DateTime.Today, Opmerking = "zeven" },
-            new Offerte { OfferteNummer = 0, Datum = DateTime.Today, Opmerking = "nul-a" },
-            new Offerte { OfferteNummer = 0, Datum = DateTime.Today, Opmerking = "nul-b" });
-        db.OfferteArchieven.Add(new OfferteArchief { OfferteNummer = 12, OrigineleOfferteId = 99, KlantNaam = "Archief" });
-        await db.SaveChangesAsync();
+        // Met SQL invoegen (niet via het huidige model): latere migraties voegen kolommen toe die in
+        // deze oudere database nog niet bestaan (bv. US-87).
+        foreach (var (nummer, opmerking) in new[] { (7, "zeven"), (0, "nul-a"), (0, "nul-b") })
+            await InsertAsync(db, "Offertes", new() { ["OfferteNummer"] = nummer, ["Datum"] = "2026-10-01 00:00:00", ["Opmerking"] = opmerking });
+        await InsertAsync(db, "OfferteArchieven", new() { ["OfferteNummer"] = 12, ["OrigineleOfferteId"] = 99, ["KlantNaam"] = "Archief" });
 
         await migrator.MigrateAsync();
 
@@ -113,5 +112,33 @@ public class OfferteNummerNulTests : IDisposable
 
         vm.BestelbonDatum = new DateTimeOffset(new DateTime(2026, 10, 23));
         Assert.False(vm.HasAfhaalWaarschuwing);
+    }
+
+    /// <summary>Rij invoegen met dummywaarden voor verplichte kolommen zonder standaardwaarde.</summary>
+    private static async Task InsertAsync(AppDbContext db, string tabel, System.Collections.Generic.Dictionary<string, object> waarden)
+    {
+        var conn = (Microsoft.Data.Sqlite.SqliteConnection)db.Database.GetDbConnection();
+        if (conn.State != System.Data.ConnectionState.Open) await conn.OpenAsync();
+        await using (var info = conn.CreateCommand())
+        {
+            info.CommandText = $"SELECT name, type, \"notnull\", dflt_value, pk FROM pragma_table_info('{tabel}')";
+            await using var r = await info.ExecuteReaderAsync();
+            while (await r.ReadAsync())
+            {
+                var naam = r.GetString(0);
+                if (r.GetInt64(2) != 1 || !r.IsDBNull(3) || r.GetInt64(4) != 0 || waarden.ContainsKey(naam)) continue;
+                waarden[naam] = r.GetString(1).ToUpperInvariant() switch
+                {
+                    "INTEGER" => 0,
+                    "BLOB" => Array.Empty<byte>(),
+                    _ => naam.Contains("Datum") || naam.EndsWith("Op") ? "2026-10-01 00:00:00" : "0"
+                };
+            }
+        }
+        await using var cmd = conn.CreateCommand();
+        var kolommen = waarden.Keys.ToList();
+        cmd.CommandText = $"INSERT INTO \"{tabel}\" ({string.Join(", ", kolommen.Select(k => $"\"{k}\""))}) VALUES ({string.Join(", ", kolommen.Select((_, i) => $"$p{i}"))})";
+        for (var i = 0; i < kolommen.Count; i++) cmd.Parameters.AddWithValue($"$p{i}", waarden[kolommen[i]]);
+        await cmd.ExecuteNonQueryAsync();
     }
 }
