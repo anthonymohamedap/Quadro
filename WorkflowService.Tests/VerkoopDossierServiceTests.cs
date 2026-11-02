@@ -189,6 +189,27 @@ public class VerkoopDossierServiceTests
     }
 
     [Fact]
+    public async Task Ontvangen_telt_ook_betalingen_op_de_bestelbon_zonder_offerteId_US90()
+    {
+        var o = await OpstellingAsync(voorschot: 100m);
+        await using var _ = o.Scope;
+        await o.Dossier.SlaOverNaarKlaarAsync(o.OfferteId, "Klant neemt meteen mee");
+
+        await using (var db = await o.Scope.Factory.CreateDbContextAsync())
+        {
+            var bon = await db.Bestelbonnen.SingleAsync();
+            db.Ontvangsten.Add(new Ontvangst
+            {
+                Soort = OntvangstSoort.Betaling, BestelbonId = bon.Id, OfferteId = null,
+                Datum = DateTime.Today, BedragIncl = 20m, Betaalwijze = Betaalwijze.Cash
+            });
+            await db.SaveChangesAsync();
+        }
+
+        Assert.Equal(120m, await o.Dossier.OntvangenBedragAsync(o.OfferteId));
+    }
+
+    [Fact]
     public async Task Annuleren_met_voorschot_houden_boekt_niets_terug()
     {
         var o = await OpstellingAsync(voorschot: 100m);

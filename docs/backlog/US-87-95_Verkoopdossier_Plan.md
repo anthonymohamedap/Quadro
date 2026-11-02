@@ -223,6 +223,16 @@ Technisch: `ViewModels/Verkopen/VerkopenViewModel.cs` + `Views/VerkopenView.axam
 
 ### US-90 — Dossier-schil
 
+> ✅ **Gebouwd 02/11/2026** (`feature/us90-dossier-schil`, PR naar `dev`):
+> - `VerkoopDossierViewModel` + `VerkoopDossierView`: kop (◀ Verkopen, "Verkoop 423 · klant", adres · telefoon · afhalen, fase), rechts totaal en nog te betalen, menu ⋯ (Offerte openen, Verkoop annuleren…).
+> - Chips Offerte / Werkbon / Bestelbon / Voorschot, gestreept zolang ze niet bestaan.
+> - Stappenbalk: klaar (✓ + datum offerte/werkbon), huidig ("hier ben je"), overgeslagen (gestreept), nog te doen (niet klikbaar). Klik op een bereikte stap of "◀ Vorige stap" = **terug kijken** (enkel bekijken, melding bovenaan, "Naar huidige stap ▶").
+> - Stapinhoud = samenvatting + knoppen naar de **bestaande schermen** (offerte, werkbonvenster, planning, bestelbonnen); US-91–93 zetten die inhoud in de stap zelf.
+> - Voetbalk: Stap n van 5 en hoofdknop: Offerte openen ▶ · Start productie ▶ (zegt wat ontbreekt) · Klaar om af te halen ▶ (bevestigen) · Klant komt afhalen ▶ (werkbonvenster, afrekenen zoals US-76) · Betaling registreren ▶ (bestelbonnen).
+> - Annuleren: dialoog met verplichte reden, gevolgen (zoals nu) en voorschot terugbetalen (betaalwijze) of houden.
+> - Ingang: knop **"Dossier (nieuw)"** in Verkopen, naast Openen (fase B: oude schermen blijven de standaard).
+> - Fix: "ontvangen" telt ook betalingen op de bestelbon zonder OfferteId.
+
 **Als** medewerker **wil ik** bij het openen van een verkoop op de stap staan waar ik gestopt was, **zodat** ik niet hoef te zoeken wat de volgende stap is.
 
 1. Kop: "◀ Verkopen", "Verkoop 412 · Test Quadro", klantgegevens, afhaaldatum; rechts totaal en "nog te betalen"; menu ⋯ met Annuleren (en later Dupliceren).
