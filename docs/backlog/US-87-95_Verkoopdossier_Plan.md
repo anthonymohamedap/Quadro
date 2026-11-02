@@ -361,6 +361,15 @@ Mock: `docs/backlog/mock-verkoopdossier/` (HTML, in de browser openen).
 - Stap 5: afgehaald met rest → betalen zoals op het Bestelbonnen-scherm; alles betaald → afgerond en vergrendeld, "Ontgrendelen" enkel beheerder (US-101). Momentopname = US-102.
 - Niet toegevoegd (bestaat vandaag niet): wisselgeld bij afrekenen, tijdlijn, "Nieuwe verkoop voor deze klant", afvinklijst "meegeven".
 
+### Lijst Verkopen (mock 02/11/2026)
+
+- Zelfde 5 tabbladen als de huidige offertelijst (US-84) met aantallen: Open offertes, Lopende werkbonnen, Klaar om af te halen, Afgerond, Geannuleerd (niet de 8 uit de eerste schets).
+- Zoeken op nummer, klant **of bestelbonnummer** (zoals de Bestelbonnenlijst), "Zoek in alle tabbladen", jaarfilter.
+- Kolommen van de offertelijst (Nr., Klant + e-mail, Datum, Fase, Afhalen, Totaal incl.) + Bestelbon; bij werkbonnen onder de fase: werkbon #, status, taken, bestelvoortgang (zoals de Werkbonnenlijst).
+- Knoppen zoals nu: Openen, Vernieuwen, Nieuw(e verkoop), Naar archief, Archief bekijken; bij werkbonnen ook Planning en Werklijst van een week.
+- Menu: **Werkbonnen en Bestelbonnen blijven** tot Anthony en Veerle akkoord zijn (US-95). Geen kaartjes bovenaan (staan al op het beginscherm, US-86/105).
+- Eerste schets `dossier.html` verwijderd (bevatte toevoegingen).
+
 ### Werkwijze (02/11/2026)
 
 Alle stories van het verkoopdossier (US-87 → US-95, US-102) gaan naar de branch **`dev`**: feature-branch vanaf `dev`, PR naar `dev`. Pas als Anthony (en Veerle) akkoord zijn, gaat `dev` in één keer naar `main`. Andere werk (fixes, losse stories) blijft rechtstreeks naar `main` gaan; `dev` wordt dan regelmatig bijgewerkt met `main`.
