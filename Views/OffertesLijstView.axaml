@@ -90,6 +90,13 @@
                             Padding="10,5"
                             Margin="0,0,8,6"
                             ToolTip.Tip="Open de geselecteerde verkoop (of dubbelklik op een rij)"/>
+                    <!-- US-90: nieuw dossier, naast het oude scherm -->
+                    <Button Content="Dossier (nieuw)"
+                            Command="{Binding OpenDossierCommand}"
+                            CornerRadius="6"
+                            Padding="10,5"
+                            Margin="0,0,8,6"
+                            ToolTip.Tip="Open de verkoop als dossier met stappen (nieuw, om te testen)"/>
                     <Button Content="&#x21BB; Vernieuwen"
                             Command="{Binding LoadCommand}"
                             CornerRadius="6"

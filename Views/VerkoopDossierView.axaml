@@ -1,0 +1,264 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:QuadroApp.ViewModels.Verkoop"
+    x:Class="QuadroApp.Views.VerkoopDossierView"
+    x:DataType="vm:VerkoopDossierViewModel"
+    Background="{DynamicResource SurfaceMuted}">
+
+    <!-- US-90: dossier-schil — kop, documentchips, stappenbalk (terugkijken), stapinhoud, voetbalk.
+         De stappen gebruiken voorlopig de bestaande schermen (offerte, werkbon, planning, bestelbonnen). -->
+    <UserControl.Styles>
+        <Style Selector="Border.kaart">
+            <Setter Property="Background" Value="{DynamicResource Surface}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="16"/>
+        </Style>
+        <Style Selector="Border.chip">
+            <Setter Property="Background" Value="{DynamicResource Surface}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="10,3"/>
+            <Setter Property="Margin" Value="0,0,6,4"/>
+        </Style>
+        <Style Selector="Border.chip.ontbreekt">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="Border.chip.ontbreekt TextBlock">
+            <Setter Property="TextDecorations" Value="Strikethrough"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+        </Style>
+
+        <!-- Stappenbalk: klaar = groen ✓, huidig = geel, overgeslagen = gestreept, bekeken = kader -->
+        <Style Selector="Button.stap">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+        </Style>
+        <!-- Nog te doen: niet klikbaar, maar niet grijs gevuld zoals een uitgeschakelde knop -->
+        <Style Selector="Button.stap:disabled /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="Button.stap.huidig">
+            <Setter Property="Background" Value="{DynamicResource BrandYellowHover}"/>
+        </Style>
+        <Style Selector="Button.stap.bekeken">
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandYellow}"/>
+        </Style>
+        <Style Selector="Border.bol">
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+            <Setter Property="Background" Value="{DynamicResource Surface}"/>
+        </Style>
+        <Style Selector="Border.bol.klaar">
+            <Setter Property="Background" Value="{DynamicResource Success}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Success}"/>
+        </Style>
+        <Style Selector="Border.bol.huidig">
+            <Setter Property="Background" Value="{DynamicResource BrandYellow}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandYellow}"/>
+        </Style>
+        <Style Selector="TextBlock.bolTekst">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+        </Style>
+        <Style Selector="TextBlock.bolTekst.klaar">
+            <Setter Property="Foreground" Value="{DynamicResource TextOnDark}"/>
+        </Style>
+        <Style Selector="TextBlock.bolTekst.huidig">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+        </Style>
+        <Style Selector="TextBlock.stapTitel">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+        <Style Selector="TextBlock.stapTitel.actief">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+        </Style>
+        <Style Selector="TextBlock.stapTitel.overgeslagen">
+            <Setter Property="TextDecorations" Value="Strikethrough"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+
+        <!-- ── Kop ── -->
+        <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="0,0,0,1" Padding="24,14,24,10">
+            <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="16">
+                    <StackPanel Spacing="2">
+                        <Button Content="◀ Verkopen" Command="{Binding TerugNaarVerkopenCommand}"
+                                Background="Transparent" Padding="0" Foreground="{DynamicResource TextSecondary}"/>
+                        <TextBlock Text="{Binding Titel}" Classes="h1" TextTrimming="CharacterEllipsis"/>
+                        <WrapPanel>
+                            <TextBlock Text="{Binding KlantRegel}" Classes="body" Foreground="{DynamicResource TextSecondary}"
+                                       TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <Border Background="{DynamicResource WarningBg}" CornerRadius="10" Padding="9,2">
+                                <TextBlock Text="{Binding StatusTekst}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                            </Border>
+                        </WrapPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="Totaal incl." Classes="label" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Right"/>
+                        <TextBlock Text="{Binding TotaalTekst}" FontSize="22" FontWeight="Bold" HorizontalAlignment="Right"/>
+                        <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Right"
+                                Background="{DynamicResource StatOrangeBg}" IsVisible="{Binding !IsAllesBetaald}">
+                            <TextBlock Text="{Binding NogTeBetalenTekst}" FontWeight="SemiBold" Foreground="{DynamicResource StatOrangeText}"/>
+                        </Border>
+                        <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Right"
+                                Background="{DynamicResource SuccessBg}" IsVisible="{Binding IsAllesBetaald}">
+                            <TextBlock Text="{Binding NogTeBetalenTekst}" FontWeight="SemiBold" Foreground="{DynamicResource Success}"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Menu ⋯ -->
+                    <Button Grid.Column="2" Content="⋯" VerticalAlignment="Top" Padding="12,4" CornerRadius="6"
+                            ToolTip.Tip="Meer acties">
+                        <Button.Flyout>
+                            <MenuFlyout>
+                                <MenuItem Header="Offerte openen" Command="{Binding OpenOfferteCommand}"/>
+                                <MenuItem Header="Verkoop annuleren…" Command="{Binding AnnulerenCommand}"
+                                          IsEnabled="{Binding KanAnnuleren}"/>
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+                </Grid>
+
+                <!-- Documentchips -->
+                <WrapPanel>
+                    <TextBlock Text="In deze verkoop:" Classes="label" Foreground="{DynamicResource TextSecondary}"
+                               VerticalAlignment="Center" Margin="0,0,8,4"/>
+                    <ItemsControl ItemsSource="{Binding Chips}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:DossierChip">
+                                <Border Classes="chip" Classes.ontbreekt="{Binding BestaatNiet}">
+                                    <TextBlock Text="{Binding Tekst}" Classes="label"/>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </WrapPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ── Stappenbalk ── -->
+        <Border Grid.Row="1" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="0,0,0,1" Padding="24,8">
+            <ItemsControl ItemsSource="{Binding Stappen}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><UniformGrid Rows="1"/></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:DossierStap">
+                        <Button Classes="stap" Classes.huidig="{Binding IsHuidig}" Classes.bekeken="{Binding IsBekeken}"
+                                IsEnabled="{Binding KanBekijken}"
+                                Command="{Binding $parent[UserControl].((vm:VerkoopDossierViewModel)DataContext).BekijkStapCommand}"
+                                CommandParameter="{Binding}"
+                                ToolTip.Tip="Klik om deze stap te bekijken">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                <Border Classes="bol" Classes.klaar="{Binding IsKlaar}" Classes.huidig="{Binding IsHuidig}">
+                                    <TextBlock Text="{Binding Bolletje}" Classes="bolTekst"
+                                               Classes.klaar="{Binding IsKlaar}" Classes.huidig="{Binding IsHuidig}"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Titel}" Classes="stapTitel"
+                                               Classes.actief="{Binding !IsNogTeDoen}"
+                                               Classes.overgeslagen="{Binding IsOvergeslagen}"/>
+                                    <TextBlock Text="{Binding Onderschrift}" Classes="label" Foreground="{DynamicResource TextSecondary}"
+                                               IsVisible="{Binding Onderschrift, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Border>
+
+        <!-- ── Stapinhoud ── -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="24,16" Spacing="12" MaxWidth="1100" HorizontalAlignment="Left">
+                <Border Classes="kaart" IsVisible="{Binding IsTerugGekeken}"
+                        Background="{DynamicResource InfoBg}" BorderBrush="{DynamicResource InfoBorder}" Padding="12,8">
+                    <TextBlock Text="Terug gekeken — enkel bekijken, er wordt niets teruggezet."
+                               Foreground="{DynamicResource InfoText}" FontWeight="SemiBold"/>
+                </Border>
+
+                <Border Classes="kaart">
+                    <StackPanel Spacing="10">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="{Binding BekekenTitel}" Classes="h2"/>
+                            <TextBlock Text="{Binding BekekenUitleg}" Classes="body" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <ItemsControl ItemsSource="{Binding Gegevens}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:DossierGegeven">
+                                    <Grid ColumnDefinitions="140,*" Margin="0,2">
+                                        <TextBlock Text="{Binding Label}" Foreground="{DynamicResource TextSecondary}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Waarde}" TextWrapping="Wrap"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <ItemsControl ItemsSource="{Binding Meldingen}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <Border Background="{DynamicResource WarningBg}" CornerRadius="8" Padding="10,6" Margin="0,2">
+                                        <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="{DynamicResource TextPrimary}"/>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Bestaande schermen (zelfde functies als nu) -->
+                        <WrapPanel>
+                            <Button Content="Offerte openen" Command="{Binding OpenOfferteCommand}"
+                                    IsVisible="{Binding ToontOfferteKnop}" Padding="10,5" CornerRadius="6" Margin="0,0,8,6"/>
+                            <Button Content="Werkbon openen" Command="{Binding OpenWerkBonCommand}"
+                                    IsVisible="{Binding ToontWerkbonKnoppen}" Padding="10,5" CornerRadius="6" Margin="0,0,8,6"/>
+                            <Button Content="Planning openen" Command="{Binding OpenPlanningCommand}"
+                                    IsVisible="{Binding ToontWerkbonKnoppen}" Padding="10,5" CornerRadius="6" Margin="0,0,8,6"/>
+                            <Button Content="Bestelbonnen openen" Command="{Binding OpenBestelbonnenCommand}"
+                                    IsVisible="{Binding ToontBestelbonKnop}" Padding="10,5" CornerRadius="6" Margin="0,0,8,6"/>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ── Voetbalk ── -->
+        <Border Grid.Row="3" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="0,1,0,0" Padding="24,10">
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="12">
+                <Button Content="◀ Vorige stap" Command="{Binding VorigeStapCommand}" IsEnabled="{Binding KanVorigeStap}"
+                        Padding="10,6" CornerRadius="6"/>
+                <TextBlock Grid.Column="1" Text="{Binding StapTeller}" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondary}"/>
+                <Button Grid.Column="3" Content="Naar huidige stap ▶" Command="{Binding NaarHuidigeStapCommand}"
+                        IsVisible="{Binding IsTerugGekeken}" Classes="AccentBtn" Padding="12,6"/>
+                <Button Grid.Column="3" Content="{Binding HoofdKnopTekst}" Command="{Binding HoofdKnopCommand}"
+                        IsVisible="{Binding IsHoofdKnopZichtbaar}" Classes="AccentBtn" Padding="12,6"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

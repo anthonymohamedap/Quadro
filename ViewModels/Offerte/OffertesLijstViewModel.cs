@@ -210,6 +210,14 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
         await _offerteNav.OpenOfferteAsync(SelectedOfferte.OfferteId);
     }
 
+    /// <summary>US-90 — het nieuwe verkoopdossier, naast de oude schermen (fase B: Veerle test).</summary>
+    [RelayCommand]
+    private async Task OpenDossierAsync()
+    {
+        if (SelectedOfferte is null) return;
+        await _nav.NavigateToAsync<QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel, int>(SelectedOfferte.OfferteId);
+    }
+
     // ── US-89: knoppen van de Werkbonnenlijst ────────────────────────────────
 
     /// <summary>Planning openen voor de werkbon van de gekozen verkoop (zelfde venster als in Werkbonnen).</summary>

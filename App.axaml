@@ -1,6 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:QuadroApp.ViewModels"
+             xmlns:vmv="using:QuadroApp.ViewModels.Verkoop"
              xmlns:views="using:QuadroApp.Views"
              xmlns:huskui="https://github.com/d3ara1n/Huskui.Avalonia"
              x:Class="QuadroApp.App">
@@ -51,6 +52,11 @@
 
 		<DataTemplate DataType="{x:Type vm:OfferteViewModel}">
 			<views:OfferteView/>
+		</DataTemplate>
+
+		<!-- US-90: verkoopdossier -->
+		<DataTemplate DataType="{x:Type vmv:VerkoopDossierViewModel}">
+			<views:VerkoopDossierView/>
 		</DataTemplate>
 
 		<DataTemplate DataType="{x:Type vm:OffertesLijstViewModel}">
