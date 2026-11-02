@@ -88,6 +88,7 @@ namespace QuadroApp.ViewModels
                 var t = Zoekterm.Trim().ToLowerInvariant();
                 query = query.Where(w =>
                     w.Id.ToString().Contains(t) ||
+                    (w.Offerte != null && w.Offerte.OfferteNummer.ToString().Contains(t)) ||   // werkbon = verkoopnummer
                     (w.Offerte != null &&
                      w.Offerte.Klant != null &&
                      (w.Offerte.Klant.Achternaam.ToLower().Contains(t) ||

@@ -16,12 +16,16 @@
 
     <Grid RowDefinitions="Auto,*">
 
-        <controls:QuadroHeader Title="OFFERTES" BackCommand="{Binding GaTerugCommand}"/>
+        <controls:QuadroHeader Title="VERKOPEN" BackCommand="{Binding GaTerugCommand}"/>
 
         <!-- Star-rij zodat de lijst de resthoogte vult en zelf scrolt -->
         <Grid Grid.Row="1" Margin="24" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" RowSpacing="12">
 
-            <TextBlock Text="Offertes" Classes="h1" TextTrimming="CharacterEllipsis"/>
+            <StackPanel Spacing="2">
+                <TextBlock Text="Verkopen" Classes="h1" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="Offertes, werkbonnen en bestelbonnen op één plek. Dubbelklik of &quot;Openen&quot; opent de verkoop."
+                           Classes="body" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+            </StackPanel>
 
             <!-- Toolbar: wrapt op smalle vensters -->
             <!-- US-84: tabbladen per fase, met aantal -->
@@ -57,20 +61,21 @@
             </ListBox>
 
             <Grid Grid.Row="2" ColumnDefinitions="Auto,Auto,Auto,*" ColumnSpacing="10">
-                <TextBox MinWidth="200"
-                         Watermark="Zoek op nummer of klant..."
+                <TextBox MinWidth="260"
+                         VerticalAlignment="Top"
+                         Watermark="Zoek op nummer, klant of bestelbonnr…"
                          Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
                 <CheckBox Grid.Column="2" Content="Zoek in alle tabbladen"
                           IsChecked="{Binding ZoekInAlle, Mode=TwoWay}"
-                          VerticalAlignment="Center"/>
+                          VerticalAlignment="Top" Margin="0,4,0,0"/>
 
                 <!-- Jaar-filter -->
                 <ComboBox Grid.Column="1"
                           ItemsSource="{Binding BeschikbareJaren}"
                           SelectedItem="{Binding GeselecteerdJaar, Mode=TwoWay}"
                           MinWidth="100"
-                          VerticalAlignment="Center">
+                          VerticalAlignment="Top">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Converter={StaticResource JaarConv}}"/>
@@ -78,19 +83,19 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
 
-                <WrapPanel Grid.Column="3" VerticalAlignment="Center">
+                <WrapPanel Grid.Column="3" VerticalAlignment="Top">
                     <Button Content="Openen"
                             Command="{Binding OpenCommand}"
                             Classes="AccentBtn"
                             Padding="10,5"
                             Margin="0,0,8,6"
-                            ToolTip.Tip="Open de geselecteerde offerte (of dubbelklik op een rij)"/>
+                            ToolTip.Tip="Open de geselecteerde verkoop (of dubbelklik op een rij)"/>
                     <Button Content="&#x21BB; Vernieuwen"
                             Command="{Binding LoadCommand}"
                             CornerRadius="6"
                             Padding="10,5"
                             Margin="0,0,8,6"/>
-                    <Button Content="+ Nieuw"
+                    <Button Content="+ Nieuwe verkoop"
                             Command="{Binding NewCommand}"
                             Classes="MainBtn"
                             Margin="0,0,8,6"/>
@@ -109,20 +114,35 @@
                             CornerRadius="6"
                             Padding="10,5"
                             FontWeight="SemiBold"
+                            Margin="0,0,8,6"/>
+                    <!-- US-89: zoals in de Werkbonnenlijst -->
+                    <Button Content="Planning openen"
+                            Command="{Binding OpenPlanningCommand}"
+                            IsVisible="{Binding IsWerkbonTab}"
+                            CornerRadius="6"
+                            Padding="10,5"
+                            Margin="0,0,8,6"
+                            ToolTip.Tip="Planning van de werkbon van de geselecteerde verkoop"/>
+                    <Button Content="Weeklijst afdrukken"
+                            Command="{Binding OpenWeekLijstCommand}"
+                            IsVisible="{Binding IsWerkbonTab}"
+                            CornerRadius="6"
+                            Padding="10,5"
                             Margin="0,0,0,6"/>
                 </WrapPanel>
             </Grid>
 
             <Grid Grid.Row="3"
-                  ColumnDefinitions="0.7*,2.5*,1.1*,1.6*,1.1*,1.2*"
+                  ColumnDefinitions="0.6*,2.2*,1*,2.4*,1*,1*,1.1*"
                   ColumnSpacing="8"
                   Margin="16,0,16,0">
                 <TextBlock Text="Nr."          Grid.Column="0" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
                 <TextBlock Text="Klant"        Grid.Column="1" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
                 <TextBlock Text="Datum"        Grid.Column="2" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
                 <TextBlock Text="Fase"         Grid.Column="3" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
-                <TextBlock Text="Afhalen"      Grid.Column="4" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
-                <TextBlock Text="Totaal incl." Grid.Column="5" Classes="label" Foreground="{DynamicResource TextHeading}" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="Bestelbon"    Grid.Column="4" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="Afhalen"      Grid.Column="5" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="Totaal incl." Grid.Column="6" Classes="label" Foreground="{DynamicResource TextHeading}" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
             </Grid>
 
             <Border Grid.Row="4"
@@ -141,7 +161,7 @@
 
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="sv:VerkoopOverzichtRegel">
-                            <Grid ColumnDefinitions="0.7*,2.5*,1.1*,1.6*,1.1*,1.2*"
+                            <Grid ColumnDefinitions="0.6*,2.2*,1*,2.4*,1*,1*,1.1*"
                                   VerticalAlignment="Center"
                                   ColumnSpacing="8">
 
@@ -169,21 +189,34 @@
                                            VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis"/>
 
-                                <TextBlock Grid.Column="3"
-                                           Text="{Binding FaseTekst}"
-                                           Foreground="{DynamicResource TextPrimary}"
-                                           VerticalAlignment="Center"
-                                           TextTrimming="CharacterEllipsis"
-                                           ToolTip.Tip="{Binding FaseTekst}"/>
+                                <StackPanel Grid.Column="3" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding FaseTekst}"
+                                               Foreground="{DynamicResource TextPrimary}"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip.Tip="{Binding FaseTekst}"/>
+                                    <!-- US-89: werkbon zoals in de Werkbonnenlijst -->
+                                    <TextBlock Text="{Binding WerkbonInfo}"
+                                               IsVisible="{Binding ToontWerkbonInfo}"
+                                               Classes="label"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip.Tip="{Binding WerkbonInfo}"/>
+                                </StackPanel>
 
                                 <TextBlock Grid.Column="4"
+                                           Text="{Binding BestelbonKolomTekst}"
+                                           Foreground="{DynamicResource TextPrimary}"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"/>
+
+                                <TextBlock Grid.Column="5"
                                            Text="{Binding AfhaalDatum, StringFormat='{}{0:dd/MM/yyyy}'}"
                                            IsVisible="{Binding ToontAfhaalDatum}"
                                            Foreground="{DynamicResource TextPrimary}"
                                            VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis"/>
 
-                                <TextBlock Grid.Column="5"
+                                <TextBlock Grid.Column="6"
                                            Text="{Binding TotaalIncl, StringFormat='€ {0:0.00}'}"
                                            Foreground="{DynamicResource TextPrimary}"
                                            VerticalAlignment="Center"
@@ -197,7 +230,7 @@
             </Border>
 
             <TextBlock Grid.Row="5"
-                       Text="{Binding FilteredOffertes.Count, StringFormat='Aantal offertes: {0}'}"
+                       Text="{Binding FilteredOffertes.Count, StringFormat='Aantal verkopen: {0}'}"
                        HorizontalAlignment="Center"
                        Classes="caption"/>
         </Grid>

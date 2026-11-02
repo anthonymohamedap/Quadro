@@ -342,7 +342,7 @@ public partial class PlanningUitvoeringViewModel : ObservableObject
 
         var dialogVm = new PlanningTijdDialogViewModel
         {
-            ContextLabel = $"WerkBon #{taak.WerkBonId} — {taak.Omschrijving}",
+            ContextLabel = $"Werkbon {taak.WerkBon?.Offerte?.OfferteNummer ?? taak.WerkBonId} — {taak.Omschrijving}",
             GeplandeDatum = new DateTimeOffset(taak.GeplandVan.Date),
             TotaalMinuten = taak.DuurMinuten,
         };

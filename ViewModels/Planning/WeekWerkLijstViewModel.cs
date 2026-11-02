@@ -212,7 +212,7 @@ public class KlantWeekBlock
 public partial class WeekWerkItem : ObservableObject
 {
     public int TaakId { get; init; }
-    public int BonNr { get; init; }           // WerkBon.Id
+    public int BonNr { get; init; }           // verkoopnummer (= werkbonnummer)
     public int Stuks { get; init; }
     public decimal Breedte { get; init; }
     public decimal Hoogte { get; init; }
@@ -286,7 +286,7 @@ public partial class WeekWerkItem : ObservableObject
         return new WeekWerkItem
         {
             TaakId = t.Id,
-            BonNr = t.WerkBonId,
+            BonNr = t.WerkBon?.Offerte?.OfferteNummer ?? t.WerkBonId,   // werkbon = verkoopnummer
             Stuks = r?.AantalStuks ?? 0,
             Breedte = r?.BreedteCm ?? 0,
             Hoogte = r?.HoogteCm ?? 0,
