@@ -30,22 +30,66 @@ namespace QuadroApp.ViewModels
         [ObservableProperty] private int lowStockCount;
         [ObservableProperty] private int openShortageCount;
         [ObservableProperty] private int overdueOrderCount;
-        [ObservableProperty] private ObservableCollection<VoorraadAlert> openAlerts = new();
+        [ObservableProperty] private int partialReceiptCount;
+
+        // US-105 — voorraad & leveringen: één balk die open- en dichtklapt; open = alle waarschuwingen (scrollen).
+        [ObservableProperty] private ObservableCollection<WaarschuwingRegel> waarschuwingen = new();
+
+        /// <summary>Blijft bewaard zolang de app open is (ook na terugkeren naar het beginscherm).</summary>
+        private static bool _voorraadOpenOnthouden;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(VoorraadKnopTekst))]
+        private bool isVoorraadOpen = _voorraadOpenOnthouden;
+
+        partial void OnIsVoorraadOpenChanged(bool value) => _voorraadOpenOnthouden = value;
+
+        public bool HeeftWaarschuwingen => OpenAlertCount > 0;
+        public bool ToonVoorraadLijst => IsVoorraadOpen && HeeftWaarschuwingen;
+        public string VoorraadKnopTekst => IsVoorraadOpen
+            ? "verbergen ▴"
+            : OpenAlertCount == 1 ? "1 waarschuwing tonen ▾" : $"{OpenAlertCount} waarschuwingen tonen ▾";
+
+        partial void OnOpenAlertCountChanged(int value)
+        {
+            OnPropertyChanged(nameof(HeeftWaarschuwingen));
+            OnPropertyChanged(nameof(ToonVoorraadLijst));
+            OnPropertyChanged(nameof(VoorraadKnopTekst));
+        }
+
+        public string LageVoorraadTekst => $"{LowStockCount} lage voorraad";
+        public string TekortTekst => OpenShortageCount == 1 ? "1 tekort" : $"{OpenShortageCount} tekorten";
+        public string TeLaatTekst => OverdueOrderCount == 1 ? "1 levering te laat" : $"{OverdueOrderCount} leveringen te laat";
+        public string DeelsOntvangenTekst => $"{PartialReceiptCount} deels ontvangen";
+
+        [RelayCommand]
+        private void ToggleVoorraad()
+        {
+            IsVoorraadOpen = !IsVoorraadOpen;
+            OnPropertyChanged(nameof(ToonVoorraadLijst));
+        }
+
+        // US-105 — kop
+        public string Begroeting { get; } = Beginscherm.Begroeting(DateTime.Now);
+        public string DatumTekst { get; } = Beginscherm.DatumTekst(DateTime.Today);
 
         // US-86 — vandaag af te halen / nog te betalen
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(HeeftVandaagAfTeHalen), nameof(VandaagAfTeHalenTitel))]
+        [NotifyPropertyChangedFor(nameof(HeeftVandaagAfTeHalen), nameof(VandaagAantal), nameof(VandaagTotaalTekst))]
         private ObservableCollection<VerkoopOverzichtRegel> vandaagAfTeHalen = new();
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(HeeftNogTeBetalen), nameof(NogTeBetalenTitel))]
+        [NotifyPropertyChangedFor(nameof(HeeftNogTeBetalen), nameof(NogTeBetalenAantal), nameof(NogTeBetalenTotaalTekst))]
         private ObservableCollection<VerkoopOverzichtRegel> nogTeBetalen = new();
 
         public bool HeeftVandaagAfTeHalen => VandaagAfTeHalen.Count > 0;
         public bool HeeftNogTeBetalen => NogTeBetalen.Count > 0;
-        public string VandaagAfTeHalenTitel => HeeftVandaagAfTeHalen ? $"Vandaag af te halen ({VandaagAfTeHalen.Count})" : "Vandaag af te halen";
-        public string NogTeBetalenTitel => HeeftNogTeBetalen ? $"Nog te betalen ({NogTeBetalen.Count})" : "Nog te betalen";
+        public int VandaagAantal => VandaagAfTeHalen.Count;
+        public int NogTeBetalenAantal => NogTeBetalen.Count;
+        public string VandaagTotaalTekst => Beginscherm.Bedrag(VandaagAfTeHalen.Sum(r => r.NogTeBetalen));
+        public string NogTeBetalenTotaalTekst => Beginscherm.Bedrag(NogTeBetalen.Sum(r => r.NogTeBetalen));
 
+        public IAsyncRelayCommand NieuweOfferteCommand { get; }
         public IAsyncRelayCommand<VerkoopOverzichtRegel> OpenVerkoopCommand { get; }
 
         public IAsyncRelayCommand OpenKlantenCommand { get; }
@@ -99,6 +143,7 @@ namespace QuadroApp.ViewModels
             OpenFacturenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<FacturenViewModel>());
             OpenExportCenterCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<ExportCenterViewModel>());
             OpenArchiefCommand      = new AsyncRelayCommand(() => _nav.NavigateToAsync<ArchiefViewModel>());
+            NieuweOfferteCommand    = new AsyncRelayCommand(() => _offerteNav.NewOfferteAsync());
             OpenVerkoopCommand      = new AsyncRelayCommand<VerkoopOverzichtRegel>(
                 r => r is null ? Task.CompletedTask : _offerteNav.OpenOfferteAsync(r.OfferteId));
         }
@@ -144,11 +189,17 @@ namespace QuadroApp.ViewModels
                         .OrderByDescending(x => x.AangemaaktOp)
                         .ToListAsync();
 
-                    OpenAlerts = new ObservableCollection<VoorraadAlert>(alerts.Take(6));
-                    OpenAlertCount = alerts.Count;
+                    var nu = DateTime.UtcNow;
+                    Waarschuwingen = new ObservableCollection<WaarschuwingRegel>(alerts.Select(a => WaarschuwingRegel.Van(a, nu)));
                     LowStockCount = alerts.Count(x => x.AlertType is VoorraadAlertType.LowStock or VoorraadAlertType.BelowMinimum);
                     OpenShortageCount = alerts.Count(x => x.AlertType == VoorraadAlertType.OpenShortage);
                     OverdueOrderCount = alerts.Count(x => x.AlertType == VoorraadAlertType.OrderOverdue);
+                    PartialReceiptCount = alerts.Count(x => x.AlertType == VoorraadAlertType.PartialReceiptPending);
+                    OpenAlertCount = alerts.Count;
+                    OnPropertyChanged(nameof(LageVoorraadTekst));
+                    OnPropertyChanged(nameof(TekortTekst));
+                    OnPropertyChanged(nameof(TeLaatTekst));
+                    OnPropertyChanged(nameof(DeelsOntvangenTekst));
                     return; // success
                 }
                 catch (SqliteException ex) when (ex.Message.Contains("no such table"))
