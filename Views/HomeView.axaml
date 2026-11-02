@@ -24,10 +24,10 @@
 						</StackPanel>
 					</Button>
 					<TextBlock Classes="NavGroep" Text="VERKOOP"/>
-					<Button Command="{Binding OpenOffertesLijstCommand}" Classes="NavButton" ToolTip.Tip="Offertes">
+					<Button Command="{Binding OpenOffertesLijstCommand}" Classes="NavButton" ToolTip.Tip="Verkopen">
 						<StackPanel Orientation="Horizontal" Spacing="10">
 							<Path Data="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" Fill="{Binding $parent[Button].Foreground}" Width="16" Height="16" Stretch="Uniform"/>
-							<TextBlock Classes="NavLabel" Text="Offertes" VerticalAlignment="Center"/>
+							<TextBlock Classes="NavLabel" Text="Verkopen" VerticalAlignment="Center"/>
 						</StackPanel>
 					</Button>
 					<Button Command="{Binding OpenWerkBonCommand}" Classes="NavButton" ToolTip.Tip="De werkbonnen van bevestigde offertes: inplannen, lijsten bestellen, afrekenen bij afhalen">
@@ -273,8 +273,8 @@
 								<Path Data="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" Fill="{DynamicResource IconBlue}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 							</Border>
 							<StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
-								<TextBlock Text="Offertes" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis"/>
-								<TextBlock Text="Prijs berekenen en opvolgen" Classes="label" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+								<TextBlock Text="Verkopen" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis"/>
+								<TextBlock Text="Alle verkopen per fase" Classes="label" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
 							</StackPanel>
 						</Grid>
 					</Button>

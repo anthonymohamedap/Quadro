@@ -43,6 +43,36 @@ namespace QuadroApp.Service.Verkoop
         /// <summary>Nummer van de bestelbon (2026-19); leeg zolang er geen (definitieve) bon is.</summary>
         public string? BestelbonNummer { get; init; }
 
+        /// <summary>US-89 — er is een voorlopige bestelbon (nog zonder volgnummer).</summary>
+        public bool HeeftVoorlopigeBon { get; init; }
+
+        /// <summary>US-89 — kolom Bestelbon: "2026-24", "voorlopig" of "—".</summary>
+        public string BestelbonKolomTekst =>
+            !string.IsNullOrWhiteSpace(BestelbonNummer) ? BestelbonNummer!
+            : HeeftVoorlopigeBon ? "voorlopig" : "—";
+
+        // ── US-89: wat de Werkbonnenlijst toont, onder de fase ────────────────
+        public int? WerkBonId { get; init; }
+        public WerkBonStatus? WerkBonStatus { get; init; }
+        public int AantalTaken { get; init; }
+        public int AantalBesteldOfKlaar { get; init; }
+
+        /// <summary>"Werkbon 426 · In uitvoering · 2 taken · 1/2 besteld" (werkbon = verkoopnummer).</summary>
+        public string WerkbonInfo
+        {
+            get
+            {
+                if (WerkBonStatus is not { } st || Fase is VerkoopFase.Geannuleerd) return "";
+                var delen = new List<string> { $"Werkbon {OfferteNummer}", st.Label() };
+                delen.Add(AantalTaken == 1 ? "1 taak" : $"{AantalTaken} taken");
+                if (AantalTaken > 0)
+                    delen.Add($"{AantalBesteldOfKlaar}/{AantalTaken} besteld");
+                return string.Join(" · ", delen);
+            }
+        }
+
+        public bool ToontWerkbonInfo => WerkbonInfo.Length > 0;
+
         /// <summary>Openstaand bedrag (0 als alles betaald is).</summary>
         public decimal NogTeBetalen => Stap.NogTeBetalen;
 
@@ -150,6 +180,13 @@ namespace QuadroApp.Service.Verkoop
                 .GroupBy(o => o.BestelbonId)
                 .ToDictionary(g => g.Key, g => g.Sum(x => x.BedragIncl));
 
+            // US-89 — tellers zoals de Werkbonnenlijst (aantal taken, bestelvoortgang).
+            var taken = (await db.WerkTaken.AsNoTracking()
+                    .Select(t => new { t.WerkBonId, t.IsBesteld, t.IsOpVoorraad })
+                    .ToListAsync())
+                .GroupBy(t => t.WerkBonId)
+                .ToDictionary(g => g.Key, g => (Aantal: g.Count(), Besteld: g.Count(t => t.IsBesteld || t.IsOpVoorraad)));
+
             var perOfferte = bestelbonnen.Where(f => f.OfferteId != null)
                 .GroupBy(f => f.OfferteId!.Value).ToDictionary(g => g.Key, g => g.First());
             var perWerkBon = bestelbonnen.Where(f => f.WerkBonId != null)
@@ -173,7 +210,12 @@ namespace QuadroApp.Service.Verkoop
                     o.AfhaalDatum ?? o.WerkBon?.AfhaalDatum, stap)
                 {
                     // Voorlopige bon (nog geen volgnummer) heeft geen nummer om te tonen.
-                    BestelbonNummer = bestelbon?.VolgNr is null ? null : bestelbon.BestelbonNummer
+                    BestelbonNummer = bestelbon?.VolgNr is null ? null : bestelbon.BestelbonNummer,
+                    HeeftVoorlopigeBon = bestelbon is not null && bestelbon.VolgNr is null,
+                    WerkBonId = o.WerkBon?.Id,
+                    WerkBonStatus = o.WerkBon?.Status,
+                    AantalTaken = o.WerkBon is null ? 0 : taken.GetValueOrDefault(o.WerkBon.Id).Aantal,
+                    AantalBesteldOfKlaar = o.WerkBon is null ? 0 : taken.GetValueOrDefault(o.WerkBon.Id).Besteld
                 });
             }
 
