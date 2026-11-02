@@ -348,6 +348,12 @@ Mock: `docs/backlog/mock-verkoopdossier/` (HTML, in de browser openen).
 - **Start productie zonder volledige planning**: nee. Verplicht: alle inlijstingen gepland en een afhaaldatum. Stap overslaan kan daarom enkel rechtstreeks naar "Klaar".
 - Planning blijft zoals nu (8 u/dag, niet in het verleden, Plan op dag / Plan per regel / slepen, herplannen, taak verwijderen, afhaaldatum = laatste plandag, weeklijst).
 
+### Stap 3 In productie (mock 02/11/2026)
+
+- Inhoud = het huidige werkbonvenster: werktaken per inlijsting (titel, code, afmeting, inleg, duur, van/tot, afhalen, lijst/standaardkader, afwerking, opmerking), bestelstatus met "Bestelling plaatsen", planning, bestelbongegevens.
+- "Klaar om af te halen ▶" = status Afgewerkt (nu via statuskeuze + "Opslaan status"); gevolgen zoals nu (voorraad verbruikt, bestelbon, offerte → Besteld). Status terugzetten kan niet (zoals nu).
+- "Open offerte" wordt "Offerte aanpassen…". Geen afvinklijst/initialen (bestaat vandaag niet).
+
 ### Werkwijze (02/11/2026)
 
 Alle stories van het verkoopdossier (US-87 → US-95, US-102) gaan naar de branch **`dev`**: feature-branch vanaf `dev`, PR naar `dev`. Pas als Anthony (en Veerle) akkoord zijn, gaat `dev` in één keer naar `main`. Andere werk (fixes, losse stories) blijft rechtstreeks naar `main` gaan; `dev` wordt dan regelmatig bijgewerkt met `main`.
