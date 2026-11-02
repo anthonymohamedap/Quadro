@@ -1,0 +1,56 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>Logica stap 4 en 5</title>
+<style>
+:root{--yellow:#F5C242;--txt:#222;--sec:#6B7280;--bd:#E5E7EB;--bg:#F4F5F7;--gr:#047857;--grBg:#ECFDF5;--red:#991B1B;--redBg:#FEF2F2;--blue:#1D4ED8;--blueBg:#EFF6FF;--wa:#92400E;--waBg:#FFFBEB}
+*{box-sizing:border-box}body{margin:0;font-family:"Inter","Segoe UI",system-ui,sans-serif;color:var(--txt);background:var(--bg);font-size:13.5px;padding:28px 32px}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:16px;margin:0 0 10px}.sec{color:var(--sec)}
+.card{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:16px 18px;margin-top:16px}
+.flow{display:flex;align-items:stretch;gap:0;margin-top:6px}
+.box{border:1.5px solid var(--bd);border-radius:10px;padding:10px 12px;background:#fff;width:200px;flex:none}.box b{display:block;margin-bottom:3px}
+.box.y{border-color:var(--yellow);background:var(--waBg)}.box.g{border-color:#86EFAC;background:var(--grBg)}.box.r{border-color:#FCA5A5;background:var(--redBg)}
+.arr{display:grid;place-items:center;width:44px;color:var(--sec);font-size:20px;flex:none}
+.arr small{font-size:10.5px;display:block;text-align:center;line-height:1.2}
+table{width:100%;border-collapse:collapse}th{text-align:left;font-size:12px;color:var(--sec);padding:6px 8px;border-bottom:1px solid var(--bd)}td{padding:7px 8px;border-bottom:1px solid var(--bd);vertical-align:top}
+.ok{color:var(--gr);font-weight:700}.nee{color:var(--red);font-weight:700}.w{color:var(--wa);font-weight:700}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.q{border-left:4px solid var(--yellow);background:var(--waBg);padding:8px 12px;border-radius:6px;margin-top:8px}
+code{background:#F3F4F6;border-radius:4px;padding:0 4px;font-size:12px}
+</style></head><body>
+<h1>Stap 4 Klaar om af te halen · Stap 5 Afgehaald &amp; betaald — logica</h1><div class="sec">Inhoud = Bestelbonnen-scherm (gegevens, betalingen), afrekenen uit het werkbonvenster (US-76) en de vergrendeling (US-101). Functies zoals nu, enkel anders geordend.</div>
+<div class="g2">
+<div class="card"><h2>Stap 4 — wat je ziet en doet</h2>
+ <table>
+  <tr><td>Bestelbon</td><td>nummer, status, besteldatum, vervaldatum, initialen, opmerking, lijnen (zoals het Bestelbonnen-scherm)</td></tr>
+  <tr><td>Bestelbon gegevens…</td><td>"Extra bestelbon info" + waarschuwing afhaaldatum vóór besteldatum (US-81) + "Bevestigen &amp; preview"</td></tr>
+  <tr><td>Afdrukken</td><td>in elke status (US-82); betalingen op de bon (US-73)</td></tr>
+  <tr><td>Betalingen</td><td>lijst met ✕ (verwijderen zet een betaalde bon terug open, US-72), Betaling registreren, Rest betaald</td></tr>
+  <tr><td>Afhaaldatum</td><td>wijzigen kan</td></tr>
+  <tr><td>Klant komt afhalen ▶</td><td>= status "Afgehaald"; opent eerst het afrekenen (zoals nu, US-76)</td></tr>
+ </table></div>
+<div class="card"><h2>Afrekenen (zoals nu, US-76)</h2>
+ <table>
+  <tr><td>Titel</td><td>"Afrekenen bestelbon 2026-24: nog € … te betalen" + totaal · voorschot · al betaald</td></tr>
+  <tr><td>Velden</td><td>bedrag, betaalwijze (Bancontact, Cash, Credit card, Overschrijving), datum</td></tr>
+  <tr><td>Gesplitst</td><td>eerst het eerste bedrag; daarna vraagt de app de rest</td></tr>
+  <tr><td>Betalen en afhalen</td><td>betaling + Afgehaald in één keer; alles betaald → bon Betaald → afgerond</td></tr>
+  <tr><td>Later betalen</td><td>Afgehaald zonder (volledige) betaling → stap 5 open, op het beginscherm bij "Nog te betalen"</td></tr>
+  <tr><td>Annuleren</td><td>sluit het afrekenen, er gebeurt niets</td></tr>
+  <tr><td>Wisselgeld</td><td>bestaat hier vandaag niet (enkel bij Winkelverkopen) → niet toegevoegd</td></tr>
+ </table></div>
+</div>
+<div class="g2">
+<div class="card"><h2>Stap 5 — afgehaald, nog te betalen</h2>
+ <table>
+  <tr><td>Melding</td><td>"Afgehaald op … — nog € … te betalen"</td></tr>
+  <tr><td>Betalen</td><td>Betaling registreren of "Rest betaald" (zoals het Bestelbonnen-scherm)</td></tr>
+  <tr><td>Alles betaald</td><td>bon Betaald → verkoop afgerond</td></tr>
+ </table></div>
+<div class="card"><h2>Afgerond (zoals nu, US-101)</h2>
+ <table>
+  <tr><td>Vergrendeld</td><td>"Afgehaald en volledig betaald: deze verkoop is afgerond en kan niet meer gewijzigd worden."</td></tr>
+  <tr><td>Ontgrendelen</td><td>enkel beheerder, na bevestiging; wijzigingen in het auditlogboek; de betaalde bon verandert niet</td></tr>
+  <tr><td>Afdrukken</td><td>bestelbon en werkbon blijven afdrukbaar</td></tr>
+  <tr><td>Momentopname</td><td>US-102 (later, samen met dit scherm)</td></tr>
+ </table></div>
+</div>
+<div class="card"><h2>Bewust niet toegevoegd</h2><div class="sec">Wisselgeld bij afrekenen, tijdlijn "verloop van de verkoop", "Nieuwe verkoop voor deze klant", afvinklijst "meegeven" (stonden in de eerste schets; bestaan vandaag niet).</div></div>
+</body></html>

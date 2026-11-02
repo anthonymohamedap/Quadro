@@ -16,6 +16,8 @@ Linksonder staat een zwarte knoppenbalk **"MOCK — kies een scherm"** om tussen
 | `logica2.html` | logica van stap 2 |
 | `stap3.html` | stap 3 In productie: inhoud van het huidige werkbonvenster (hoofd, bestellen, klaar, overslaan, annuleren) |
 | `logica3.html` | logica van stap 3 |
+| `stap45.html` | stap 4 Klaar om af te halen + stap 5 Afgehaald & betaald (s4_hoofd, s4_gegevens, s4_afdrukken, s5_afrekenen, s5_gesplitst, s5_later, s5_afgerond) |
+| `logica45.html` | logica van stap 4 en 5 |
 | `dossier.html` | eerste schets (lijst Verkopen, stap 3, 5, afgerond) — wordt herzien met de grondregel bij stap 3–5 |
 
 Testgegevens: verkoop 423, Sofie Claes, € 245 met € 100 voorschot. Beslissingen: zie
