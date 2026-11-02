@@ -116,7 +116,7 @@ const sect=(t,inh)=>`<div class="sect"><div class="st2h">${t}</div>${inh}</div>`
 const veld=(l,v,st='')=>`<div><div class="lbl">${l}</div><div class="inp" style="${st}">${v}</div></div>`;
 const zoekKeuze=(lbl,waarde,leegTekst,extra='')=>`<div><div class="lbl">${lbl}</div><div class="row" style="gap:6px"><div class="inp" style="width:170px;color:#9CA3AF;white-space:nowrap">Zoek artikelnummer…</div><div class="inp" style="flex:1;${waarde?'':'color:#9CA3AF'}">${waarde||leegTekst} ▾</div>${waarde?'<span class="btn sm2" style="padding:2px 7px">✕</span>':''}${extra}</div></div>`;
 const afwRij=(g,naam,type,variant)=>`<div class="row" style="gap:6px;padding:2px 0"><span class="code">${g}</span><span class="sec sm" style="width:110px;white-space:nowrap">${naam}</span><div class="inp" style="flex:1;padding:3px 8px;${type?'':'color:#9CA3AF'}">${type||naam+' type…'} ▾</div><div class="inp" style="width:130px;padding:3px 8px;${variant?'':'color:#9CA3AF'}">${variant||'Variant…'} ▾</div>${type?'<span class="btn sm2" style="padding:1px 6px">✕</span>':'<span style="width:26px"></span>'}</div>`;
-const detailsMaat=(o={})=>`<div class="card"><div class="row" style="margin-bottom:6px"><h2>Regel details · ${o.titel||'Trouwfoto'}</h2></div>
+const detailsMaat=(o={})=>`<div class="card"><div class="row" style="margin-bottom:6px"><h2>Inlijsting details · ${o.titel||'Trouwfoto'}</h2></div>
  ${sect('Algemeen',`<div class="g4" style="grid-template-columns:2fr 1fr 1.3fr">${veld('Titel (verschijnt op bon)',o.titel||'Trouwfoto')}${veld('Aantal stuks','1')}${veld('Afhaal datum','— nog niet gepland <span class="sec sm">(via planning)</span>','background:var(--muted)')}</div>`)}
  ${sect('Lijst',zoekKeuze('Type lijst',o.fout||o.kader?'':'L-2045 · eik naturel 4 cm','Kies een lijst…','<span class="btn sm2" title="Lijst bewerken">✏</span><span class="btn sm2" title="Lijstbeheer">📋</span>')+(o.fout?'<div class="sm" style="color:#B91C1C;margin-top:3px">Selecteer een TypeLijst.</div>':''))}
  ${sect('Standaardkader',`<div class="row" style="gap:6px"><div class="inp" style="width:170px;${o.kader?'border-color:var(--yellow)':'color:#9CA3AF'}">${o.kader?'🔍 c2 zwart':'Zoek…'}</div><div class="inp" style="flex:1;${o.kader?'':'color:#9CA3AF'}">${o.kader?'C2 – Alu zwart 30 × 42':'Geen standaardkader (op-maat lijst hierboven gebruiken)'} ▾</div>${o.kader?'<span class="btn sm2" style="padding:2px 7px">✕</span>':''}</div>`)}
@@ -130,7 +130,7 @@ const detailsMaat=(o={})=>`<div class="card"><div class="row" style="margin-bott
  </div>`;
 
 const voet=(dis,why)=>`<div class="voet"><span class="sec" style="white-space:nowrap">Stap 1 van 5</span><span class="sp"></span>${why?`<span class="sm" style="color:#B91C1C;max-width:300px;text-align:right">${why}</span>`:''}<span class="btn">🖨 Bestelbon (voorlopig)</span><span class="btn pri" ${dis?'style="opacity:.45"':''}>Bevestigen → Werkbon ▶</span></div>`;
-const scherm=(o={},d={})=>kop({...O,...o})+`<div class="g2" style="grid-template-columns:1fr 1.25fr;align-items:start">${links(d)}${detailsMaat(d)}</div>`;
+const scherm=(o={},d={})=>kop({...O,...o})+`<div class="g2" style="grid-template-columns:1.25fr 1fr;align-items:start">${detailsMaat(d)}${links(d)}</div>`;
 
 const scr={
 nieuw:()=>`<div class="kop"><div><h1>Verkopen</h1></div></div><div class="card" style="height:600px;opacity:.5"></div>
@@ -143,9 +143,8 @@ nieuw:()=>`<div class="kop"><div><h1>Verkopen</h1></div></div><div class="card" 
   <div class="row"><span class="btn sm2">＋ Nieuwe klant</span></div>
   <div class="note i">De verkoop krijgt meteen nummer <b>428</b> (geen "offerte 0" meer, US-81).</div>
   <div class="row" style="justify-content:flex-end"><span class="btn">Annuleren</span><span class="btn pri">Verkoop starten ▶</span></div></div></div>`,
-leeg:()=>kop({...O,nr:428,tot:0,rest:null,bon:false,vs:0})+`<div class="g2" style="grid-template-columns:1fr 1.25fr;align-items:start"><div class="col">${klant}
-  <div class="card" style="text-align:center;padding:30px"><h2>Nog geen inlijstingen</h2><div class="sec" style="margin:6px 0 12px">Voeg toe wat de klant wil laten inlijsten.</div><span class="btn pri">＋ Toevoegen</span></div>${prijsaanp(0)}${totalen(0).replace('€ 202,48','€ 0,00').replace('€ 42,52','€ 0,00').replace('€ 245,00','€ 0,00')}</div>
-  <div class="card" style="color:#9CA3AF;display:grid;place-items:center;min-height:300px">Kies of voeg een inlijsting toe om de details te zien.</div></div>${voet(true,'Voeg minstens één regel toe.')}`,
+leeg:()=>kop({...O,nr:428,tot:0,rest:null,bon:false,vs:0})+`<div class="g2" style="grid-template-columns:1.25fr 1fr;align-items:start"><div class="card" style="color:#9CA3AF;display:grid;place-items:center;min-height:300px">Kies of voeg een inlijsting toe om de details te zien.</div><div class="col">${klant}
+  <div class="card" style="text-align:center;padding:30px"><h2>Nog geen inlijstingen</h2><div class="sec" style="margin:6px 0 12px">Voeg toe wat de klant wil laten inlijsten.</div><span class="btn pri">＋ Toevoegen</span></div>${prijsaanp(0)}${totalen(0).replace('€ 202,48','€ 0,00').replace('€ 42,52','€ 0,00').replace('€ 245,00','€ 0,00')}</div></div>${voet(true,'Voeg minstens één regel toe.')}`,
 maat:()=>scherm({},{})+voet(),
 kader:()=>scherm({},{sel:2,kader:1,titel:'Poster A3'})+voet(),
 lijstkiezen:()=>scherm({},{})+voet()+`<div class="overlay" style="background:rgba(17,24,39,.25)"><div class="dlg" style="width:560px;position:absolute;right:70px;top:430px">
@@ -153,7 +152,7 @@ lijstkiezen:()=>scherm({},{})+voet()+`<div class="overlay" style="background:rgb
   <div class="lijst2">${['L-2045','L-2046','L-2050','L-2060'].map((a,i)=>`<div class="r2 ${i==0?'on':''}"><b>${a}</b></div>`).join('')}</div>
   <div class="sec sm">Zoeken op artikelnummer, zoals nu.</div></div></div>`,
 fouten:()=>kop({...O,tot:185,rest:85,afhaal:'<b style="color:#B45309">wo 28/10</b>'})+`<div class="note w">⚠ De afhaaldatum (28/10) ligt in het verleden.</div>
- <div class="g2" style="grid-template-columns:1fr 1.25fr;align-items:start">${links({sel:3,fout:1})}${detailsMaat({fout:1,titel:'Schilderij'})}</div>${voet(true,'Regel 2: Selecteer een TypeLijst.')}`,
+ <div class="g2" style="grid-template-columns:1.25fr 1fr;align-items:start">${detailsMaat({fout:1,titel:'Schilderij'})}${links({sel:3,fout:1})}</div>${voet(true,'Inlijsting 2 (Schilderij): Selecteer een TypeLijst.')}`,
 voorschot:()=>scherm({vs:0,rest:null},{vs:0})+voet()+`<div class="hint" style="left:262px;top:600px">← voorschot: bedrag, betaalwijze, datum, Registreren (zoals nu)</div>`,
 afdrukken:()=>`<div class="pv">
   <div class="row" style="padding:12px 18px;background:#fff;border-bottom:1px solid var(--bd)"><h2>Bestelbon voorlopig (V423)</h2><span class="sp"></span><span class="btn">Sluiten</span><span class="btn">⤓ Bewaren als PDF</span><span class="btn pri">🖨 Afdrukken…</span></div>
@@ -184,7 +183,7 @@ annuleren:()=>scherm()+voet()+`<div class="overlay"><div class="dlg" style="widt
   <div class="opt"><span class="rad"></span><div><b>Voorschot houden</b></div></div>
   <div class="row" style="justify-content:flex-end"><span class="btn">Niet annuleren</span><span class="btn" style="background:#DC2626;border-color:#DC2626;color:#fff">Verkoop annuleren</span></div></div></div>`,
 geannuleerd:()=>kop({...O,rest:null,grijs:1,status:'Geannuleerd'})+`<div class="note" style="background:#F3F4F6;color:#374151;border:1px solid var(--bd)"><b>Geannuleerd op 2/11/2026</b> — reden: Klant ziet af. Voorschot € 100,00 terugbetaald. Alleen-lezen.</div>
- <div class="g2" style="grid-template-columns:1fr 1.25fr;align-items:start;opacity:.7">${links()}${detailsMaat()}</div>`
+ <div class="g2" style="grid-template-columns:1.25fr 1fr;align-items:start;opacity:.7">${detailsMaat()}${links()}</div>`
 };
 m.innerHTML=scr[S]();
 

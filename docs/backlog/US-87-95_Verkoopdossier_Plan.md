@@ -339,6 +339,8 @@ Mock: `docs/backlog/mock-verkoopdossier/` (HTML, in de browser openen).
 
 **De functies veranderen niet; enkel de flow wordt duidelijker en logischer.** Niets uit de huidige versie mag verdwijnen en er komt niet te veel extra bij. Elk veld en elke knop van de huidige schermen (offerte, werkbon, planning, bestelbon) moet in het dossier terug te vinden zijn. De mock van stap 1 is daarom herzien: alle velden van `OfferteView` (o.a. inleg B × H en inleg nr., 6 afwerkingen met type + variant, afwerkingscode Toepassen/Genereren, ✏/📋 bij de lijst, afhaaldatum en opmerking per regel, prijs deze inlijsting) staan erin; toevoegingen die er vandaag niet zijn (prijsopbouw-paneel, extra werk/extra kost op het scherm, eerdere verkopen, verkoop dupliceren, heropenen) zijn eruit.
 
+**Indeling stap 1** (Anthony, 02/11): links **"Inlijsting details"** (vroeger "Regel details": duidelijker voor de gebruiker), rechts klant, inlijstingen, prijsaanpassingen/voorschot en totalen.
+
 ### Stap 2 Werkbon (02/11/2026)
 
 - **Offerte aanpassen na het akkoord**: ja, zoals nu ("Offerte aanpassen…" opent stap 1; "Prijzen herberekenen" vraagt bevestiging; werkbon, planning en reservaties volgen).
