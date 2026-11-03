@@ -1,0 +1,78 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:QuadroApp.ViewModels"
+    xmlns:m="clr-namespace:QuadroApp.Model.DB;assembly=QuadroApp.Data"
+    xmlns:conv="clr-namespace:QuadroApp.Converters"
+    x:Class="QuadroApp.Views.Offerte.OfferteRegelsKaart"
+    x:DataType="vm:OfferteViewModel">
+    <!-- US-91: deel van het offertescherm, hergebruikt in OfferteView en in stap 1 van het verkoopdossier.
+         Inhoud ongewijzigd overgenomen uit OfferteView.axaml. -->
+					<!-- REGELS -->
+					<Border Classes="quadro-card">
+						<StackPanel Spacing="12">
+
+							<Grid IsEnabled="{Binding KanBewerken}" ColumnDefinitions="*,Auto,Auto,Auto"
+                                  ColumnSpacing="8">
+
+								<TextBlock x:Name="TitelTekst" Text="Regels"
+                                           Classes="h2"
+                                           TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Center"/>
+
+								<Button Grid.Column="1"
+                                        Content="+ Toevoegen"
+                                        Command="{Binding RegelToevoegenCommand}"
+                                        Classes="AccentBtn"/>
+
+								<Button Grid.Column="2"
+                                        Content="Dupliceren"
+                                        Command="{Binding RegelDuplicerenCommand}"
+                                        Classes="AccentBtn"/>
+
+								<Button Grid.Column="3"
+                                        Content="– Verwijderen"
+                                        Command="{Binding RegelVerwijderenCommand}"
+                                        CommandParameter="{Binding SelectedRegel}"
+                                        Classes="AccentBtn"/>
+							</Grid>
+
+
+							<ListBox ItemsSource="{Binding Regels}"
+                                     SelectedItem="{Binding SelectedRegel, Mode=TwoWay}"
+                                     Background="Transparent"
+                                     BorderThickness="0">
+
+								<ListBox.ItemTemplate>
+									<DataTemplate x:DataType="m:OfferteRegel">
+										<Border Background="{DynamicResource Surface}"
+												BorderBrush="{DynamicResource BorderSubtle}"
+												BorderThickness="1" CornerRadius="8"
+												Padding="10,8" Margin="0,3">
+											<Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+												<StackPanel Grid.Column="0" Spacing="2">
+													<TextBlock Text="{Binding AfmetingLabel}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+													<TextBlock Text="{Binding Titel}" Classes="caption"
+															   Foreground="{DynamicResource TextSecondary}"
+															   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Titel}"
+															   IsVisible="{Binding Titel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+													<TextBlock Text="{Binding TypeLijst.Artikelnummer, StringFormat='Lijst: {0}'}"
+															   Classes="caption" Foreground="{DynamicResource TextSecondary}"
+															   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding TypeLijst.Artikelnummer}"
+															   IsVisible="{Binding TypeLijst, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+													<!-- US-80: standaardkader met omschrijving -->
+													<TextBlock Text="{Binding StandaardkaderLabel}"
+															   Classes="caption" Foreground="{DynamicResource TextSecondary}"
+															   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding StandaardkaderLabel}"
+															   IsVisible="{Binding KantKlaarKader, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+												</StackPanel>
+												<TextBlock Grid.Column="1" Text="{Binding TotaalInclBtw, StringFormat=€ {0:N2}}"
+														   FontWeight="SemiBold" VerticalAlignment="Center"/>
+											</Grid>
+										</Border>
+									</DataTemplate>
+								</ListBox.ItemTemplate>
+							</ListBox>
+						</StackPanel>
+					</Border>
+</UserControl>
