@@ -1,0 +1,68 @@
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:QuadroApp.ViewModels.Verkoop"
+    xmlns:conv="using:QuadroApp.Converters"
+    x:Class="QuadroApp.Views.AnnuleerVerkoopDialog"
+    x:DataType="vm:AnnuleerVerkoopDialogViewModel"
+    Width="600"
+    SizeToContent="Height"
+    CanResize="False"
+    Title="Verkoop annuleren"
+    Background="{DynamicResource SurfaceMutedAlt}"
+    WindowStartupLocation="CenterOwner">
+
+    <!-- US-90: menu ⋯ "Verkoop annuleren…" (beslist 02/11: altijd met reden; voorschot terugbetalen of houden) -->
+    <Border Padding="20">
+        <StackPanel Spacing="14">
+            <TextBlock Text="{Binding Titel}" Classes="h1"/>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Reden (verplicht)" Classes="label" Foreground="{DynamicResource TextSecondary}"/>
+                <TextBox Text="{Binding Reden, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         Watermark="bv. klant ziet af" MaxLength="300"/>
+            </StackPanel>
+
+            <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1" CornerRadius="8" Padding="12,10">
+                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="14" RowSpacing="6">
+                    <TextBlock Text="Werkbon" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
+                               Text="vervalt; planning vrij; momentopname in het archief (zoals nu)"/>
+                    <TextBlock Grid.Row="1" Text="Voorraad" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
+                               Text="reservaties vrij; open leveranciersbestellingen geannuleerd (zoals nu)"/>
+                    <TextBlock Grid.Row="2" Text="Bestelbon" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
+                               Text="{Binding BestelbonTekst}"/>
+                    <TextBlock Grid.Row="3" Text="Voorschot" FontWeight="SemiBold" IsVisible="{Binding HeeftOntvangen}"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
+                               Text="{Binding OntvangenTekst}" IsVisible="{Binding HeeftOntvangen}"/>
+                </Grid>
+            </Border>
+
+            <StackPanel Spacing="6" IsVisible="{Binding HeeftOntvangen}">
+                <RadioButton GroupName="voorschot" Content="Voorschot terugbetalen (komt in Overzicht betalingen)"
+                             IsChecked="{Binding Terugbetalen, Mode=TwoWay}"/>
+                <StackPanel Orientation="Horizontal" Spacing="8" Margin="28,0,0,0" IsVisible="{Binding Terugbetalen}">
+                    <TextBlock Text="Betaalwijze" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}"/>
+                    <ComboBox ItemsSource="{Binding Betaalwijzen}" SelectedItem="{Binding Betaalwijze, Mode=TwoWay}" MinWidth="160">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Converter={x:Static conv:BetaalwijzeToLabelConverter.Instance}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                <RadioButton GroupName="voorschot" Content="Voorschot houden"
+                             IsChecked="{Binding !Terugbetalen}"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <Button Content="Niet annuleren" Command="{Binding SluitCommand}" Padding="12,6" CornerRadius="6"/>
+                <Button Content="Verkoop annuleren" Command="{Binding BevestigCommand}" Padding="12,6" CornerRadius="6"
+                        Background="{DynamicResource Danger}" Foreground="{DynamicResource TextOnDark}" FontWeight="SemiBold"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

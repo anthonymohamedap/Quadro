@@ -200,9 +200,16 @@ namespace QuadroApp.Service.Verkoop
         public async Task<decimal> OntvangenBedragAsync(int offerteId)
         {
             await using var db = await _factory.CreateDbContextAsync();
+            // Betalingen op de bestelbon dragen niet altijd het OfferteId → ook via de bon(nen) van deze verkoop.
+            var werkBonId = await db.WerkBonnen.Where(w => w.OfferteId == offerteId).Select(w => (int?)w.Id).FirstOrDefaultAsync();
+            var bonIds = await db.Bestelbonnen
+                .Where(b => b.OfferteId == offerteId || (werkBonId != null && b.WerkBonId == werkBonId))
+                .Select(b => b.Id).ToListAsync();
+
             // SQLite kan geen SUM op decimal → in het geheugen optellen.
             var bedragen = await db.Ontvangsten.AsNoTracking()
-                .Where(o => o.OfferteId == offerteId && o.Soort != OntvangstSoort.Winkelverkoop)
+                .Where(o => (o.OfferteId == offerteId || (o.BestelbonId != null && bonIds.Contains(o.BestelbonId.Value)))
+                         && o.Soort != OntvangstSoort.Winkelverkoop)
                 .Select(o => o.BedragIncl)
                 .ToListAsync();
             return Math.Round(bedragen.Sum(), 2);

@@ -54,6 +54,12 @@ static class Schermen
         ["offertelijst-werkbonnen"] = f => OffertelijstAsync(f, VerkoopFase.LopendeWerkbonnen),
         ["offertelijst-klaar"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await OffertelijstAsync(f, VerkoopFase.KlaarOmAfTeHalen); },
         ["werkbonnenlijst"] = WerkbonnenlijstAsync,
+        ["dossier-1-offerte"] = f => DossierAsync(f, 419),
+        ["dossier-2-werkbon"] = f => DossierAsync(f, 412),
+        ["dossier-4-klaar"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 421); },
+        ["dossier-5-nog-te-betalen"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 423); },
+        ["dossier-terug-gekeken"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 423, bekijk: QuadroApp.Service.Verkoop.VerkoopStap.Offerte); },
+        ["dossier-annuleren"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await AnnulerenDialoogAsync(f, 421); },
         ["bestelbonnen"] = BestelbonnenAsync,
         ["home"] = f => HomeAsync(f, metVandaag: true),
         ["home-leeg"] = f => HomeAsync(f, metVandaag: false),
@@ -139,6 +145,44 @@ static class Schermen
         await vm.LoadAsync();
         vm.GeselecteerdeFase = tabblad;
         return new OffertesLijstView { DataContext = vm };
+    }
+
+    /// <summary>US-90 — het verkoopdossier op de huidige stap (of een vorige, terug gekeken).</summary>
+    static async Task<Control> DossierAsync(IDbContextFactory<AppDbContext> f, int offerteNummer,
+        QuadroApp.Service.Verkoop.VerkoopStap? bekijk = null)
+    {
+        var toast = new TestToastService();
+        var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
+        await using var db = await f.CreateDbContextAsync();
+        var id = await db.Offertes.Where(o => o.OfferteNummer == offerteNummer).Select(o => o.Id).SingleAsync();
+        var vm = new QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel(f, new VerkoopOverzichtService(f),
+            new QuadroApp.Service.Verkoop.VerkoopDossierService(f, wf), new TestNavigationService(), new GeenOfferteNavigatie(),
+            wf, new WerkBonWorkflowService(f, wf), new TestDialogService(), toast);
+        await vm.ReceiveAsync(id);
+        await vm.InitializeAsync();
+        if (bekijk is { } stap)
+            await vm.BekijkStapCommand.ExecuteAsync(vm.Stappen.First(s => s.Stap == stap));
+        return new VerkoopDossierView { DataContext = vm };
+    }
+
+    /// <summary>US-90 — menu ⋯ "Verkoop annuleren…" (dialoog los gerenderd).</summary>
+    static async Task<Control> AnnulerenDialoogAsync(IDbContextFactory<AppDbContext> f, int offerteNummer)
+    {
+        await using var db = await f.CreateDbContextAsync();
+        var id = await db.Offertes.Where(o => o.OfferteNummer == offerteNummer).Select(o => o.Id).SingleAsync();
+        var toast = new TestToastService();
+        var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
+        var ontvangen = await new QuadroApp.Service.Verkoop.VerkoopDossierService(f, wf).OntvangenBedragAsync(id);
+        var vm = new QuadroApp.ViewModels.Verkoop.AnnuleerVerkoopDialogViewModel(offerteNummer, ontvangen, "2026-20") { Reden = "Klant ziet af" };
+        var dialog = new AnnuleerVerkoopDialog { DataContext = vm };
+        var inhoud = (Control)dialog.Content!;
+        dialog.Content = null;
+        inhoud.DataContext = vm;
+        return new Border
+        {
+            Background = Avalonia.Media.Brushes.Gray, Padding = new Avalonia.Thickness(200, 80),
+            Child = new Border { Width = 600, Background = Avalonia.Media.Brushes.White, Child = inhoud, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top }
+        };
     }
 
     /// <summary>US-89 — de Werkbonnenlijst (blijft in het menu): werkbon = verkoopnummer.</summary>
@@ -323,6 +367,14 @@ static partial class TestGegevens
             }
         };
         db.Bestelbonnen.AddRange(Bon(claes, 23, 100m), Bon(wouters, 21, 40m));
+
+        // US-90: voorschotten ook als ontvangst (zoals de app ze registreert, US-69).
+        foreach (var o in new[] { peeters, claes, wouters })
+            db.Ontvangsten.Add(new Ontvangst
+            {
+                Soort = OntvangstSoort.Voorschot, OfferteId = o.Id, Datum = o.Datum, BedragIncl = o.VoorschotBedrag,
+                Betaalwijze = Betaalwijze.Bancontact, Omschrijving = $"Voorschot offerte {o.OfferteNummer}"
+            });
         await db.SaveChangesAsync();
     }
 }
