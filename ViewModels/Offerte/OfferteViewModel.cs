@@ -1069,6 +1069,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             {
                 OnPropertyChanged(nameof(IsPrijsVast));
                 OnPropertyChanged(nameof(IsAlleenLezen));
+                OnPropertyChanged(nameof(KanBewerken));
                 OnPropertyChanged(nameof(BerekenKnopTekst));
                 OnPropertyChanged(nameof(IsPrijsVastMeldingZichtbaar));
                 OnPropertyChanged(nameof(IsOntgrendelenZichtbaar));
@@ -1393,6 +1394,17 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
     /// <summary>Afgehaald en volledig betaald (en niet ontgrendeld): niets meer wijzigen.</summary>
     public bool IsAlleenLezen => Workflow.IsVergrendeld;
 
+    /// <summary>
+    /// US-91 — in het dossier: een vorige stap terugkijken is enkel bekijken (tot "Offerte aanpassen…").
+    /// In het oude offertescherm altijd false.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(KanBewerken))]
+    private bool alleenBekijken;
+
+    /// <summary>US-91 — velden en knoppen van de offerte zijn bewerkbaar (niet afgerond, niet terugkijken).</summary>
+    public bool KanBewerken => !IsAlleenLezen && !AlleenBekijken;
+
     public bool IsPrijsVastMeldingZichtbaar => IsPrijsVast && !IsAlleenLezen;
 
     public string BerekenKnopTekst => IsPrijsVast ? "Prijzen herberekenen" : "Berekenen";
@@ -1561,6 +1573,31 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// US-91 — vingerafdruk van wat de gebruiker kan wijzigen (klant, korting, meerprijs, opmerking en
+    /// alle eenvoudige velden van elke inlijsting). Het dossier vergelijkt hem om te weten of er
+    /// automatisch bewaard moet worden; de offerte zelf verandert er niet door.
+    /// </summary>
+    public string Vingerafdruk()
+    {
+        var sb = new System.Text.StringBuilder();
+        var o = Offerte;
+        sb.Append(KlantSelectie.SelectedKlant?.Id).Append('|').Append(o?.KortingPct).Append('|')
+          .Append(o?.MeerPrijsIncl).Append('|').Append(o?.Opmerking).Append('|').Append(Regelbeheer.Regels.Count);
+        foreach (var r in Regelbeheer.Regels)
+        {
+            sb.Append('#');
+            foreach (var prop in typeof(OfferteRegel).GetProperties())
+            {
+                var t = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                if (!prop.CanRead || !prop.CanWrite || !(t.IsPrimitive || t.IsEnum || t == typeof(string) || t == typeof(decimal) || t == typeof(DateTime)))
+                    continue;
+                sb.Append(prop.Name).Append('=').Append(prop.GetValue(r)).Append(';');
+            }
+        }
+        return sb.ToString();
     }
 
     private Offerte BuildSnapshotForValidation()

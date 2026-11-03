@@ -65,7 +65,7 @@ public class VerkoopDossierViewModelTests
     }
 
     [Theory]
-    [InlineData(OfferteStatus.Concept, null, "Offerte openen ▶")]
+    [InlineData(OfferteStatus.Concept, null, "Bevestigen → Werkbon ▶")]
     [InlineData(OfferteStatus.Goedgekeurd, WerkBonStatus.Gepland, "Start productie ▶")]
     [InlineData(OfferteStatus.InProductie, WerkBonStatus.InUitvoering, "Klaar om af te halen ▶")]
     [InlineData(OfferteStatus.Afgewerkt, WerkBonStatus.Afgewerkt, "Klant komt afhalen ▶")]

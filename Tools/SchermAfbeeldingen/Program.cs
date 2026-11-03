@@ -58,6 +58,12 @@ static class Schermen
         ["dossier-2-werkbon"] = f => DossierAsync(f, 412),
         ["dossier-4-klaar"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 421); },
         ["dossier-5-nog-te-betalen"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 423); },
+        ["dossier-1-inlijsting"] = f => DossierAsync(f, 419, daarna: vm => { vm.Stap1!.SelectedRegel = vm.Stap1.Regels.First(); return Task.CompletedTask; }),
+        ["dossier-1-lang"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 419, daarna: vm => { vm.Stap1!.SelectedRegel = vm.Stap1.Regels.First(); return Task.CompletedTask; }); },
+        ["dossier-1-terug-412"] = f => DossierAsync(f, 412, bekijk: QuadroApp.Service.Verkoop.VerkoopStap.Offerte,
+            daarna: vm => { vm.Stap1!.SelectedRegel = vm.Stap1.Regels.FirstOrDefault(); return Task.CompletedTask; }),
+        ["dossier-1-aanpassen-412"] = f => DossierAsync(f, 412, bekijk: QuadroApp.Service.Verkoop.VerkoopStap.Offerte,
+            daarna: vm => { vm.OfferteAanpassenCommand.Execute(null); vm.Stap1!.SelectedRegel = vm.Stap1.Regels.FirstOrDefault(); return Task.CompletedTask; }),
         ["dossier-terug-gekeken"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 423, bekijk: QuadroApp.Service.Verkoop.VerkoopStap.Offerte); },
         ["dossier-annuleren"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await AnnulerenDialoogAsync(f, 421); },
         ["bestelbonnen"] = BestelbonnenAsync,
@@ -73,6 +79,7 @@ static class Schermen
     static readonly Dictionary<string, (int Breedte, int Hoogte)> Formaten = new()
     {
         ["home-klein"] = (1024, 768),
+        ["dossier-1-lang"] = (1440, 2000),
     };
 
     public static async Task AllesAsync(string uitvoer, HashSet<string> gekozen)
@@ -103,6 +110,17 @@ static class Schermen
 
     static async Task<Control> OfferteAsync(IDbContextFactory<AppDbContext> f, int offerteNummer)
     {
+        var vm = MaakOfferteVm(f);
+        await using var db = await f.CreateDbContextAsync();
+        var id = await db.Offertes.Where(o => o.OfferteNummer == offerteNummer).Select(o => o.Id).SingleAsync();
+        await vm.InitializeAsync();
+        await vm.LoadAsync(id);
+        await Task.Delay(300);
+        return new OfferteView { DataContext = vm };
+    }
+
+    static OfferteViewModel MaakOfferteVm(IDbContextFactory<AppDbContext> f)
+    {
         var toast = new TestToastService();
         var auth = new TestAuthService();
         var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
@@ -113,13 +131,13 @@ static class Schermen
             new BestelbonExportService(f, new IBestelbonExporter[] { new PdfBestelbonExporter() }), new TestFilePickerService(),
             new OfferteValidator(f), toast, new KlantValidator(f), new KlantDialogService(),
             new OntvangstService(f, auth, bestelbonWf), new TestPathOpener(), new GeenOfferteNavigatie(), auth);
+        return vm;
+    }
 
-        await using var db = await f.CreateDbContextAsync();
-        var id = await db.Offertes.Where(o => o.OfferteNummer == offerteNummer).Select(o => o.Id).SingleAsync();
-        await vm.InitializeAsync();
-        await vm.LoadAsync(id);
-        await Task.Delay(300);
-        return new OfferteView { DataContext = vm };
+    /// <summary>US-91 — het dossier vraagt een OfferteViewModel voor stap 1.</summary>
+    sealed class OfferteVmProvider(IDbContextFactory<AppDbContext> f) : IServiceProvider
+    {
+        public object? GetService(Type serviceType) => serviceType == typeof(OfferteViewModel) ? MaakOfferteVm(f) : null;
     }
 
     /// <summary>US-87 — verkoop 412 met overgeslagen stappen (standaardkader uit voorraad): Klaar om af te halen.</summary>
@@ -149,7 +167,7 @@ static class Schermen
 
     /// <summary>US-90 — het verkoopdossier op de huidige stap (of een vorige, terug gekeken).</summary>
     static async Task<Control> DossierAsync(IDbContextFactory<AppDbContext> f, int offerteNummer,
-        QuadroApp.Service.Verkoop.VerkoopStap? bekijk = null)
+        QuadroApp.Service.Verkoop.VerkoopStap? bekijk = null, Func<QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel, Task>? daarna = null)
     {
         var toast = new TestToastService();
         var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
@@ -157,11 +175,13 @@ static class Schermen
         var id = await db.Offertes.Where(o => o.OfferteNummer == offerteNummer).Select(o => o.Id).SingleAsync();
         var vm = new QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel(f, new VerkoopOverzichtService(f),
             new QuadroApp.Service.Verkoop.VerkoopDossierService(f, wf), new TestNavigationService(), new GeenOfferteNavigatie(),
-            wf, new WerkBonWorkflowService(f, wf), new TestDialogService(), toast);
+            wf, new WerkBonWorkflowService(f, wf), new TestDialogService(), toast, services: new OfferteVmProvider(f));
         await vm.ReceiveAsync(id);
         await vm.InitializeAsync();
         if (bekijk is { } stap)
             await vm.BekijkStapCommand.ExecuteAsync(vm.Stappen.First(s => s.Stap == stap));
+        if (daarna is not null) await daarna(vm);
+        await Task.Delay(300);
         return new VerkoopDossierView { DataContext = vm };
     }
 

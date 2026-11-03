@@ -1,0 +1,74 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:QuadroApp.ViewModels"
+    xmlns:m="clr-namespace:QuadroApp.Model.DB;assembly=QuadroApp.Data"
+    xmlns:conv="clr-namespace:QuadroApp.Converters"
+    x:Class="QuadroApp.Views.Offerte.OfferteTotalen"
+    x:DataType="vm:OfferteViewModel">
+    <!-- US-91: deel van het offertescherm, hergebruikt in OfferteView en in stap 1 van het verkoopdossier.
+         Inhoud ongewijzigd overgenomen uit OfferteView.axaml. -->
+				<!-- RECHTS PRIJZEN -->
+				<Grid
+					  HorizontalAlignment="Right"
+					  RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+					  RowSpacing="6">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto"/>
+						<ColumnDefinition Width="Auto" MinWidth="120"/>
+					</Grid.ColumnDefinitions>
+
+					<TextBlock Text="Subtotaal"/>
+					<TextBlock Grid.Row="0"
+							   Grid.Column="1"
+							   Text="{Binding OfferteEx, StringFormat=€ {0:N2}}"
+							   HorizontalAlignment="Right"/>
+
+					<TextBlock Grid.Row="1" Grid.Column="0" Text="BTW"/>
+					<TextBlock Grid.Row="1"
+							   Grid.Column="1"
+							   Text="{Binding OfferteBtw, StringFormat=€ {0:N2}}"
+							   HorizontalAlignment="Right"/>
+
+					<TextBlock Grid.Row="2"
+							   Grid.Column="0"
+							   Text="Totaal incl. BTW"
+							   FontWeight="Bold"/>
+
+					<TextBlock Grid.Row="2"
+							   Grid.Column="1"
+							   Text="{Binding OfferteIncl, StringFormat=€ {0:N2}}"
+							   Classes="h2"
+							   FontWeight="Bold"
+							   HorizontalAlignment="Right"/>
+
+					<!-- VOORSCHOT — zichtbaar zodra bedrag > 0 -->
+					<TextBlock Grid.Row="3"
+							   Grid.Column="0"
+							   Text="Voorschot betaald"
+							   Foreground="{DynamicResource Success}"
+							   FontWeight="SemiBold"
+							   IsVisible="{Binding HeeftVoorschot}"/>
+					<TextBlock Grid.Row="3"
+							   Grid.Column="1"
+							   Text="{Binding OfferteVoorschot, StringFormat=- € {0:N2}}"
+							   Foreground="{DynamicResource Success}"
+							   FontWeight="Bold"
+							   HorizontalAlignment="Right"
+							   IsVisible="{Binding HeeftVoorschot}"/>
+
+					<TextBlock Grid.Row="4"
+							   Grid.Column="0"
+							   Text="Rest te betalen"
+							   Foreground="{DynamicResource Danger}"
+							   FontWeight="SemiBold"/>
+
+					<TextBlock Grid.Row="4"
+							   Grid.Column="1"
+							   Text="{Binding OfferteRest, StringFormat=€ {0:N2}}"
+							   Foreground="{DynamicResource Danger}"
+							   FontWeight="Bold"
+							   HorizontalAlignment="Right"/>
+
+				</Grid>
+</UserControl>
