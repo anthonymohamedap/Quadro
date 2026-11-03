@@ -1041,6 +1041,17 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             }
         };
 
+        // US-92: planning als pagina; "Terug" opent deze offerte opnieuw (vers uit de database, met de
+        // via de planning gezette afhaaldatum). Vóór "Planning bekijken" wordt de offerte bewaard.
+        Workflow.ToonPlanningAsync = async (werkBonId, eerstOpslaan) =>
+        {
+            if (eerstOpslaan && KanBewerken && Offerte is { Id: > 0 })
+                await SaveCoreAsync(reloadAfterSave: false);
+            var offerteId = Offerte?.Id ?? 0;
+            await PlanningPaginaViewModel.ToonAsync(_nav, dbFactory, werkBonWorkflow, toast, statusWorkflow, werkBonId,
+                () => offerteId > 0 ? offerteNav.OpenOfferteAsync(offerteId) : _nav.NavigateToAsync<OffertesLijstViewModel>());
+        };
+
         Workflow.StappenBalk.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(Workflow.StappenBalk.Info))

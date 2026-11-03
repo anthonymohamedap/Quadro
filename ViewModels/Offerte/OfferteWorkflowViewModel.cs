@@ -293,6 +293,12 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
     /// </summary>
     public bool PlanningOpenenNaBevestigen { get; set; } = true;
 
+    /// <summary>
+    /// US-92 — opent de planning als pagina (werkBonId, eerst opslaan?). Gezet door de offerte;
+    /// zonder deze delegate valt hij terug op het oude venster.
+    /// </summary>
+    public Func<int, bool, Task>? ToonPlanningAsync { get; set; }
+
     /// <summary>US-91 — na een geslaagde bevestiging (het dossier gaat dan naar stap 2).</summary>
     public event Action? Bevestigd;
 
@@ -333,6 +339,12 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
             if (!PlanningOpenenNaBevestigen)
             {
                 Bevestigd?.Invoke();
+                return;
+            }
+
+            if (ToonPlanningAsync is not null)
+            {
+                await ToonPlanningAsync(werkBonId, false);   // al opgeslagen bij het bevestigen
                 return;
             }
 
@@ -380,6 +392,12 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         try
         {
             IsBusy = true;
+
+            if (ToonPlanningAsync is not null)
+            {
+                await ToonPlanningAsync(werkBon.Id, true);
+                return;
+            }
 
             var vm = new PlanningCalendarViewModel(_dbFactory, _werkBonWorkflow, Toast, _statusWorkflow);
             await vm.InitializeAsync(werkBon.Id);

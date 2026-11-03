@@ -271,8 +271,8 @@ Technisch: de bestaande `OfferteViewModel` (1 798 regels) + `OfferteRegelViewMod
 ### US-92 — Planning als pagina en in stap 2
 
 > ✅ **Gebouwd 03/11/2026** (`feature/us92-planning-pagina`, PR naar `dev`):
-> - `PlanningCalendarWindow` → herbruikbaar blok `Views/Planning/PlanningKalender` (inhoud, slepen, dag kiezen, herplannen, taak verwijderen, tijd-dialoog ongewijzigd). Het venster is nu een dun omhulsel en ziet er pixel-gelijk uit; de oude schermen (offerte, werkbonnen, offertelijst) openen het nog tot US-95.
-> - **Zijbalk "Planning"** opent de kalender als **pagina** (`PlanningPaginaViewModel`/`PlanningPaginaView`, met ← Terug), niet meer als los venster.
+> - `PlanningCalendarWindow` → herbruikbaar blok `Views/Planning/PlanningKalender` (inhoud, slepen, dag kiezen, herplannen, taak verwijderen, tijd-dialoog ongewijzigd). Het venster blijft enkel als terugvaloptie (pixel-gelijk) en wordt in US-95 weggehaald.
+> - **Planning opent overal als pagina** (`PlanningPaginaViewModel`/`PlanningPaginaView`), niet meer als los venster: zijbalk/beginscherm, Werkbonnen ("Planning openen"), Verkopen, het offertescherm (na "Bevestigen → Werkbon" en "Planning bekijken"; die bewaart de offerte eerst) en het dossier. Vanuit een werkbon met zijn inlijstingen; "← Terug" gaat naar het scherm waar je vandaan kwam (Anthony 03/11: "ik zie alleen de oude planning die openspringt").
 > - **Stap 2 in het dossier**: dezelfde kalender met de inlijstingen van deze werkbon (slepen, Plan op geselecteerde dag, Plan per regel). Na elke planwijziging werken kop (afhaaldatum = laatste plandag) en "wat ontbreekt" bij; de stap blijft Werkbon tot **Start productie ▶**.
 > - P6 (standaardkader i.p.v. "Geen lijst gekozen") was al opgelost in US-80; zichtbaar in stap 2.
 > - Niet in deze story: "Werkbon afdrukken" (US-94) en "Stap overslaan" (US-93) in de voetbalk; een 2-wekenweergave zoals in de mock (zou de planning zelf veranderen — de maandkalender blijft zoals nu).

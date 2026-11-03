@@ -118,6 +118,25 @@ public class VerkoopDossierServiceTests
     }
 
     [Fact]
+    public async Task Planningpagina_voor_een_werkbon_toont_zijn_inlijstingen_en_terug_gaat_naar_de_herkomst_US92()
+    {
+        var o = await OpstellingAsync(regels: 2);
+        await using var _ = o.Scope;
+        var nav = new TestNavigationService();
+        var terug = false;
+
+        await QuadroApp.ViewModels.PlanningPaginaViewModel.ToonAsync(nav, o.Scope.Factory, o.WerkBonWorkflow, new TestToastService(),
+            o.Workflow, o.WerkBonId, () => { terug = true; return Task.CompletedTask; });
+
+        var pagina = Assert.IsType<QuadroApp.ViewModels.PlanningPaginaViewModel>(nav.CurrentViewModel);
+        await pagina.InitializeAsync();
+        Assert.Equal(2, pagina.Kalender.RegelsVanWerkBon.Count);
+
+        await pagina.GaTerugCommand.ExecuteAsync(null);
+        Assert.True(terug);
+    }
+
+    [Fact]
     public async Task Inplannen_verandert_de_offertestatus_niet_meer()
     {
         var o = await OpstellingAsync();
