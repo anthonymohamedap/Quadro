@@ -248,6 +248,14 @@ Technisch: `VerkoopDossierViewModel` (houdt `OfferteId`, `StapInfo`, `BekekenSta
 
 ### US-91 — Stap 1 Offerte + voorschot
 
+> ✅ **Gebouwd 03/11/2026** (`feature/us91-stap1-offerte`, PR naar `dev`):
+> - `OfferteView.axaml` opgesplitst in vijf controls (`Views/Offerte/`): `OfferteKlantKaart`, `OfferteRegelsKaart`, `OfferteRegelEditor`, `OffertePrijsKaart`, `OfferteTotalen`. Het oude offertescherm gebruikt ze op dezelfde plaats (render pixel-gelijk).
+> - Stap 1 in het dossier = dezelfde `OfferteViewModel`: links **Inlijsting details** (+ afwerkingen, afwerkingscode), rechts klant, **Inlijstingen**, prijsaanpassingen + voorschot ontvangen, totalen en bonstatus.
+> - Voetbalk stap 1: **Bestelbon aanmaken/afdrukken** (zelfde knop) en **Bevestigen → Werkbon ▶** (zelfde bevestiging; daarna stap 2 in het dossier i.p.v. de planning-popup). Menu ⋯: Opslaan, Berekenen/Prijzen herberekenen, → Verzonden / ↩ Concept / ↩ Verzonden, Ontgrendelen, Offerte openen in het oude scherm.
+> - **Automatisch bewaren**: bij het verlaten van stap 1 (andere stap, Verkopen, menu-acties) als er iets gewijzigd is; voet toont "bewaard ✓" / "nog niet bewaard". Niet bij elke toets: opslaan herlaadt de offerte (selectie en keuzelijsten springen dan terug).
+> - Stap 1 **terugkijken** na het akkoord = alleen-lezen; **✎ Offerte aanpassen…** maakt hem bewerkbaar (zoals nu: prijs vast, "Prijzen herberekenen" in ⋯).
+> - Niet gedaan (staat niet in de mock of zou een functie toevoegen): snelknoppen 25 % / 50 % / Volledig bij het voorschot, "+ Nieuwe verkoop" rechtstreeks in het dossier (opent nog het offertescherm), compactere klantkaart. Voorschot werkt zoals nu (bedrag, betaalwijze, datum, Registreren).
+
 **Als** medewerker **wil ik** de offerte opmaken in het dossier, **zodat** prijs, voorschot en afdrukken samen staan.
 
 1. Links de inlijstingen als kaarten (titel, prijs, maat, lijst of standaardkader, afwerkingen) + "+ Inlijsting"; onderaan subtotaal, btw, korting/meerprijs, totaal, voorschot, nog te betalen.

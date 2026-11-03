@@ -1,0 +1,118 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:QuadroApp.ViewModels"
+    xmlns:m="clr-namespace:QuadroApp.Model.DB;assembly=QuadroApp.Data"
+    xmlns:conv="clr-namespace:QuadroApp.Converters"
+    x:Class="QuadroApp.Views.Offerte.OffertePrijsKaart"
+    x:DataType="vm:OfferteViewModel">
+    <!-- US-91: deel van het offertescherm, hergebruikt in OfferteView en in stap 1 van het verkoopdossier.
+         Inhoud ongewijzigd overgenomen uit OfferteView.axaml. -->
+					<Border Classes="quadro-card">
+
+						<StackPanel Spacing="14">
+
+							<TextBlock Text="Prijsaanpassingen"
+									   Classes="h2"
+									   TextTrimming="CharacterEllipsis"/>
+
+							<Grid ColumnDefinitions="Auto,*"
+								  RowDefinitions="Auto,Auto,Auto"
+								  RowSpacing="10"
+								  ColumnSpacing="12">
+
+								<!-- KORTING -->
+								<TextBlock Text="Korting op totaal (%)" VerticalAlignment="Center"/>
+								<NumericUpDown Grid.Row="0"
+											   Grid.Column="1"
+											   Minimum="0"
+											   Foreground="{DynamicResource TextPrimary}"
+											   Maximum="100"
+											   FormatString="0.##"
+											   Value="{Binding OfferteKortingPct, Mode=TwoWay}"/>
+
+								<!-- MEERPRIJS -->
+								<TextBlock Grid.Row="1" Grid.Column="0" Text="Meerprijs (incl. BTW)" VerticalAlignment="Center"/>
+								<NumericUpDown Grid.Row="1"
+										   Grid.Column="1"
+										   Minimum="0"
+										   Increment="5"
+										   FormatString="'€ '0.00"
+										   Foreground="{DynamicResource TextPrimary}"
+										   Value="{Binding OfferteMeerPrijsIncl, Mode=TwoWay}"/>
+
+								<!-- VOORSCHOT (US-69): enkel via "Voorschot ontvangen" hieronder, zodat datum en
+								     betaalwijze mee in het overzicht betalingen komen. -->
+								<TextBlock Grid.Row="2" Grid.Column="0" Text="Voorschot betaald" VerticalAlignment="Center"/>
+								<TextBlock Grid.Row="2"
+										   Grid.Column="1"
+										   VerticalAlignment="Center"
+										   FontWeight="SemiBold"
+										   Text="{Binding VoorschotBedragInput, StringFormat='€ {0:0.00}'}"/>
+
+							</Grid>
+
+							<!-- US-69: voorschot ontvangen -->
+							<StackPanel Spacing="6" Margin="0,10,0,0">
+								<TextBlock Text="Voorschot ontvangen" Classes="label" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
+								<!-- US-74: twee rijen — de datumkiezer is te breed om naast bedrag en betaalwijze te passen. -->
+								<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="6" RowSpacing="6">
+									<NumericUpDown Grid.Row="0" Grid.Column="0"
+												   MinWidth="0"
+												   HorizontalAlignment="Stretch"
+												   Minimum="0"
+												   Increment="5"
+												   FormatString="'€ '0.00"
+												   Watermark="Bedrag"
+												   Foreground="{DynamicResource TextPrimary}"
+												   Value="{Binding NieuwVoorschotBedrag, Mode=TwoWay}"/>
+									<ComboBox Grid.Row="0" Grid.Column="1"
+											  MinWidth="0"
+											  HorizontalAlignment="Stretch"
+											  ItemsSource="{Binding BetaalwijzeOpties}"
+											  SelectedItem="{Binding NieuwVoorschotBetaalwijze, Mode=TwoWay}">
+    <ComboBox.ItemTemplate>
+        <DataTemplate x:DataType="m:Betaalwijze">
+            <TextBlock Text="{Binding Converter={x:Static conv:BetaalwijzeToLabelConverter.Instance}}"/>
+        </DataTemplate>
+    </ComboBox.ItemTemplate>
+</ComboBox>
+									<DatePicker Grid.Row="1" Grid.Column="0"
+												MinWidth="0"
+												HorizontalAlignment="Stretch"
+												SelectedDate="{Binding NieuwVoorschotDatum, Mode=TwoWay}"/>
+									<Button Grid.Row="1" Grid.Column="1"
+											HorizontalAlignment="Stretch"
+											HorizontalContentAlignment="Center"
+											Content="Registreren"
+											Classes="MainBtn"
+											Command="{Binding RegistreerVoorschotCommand}"/>
+								</Grid>
+
+								<ItemsControl ItemsSource="{Binding Voorschotten}"
+											  IsVisible="{Binding HeeftVoorschotRegels}">
+									<ItemsControl.ItemTemplate>
+										<DataTemplate x:DataType="m:Ontvangst">
+											<Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10" Margin="0,2">
+												<TextBlock Grid.Column="0" VerticalAlignment="Center"
+														   Text="{Binding Datum, StringFormat='{}{0:dd/MM/yyyy}'}"/>
+												<TextBlock Grid.Column="1" VerticalAlignment="Center"
+														   Text="{Binding Betaalwijze, Converter={x:Static conv:BetaalwijzeToLabelConverter.Instance}}"/>
+												<TextBlock Grid.Column="2" VerticalAlignment="Center" FontWeight="SemiBold"
+														   Text="{Binding BedragIncl, StringFormat='€ {0:0.00}'}"/>
+												<Button Grid.Column="3" Content="&#x2715;" Width="28" Height="24" Padding="0"
+														HorizontalContentAlignment="Center"
+														Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
+														ToolTip.Tip="Voorschot verwijderen"
+														Command="{Binding $parent[ItemsControl].((vm:OfferteViewModel)DataContext).VerwijderVoorschotCommand}"
+														CommandParameter="{Binding}"/>
+											</Grid>
+										</DataTemplate>
+									</ItemsControl.ItemTemplate>
+								</ItemsControl>
+							</StackPanel>
+
+						</StackPanel>
+
+					</Border>
+</UserControl>
