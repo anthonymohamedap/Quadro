@@ -130,29 +130,10 @@ namespace QuadroApp.ViewModels
             if (SelectedWerkBon == null)
                 return;
 
-            var vm = new PlanningCalendarViewModel(_factory, _workflow, _toast, _statusWorkflow);
-            await vm.InitializeAsync(SelectedWerkBon.Id);
-
-            var window = new QuadroApp.Views.PlanningCalendarWindow
-            {
-                DataContext = vm
-            };
-
-            if (App.Current?.ApplicationLifetime is
-                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                var owner = desktop.MainWindow;
-                if (owner is null)
-                    return;
-
-                await window.ShowDialog(owner);
-            }
-
-            // Na plannen kan de status gewijzigd zijn (offerte → InProductie) → lijst verversen.
-            var bewaardeId = SelectedWerkBon?.Id;
-            await LoadAsync();
-            if (bewaardeId.HasValue)
-                SelectedWerkBon = WerkBonnen.FirstOrDefault(x => x.Id == bewaardeId.Value);
+            // US-92: planning als pagina; "Terug" komt terug in deze lijst (die herlaadt zichzelf).
+            var lijst = this;
+            await PlanningPaginaViewModel.ToonAsync(_nav, _factory, _workflow, _toast, _statusWorkflow,
+                SelectedWerkBon.Id, () => _nav.NavigateToAsync(lijst));
         }
 
         /// <summary>US-51 Fase B — opent het volledige werkbon-overzicht in een modaal venster.</summary>

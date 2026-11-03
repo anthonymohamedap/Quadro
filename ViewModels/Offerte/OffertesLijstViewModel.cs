@@ -230,14 +230,10 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
             return;
         }
 
-        var vm = new PlanningCalendarViewModel(_dbFactory, _werkBonWorkflow, _toast, _workflow);
-        await vm.InitializeAsync(werkBonId);
-        var window = new QuadroApp.Views.PlanningCalendarWindow { DataContext = vm };
-        if (App.Current?.ApplicationLifetime is
-            Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime { MainWindow: { } owner })
-            await window.ShowDialog(owner);
-
-        await LoadAsync();
+        // US-92: planning als pagina; "Terug" komt terug in deze lijst (zelfde tabblad, herlaadt).
+        var lijst = this;
+        await PlanningPaginaViewModel.ToonAsync(_nav, _dbFactory, _werkBonWorkflow, _toast, _workflow,
+            werkBonId, () => _nav.NavigateToAsync(lijst));
     }
 
     /// <summary>Werklijst van een week (US-98), opent op de huidige week.</summary>

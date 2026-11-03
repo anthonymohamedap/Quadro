@@ -57,6 +57,16 @@ static class Schermen
         ["planning-venster"] = f => PlanningVensterAsync(f, 412),
         ["planning-venster-globaal"] = f => PlanningVensterAsync(f, null),
         ["planning-pagina"] = PlanningPaginaAsync,
+        ["planning-pagina-werkbon"] = async f =>
+        {
+            var toast = new TestToastService();
+            var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
+            await using var db = await f.CreateDbContextAsync();
+            var wbId = await db.WerkBonnen.Where(w => w.Offerte.OfferteNummer == 412).Select(w => w.Id).SingleAsync();
+            var vm = new PlanningPaginaViewModel(f, new WerkBonWorkflowService(f, wf), toast, wf, new TestNavigationService()) { WerkBonId = wbId };
+            await vm.InitializeAsync();
+            return new QuadroApp.Views.Planning.PlanningPaginaView { DataContext = vm };
+        },
         ["dossier-1-offerte"] = f => DossierAsync(f, 419),
         ["dossier-2-werkbon"] = f => DossierAsync(f, 412),
         ["dossier-4-klaar"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 421); },
