@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:QuadroApp.ViewModels"
              xmlns:vmv="using:QuadroApp.ViewModels.Verkoop"
+             xmlns:planningv="using:QuadroApp.Views.Planning"
              xmlns:views="using:QuadroApp.Views"
              xmlns:huskui="https://github.com/d3ara1n/Huskui.Avalonia"
              x:Class="QuadroApp.App">
@@ -52,6 +53,11 @@
 
 		<DataTemplate DataType="{x:Type vm:OfferteViewModel}">
 			<views:OfferteView/>
+		</DataTemplate>
+
+		<!-- US-92: planning als pagina -->
+		<DataTemplate DataType="{x:Type vm:PlanningPaginaViewModel}">
+			<planningv:PlanningPaginaView/>
 		</DataTemplate>
 
 		<!-- US-90: verkoopdossier -->

@@ -83,6 +83,40 @@ public class VerkoopDossierServiceTests
         return (off.Status, off.WerkBon!.Status);
     }
 
+    private sealed class GeenOfferteNavigatie : IOfferteNavigationService
+    {
+        public Task OpenOfferteAsync(int offerteId) => Task.CompletedTask;
+        public Task NewOfferteAsync() => Task.CompletedTask;
+    }
+
+    [Fact]
+    public async Task Stap2_toont_de_planning_en_inplannen_werkt_het_dossier_bij_zonder_stap_te_wijzigen_US92()
+    {
+        var o = await OpstellingAsync(metAfhaalDatum: false, regels: 1);
+        await using var _ = o.Scope;
+        var f = o.Scope.Factory;
+        var toast = new TestToastService();
+        var dossier = new QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel(f, new VerkoopOverzichtService(f), o.Dossier,
+            new TestNavigationService(), new GeenOfferteNavigatie(), o.Workflow, o.WerkBonWorkflow, new TestDialogService(), toast);
+        await dossier.ReceiveAsync(o.OfferteId);
+        await dossier.InitializeAsync();
+
+        Assert.Equal(VerkoopStap.Werkbon, dossier.Info!.Huidig);
+        Assert.True(dossier.IsPlanningZichtbaar);
+        Assert.False(dossier.ToontPlanningKnop);
+        Assert.Contains(dossier.Meldingen, m => m.StartsWith("Plan eerst"));
+        var regel = Assert.Single(dossier.Planning!.RegelsVanWerkBon);
+
+        await dossier.Planning.PlanRegelOpDatumAsync(regel.RegelId, VolgendeMaandag());
+        for (var i = 0; i < 50 && dossier.Meldingen.Any(m => m.StartsWith("Plan eerst")); i++)
+            await Task.Delay(100);
+
+        Assert.DoesNotContain(dossier.Meldingen, m => m.StartsWith("Plan eerst"));
+        Assert.DoesNotContain(dossier.Meldingen, m => m.Contains("afhaaldatum"));   // = laatste plandag (US-27)
+        Assert.Equal(VerkoopStap.Werkbon, dossier.Info!.Huidig);                     // inplannen ≠ start productie
+        Assert.Equal((OfferteStatus.Goedgekeurd, WerkBonStatus.Gepland), await StatusAsync(o));
+    }
+
     [Fact]
     public async Task Inplannen_verandert_de_offertestatus_niet_meer()
     {
