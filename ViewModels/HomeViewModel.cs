@@ -211,26 +211,8 @@ namespace QuadroApp.ViewModels
             }
         }
 
-        private async Task OpenPlanningAsync()
-        {
-            var vm = new PlanningCalendarViewModel(_factory, _workflow, _toast, _statusWorkflow);
-            await vm.InitializeGlobalAsync();
-
-            var window = new PlanningCalendarWindow
-            {
-                DataContext = vm
-            };
-
-            if (App.Current?.ApplicationLifetime is
-                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                var owner = desktop.MainWindow;
-                if (owner is null)
-                    return;
-
-                await window.ShowDialog(owner);
-            }
-        }
+        /// <summary>US-92 — Planning opent als pagina in het hoofdvenster (niet meer als los venster).</summary>
+        private Task OpenPlanningAsync() => _nav.NavigateToAsync<PlanningPaginaViewModel>();
 
         private async Task OpenInstellingenAsync()
         {

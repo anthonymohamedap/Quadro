@@ -54,11 +54,15 @@ static class Schermen
         ["offertelijst-werkbonnen"] = f => OffertelijstAsync(f, VerkoopFase.LopendeWerkbonnen),
         ["offertelijst-klaar"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await OffertelijstAsync(f, VerkoopFase.KlaarOmAfTeHalen); },
         ["werkbonnenlijst"] = WerkbonnenlijstAsync,
+        ["planning-venster"] = f => PlanningVensterAsync(f, 412),
+        ["planning-venster-globaal"] = f => PlanningVensterAsync(f, null),
+        ["planning-pagina"] = PlanningPaginaAsync,
         ["dossier-1-offerte"] = f => DossierAsync(f, 419),
         ["dossier-2-werkbon"] = f => DossierAsync(f, 412),
         ["dossier-4-klaar"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 421); },
         ["dossier-5-nog-te-betalen"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 423); },
         ["dossier-1-inlijsting"] = f => DossierAsync(f, 419, daarna: vm => { vm.Stap1!.SelectedRegel = vm.Stap1.Regels.First(); return Task.CompletedTask; }),
+        ["dossier-2-lang"] = f => DossierAsync(f, 412),
         ["dossier-1-lang"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 419, daarna: vm => { vm.Stap1!.SelectedRegel = vm.Stap1.Regels.First(); return Task.CompletedTask; }); },
         ["dossier-1-terug-412"] = f => DossierAsync(f, 412, bekijk: QuadroApp.Service.Verkoop.VerkoopStap.Offerte,
             daarna: vm => { vm.Stap1!.SelectedRegel = vm.Stap1.Regels.FirstOrDefault(); return Task.CompletedTask; }),
@@ -80,6 +84,7 @@ static class Schermen
     {
         ["home-klein"] = (1024, 768),
         ["dossier-1-lang"] = (1440, 2000),
+        ["dossier-2-lang"] = (1440, 1500),
     };
 
     public static async Task AllesAsync(string uitvoer, HashSet<string> gekozen)
@@ -203,6 +208,42 @@ static class Schermen
             Background = Avalonia.Media.Brushes.Gray, Padding = new Avalonia.Thickness(200, 80),
             Child = new Border { Width = 600, Background = Avalonia.Media.Brushes.White, Child = inhoud, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top }
         };
+    }
+
+    /// <summary>US-92 — Planning als pagina (zijbalk).</summary>
+    static async Task<Control> PlanningPaginaAsync(IDbContextFactory<AppDbContext> f)
+    {
+        var toast = new TestToastService();
+        var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
+        var vm = new PlanningPaginaViewModel(f, new WerkBonWorkflowService(f, wf), toast, wf, new TestNavigationService());
+        await vm.InitializeAsync();
+        return new QuadroApp.Views.Planning.PlanningPaginaView { DataContext = vm };
+    }
+
+    /// <summary>US-92 — het planningsvenster (oude schermen): inhoud los gerenderd.</summary>
+    static async Task<Control> PlanningVensterAsync(IDbContextFactory<AppDbContext> f, int? offerteNummer)
+    {
+        var toast = new TestToastService();
+        var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
+        var vm = new PlanningCalendarViewModel(f, new WerkBonWorkflowService(f, wf), toast, wf);
+        if (offerteNummer is int nr)
+        {
+            await using var db = await f.CreateDbContextAsync();
+            var wbId = await db.WerkBonnen.Where(w => w.Offerte.OfferteNummer == nr).Select(w => w.Id).SingleAsync();
+            await vm.InitializeAsync(wbId);
+        }
+        else
+            await vm.InitializeGlobalAsync();
+        var venster = new PlanningCalendarWindow { DataContext = vm };
+        var inhoud = (Control)venster.Content!;
+        venster.Content = null;
+        foreach (var stijl in venster.Styles.ToList())   // vóór US-92 stonden de stijlen op het venster
+        {
+            venster.Styles.Remove(stijl);
+            inhoud.Styles.Add(stijl);
+        }
+        inhoud.DataContext = vm;
+        return inhoud;
     }
 
     /// <summary>US-89 — de Werkbonnenlijst (blijft in het menu): werkbon = verkoopnummer.</summary>

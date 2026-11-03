@@ -100,7 +100,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     // ── Stap ─────────────────────────────────────────────────────────────────
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsTerugGekeken), nameof(StapTeller), nameof(KanVorigeStap),
-        nameof(BekekenTitel), nameof(BekekenUitleg), nameof(IsHoofdKnopZichtbaar),
+        nameof(BekekenTitel), nameof(BekekenUitleg), nameof(IsHoofdKnopZichtbaar), nameof(IsPlanningZichtbaar), nameof(ToontPlanningKnop),
         nameof(IsStap1Zichtbaar), nameof(IsSamenvattingZichtbaar), nameof(IsBestelbonKnopZichtbaar), nameof(IsOfferteAanpassenZichtbaar))]
     private VerkoopStap bekekenStap = VerkoopStap.Offerte;
 
@@ -131,6 +131,18 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     [ObservableProperty] private string? bewaardTekst;
 
     public bool IsStap1Zichtbaar => BekekenStap == VerkoopStap.Offerte && Stap1 is not null;
+
+    // ── US-92: stap 2 = de planning van deze werkbon in het dossier ─────────
+
+    /// <summary>Zelfde kalender als de pagina Planning, met de inlijstingen van deze werkbon (slepen, Plan op dag).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPlanningZichtbaar), nameof(ToontPlanningKnop))]
+    private PlanningCalendarViewModel? planning;
+
+    /// <summary>Enkel op de huidige stap 2 (terugkijken = samenvatting).</summary>
+    public bool IsPlanningZichtbaar => BekekenStap == VerkoopStap.Werkbon && Planning is not null && !IsTerugGekeken;
+
+    private bool _vernieuwtNaPlanning;
     public bool IsSamenvattingZichtbaar => !IsStap1Zichtbaar;
     public bool IsBestelbonKnopZichtbaar => IsStap1Zichtbaar && !IsTerugGekeken;
     public bool IsOfferteAanpassenZichtbaar =>
@@ -152,7 +164,12 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     public ObservableCollection<string> Meldingen { get; } = new();
 
     [ObservableProperty] private bool toontOfferteKnop;
-    [ObservableProperty] private bool toontWerkbonKnoppen;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ToontPlanningKnop))]
+    private bool toontWerkbonKnoppen;
+
+    /// <summary>US-92: in stap 2 staat de kalender al in het dossier; elders opent de knop het venster.</summary>
+    public bool ToontPlanningKnop => ToontWerkbonKnoppen && !IsPlanningZichtbaar;
     [ObservableProperty] private bool toontBestelbonKnop;
 
     [ObservableProperty]
@@ -205,6 +222,10 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
             Info = _regel.Stap;
             if (naarHuidigeStap || BekekenStap > Info.Huidig)
                 BekekenStap = Info.Huidig;
+
+            // US-92: na een stapovergang hoort de kalender niet meer in het dossier.
+            if (naarHuidigeStap && Info.Huidig != VerkoopStap.Werkbon && Planning is not null)
+                StopPlanning();
 
             // US-91: na een stapovergang de offerte opnieuw laden als je stap 1 nog eens opent.
             if (naarHuidigeStap && Info.Huidig != VerkoopStap.Offerte && Stap1 is not null)
@@ -339,8 +360,11 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
                     Gegevens.Add(new("Bestellen", wb.BestelVoortgangLabel));
                 Gegevens.Add(new("Afhalen", _regel!.AfhaalDatum is { } a ? a.ToString("dd/MM/yyyy") : "nog geen afhaaldatum"));
                 if (BekekenStap == VerkoopStap.Werkbon && !IsTerugGekeken)
+                {
                     foreach (var m in await _dossier.WatOntbreektVoorProductieAsync(OfferteId))
                         Meldingen.Add(m);
+                    await LaadPlanningAsync(wb.Id);
+                }
                 ToontWerkbonKnoppen = true;
                 break;
 
@@ -428,6 +452,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     [RelayCommand]
     private async Task TerugNaarVerkopenAsync()
     {
+        StopPlanning();
         await BewaarStap1Async();
         StopBewaardTimer();
         await _nav.NavigateToAsync<OffertesLijstViewModel>();
@@ -580,6 +605,47 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
         if (EigenaarVenster() is { } owner)
             await window.ShowDialog(owner);
         await LaadAsync(naarHuidigeStap: true);
+    }
+
+    private async Task LaadPlanningAsync(int werkBonId)
+    {
+        if (Planning is not null) return;
+        var vm = new PlanningCalendarViewModel(_factory, _werkBonWorkflow, _toast, _workflow);
+        await vm.InitializeAsync(werkBonId);
+        vm.PropertyChanged += OpPlanningGewijzigd;
+        Planning = vm;
+        OnPropertyChanged(nameof(IsPlanningZichtbaar));
+        OnPropertyChanged(nameof(ToontPlanningKnop));
+    }
+
+    private void StopPlanning()
+    {
+        if (Planning is not null) Planning.PropertyChanged -= OpPlanningGewijzigd;
+        Planning = null;
+    }
+
+    /// <summary>
+    /// Na inplannen, herplannen of een taak verwijderen herberekent de kalender zijn bezetting:
+    /// dan ook de kop (afhaaldatum = laatste plandag) en "wat ontbreekt" bijwerken. De stap zelf
+    /// verandert niet (beslist 02/11: enkel "Start productie" of de weeklijst).
+    /// </summary>
+    private void OpPlanningGewijzigd(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(PlanningCalendarViewModel.KpiOpenWerkbonnen)
+            && e.PropertyName != nameof(PlanningCalendarViewModel.KpiUtilWeek)) return;
+        _ = VernieuwNaPlanningAsync();
+    }
+
+    private async Task VernieuwNaPlanningAsync()
+    {
+        if (_vernieuwtNaPlanning) return;
+        _vernieuwtNaPlanning = true;
+        try
+        {
+            await Task.Delay(300);   // meerdere wijzigingen na één actie samen afhandelen
+            await LaadAsync();
+        }
+        finally { _vernieuwtNaPlanning = false; }
     }
 
     [RelayCommand]

@@ -1,0 +1,16 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:QuadroApp.ViewModels"
+    xmlns:controls="clr-namespace:QuadroApp.Views.Controls"
+    xmlns:planning="clr-namespace:QuadroApp.Views.Planning"
+    x:Class="QuadroApp.Views.Planning.PlanningPaginaView"
+    x:DataType="vm:PlanningPaginaViewModel"
+    Background="{DynamicResource SurfaceMuted}">
+
+    <!-- US-92: Planning als pagina (K14); zelfde kalender als het venster. -->
+    <Grid RowDefinitions="Auto,*">
+        <controls:QuadroHeader Title="PLANNING" BackCommand="{Binding GaTerugCommand}"/>
+        <planning:PlanningKalender Grid.Row="1" DataContext="{Binding Kalender}"/>
+    </Grid>
+</UserControl>
