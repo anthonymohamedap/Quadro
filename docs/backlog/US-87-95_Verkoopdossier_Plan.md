@@ -254,7 +254,7 @@ Technisch: `VerkoopDossierViewModel` (houdt `OfferteId`, `StapInfo`, `BekekenSta
 > - Voetbalk stap 1: **Bestelbon aanmaken/afdrukken** (zelfde knop) en **Bevestigen → Werkbon ▶** (zelfde bevestiging; daarna stap 2 in het dossier i.p.v. de planning-popup). Menu ⋯: Opslaan, Berekenen/Prijzen herberekenen, → Verzonden / ↩ Concept / ↩ Verzonden, Ontgrendelen, Offerte openen in het oude scherm.
 > - **Automatisch bewaren**: bij het verlaten van stap 1 (andere stap, Verkopen, menu-acties) als er iets gewijzigd is; voet toont "bewaard ✓" / "nog niet bewaard". Niet bij elke toets: opslaan herlaadt de offerte (selectie en keuzelijsten springen dan terug).
 > - Stap 1 **terugkijken** na het akkoord = alleen-lezen; **✎ Offerte aanpassen…** maakt hem bewerkbaar (zoals nu: prijs vast, "Prijzen herberekenen" in ⋯).
-> - Niet gedaan (zou functie wijzigen of toevoegen): doorzoekbare standaardkaderlijst met snelknoppen voorschot 25/50 %, nieuwe verkoop starten in het dossier.
+> - Niet gedaan (staat niet in de mock of zou een functie toevoegen): snelknoppen 25 % / 50 % / Volledig bij het voorschot, "+ Nieuwe verkoop" rechtstreeks in het dossier (opent nog het offertescherm), compactere klantkaart. Voorschot werkt zoals nu (bedrag, betaalwijze, datum, Registreren).
 
 **Als** medewerker **wil ik** de offerte opmaken in het dossier, **zodat** prijs, voorschot en afdrukken samen staan.
 
