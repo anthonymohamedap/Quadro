@@ -4,6 +4,7 @@
     xmlns:vm="clr-namespace:QuadroApp.ViewModels.Verkoop"
     xmlns:ovm="clr-namespace:QuadroApp.ViewModels"
     xmlns:offerte="clr-namespace:QuadroApp.Views.Offerte"
+    xmlns:planning="clr-namespace:QuadroApp.Views.Planning"
     x:Class="QuadroApp.Views.VerkoopDossierView"
     x:DataType="vm:VerkoopDossierViewModel"
     Background="{DynamicResource SurfaceMuted}">
@@ -286,11 +287,18 @@
                             <Button Content="Werkbon openen" Command="{Binding OpenWerkBonCommand}"
                                     IsVisible="{Binding ToontWerkbonKnoppen}" Padding="10,5" CornerRadius="6" Margin="0,0,8,6"/>
                             <Button Content="Planning openen" Command="{Binding OpenPlanningCommand}"
-                                    IsVisible="{Binding ToontWerkbonKnoppen}" Padding="10,5" CornerRadius="6" Margin="0,0,8,6"/>
+                                    IsVisible="{Binding ToontPlanningKnop}" Padding="10,5" CornerRadius="6" Margin="0,0,8,6"/>
                             <Button Content="Bestelbonnen openen" Command="{Binding OpenBestelbonnenCommand}"
                                     IsVisible="{Binding ToontBestelbonKnop}" Padding="10,5" CornerRadius="6" Margin="0,0,8,6"/>
                         </WrapPanel>
                     </StackPanel>
+                </Border>
+
+                <!-- US-92: stap 2 = de planning van deze werkbon (zelfde kalender als de pagina Planning):
+                     inlijstingen van de werkbon rechts, slepen of "Plan op geselecteerde dag". -->
+                <Border IsVisible="{Binding IsPlanningZichtbaar}" Height="820" CornerRadius="12" ClipToBounds="True"
+                        BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1">
+                    <planning:PlanningKalender DataContext="{Binding Planning}"/>
                 </Border>
             </StackPanel>
         </ScrollViewer>
