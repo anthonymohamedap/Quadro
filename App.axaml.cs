@@ -228,6 +228,7 @@ public partial class App : Application
         services.AddTransient<AfwerkingenViewModel>();
         services.AddTransient<OffertesLijstViewModel>();
         services.AddTransient<QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel>();   // US-90
+        services.AddTransient<PlanningPaginaViewModel>();   // US-92
         services.AddTransient<OfferteViewModel>();
         services.AddTransient<KlantDetailViewModel>();
         services.AddTransient<WerkBonLijstViewModel>();

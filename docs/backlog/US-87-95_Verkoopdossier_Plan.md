@@ -270,6 +270,13 @@ Technisch: de bestaande `OfferteViewModel` (1 798 regels) + `OfferteRegelViewMod
 
 ### US-92 — Planning als pagina en in stap 2
 
+> ✅ **Gebouwd 03/11/2026** (`feature/us92-planning-pagina`, PR naar `dev`):
+> - `PlanningCalendarWindow` → herbruikbaar blok `Views/Planning/PlanningKalender` (inhoud, slepen, dag kiezen, herplannen, taak verwijderen, tijd-dialoog ongewijzigd). Het venster is nu een dun omhulsel en ziet er pixel-gelijk uit; de oude schermen (offerte, werkbonnen, offertelijst) openen het nog tot US-95.
+> - **Zijbalk "Planning"** opent de kalender als **pagina** (`PlanningPaginaViewModel`/`PlanningPaginaView`, met ← Terug), niet meer als los venster.
+> - **Stap 2 in het dossier**: dezelfde kalender met de inlijstingen van deze werkbon (slepen, Plan op geselecteerde dag, Plan per regel). Na elke planwijziging werken kop (afhaaldatum = laatste plandag) en "wat ontbreekt" bij; de stap blijft Werkbon tot **Start productie ▶**.
+> - P6 (standaardkader i.p.v. "Geen lijst gekozen") was al opgelost in US-80; zichtbaar in stap 2.
+> - Niet in deze story: "Werkbon afdrukken" (US-94) en "Stap overslaan" (US-93) in de voetbalk; een 2-wekenweergave zoals in de mock (zou de planning zelf veranderen — de maandkalender blijft zoals nu).
+
 **Als** medewerker **wil ik** de planner in het hoofdvenster, **zodat** hij niet als los venster achter de app verdwijnt.
 
 1. Zijbalk "Planning" opent de kalender als pagina (K14).
