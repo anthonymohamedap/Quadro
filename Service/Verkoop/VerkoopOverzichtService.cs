@@ -104,6 +104,9 @@ namespace QuadroApp.Service.Verkoop
     public interface IVerkoopOverzichtService
     {
         Task<IReadOnlyList<VerkoopOverzichtRegel>> GetOverzichtAsync();
+
+        /// <summary>US-90 — dezelfde regel voor één verkoop (kop en stappenbalk van het dossier).</summary>
+        Task<VerkoopOverzichtRegel?> GetRegelAsync(int offerteId);
     }
 
     /// <summary>US-86 — de twee blokken van het beginscherm.</summary>
@@ -158,11 +161,17 @@ namespace QuadroApp.Service.Verkoop
             _ => VerkoopFase.KlaarOmAfTeHalen
         };
 
-        public async Task<IReadOnlyList<VerkoopOverzichtRegel>> GetOverzichtAsync()
+        public Task<IReadOnlyList<VerkoopOverzichtRegel>> GetOverzichtAsync() => LeesAsync(null);
+
+        public async Task<VerkoopOverzichtRegel?> GetRegelAsync(int offerteId)
+            => (await LeesAsync(offerteId)).FirstOrDefault();
+
+        private async Task<IReadOnlyList<VerkoopOverzichtRegel>> LeesAsync(int? offerteId)
         {
             await using var db = await _factory.CreateDbContextAsync();
 
             var offertes = await db.Offertes.AsNoTracking()
+                .Where(o => offerteId == null || o.Id == offerteId)
                 .Include(o => o.Klant)
                 .Include(o => o.WerkBon)
                 .OrderByDescending(o => o.Datum).ThenByDescending(o => o.OfferteNummer)
