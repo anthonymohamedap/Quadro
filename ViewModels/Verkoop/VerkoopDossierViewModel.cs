@@ -652,12 +652,13 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     private async Task OpenPlanningAsync()
     {
         if (_offerte?.WerkBon is not { } wb) return;
-        var vm = new PlanningCalendarViewModel(_factory, _werkBonWorkflow, _toast, _workflow);
-        await vm.InitializeAsync(wb.Id);
-        var window = new QuadroApp.Views.PlanningCalendarWindow { DataContext = vm };
-        if (EigenaarVenster() is { } owner)
-            await window.ShowDialog(owner);
-        await LaadAsync();
+        // US-92: planning als pagina; "Terug" komt terug in dit dossier (herlaadt op de huidige stap).
+        await BewaarStap1Async();
+        StopBewaardTimer();
+        StopPlanning();
+        var dossier = this;
+        await PlanningPaginaViewModel.ToonAsync(_nav, _factory, _werkBonWorkflow, _toast, _workflow,
+            wb.Id, () => _nav.NavigateToAsync(dossier));
     }
 
     [RelayCommand]
