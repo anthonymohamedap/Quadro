@@ -287,6 +287,15 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         if (_reloadOnly is not null) await _reloadOnly();
     }
 
+    /// <summary>
+    /// US-91 — in het oude offertescherm opent na "Bevestigen → Werkbon" de planning. In het dossier
+    /// niet: daar ga je naar stap 2 (beslist 02/11, geen planning-popup meer).
+    /// </summary>
+    public bool PlanningOpenenNaBevestigen { get; set; } = true;
+
+    /// <summary>US-91 — na een geslaagde bevestiging (het dossier gaat dan naar stap 2).</summary>
+    public event Action? Bevestigd;
+
     private async Task BevestigenAsync()
     {
         if (IsBusy) return;
@@ -318,6 +327,12 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
             if (werkBonId == 0)
             {
                 Toast.Error("Bevestiging gelukt, maar werkbon werd niet gevonden. Check workflow.");
+                return;
+            }
+
+            if (!PlanningOpenenNaBevestigen)
+            {
+                Bevestigd?.Invoke();
                 return;
             }
 

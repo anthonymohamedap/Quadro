@@ -55,6 +55,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     private readonly IDialogService _dialogs;
     private readonly IToastService _toast;
     private readonly IOntvangstService? _ontvangsten;
+    private readonly IServiceProvider? _services;
 
     public VerkoopDossierViewModel(
         IDbContextFactory<AppDbContext> factory,
@@ -66,8 +67,10 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
         IWerkBonWorkflowService werkBonWorkflow,
         IDialogService dialogs,
         IToastService toast,
-        IOntvangstService? ontvangsten = null)
+        IOntvangstService? ontvangsten = null,
+        IServiceProvider? services = null)
     {
+        _services = services;
         _factory = factory;
         _overzicht = overzicht;
         _dossier = dossier;
@@ -97,12 +100,44 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     // ── Stap ─────────────────────────────────────────────────────────────────
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsTerugGekeken), nameof(StapTeller), nameof(KanVorigeStap),
-        nameof(BekekenTitel), nameof(BekekenUitleg), nameof(IsHoofdKnopZichtbaar))]
+        nameof(BekekenTitel), nameof(BekekenUitleg), nameof(IsHoofdKnopZichtbaar),
+        nameof(IsStap1Zichtbaar), nameof(IsSamenvattingZichtbaar), nameof(IsBestelbonKnopZichtbaar), nameof(IsOfferteAanpassenZichtbaar))]
     private VerkoopStap bekekenStap = VerkoopStap.Offerte;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsTerugGekeken), nameof(IsHoofdKnopZichtbaar))]
+    [NotifyPropertyChangedFor(nameof(IsTerugGekeken), nameof(IsHoofdKnopZichtbaar), nameof(IsBestelbonKnopZichtbaar),
+        nameof(IsOfferteAanpassenZichtbaar))]
     private VerkoopStapInfo? info;
+
+    // ── US-91: stap 1 = het offertescherm in het dossier ─────────────────────
+
+    /// <summary>De offerte van deze verkoop, met dezelfde velden en knoppen als het offertescherm.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsStap1Zichtbaar), nameof(IsSamenvattingZichtbaar), nameof(IsBestelbonKnopZichtbaar),
+        nameof(IsOfferteAanpassenZichtbaar))]
+    private OfferteViewModel? stap1;
+
+    /// <summary>Na het akkoord: "Offerte aanpassen…" maakt de teruggekeken stap 1 bewerkbaar (beslist 02/11).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsOfferteAanpassenZichtbaar), nameof(TerugGekekenTekst))]
+    private bool isOfferteAanpassen;
+
+    /// <summary>Melding bovenaan een teruggekeken stap.</summary>
+    public string TerugGekekenTekst => IsOfferteAanpassen
+        ? "Offerte aanpassen — wijzigingen worden bewaard als je deze stap verlaat."
+        : "Terug gekeken — enkel bekijken, er wordt niets teruggezet.";
+
+    /// <summary>"bewaard ✓" of "nog niet bewaard" (automatisch bewaren bij het verlaten van stap 1).</summary>
+    [ObservableProperty] private string? bewaardTekst;
+
+    public bool IsStap1Zichtbaar => BekekenStap == VerkoopStap.Offerte && Stap1 is not null;
+    public bool IsSamenvattingZichtbaar => !IsStap1Zichtbaar;
+    public bool IsBestelbonKnopZichtbaar => IsStap1Zichtbaar && !IsTerugGekeken;
+    public bool IsOfferteAanpassenZichtbaar =>
+        IsStap1Zichtbaar && IsTerugGekeken && !IsOfferteAanpassen && Stap1 is { IsAlleenLezen: false } && Info is { IsGeannuleerd: false };
+
+    private string? _bewaardeVingerafdruk;
+    private Avalonia.Threading.DispatcherTimer? _bewaardTimer;
 
     public bool IsTerugGekeken => Info is not null && BekekenStap != Info.Huidig;
     public string StapTeller => $"Stap {(int)BekekenStap} van 5";
@@ -170,6 +205,13 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
             Info = _regel.Stap;
             if (naarHuidigeStap || BekekenStap > Info.Huidig)
                 BekekenStap = Info.Huidig;
+
+            // US-91: na een stapovergang de offerte opnieuw laden als je stap 1 nog eens opent.
+            if (naarHuidigeStap && Info.Huidig != VerkoopStap.Offerte && Stap1 is not null)
+            {
+                StopBewaardTimer();
+                Stap1 = null;
+            }
 
             VulKop();
             VulStappen();
@@ -273,6 +315,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
         switch (BekekenStap)
         {
             case VerkoopStap.Offerte:
+                await LaadStap1Async();
                 Gegevens.Add(new("Offerte", $"{o.OfferteNummer} · {o.Status.Label()} · {o.Datum:dd/MM/yyyy}"));
                 Gegevens.Add(new("Inlijstingen", o.Regels.Count == 1 ? "1 inlijsting" : $"{o.Regels.Count} inlijstingen"));
                 Gegevens.Add(new("Totaal incl.", $"€ {o.TotaalInclBtw:#,##0.00}"));
@@ -343,7 +386,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     {
         { IsGeannuleerd: true } or { IsAfgerond: true } => null,
         { IsAfgehaaldNogTeBetalen: true } => "Betaling registreren ▶",
-        { Huidig: VerkoopStap.Offerte } => "Offerte openen ▶",
+        { Huidig: VerkoopStap.Offerte } => "Bevestigen → Werkbon ▶",
         { Huidig: VerkoopStap.Werkbon } => "Start productie ▶",
         { Huidig: VerkoopStap.InProductie } => "Klaar om af te halen ▶",
         { Huidig: VerkoopStap.KlaarOmAfTeHalen } => "Klant komt afhalen ▶",
@@ -356,6 +399,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     private async Task BekijkStapAsync(DossierStap? stap)
     {
         if (stap is null || !stap.KanBekijken) return;
+        if (stap.Stap != BekekenStap) await BewaarStap1Async();
         BekekenStap = stap.Stap;
         VulStappen();
         await VulStapInhoudAsync();
@@ -365,6 +409,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     private async Task VorigeStapAsync()
     {
         if (!KanVorigeStap) return;
+        await BewaarStap1Async();
         BekekenStap -= 1;
         VulStappen();
         await VulStapInhoudAsync();
@@ -374,13 +419,19 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     private async Task NaarHuidigeStapAsync()
     {
         if (Info is null) return;
+        await BewaarStap1Async();
         BekekenStap = Info.Huidig;
         VulStappen();
         await VulStapInhoudAsync();
     }
 
     [RelayCommand]
-    private Task TerugNaarVerkopenAsync() => _nav.NavigateToAsync<OffertesLijstViewModel>();
+    private async Task TerugNaarVerkopenAsync()
+    {
+        await BewaarStap1Async();
+        StopBewaardTimer();
+        await _nav.NavigateToAsync<OffertesLijstViewModel>();
+    }
 
     [RelayCommand]
     private async Task HoofdKnopAsync()
@@ -394,7 +445,14 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
                     await OpenBestelbonnenAsync();
                     return;
                 case { Huidig: VerkoopStap.Offerte }:
-                    await OpenOfferteAsync();
+                    if (Stap1 is null)
+                    {
+                        await OpenOfferteAsync();
+                        return;
+                    }
+                    // Zelfde bevestiging als in het offertescherm (opslaan, werkbon, reservaties); daarna
+                    // stap 2 in het dossier in plaats van de planning-popup (via het Bevestigd-event).
+                    await Stap1.BevestigenCommand.ExecuteAsync(null);
                     return;
                 case { Huidig: VerkoopStap.Werkbon }:
                     var ontbreekt = await _dossier.WatOntbreektVoorProductieAsync(OfferteId);
@@ -429,7 +487,88 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     // ── Bestaande schermen ───────────────────────────────────────────────────
 
     [RelayCommand]
-    private Task OpenOfferteAsync() => _offerteNav.OpenOfferteAsync(OfferteId);
+    private async Task OpenOfferteAsync()
+    {
+        await BewaarStap1Async();
+        StopBewaardTimer();
+        await _offerteNav.OpenOfferteAsync(OfferteId);
+    }
+
+    // ── US-91: stap 1 laden, bewaren, aanpassen ──────────────────────────────
+
+    private async Task LaadStap1Async()
+    {
+        if (Stap1 is null)
+        {
+            if (_services?.GetService(typeof(OfferteViewModel)) is not OfferteViewModel vm) return;
+            await vm.InitializeAsync();
+            await vm.LoadAsync(OfferteId);
+            vm.Workflow.PlanningOpenenNaBevestigen = false;
+            vm.Workflow.Bevestigd += () => _ = NaBevestigenAsync();
+            Stap1 = vm;
+            _bewaardeVingerafdruk = vm.Vingerafdruk();
+            StartBewaardTimer();
+        }
+
+        IsOfferteAanpassen = false;
+        Stap1.AlleenBekijken = IsTerugGekeken;
+        WerkBewaardTekstBij();
+    }
+
+    private async Task NaBevestigenAsync()
+    {
+        _bewaardeVingerafdruk = Stap1?.Vingerafdruk();
+        _toast.Success("De klant is akkoord: de werkbon is aangemaakt. Plan nu het werk in.");
+        await LaadAsync(naarHuidigeStap: true);
+    }
+
+    /// <summary>
+    /// Automatisch bewaren (beslist 02/11): bij het verlaten van stap 1 wordt de offerte bewaard als er
+    /// iets gewijzigd is. Zelfde opslag als de knop Opslaan (die in het menu ⋯ blijft).
+    /// </summary>
+    public async Task BewaarStap1Async()
+    {
+        if (Stap1 is not { } vm || !vm.KanBewerken || vm.Offerte is null) return;
+        if (vm.Vingerafdruk() == _bewaardeVingerafdruk) return;
+
+        await vm.SaveCoreAsync(reloadAfterSave: true);
+        _bewaardeVingerafdruk = vm.Vingerafdruk();
+        WerkBewaardTekstBij();
+    }
+
+    [RelayCommand]
+    private async Task BewaarNuAsync()
+    {
+        if (Stap1 is null) return;
+        await Stap1.SaveCommand.ExecuteAsync(null);
+        _bewaardeVingerafdruk = Stap1.Vingerafdruk();
+        WerkBewaardTekstBij();
+        await LaadAsync();
+    }
+
+    [RelayCommand]
+    private void OfferteAanpassen()
+    {
+        if (Stap1 is null) return;
+        IsOfferteAanpassen = true;
+        Stap1.AlleenBekijken = false;
+        WerkBewaardTekstBij();
+    }
+
+    private void WerkBewaardTekstBij()
+    {
+        if (Stap1 is not { } vm || !vm.KanBewerken) { BewaardTekst = null; return; }
+        BewaardTekst = vm.Vingerafdruk() == _bewaardeVingerafdruk ? "bewaard ✓" : "nog niet bewaard — wordt bewaard bij het verlaten van deze stap";
+    }
+
+    private void StartBewaardTimer()
+    {
+        _bewaardTimer ??= new Avalonia.Threading.DispatcherTimer(TimeSpan.FromSeconds(1),
+            Avalonia.Threading.DispatcherPriority.Background, (_, _) => WerkBewaardTekstBij());
+        _bewaardTimer.Start();
+    }
+
+    private void StopBewaardTimer() => _bewaardTimer?.Stop();
 
     [RelayCommand]
     private async Task OpenWerkBonAsync()
@@ -456,7 +595,12 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     }
 
     [RelayCommand]
-    private Task OpenBestelbonnenAsync() => _nav.NavigateToAsync<BestelbonnenViewModel>();
+    private async Task OpenBestelbonnenAsync()
+    {
+        await BewaarStap1Async();
+        StopBewaardTimer();
+        await _nav.NavigateToAsync<BestelbonnenViewModel>();
+    }
 
     // ── Menu ⋯ ───────────────────────────────────────────────────────────────
 
@@ -464,6 +608,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     private async Task AnnulerenAsync()
     {
         if (!KanAnnuleren || _offerte is null) return;
+        await BewaarStap1Async();
 
         var vm = new AnnuleerVerkoopDialogViewModel(_offerte.OfferteNummer, _ontvangen, _bestelbon?.VolgNr is null ? null : _bestelbon.BestelbonNummer);
         if (EigenaarVenster() is not { } owner) return;
