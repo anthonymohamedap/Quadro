@@ -2,12 +2,14 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:QuadroApp.ViewModels"
+    xmlns:planning="clr-namespace:QuadroApp.Views.Planning"
     x:Class="QuadroApp.Views.Planning.WerkbonPlanner"
     x:DataType="vm:WerkbonPlannerViewModel">
 
     <!-- US-92: stap 2 van het verkoopdossier volgens de mock (stap2.html): links de werkdagen
          (2 weken of maand) met de bezetting en het werk van deze verkoop, rechts de inlijstingen
-         van de werkbon. Geen zijpaneel: blokkeren en weekdetail staan op de pagina Planning. -->
+         van de werkbon. Daaronder dezelfde blokken als de pagina Planning: cijfers, dagdetails
+         (ook taken van andere verkopen), weekdetail en blokkeren. -->
     <UserControl.Styles>
         <Style Selector="Border.kaart">
             <Setter Property="Background" Value="{DynamicResource Surface}"/>
@@ -57,9 +59,10 @@
             <Setter Property="CornerRadius" Value="3"/>
             <Setter Property="Background" Value="{DynamicResource IconSlate}"/>
         </Style>
-        <Style Selector="Border.balk.vol">
-            <Setter Property="Background" Value="{DynamicResource Danger}"/>
-        </Style>
+        <Style Selector="Border.balk.capLow"><Setter Property="Background" Value="{DynamicResource CapacityLow}"/></Style>
+        <Style Selector="Border.balk.capMid"><Setter Property="Background" Value="{DynamicResource CapacityMid}"/></Style>
+        <Style Selector="Border.balk.capHigh"><Setter Property="Background" Value="{DynamicResource CapacityHigh}"/></Style>
+        <Style Selector="Border.balk.capFull"><Setter Property="Background" Value="{DynamicResource CapacityFull}"/></Style>
         <Style Selector="Border.chip">
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="8,3"/>
@@ -91,6 +94,13 @@
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
         </Style>
     </UserControl.Styles>
+
+    <StackPanel Spacing="16">
+
+    <!-- ── Cijfers bovenaan + legende (zoals de pagina Planning) ── -->
+    <Border Classes="kaart" Padding="16,10">
+        <planning:PlanningKpiBalk DataContext="{Binding Kalender}"/>
+    </Border>
 
     <Grid ColumnDefinitions="1.25*,1*" ColumnSpacing="16">
 
@@ -124,14 +134,16 @@
                                     Command="{Binding $parent[ItemsControl].((vm:WerkbonPlannerViewModel)DataContext).KiesDagCommand}"
                                     CommandParameter="{Binding}">
                                 <StackPanel Spacing="4">
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <TextBlock Text="{Binding Kop}" Classes="dagKop" Classes.vandaag="{Binding IsVandaag}"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding UrenTekst}" Classes="caption"
+                                    <StackPanel Spacing="0">
+                                        <TextBlock Text="{Binding Kop}" Classes="dagKop" Classes.vandaag="{Binding IsVandaag}"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding UrenTekst}" Classes="caption" TextTrimming="CharacterEllipsis"
                                                    Foreground="{DynamicResource TextSecondary}"/>
-                                    </Grid>
+                                    </StackPanel>
                                     <!-- bezetting van die dag (alle werk), 8 u = vol -->
                                     <Border Height="5" CornerRadius="3" Background="{DynamicResource SurfaceMutedAlt}">
-                                        <Border Classes="balk" Classes.vol="{Binding IsVol}" RenderTransformOrigin="0%,50%">
+                                        <Border Classes="balk" Classes.capLow="{Binding CapLow}" Classes.capMid="{Binding CapMid}"
+                                                Classes.capHigh="{Binding CapHigh}" Classes.capFull="{Binding CapFull}" RenderTransformOrigin="0%,50%">
                                             <Border.RenderTransform>
                                                 <ScaleTransform ScaleX="{Binding Bezetting}" ScaleY="1"/>
                                             </Border.RenderTransform>
@@ -153,10 +165,6 @@
                 </ItemsControl>
 
                 <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="14">
-                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <Border Width="10" Height="10" CornerRadius="2" Background="{DynamicResource IconSlate}"/>
-                        <TextBlock Text="ander werk" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
-                    </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                         <Border Width="10" Height="10" CornerRadius="2" Background="{DynamicResource BrandYellow}"/>
                         <TextBlock Text="deze verkoop" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
@@ -252,4 +260,20 @@
             </StackPanel>
         </Border>
     </Grid>
+
+    <!-- ── Dagdetails | weekdetail + blokkeren (zelfde blokken als de pagina Planning) ── -->
+    <Grid ColumnDefinitions="1.25*,1*" ColumnSpacing="16">
+        <Border Classes="kaart" VerticalAlignment="Top">
+            <planning:PlanningDagDetails DataContext="{Binding Kalender}"/>
+        </Border>
+        <StackPanel Grid.Column="1" Spacing="16">
+            <Border Classes="kaart">
+                <planning:PlanningWeekDetail DataContext="{Binding Kalender}"/>
+            </Border>
+            <Border Classes="kaart">
+                <planning:PlanningBlokkeren DataContext="{Binding Kalender}"/>
+            </Border>
+        </StackPanel>
+    </Grid>
+    </StackPanel>
 </UserControl>

@@ -1,0 +1,120 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="QuadroApp.Views.Planning.PlanningWeekDetail"
+    x:CompileBindings="False">
+	<!-- US-92: weekdetail per dag (afmeting, lijst, duur) + weeklijst. Uit PlanningKalender gehaald (inhoud ongewijzigd) zodat ook stap 2 van het
+	     dossier het gebruikt. DataContext = PlanningCalendarViewModel. -->
+	<UserControl.Styles>
+		<StyleInclude Source="avares://QuadroApp/Views/Planning/PlanningStijlen.axaml"/>
+	</UserControl.Styles>
+	<StackPanel Spacing="0">
+							<!-- ══ WEEKDETAIL ══ -->
+							<StackPanel Spacing="10">
+								<DockPanel>
+									<TextBlock Text="WEEKDETAIL" Classes="caption" FontWeight="SemiBold" VerticalAlignment="Center"/>
+									<Button DockPanel.Dock="Right"
+											Content="Weeklijst"
+											Command="{Binding OpenWeekWerkLijstCommand}"
+											Classes="GhostBtn"/>
+								</DockPanel>
+
+								<Border Background="{DynamicResource SurfaceMutedAlt}"
+										BorderBrush="{DynamicResource BorderSubtle}"
+										BorderThickness="1"
+										CornerRadius="8"
+										Padding="12,10">
+									<StackPanel Spacing="8">
+
+										<!-- Row count badge -->
+										<StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,4">
+											<Border Background="{DynamicResource InfoBg}"
+													BorderBrush="{DynamicResource InfoBorder}"
+													BorderThickness="1"
+													CornerRadius="20"
+													Padding="10,3">
+												<TextBlock Text="{Binding WeekRows.Count, StringFormat='{}{0} regels'}"
+														   Classes="caption"
+														   FontWeight="SemiBold"
+														   Foreground="{DynamicResource InfoText}"/>
+											</Border>
+										<TextBlock Text="{Binding WeekGeplandLabel, StringFormat='· gepland {0}'}" Classes="caption" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+										<TextBlock Text="{Binding WeekUtilLabel, StringFormat='· bezetting {0}'}" Classes="caption" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+										</StackPanel>
+
+										<!-- Empty state -->
+										<Border IsVisible="{Binding !WeekRows.Count}"
+												Padding="0,16"
+												HorizontalAlignment="Center">
+											<StackPanel Spacing="6" HorizontalAlignment="Center">
+												<TextBlock Text=""
+														   Classes="h2"
+														   HorizontalAlignment="Center"/>
+												<TextBlock Text="Geen regels voor deze week"
+														   Classes="caption"
+														   HorizontalAlignment="Center"/>
+											</StackPanel>
+										</Border>
+
+										<!-- Week per dag -->
+										<StackPanel IsVisible="{Binding WeekRows.Count}" Spacing="6">
+
+											<!-- Column headers -->
+											<Grid ColumnDefinitions="1.4*,1.1*,*,44" ColumnSpacing="6" Margin="2,0">
+												<TextBlock Text="Klant"    Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="1" Text="Afmeting" Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="2" Text="Lijst"    Classes="caption" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+												<TextBlock Grid.Column="3" Text="Duur"     Classes="caption" FontWeight="SemiBold" TextAlignment="Right"/>
+											</Grid>
+
+											<Rectangle Classes="Divider"/>
+
+											<!-- Dag-groepen -->
+											<ScrollViewer MaxHeight="340" HorizontalScrollBarVisibility="Disabled">
+												<ItemsControl ItemsSource="{Binding WeekDagGroepen}">
+													<ItemsControl.ItemTemplate>
+														<DataTemplate>
+															<StackPanel Spacing="3" Margin="0,0,0,10">
+
+																<!-- Dagkop met subtotaal -->
+																<DockPanel Margin="2,0">
+																	<TextBlock Text="{Binding TotaalLabel}" DockPanel.Dock="Right"
+																			   Classes="caption"
+																			   Foreground="{DynamicResource TextSecondary}"
+																			   VerticalAlignment="Center"/>
+																	<TextBlock Text="{Binding DagLabel}" Classes="label" FontWeight="SemiBold"/>
+																</DockPanel>
+
+																<!-- Regels van die dag -->
+																<ItemsControl ItemsSource="{Binding Regels}">
+																	<ItemsControl.ItemTemplate>
+																		<DataTemplate>
+																			<Border Background="{DynamicResource Surface}"
+																					BorderBrush="{DynamicResource BorderSubtle}"
+																					BorderThickness="1"
+																					CornerRadius="6"
+																					Padding="8,6"
+																					Margin="0,2">
+																				<Grid ColumnDefinitions="1.4*,1.1*,*,44" ColumnSpacing="6">
+																					<TextBlock Text="{Binding KlantNaam}" Classes="label" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding KlantTip}"/>
+																					<TextBlock Grid.Column="1" Text="{Binding Afmeting}"   Classes="label" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Afmeting}"/>
+																					<TextBlock Grid.Column="2" Text="{Binding LijstLabel}" Classes="label" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding LijstLabel}"/>
+																					<TextBlock Grid.Column="3" Text="{Binding DuurLabel}"  Classes="label" TextAlignment="Right"/>
+																				</Grid>
+																			</Border>
+																		</DataTemplate>
+																	</ItemsControl.ItemTemplate>
+																</ItemsControl>
+															</StackPanel>
+														</DataTemplate>
+													</ItemsControl.ItemTemplate>
+												</ItemsControl>
+											</ScrollViewer>
+										</StackPanel>
+
+									</StackPanel>
+								</Border>
+							</StackPanel>
+
+	</StackPanel>
+</UserControl>

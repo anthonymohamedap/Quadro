@@ -89,24 +89,4 @@ public partial class PlanningKalender : UserControl
         if (sender is Border b && b.DataContext is DayTile d)
             vm.SelectedDate = d.Date;
     }
-
-    // ───────── CONTEXT MENU HANDLERS ─────────
-
-    private async void OnHerplanMenuClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not MenuItem mi) return;
-        if (mi.DataContext is not WerkTaak taak) return;
-        if (DataContext is not PlanningCalendarViewModel vm) return;
-
-        await vm.HerplanTaakCommand.ExecuteAsync(taak);
-    }
-
-    private async void OnVerwijderMenuClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not MenuItem mi) return;
-        if (mi.DataContext is not WerkTaak taak) return;
-        if (DataContext is not PlanningCalendarViewModel vm) return;
-
-        await vm.VerwijderTaakCommand.ExecuteAsync(taak);
-    }
 }

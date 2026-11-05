@@ -117,6 +117,8 @@ static class Schermen
         ["home-klein"] = (1024, 768),
         ["dossier-1-lang"] = (1440, 2000),
         ["dossier-2-lang"] = (1440, 1500),
+        ["dossier-2-gepland"] = (1440, 1500),
+        ["dossier-2-delen"] = (1440, 1500),
     };
 
     public static async Task AllesAsync(string uitvoer, HashSet<string> gekozen)
