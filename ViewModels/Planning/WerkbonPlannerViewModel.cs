@@ -25,7 +25,13 @@ public sealed partial class PlannerDag : ObservableObject
     public bool IsAfhaaldag { get; init; }
 
     public string Kop => Datum.ToString("ddd d/MM", Nl);
-    public string UrenTekst => IsGeblokkeerd ? "dicht" : $"{GeplandMinuten / 60.0:0.#} u";
+    public string UrenTekst => IsGeblokkeerd ? "geblokkeerd" : $"{GeplandMinuten / 60.0:0.#} u · {(int)Math.Round(Bezetting * 100)}%";
+
+    // Zelfde drempels als de kalender (DayTile): ≤50% rustig, ≤75% midden, ≤90% hoog, anders vol.
+    public bool CapLow => !IsGeblokkeerd && Bezetting <= 0.5;
+    public bool CapMid => !IsGeblokkeerd && Bezetting > 0.5 && Bezetting <= 0.75;
+    public bool CapHigh => !IsGeblokkeerd && Bezetting > 0.75 && Bezetting <= 0.9;
+    public bool CapFull => IsGeblokkeerd || Bezetting > 0.9;
     public double Bezetting => IsGeblokkeerd ? 1 : Math.Clamp(GeplandMinuten / (double)PlanningUitvoeringViewModel.CapaciteitMinuten, 0, 1);
     public bool IsVandaag => Datum.Date == DateTime.Today;
     public bool IsWeekend => Datum.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
@@ -117,6 +123,28 @@ public partial class WerkbonPlannerViewModel : ObservableObject
         startMaandag = Maandag(DateTime.Today);
         geselecteerdeDag = VolgendeWerkdag(DateTime.Today);
         Kalender.SelectedDate = geselecteerdeDag;
+        // Herplannen/verwijderen in de dagdetails of blokkeren laat de kalender herladen: dan ook de planner.
+        Kalender.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(PlanningCalendarViewModel.KpiUtilWeek) or nameof(PlanningCalendarViewModel.KpiBlokdagen)
+                or nameof(PlanningCalendarViewModel.KpiOpenWerkbonnen) or nameof(PlanningCalendarViewModel.KpiBeschikbareUren))
+                _ = HerlaadNaKalenderAsync();
+        };
+    }
+
+    private bool _herlaadt;
+
+    private async Task HerlaadNaKalenderAsync()
+    {
+        if (_herlaadt) return;
+        _herlaadt = true;
+        try
+        {
+            await Task.Delay(250);
+            await LaadAsync();
+        }
+        catch { /* niet fataal: volgende actie herlaadt opnieuw */ }
+        finally { _herlaadt = false; }
     }
 
     public PlanningCalendarViewModel Kalender { get; }
