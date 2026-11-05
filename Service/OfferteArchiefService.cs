@@ -160,7 +160,11 @@ namespace QuadroApp.Service
             {
                 // Zelfde offertenummer als vóór het archiveren — geen nieuw nummer trekken,
                 // zodat het nummer dat de klant al gezien heeft consistent blijft.
-                OfferteNummer      = archief.OfferteNummer,
+                // Uitzondering: gearchiveerd met nummer 0 (van vóór US-81) → een echt nummer,
+                // anders verschijnt "Werkbon 0" / "offerte 0" opnieuw.
+                OfferteNummer      = archief.OfferteNummer > 0
+                                         ? archief.OfferteNummer
+                                         : await OfferteNummering.VolgendeAsync(db),
                 KlantId            = klantId,
                 Datum              = DateTime.Today,
                 Status             = OfferteStatus.Concept,
