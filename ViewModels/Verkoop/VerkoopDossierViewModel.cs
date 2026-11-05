@@ -140,10 +140,18 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     private PlanningCalendarViewModel? planning;
 
     /// <summary>Enkel op de huidige stap 2 (terugkijken = samenvatting).</summary>
-    public bool IsPlanningZichtbaar => BekekenStap == VerkoopStap.Werkbon && Planning is not null && !IsTerugGekeken;
+    public bool IsPlanningZichtbaar => BekekenStap == VerkoopStap.Werkbon && Planner is not null && !IsTerugGekeken;
+
+    /// <summary>US-92 — de planner van stap 2 (mock): werkdagen links, inlijstingen van de werkbon rechts.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPlanningZichtbaar), nameof(ToontPlanningKnop), nameof(IsSamenvattingZichtbaar))]
+    private WerkbonPlannerViewModel? planner;
+
+    /// <summary>"Plan eerst alle inlijstingen…" in de voetbalk, naast Start productie (mock stap 2).</summary>
+    public string? VoetMelding => IsPlanningZichtbaar && Meldingen.Count > 0 ? string.Join(" ", Meldingen) : null;
 
     private bool _vernieuwtNaPlanning;
-    public bool IsSamenvattingZichtbaar => !IsStap1Zichtbaar;
+    public bool IsSamenvattingZichtbaar => !IsStap1Zichtbaar && !IsPlanningZichtbaar;
     public bool IsBestelbonKnopZichtbaar => IsStap1Zichtbaar && !IsTerugGekeken;
     public bool IsOfferteAanpassenZichtbaar =>
         IsStap1Zichtbaar && IsTerugGekeken && !IsOfferteAanpassen && Stap1 is { IsAlleenLezen: false } && Info is { IsGeannuleerd: false };
@@ -391,6 +399,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
             Gegevens.Add(new("Overgeslagen", o.OverslaanReden!));
 
         HoofdKnopTekst = HoofdKnopVoor(Info);
+        OnPropertyChanged(nameof(VoetMelding));
     }
 
     private static string PlanningTekst(WerkBon wb)
@@ -614,6 +623,9 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
         await vm.InitializeAsync(werkBonId);
         vm.PropertyChanged += OpPlanningGewijzigd;
         Planning = vm;
+        var planner = new WerkbonPlannerViewModel(vm, _factory, werkBonId) { BestellenCommand = OpenWerkBonCommand };
+        await planner.LaadAsync();
+        Planner = planner;
         OnPropertyChanged(nameof(IsPlanningZichtbaar));
         OnPropertyChanged(nameof(ToontPlanningKnop));
     }
@@ -622,6 +634,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     {
         if (Planning is not null) Planning.PropertyChanged -= OpPlanningGewijzigd;
         Planning = null;
+        Planner = null;
     }
 
     /// <summary>

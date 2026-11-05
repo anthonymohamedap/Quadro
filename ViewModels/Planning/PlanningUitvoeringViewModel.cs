@@ -26,7 +26,7 @@ public partial class PlanningUitvoeringViewModel : ObservableObject
     private readonly Func<Task> _requestRefresh;
     private readonly Func<DateTime, Task<bool>> _isDagGeblokkeerd;
 
-    private const int CapaciteitMinuten = 8 * 60;
+    public const int CapaciteitMinuten = 8 * 60;   // 8 u per dag (ook getoond in stap 2, US-92)
 
     // Injecteer vanuit de code-behind om een PlanningTijdDialog te tonen.
     public Func<PlanningTijdDialogViewModel, Task<bool>>? ShowTijdDialogAsync { get; set; }
@@ -434,7 +434,8 @@ public partial class PlanningUitvoeringViewModel : ObservableObject
 
     // ───────── HELPERS ─────────
 
-    private static int CalcMinutenVoorRegel(OfferteRegel r)
+    /// <summary>Geschatte werkduur van een inlijsting (ook getoond in stap 2 van het dossier, US-92).</summary>
+    public static int CalcMinutenVoorRegel(OfferteRegel r)
     {
         int min = 0;
         min += r.TypeLijst?.WerkMinuten ?? 0;

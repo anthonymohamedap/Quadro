@@ -1,0 +1,59 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="QuadroApp.Views.Planning.PlanningKpiBalk"
+    x:CompileBindings="False">
+	<!-- US-92: cijfers bovenaan + legende rustig/vol/geblokkeerd. Uit PlanningKalender gehaald (inhoud ongewijzigd) zodat ook stap 2 van het
+	     dossier het gebruikt. DataContext = PlanningCalendarViewModel. -->
+	<UserControl.Styles>
+		<StyleInclude Source="avares://QuadroApp/Views/Planning/PlanningStijlen.axaml"/>
+	</UserControl.Styles>
+				<Grid ColumnDefinitions="*,Auto">
+				<StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+					<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="10" Padding="14,8" MinWidth="110">
+						<StackPanel Spacing="1">
+							<TextBlock Text="Bezetting vandaag" Classes="caption" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+							<TextBlock Text="{Binding KpiUtilVandaag}" Classes="h2" Foreground="{DynamicResource TextHeading}"/>
+						</StackPanel>
+					</Border>
+					<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="10" Padding="14,8" MinWidth="110">
+						<StackPanel Spacing="1">
+							<TextBlock Text="Bezetting deze week" Classes="caption" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+							<TextBlock Text="{Binding KpiUtilWeek}" Classes="h2" Foreground="{DynamicResource TextHeading}"/>
+						</StackPanel>
+					</Border>
+					<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="10" Padding="14,8" MinWidth="110">
+						<StackPanel Spacing="1">
+							<TextBlock Text="Open werkbonnen" Classes="caption" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+							<TextBlock Text="{Binding KpiOpenWerkbonnen}" Classes="h2" Foreground="{DynamicResource TextHeading}"/>
+						</StackPanel>
+					</Border>
+					<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="10" Padding="14,8" MinWidth="110">
+						<StackPanel Spacing="1">
+							<TextBlock Text="Geblokkeerde dagen" Classes="caption" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+							<TextBlock Text="{Binding KpiBlokdagen}" Classes="h2" Foreground="{DynamicResource TextHeading}"/>
+						</StackPanel>
+					</Border>
+					<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="10" Padding="14,8" MinWidth="110">
+						<StackPanel Spacing="1">
+							<TextBlock Text="Beschikbare uren" Classes="caption" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+							<TextBlock Text="{Binding KpiBeschikbareUren}" Classes="h2" Foreground="{DynamicResource TextHeading}"/>
+						</StackPanel>
+					</Border>
+				</StackPanel>
+				<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
+					<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+						<Border Width="12" Height="12" CornerRadius="3" Background="{DynamicResource CapacityLow}"/>
+						<TextBlock Text="Rustig" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+					</StackPanel>
+					<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+						<Border Width="12" Height="12" CornerRadius="3" Background="{DynamicResource CapacityHigh}"/>
+						<TextBlock Text="Vol" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+					</StackPanel>
+					<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+						<Border Width="12" Height="12" CornerRadius="3" Background="{DynamicResource Danger}"/>
+						<TextBlock Text="Geblokkeerd" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+					</StackPanel>
+				</StackPanel>
+				</Grid>
+</UserControl>

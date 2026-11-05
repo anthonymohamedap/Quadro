@@ -137,6 +137,46 @@ public class VerkoopDossierServiceTests
     }
 
     [Fact]
+    public async Task Planner_van_stap2_plant_via_dezelfde_uitvoering_en_toont_de_status_US92()
+    {
+        var o = await OpstellingAsync(regels: 2);
+        await using var _ = o.Scope;
+        var f = o.Scope.Factory;
+        var kalender = new QuadroApp.ViewModels.PlanningCalendarViewModel(f, o.WerkBonWorkflow, new TestToastService(), o.Workflow);
+        await kalender.InitializeAsync(o.WerkBonId);
+        var planner = new QuadroApp.ViewModels.WerkbonPlannerViewModel(kalender, f, o.WerkBonId);
+        await planner.LaadAsync();
+
+        Assert.Equal(14, planner.Dagen.Count);                       // 2 weken, ook het weekend (planning kan daar werk zetten)
+        Assert.Equal("2 nog te plannen", planner.KopRechts);
+        Assert.False(planner.HeeftSelectie);
+
+        planner.Regels[0].IsSelected = true;
+        Assert.True(planner.HeeftSelectie);
+        planner.KiesDagCommand.Execute(new QuadroApp.ViewModels.PlannerDag { Datum = VolgendeMaandag() });
+        await planner.PlanOpDagCommand.ExecuteAsync(null);
+
+        Assert.Equal("1 nog te plannen", planner.KopRechts);
+        Assert.True(planner.Regels[0].IsGepland);
+        Assert.False(planner.HeeftSelectie);                         // geplande regel niet meer geselecteerd
+        Assert.Equal("te bestellen", planner.Regels[0].BestelTekst);
+
+        await planner.VerwijderTaakCommand.ExecuteAsync(planner.Regels[0]);
+        Assert.Equal("2 nog te plannen", planner.KopRechts);
+
+        // Een lange inlijsting wordt over twee dagen verdeeld: beide delen zichtbaar, ✕ per deel.
+        await o.WerkBonWorkflow.PlanRegelMetDagCapaciteitAsync(o.WerkBonId, o.RegelIds[1], VolgendeMaandag(), 600, 480, "Inlijsting 2");
+        await planner.LaadAsync();
+        var lang = planner.Regels[1];
+        Assert.True(lang.HeeftMeerdereDelen);
+        Assert.Equal("gepland in 2 delen", lang.PlanTekst);
+        Assert.Equal(600, lang.DuurMinuten);
+        await planner.VerwijderDeelCommand.ExecuteAsync(lang.Delen.Last());
+        Assert.Equal("gepland " + VolgendeMaandag().ToString("ddd d/MM", new System.Globalization.CultureInfo("nl-BE")), planner.Regels[1].PlanTekst);
+        Assert.Equal((OfferteStatus.Goedgekeurd, WerkBonStatus.Gepland), await StatusAsync(o));
+    }
+
+    [Fact]
     public async Task Inplannen_verandert_de_offertestatus_niet_meer()
     {
         var o = await OpstellingAsync();
