@@ -28,6 +28,7 @@ public sealed partial class PlannerDag : ObservableObject
     public string UrenTekst => IsGeblokkeerd ? "dicht" : $"{GeplandMinuten / 60.0:0.#} u";
     public double Bezetting => IsGeblokkeerd ? 1 : Math.Clamp(GeplandMinuten / (double)PlanningUitvoeringViewModel.CapaciteitMinuten, 0, 1);
     public bool IsVandaag => Datum.Date == DateTime.Today;
+    public bool IsWeekend => Datum.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
     public bool IsVerleden => Datum.Date < DateTime.Today;
     public bool IsVol => GeplandMinuten >= PlanningUitvoeringViewModel.CapaciteitMinuten;
     public bool HeeftTakenDezeVerkoop => TakenDezeVerkoop.Count > 0;
@@ -47,24 +48,34 @@ public sealed partial class PlannerRegel : ObservableObject
     public string? Opmerking { get; init; }
     public WerkTaak? Taak { get; init; }
 
+    /// <summary>
+    /// Alle delen van deze inlijsting: de planning verdeelt een lange inlijsting over meerdere dagen
+    /// ("deel 1/2", "deel 2/2"). Herplannen en ✕ werken per deel, zoals in de kalender.
+    /// </summary>
+    public IReadOnlyList<WerkTaak> Taken { get; init; } = Array.Empty<WerkTaak>();
+    public bool HeeftMeerdereDelen => Taken.Count > 1;
+    public IEnumerable<PlannerDeel> Delen => Taken.Select((t, i) => new PlannerDeel(this, t, i + 1, Taken.Count));
+
     /// <summary>Zelfde selectie-object als de kalender (Plan op dag / Plan per regel gebruiken het).</summary>
     public RegelPlanItem? Item { get; init; }
 
     public string DuurTekst => $"± {DuurMinuten} min";
     public bool IsGepland => Taak is not null;
-    public string PlanTekst => Taak is { } t ? $"gepland {t.GeplandVan.ToString("ddd d/MM", new CultureInfo("nl-BE"))}" : "nog niet gepland";
+    public string PlanTekst => Taken.Count switch
+    {
+        0 => "nog niet gepland",
+        1 => $"gepland {Taken[0].GeplandVan.ToString("ddd d/MM", new CultureInfo("nl-BE"))}",
+        _ => $"gepland in {Taken.Count} delen"
+    };
 
     /// <summary>Bestelstatus van de taak (zoals in het werkbonvenster); leeg zolang er niets gepland is.</summary>
-    public string? BestelTekst => Taak switch
-    {
-        null => null,
-        { IsOpVoorraad: true } => "uit voorraad",
-        { IsBesteld: true } => "besteld",
-        _ => "te bestellen"
-    };
+    public string? BestelTekst => Taken.Count == 0 ? null
+        : Taken.All(t => t.IsOpVoorraad) ? "uit voorraad"
+        : IsBestelOk ? "besteld"
+        : "te bestellen";
     public bool HeeftBestelTekst => BestelTekst is not null;
-    public bool IsTeBestellen => Taak is { IsOpVoorraad: false, IsBesteld: false };
-    public bool IsBestelOk => Taak is { } t && (t.IsOpVoorraad || t.IsBesteld);
+    public bool IsTeBestellen => Taken.Any(t => !t.IsOpVoorraad && !t.IsBesteld);
+    public bool IsBestelOk => Taken.Count > 0 && !IsTeBestellen;
     public bool HeeftOpmerking => !string.IsNullOrWhiteSpace(Opmerking);
 
     public bool IsSelected
@@ -77,6 +88,12 @@ public sealed partial class PlannerRegel : ObservableObject
             OnPropertyChanged();
         }
     }
+}
+
+/// <summary>US-92 — één deel van een over meerdere dagen verdeelde inlijsting.</summary>
+public sealed record PlannerDeel(PlannerRegel Regel, WerkTaak Taak, int Nummer, int Aantal)
+{
+    public string Tekst => $"deel {Nummer}/{Aantal}: {Taak.GeplandVan.ToString("ddd d/MM", new CultureInfo("nl-BE"))} · {Taak.DuurMinuten} min";
 }
 
 /// <summary>
@@ -131,7 +148,7 @@ public partial class WerkbonPlannerViewModel : ObservableObject
     public string PlanOpDagTekst => $"Plan op {GeselecteerdeDag.ToString("ddd d/MM", Nl)}";
 
     public string PeriodeTekst => IsTweeWeken
-        ? $"{StartMaandag:d/MM} – {StartMaandag.AddDays(11):d/MM}"
+        ? $"{StartMaandag:d/MM} – {StartMaandag.AddDays(13):d/MM}"
         : Nl.TextInfo.ToTitleCase(StartMaandag.AddDays(7).ToString("MMMM yyyy", Nl));
 
     private DateTime? _afhaalDatum;
@@ -166,7 +183,7 @@ public partial class WerkbonPlannerViewModel : ObservableObject
         Dagen.Clear();
         for (var d = van; d < tot; d = d.AddDays(1))
         {
-            if (d.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday) continue;
+            // Ook zaterdag en zondag: de planning kan daar werk zetten (zoals in de kalender).
             var vandaag = taken.Where(t => t.GeplandVan.Date == d).ToList();
             Dagen.Add(new PlannerDag
             {
@@ -204,7 +221,8 @@ public partial class WerkbonPlannerViewModel : ObservableObject
         Regels.Clear();
         foreach (var r in regels)
         {
-            var taak = taken.FirstOrDefault(t => t.OfferteRegelId == r.Id);
+            var delen = taken.Where(t => t.OfferteRegelId == r.Id).ToList();
+            var taak = delen.FirstOrDefault();
             var item = Kalender.RegelsVanWerkBon.FirstOrDefault(i => i.RegelId == r.Id);
             if (taak is not null && item is not null) item.IsSelected = false;   // gepland → niet meer geselecteerd
             var lijst = r.KantKlaarKader is not null ? r.StandaardkaderLabel
@@ -216,9 +234,10 @@ public partial class WerkbonPlannerViewModel : ObservableObject
                 Kop = $"{(string.IsNullOrWhiteSpace(r.Titel) ? "Inlijsting" : r.Titel)} · {r.BreedteCm:0.#} × {r.HoogteCm:0.#}"
                       + (r.AantalStuks > 1 ? $" ({r.AantalStuks}×)" : ""),
                 Omschrijving = string.IsNullOrWhiteSpace(afwerking) ? lijst : $"{lijst} · {afwerking}",
-                DuurMinuten = taak?.DuurMinuten ?? PlanningUitvoeringViewModel.CalcMinutenVoorRegel(r),
+                DuurMinuten = delen.Count > 0 ? delen.Sum(t => t.DuurMinuten) : PlanningUitvoeringViewModel.CalcMinutenVoorRegel(r),
                 Opmerking = r.Opmerking,
                 Taak = taak,
+                Taken = delen,
                 Item = item
             };
             regel.PropertyChanged += OpRegelGewijzigd;
@@ -319,6 +338,22 @@ public partial class WerkbonPlannerViewModel : ObservableObject
     public async Task PlanRegelOpDagAsync(int regelId, DateTime datum)
     {
         await Kalender.PlanRegelOpDatumAsync(regelId, datum);
+        await LaadAsync();
+    }
+
+    [RelayCommand]
+    private async Task HerplanDeelAsync(PlannerDeel? deel)
+    {
+        if (deel is null) return;
+        await Kalender.HerplanTaakCommand.ExecuteAsync(deel.Taak);
+        await LaadAsync();
+    }
+
+    [RelayCommand]
+    private async Task VerwijderDeelAsync(PlannerDeel? deel)
+    {
+        if (deel is null) return;
+        await Kalender.VerwijderTaakCommand.ExecuteAsync(deel.Taak);
         await LaadAsync();
     }
 

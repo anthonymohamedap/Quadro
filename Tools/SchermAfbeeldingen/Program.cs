@@ -73,6 +73,18 @@ static class Schermen
         ["dossier-5-nog-te-betalen"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 423); },
         ["dossier-1-inlijsting"] = f => DossierAsync(f, 419, daarna: vm => { vm.Stap1!.SelectedRegel = vm.Stap1.Regels.First(); return Task.CompletedTask; }),
         ["dossier-2-lang"] = f => DossierAsync(f, 412),
+        ["dossier-2-delen"] = f => DossierAsync(f, 412, daarna: async vm =>
+        {
+            var p = vm.Planner!;
+            var dag = p.Dagen.First(d => d.KanPlannen && d.Datum.DayOfWeek == DayOfWeek.Friday);
+            var toast = new TestToastService();
+            var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
+            await using var db = await f.CreateDbContextAsync();
+            var wb = await db.WerkBonnen.Where(w => w.Offerte.OfferteNummer == 412).Select(w => new { w.Id, w.OfferteId }).SingleAsync();
+            var regelId = await db.OfferteRegels.Where(r => r.OfferteId == wb.OfferteId).Select(r => r.Id).FirstAsync();
+            await new WerkBonWorkflowService(f, wf).PlanRegelMetDagCapaciteitAsync(wb.Id, regelId, dag.Datum, 600, 480, "Trouwfoto");
+            await p.LaadAsync();
+        }),
         ["dossier-2-maand"] = f => DossierAsync(f, 412, daarna: vm => vm.Planner!.ToonMaandCommand.ExecuteAsync(null)),
         ["dossier-2-gepland"] = f => DossierAsync(f, 412, daarna: async vm =>
         {
