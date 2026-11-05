@@ -21,6 +21,11 @@ public sealed partial class PlannerDag : ObservableObject
     public DateTime Datum { get; init; }
     public int GeplandMinuten { get; init; }
     public IReadOnlyList<string> TakenDezeVerkoop { get; init; } = Array.Empty<string>();
+
+    /// <summary>Klanten van het andere werk die dag (zoals de kalender ze op de dagtegel toonde).</summary>
+    public IReadOnlyList<string> AnderWerk { get; init; } = Array.Empty<string>();
+    public bool HeeftAnderWerk => AnderWerk.Count > 0;
+    public string AnderWerkTekst => AnderWerk.Count <= 3 ? string.Join(", ", AnderWerk) : $"{string.Join(", ", AnderWerk.Take(3))} +{AnderWerk.Count - 3}";
     public bool IsGeblokkeerd { get; init; }
     public bool IsAfhaaldag { get; init; }
 
@@ -60,6 +65,9 @@ public sealed partial class PlannerRegel : ObservableObject
     /// </summary>
     public IReadOnlyList<WerkTaak> Taken { get; init; } = Array.Empty<WerkTaak>();
     public bool HeeftMeerdereDelen => Taken.Count > 1;
+
+    /// <summary>Gepland in één deel: herplannen en ✕ naast de status (meerdere delen: per deel).</summary>
+    public bool IsEnkelGepland => Taken.Count == 1;
     public IEnumerable<PlannerDeel> Delen => Taken.Select((t, i) => new PlannerDeel(this, t, i + 1, Taken.Count));
 
     /// <summary>Zelfde selectie-object als de kalender (Plan op dag / Plan per regel gebruiken het).</summary>
@@ -113,9 +121,13 @@ public partial class WerkbonPlannerViewModel : ObservableObject
 {
     private static readonly CultureInfo Nl = new("nl-BE");
     private readonly IDbContextFactory<AppDbContext> _factory;
-    private readonly int _werkBonId;
+    private readonly int? _werkBonId;
 
-    public WerkbonPlannerViewModel(PlanningCalendarViewModel kalender, IDbContextFactory<AppDbContext> factory, int werkBonId)
+    /// <summary>Vanuit een werkbon (dossier, Werkbonnen, Verkopen, offerte): met de inlijstingen rechts.</summary>
+    public bool HeeftWerkBon => _werkBonId is not null;
+    public int PlannerKolommen => HeeftWerkBon ? 1 : 2;
+
+    public WerkbonPlannerViewModel(PlanningCalendarViewModel kalender, IDbContextFactory<AppDbContext> factory, int? werkBonId)
     {
         Kalender = kalender;
         _factory = factory;
@@ -197,12 +209,21 @@ public partial class WerkbonPlannerViewModel : ObservableObject
         var (van, tot) = Periode();
         await using var db = await _factory.CreateDbContextAsync();
 
-        var offerteId = await db.WerkBonnen.Where(w => w.Id == _werkBonId).Select(w => w.OfferteId).FirstAsync();
-        _afhaalDatum = await db.Offertes.Where(o => o.Id == offerteId).Select(o => o.AfhaalDatum).FirstOrDefaultAsync();
+        int? offerteId = _werkBonId is int wbId
+            ? await db.WerkBonnen.Where(w => w.Id == wbId).Select(w => (int?)w.OfferteId).FirstOrDefaultAsync()
+            : null;
+        _afhaalDatum = offerteId is int oid
+            ? await db.Offertes.Where(o => o.Id == oid).Select(o => o.AfhaalDatum).FirstOrDefaultAsync()
+            : null;
 
         var taken = await db.WerkTaken.AsNoTracking()
             .Where(t => t.GeplandVan >= van && t.GeplandVan < tot)
-            .Select(t => new { t.GeplandVan, t.DuurMinuten, t.WerkBonId, t.Omschrijving })
+            .Select(t => new
+            {
+                t.GeplandVan, t.DuurMinuten, t.WerkBonId, t.Omschrijving,
+                Klant = t.WerkBon != null && t.WerkBon.Offerte != null && t.WerkBon.Offerte.Klant != null
+                    ? t.WerkBon.Offerte.Klant.Achternaam : null
+            })
             .ToListAsync();
         var geblokkeerd = (await db.GeblokkeerDagen.AsNoTracking()
                 .Where(g => g.Datum >= van && g.Datum < tot).Select(g => g.Datum).ToListAsync())
@@ -218,13 +239,16 @@ public partial class WerkbonPlannerViewModel : ObservableObject
                 Datum = d,
                 GeplandMinuten = vandaag.Sum(t => t.DuurMinuten),
                 TakenDezeVerkoop = vandaag.Where(t => t.WerkBonId == _werkBonId).Select(t => t.Omschrijving).ToList(),
+                AnderWerk = vandaag.Where(t => t.WerkBonId != _werkBonId)
+                    .Select(t => string.IsNullOrWhiteSpace(t.Klant) ? "zonder klant" : t.Klant!).Distinct().ToList(),
                 IsGeblokkeerd = geblokkeerd.Contains(d),
                 IsAfhaaldag = _afhaalDatum?.Date == d,
                 IsGeselecteerd = d == GeselecteerdeDag.Date
             });
         }
 
-        await LaadRegelsAsync(db, offerteId);
+        if (offerteId is int id)
+            await LaadRegelsAsync(db, id);
     }
 
     private async Task LaadRegelsAsync(AppDbContext db, int offerteId)
