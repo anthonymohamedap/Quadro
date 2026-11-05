@@ -104,8 +104,8 @@
 
     <Grid ColumnDefinitions="1.25*,1*" ColumnSpacing="16">
 
-        <!-- ── Planning ── -->
-        <Border Classes="kaart" VerticalAlignment="Top">
+        <!-- ── Planning (zonder werkbon over de volle breedte: pagina Planning vanuit de zijbalk) ── -->
+        <Border Classes="kaart" VerticalAlignment="Top" Grid.ColumnSpan="{Binding PlannerKolommen}">
             <StackPanel Spacing="12">
                 <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
                     <TextBlock Text="Planning" Classes="h2" VerticalAlignment="Center"/>
@@ -154,6 +154,12 @@
                                         <TextBlock Text="{Binding TakenTekst}" Classes="caption" TextWrapping="Wrap"
                                                    Foreground="{DynamicResource TextPrimary}"/>
                                     </Border>
+                                    <!-- ander werk die dag: de klanten (zoals de kalender) -->
+                                    <Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="6" Padding="6,3"
+                                            IsVisible="{Binding HeeftAnderWerk}">
+                                        <TextBlock Text="{Binding AnderWerkTekst}" Classes="caption" TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource TextSecondary}"/>
+                                    </Border>
                                     <Border Background="{DynamicResource SuccessBg}" CornerRadius="6" Padding="6,2"
                                             IsVisible="{Binding IsAfhaaldag}">
                                         <TextBlock Text="afhalen" Classes="caption" Foreground="{DynamicResource Success}"/>
@@ -165,7 +171,13 @@
                 </ItemsControl>
 
                 <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="14">
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <Border Width="10" Height="10" CornerRadius="2" Background="{DynamicResource SurfaceMutedAlt}"
+                                BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1"/>
+                        <TextBlock Text="ander werk" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center"
+                                IsVisible="{Binding HeeftWerkBon}">
                         <Border Width="10" Height="10" CornerRadius="2" Background="{DynamicResource BrandYellow}"/>
                         <TextBlock Text="deze verkoop" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
                     </StackPanel>
@@ -178,7 +190,7 @@
         </Border>
 
         <!-- ── Werkbon · inlijstingen ── -->
-        <Border Grid.Column="1" Classes="kaart" VerticalAlignment="Top">
+        <Border Grid.Column="1" Classes="kaart" VerticalAlignment="Top" IsVisible="{Binding HeeftWerkBon}">
             <StackPanel Spacing="10">
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="Werkbon · inlijstingen" Classes="h2"/>
@@ -209,10 +221,10 @@
                                         <Border Classes="chip" Classes.ok="{Binding IsGepland}" Margin="0,0,6,4">
                                             <TextBlock Text="{Binding PlanTekst}" Classes="caption" FontWeight="SemiBold"/>
                                         </Border>
-                                        <Button Classes="klein" Content="herplannen" IsVisible="{Binding !HeeftMeerdereDelen}" Margin="0,0,4,4"
+                                        <Button Classes="klein" Content="herplannen" IsVisible="{Binding IsEnkelGepland}" Margin="0,0,4,4"
                                                 Command="{Binding $parent[ItemsControl].((vm:WerkbonPlannerViewModel)DataContext).HerplanCommand}"
                                                 CommandParameter="{Binding}"/>
-                                        <Button Classes="klein" Content="✕" IsVisible="{Binding !HeeftMeerdereDelen}" Margin="0,0,10,4"
+                                        <Button Classes="klein" Content="✕" IsVisible="{Binding IsEnkelGepland}" Margin="0,0,10,4"
                                                 ToolTip.Tip="Taak uit de planning halen"
                                                 Command="{Binding $parent[ItemsControl].((vm:WerkbonPlannerViewModel)DataContext).VerwijderTaakCommand}"
                                                 CommandParameter="{Binding}"/>
