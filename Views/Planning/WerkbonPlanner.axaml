@@ -1,0 +1,236 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:QuadroApp.ViewModels"
+    x:Class="QuadroApp.Views.Planning.WerkbonPlanner"
+    x:DataType="vm:WerkbonPlannerViewModel">
+
+    <!-- US-92: stap 2 van het verkoopdossier volgens de mock (stap2.html): links de werkdagen
+         (2 weken of maand) met de bezetting en het werk van deze verkoop, rechts de inlijstingen
+         van de werkbon. Geen zijpaneel: blokkeren en weekdetail staan op de pagina Planning. -->
+    <UserControl.Styles>
+        <Style Selector="Border.kaart">
+            <Setter Property="Background" Value="{DynamicResource Surface}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="16"/>
+        </Style>
+        <Style Selector="Button.dag">
+            <Setter Property="Background" Value="{DynamicResource Surface}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Margin" Value="0,0,8,8"/>
+            <Setter Property="MinHeight" Value="84"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Top"/>
+        </Style>
+        <Style Selector="Button.dag.gekozen">
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandYellow}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Background" Value="{DynamicResource WarningBg}"/>
+        </Style>
+        <Style Selector="Button.dag.gekozen /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource WarningBg}"/>
+        </Style>
+        <Style Selector="Button.dag.verleden">
+            <Setter Property="Opacity" Value="0.5"/>
+        </Style>
+        <Style Selector="Button.dag.dicht /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource DangerBg}"/>
+        </Style>
+        <Style Selector="TextBlock.dagKop">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="TextBlock.dagKop.vandaag">
+            <Setter Property="Foreground" Value="{DynamicResource InfoText}"/>
+        </Style>
+        <Style Selector="Border.balk">
+            <Setter Property="Height" Value="5"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="Background" Value="{DynamicResource IconSlate}"/>
+        </Style>
+        <Style Selector="Border.balk.vol">
+            <Setter Property="Background" Value="{DynamicResource Danger}"/>
+        </Style>
+        <Style Selector="Border.chip">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="8,3"/>
+            <Setter Property="Background" Value="{DynamicResource SurfaceMutedAlt}"/>
+        </Style>
+        <Style Selector="Border.chip.ok">
+            <Setter Property="Background" Value="{DynamicResource SuccessBg}"/>
+        </Style>
+        <Style Selector="Border.chip.ok TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource Success}"/>
+        </Style>
+        <Style Selector="Border.chip.let">
+            <Setter Property="Background" Value="{DynamicResource StatOrangeBg}"/>
+        </Style>
+        <Style Selector="Border.chip.let TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource StatOrangeText}"/>
+        </Style>
+        <Style Selector="Button.klein">
+            <Setter Property="Padding" Value="8,2"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <Style Selector="ToggleButton.seg">
+            <Setter Property="Padding" Value="12,4"/>
+            <Setter Property="CornerRadius" Value="0"/>
+        </Style>
+        <Style Selector="ToggleButton.seg:checked /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BrandYellow}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid ColumnDefinitions="1.25*,1*" ColumnSpacing="16">
+
+        <!-- ── Planning ── -->
+        <Border Classes="kaart" VerticalAlignment="Top">
+            <StackPanel Spacing="12">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+                    <TextBlock Text="Planning" Classes="h2" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="{Binding PeriodeTekst}" Foreground="{DynamicResource TextSecondary}"
+                               VerticalAlignment="Center" Margin="8,0,0,0"/>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                        <ToggleButton Classes="seg" Content="2 weken" IsChecked="{Binding IsTweeWeken, Mode=OneWay}"
+                                      Command="{Binding ToonTweeWekenCommand}" CornerRadius="6,0,0,6"/>
+                        <ToggleButton Classes="seg" Content="Maand" IsChecked="{Binding IsMaand, Mode=OneWay}"
+                                      Command="{Binding ToonMaandCommand}" CornerRadius="0,6,6,0"/>
+                    </StackPanel>
+                    <Button Grid.Column="3" Content="◀" Command="{Binding VorigeCommand}" Padding="10,4" CornerRadius="6"/>
+                    <Button Grid.Column="4" Content="Vandaag" Command="{Binding VandaagCommand}" Padding="10,4" CornerRadius="6"/>
+                    <Button Grid.Column="5" Content="▶" Command="{Binding VolgendeCommand}" Padding="10,4" CornerRadius="6"/>
+                </Grid>
+
+                <ItemsControl x:Name="DagenLijst" ItemsSource="{Binding Dagen}" Margin="0,0,-8,0">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate><UniformGrid Columns="5"/></ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:PlannerDag">
+                            <Button Classes="dag" Classes.gekozen="{Binding IsGeselecteerd}" Classes.verleden="{Binding IsVerleden}"
+                                    Classes.dicht="{Binding IsGeblokkeerd}"
+                                    DragDrop.AllowDrop="{Binding KanPlannen}"
+                                    Command="{Binding $parent[ItemsControl].((vm:WerkbonPlannerViewModel)DataContext).KiesDagCommand}"
+                                    CommandParameter="{Binding}">
+                                <StackPanel Spacing="4">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{Binding Kop}" Classes="dagKop" Classes.vandaag="{Binding IsVandaag}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding UrenTekst}" Classes="caption"
+                                                   Foreground="{DynamicResource TextSecondary}"/>
+                                    </Grid>
+                                    <!-- bezetting van die dag (alle werk), 8 u = vol -->
+                                    <Border Height="5" CornerRadius="3" Background="{DynamicResource SurfaceMutedAlt}">
+                                        <Border Classes="balk" Classes.vol="{Binding IsVol}" RenderTransformOrigin="0%,50%">
+                                            <Border.RenderTransform>
+                                                <ScaleTransform ScaleX="{Binding Bezetting}" ScaleY="1"/>
+                                            </Border.RenderTransform>
+                                        </Border>
+                                    </Border>
+                                    <Border Background="{DynamicResource WarningBg}" CornerRadius="6" Padding="6,3"
+                                            IsVisible="{Binding HeeftTakenDezeVerkoop}">
+                                        <TextBlock Text="{Binding TakenTekst}" Classes="caption" TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource TextPrimary}"/>
+                                    </Border>
+                                    <Border Background="{DynamicResource SuccessBg}" CornerRadius="6" Padding="6,2"
+                                            IsVisible="{Binding IsAfhaaldag}">
+                                        <TextBlock Text="afhalen" Classes="caption" Foreground="{DynamicResource Success}"/>
+                                    </Border>
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="14">
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <Border Width="10" Height="10" CornerRadius="2" Background="{DynamicResource IconSlate}"/>
+                        <TextBlock Text="ander werk" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <Border Width="10" Height="10" CornerRadius="2" Background="{DynamicResource BrandYellow}"/>
+                        <TextBlock Text="deze verkoop" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Text="max. 8 u per dag · niet in het verleden" Classes="caption"
+                               Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+                    <Button Grid.Column="3" Content="🗓 Weeklijst afdrukken" Command="{Binding WeeklijstAfdrukkenCommand}"
+                            Padding="10,4" CornerRadius="6"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- ── Werkbon · inlijstingen ── -->
+        <Border Grid.Column="1" Classes="kaart" VerticalAlignment="Top">
+            <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Werkbon · inlijstingen" Classes="h2"/>
+                    <TextBlock Grid.Column="1" Text="{Binding KopRechts}" Foreground="{DynamicResource TextSecondary}"
+                               VerticalAlignment="Center"/>
+                </Grid>
+
+                <ItemsControl ItemsSource="{Binding Regels}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:PlannerRegel">
+                            <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}"
+                                    BorderThickness="1" CornerRadius="10" Padding="10,8" Margin="0,0,0,8">
+                                <StackPanel Spacing="6">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                        <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Top"
+                                                  IsVisible="{Binding !IsGepland}"/>
+                                        <StackPanel Grid.Column="1" Spacing="1" Cursor="Hand" Background="Transparent"
+                                                    PointerPressed="Regel_PointerPressed"
+                                                    ToolTip.Tip="Sleep naar een dag om in te plannen">
+                                            <TextBlock Text="{Binding Kop}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding Omschrijving}" Classes="caption" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource TextSecondary}"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2" Text="{Binding DuurTekst}" Classes="caption"
+                                                   Foreground="{DynamicResource TextSecondary}"/>
+                                    </Grid>
+                                    <WrapPanel>
+                                        <Border Classes="chip" Classes.ok="{Binding IsGepland}" Margin="0,0,6,4">
+                                            <TextBlock Text="{Binding PlanTekst}" Classes="caption" FontWeight="SemiBold"/>
+                                        </Border>
+                                        <Button Classes="klein" Content="herplannen" IsVisible="{Binding IsGepland}" Margin="0,0,4,4"
+                                                Command="{Binding $parent[ItemsControl].((vm:WerkbonPlannerViewModel)DataContext).HerplanCommand}"
+                                                CommandParameter="{Binding}"/>
+                                        <Button Classes="klein" Content="✕" IsVisible="{Binding IsGepland}" Margin="0,0,10,4"
+                                                ToolTip.Tip="Taak uit de planning halen"
+                                                Command="{Binding $parent[ItemsControl].((vm:WerkbonPlannerViewModel)DataContext).VerwijderTaakCommand}"
+                                                CommandParameter="{Binding}"/>
+                                        <Border Classes="chip" Classes.ok="{Binding IsBestelOk}" Classes.let="{Binding IsTeBestellen}"
+                                                IsVisible="{Binding HeeftBestelTekst}" Margin="0,0,6,4">
+                                            <TextBlock Text="{Binding BestelTekst}" Classes="caption" FontWeight="SemiBold"/>
+                                        </Border>
+                                        <Button Classes="klein" Content="Bestellen…" IsVisible="{Binding IsTeBestellen}" Margin="0,0,0,4"
+                                                ToolTip.Tip="Bestellen bij de leverancier, zoals in de werkbon"
+                                                Command="{Binding $parent[ItemsControl].((vm:WerkbonPlannerViewModel)DataContext).BestellenCommand}"/>
+                                    </WrapPanel>
+                                    <TextBlock Text="{Binding Opmerking, StringFormat='Opmerking: {0}'}" IsVisible="{Binding HeeftOpmerking}"
+                                               Classes="caption" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                    <TextBlock Text="{Binding SelectieTekst}" Classes="caption" TextWrapping="Wrap" VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextSecondary}"/>
+                    <Button Grid.Column="1" Content="Plan per regel" Command="{Binding PlanPerRegelCommand}"
+                            IsEnabled="{Binding HeeftSelectie}" Padding="10,6" CornerRadius="6"
+                            ToolTip.Tip="Elke geselecteerde inlijsting een eigen datum geven"/>
+                    <Button Grid.Column="2" Content="{Binding PlanOpDagTekst}" Command="{Binding PlanOpDagCommand}"
+                            IsEnabled="{Binding HeeftSelectie}" Classes="AccentBtn" Padding="12,6"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

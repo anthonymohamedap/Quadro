@@ -73,6 +73,16 @@ static class Schermen
         ["dossier-5-nog-te-betalen"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 423); },
         ["dossier-1-inlijsting"] = f => DossierAsync(f, 419, daarna: vm => { vm.Stap1!.SelectedRegel = vm.Stap1.Regels.First(); return Task.CompletedTask; }),
         ["dossier-2-lang"] = f => DossierAsync(f, 412),
+        ["dossier-2-maand"] = f => DossierAsync(f, 412, daarna: vm => vm.Planner!.ToonMaandCommand.ExecuteAsync(null)),
+        ["dossier-2-gepland"] = f => DossierAsync(f, 412, daarna: async vm =>
+        {
+            var p = vm.Planner!;
+            var dag = p.Dagen.First(d => d.KanPlannen && d.Datum > DateTime.Today.AddDays(4));
+            p.KiesDagCommand.Execute(dag);
+            p.Regels.First().IsSelected = true;
+            await p.PlanOpDagCommand.ExecuteAsync(null);
+            await Task.Delay(800);
+        }),
         ["dossier-1-lang"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 419, daarna: vm => { vm.Stap1!.SelectedRegel = vm.Stap1.Regels.First(); return Task.CompletedTask; }); },
         ["dossier-1-terug-412"] = f => DossierAsync(f, 412, bekijk: QuadroApp.Service.Verkoop.VerkoopStap.Offerte,
             daarna: vm => { vm.Stap1!.SelectedRegel = vm.Stap1.Regels.FirstOrDefault(); return Task.CompletedTask; }),

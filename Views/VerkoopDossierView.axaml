@@ -148,6 +148,8 @@
                                           IsVisible="{Binding Stap1.KanTerugNaarVerzonden, FallbackValue=False}"/>
                                 <MenuItem Header="Ontgrendelen" Command="{Binding Stap1.OntgrendelenCommand, FallbackValue={x:Null}}"
                                           IsVisible="{Binding Stap1.IsOntgrendelenZichtbaar, FallbackValue=False}"/>
+                                <MenuItem Header="Werkbon openen" Command="{Binding OpenWerkBonCommand}"
+                                          IsVisible="{Binding ToontWerkbonKnoppen}"/>
                                 <MenuItem Header="Offerte openen in het oude scherm" Command="{Binding OpenOfferteCommand}"/>
                                 <MenuItem Header="Verkoop annuleren…" Command="{Binding AnnulerenCommand}"
                                           IsEnabled="{Binding KanAnnuleren}"/>
@@ -296,10 +298,9 @@
 
                 <!-- US-92: stap 2 = de planning van deze werkbon (zelfde kalender als de pagina Planning):
                      inlijstingen van de werkbon rechts, slepen of "Plan op geselecteerde dag". -->
-                <Border IsVisible="{Binding IsPlanningZichtbaar}" Height="820" CornerRadius="12" ClipToBounds="True"
-                        BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1">
-                    <planning:PlanningKalender DataContext="{Binding Planning}"/>
-                </Border>
+                <Panel IsVisible="{Binding IsPlanningZichtbaar}">
+                    <planning:WerkbonPlanner DataContext="{Binding Planner}"/>
+                </Panel>
             </StackPanel>
         </ScrollViewer>
 
@@ -314,6 +315,10 @@
                     <TextBlock Text="{Binding BewaardTekst}" Classes="caption" Foreground="{DynamicResource TextSecondary}"
                                IsVisible="{Binding BewaardTekst, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                 </StackPanel>
+                <!-- US-92: wat ontbreekt voor Start productie (stap 2, mock) -->
+                <TextBlock Grid.Column="2" Text="{Binding VoetMelding}" Foreground="{DynamicResource Danger}"
+                           TextWrapping="Wrap" TextAlignment="Right" VerticalAlignment="Center" Margin="12,0"
+                           IsVisible="{Binding VoetMelding, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                 <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8">
                     <!-- US-91: stap 1 — de bestelbon (voorlopig) als prijsvoorstel, zoals in het offertescherm -->
                     <Button Content="{Binding Stap1.BestelbonButtonText, FallbackValue=''}"
