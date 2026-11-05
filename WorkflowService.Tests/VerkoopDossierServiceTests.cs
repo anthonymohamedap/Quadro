@@ -147,7 +147,7 @@ public class VerkoopDossierServiceTests
         var planner = new QuadroApp.ViewModels.WerkbonPlannerViewModel(kalender, f, o.WerkBonId);
         await planner.LaadAsync();
 
-        Assert.Equal(10, planner.Dagen.Count);                       // 2 weken, enkel werkdagen
+        Assert.Equal(14, planner.Dagen.Count);                       // 2 weken, ook het weekend (planning kan daar werk zetten)
         Assert.Equal("2 nog te plannen", planner.KopRechts);
         Assert.False(planner.HeeftSelectie);
 
@@ -163,6 +163,16 @@ public class VerkoopDossierServiceTests
 
         await planner.VerwijderTaakCommand.ExecuteAsync(planner.Regels[0]);
         Assert.Equal("2 nog te plannen", planner.KopRechts);
+
+        // Een lange inlijsting wordt over twee dagen verdeeld: beide delen zichtbaar, ✕ per deel.
+        await o.WerkBonWorkflow.PlanRegelMetDagCapaciteitAsync(o.WerkBonId, o.RegelIds[1], VolgendeMaandag(), 600, 480, "Inlijsting 2");
+        await planner.LaadAsync();
+        var lang = planner.Regels[1];
+        Assert.True(lang.HeeftMeerdereDelen);
+        Assert.Equal("gepland in 2 delen", lang.PlanTekst);
+        Assert.Equal(600, lang.DuurMinuten);
+        await planner.VerwijderDeelCommand.ExecuteAsync(lang.Delen.Last());
+        Assert.Equal("gepland " + VolgendeMaandag().ToString("ddd d/MM", new System.Globalization.CultureInfo("nl-BE")), planner.Regels[1].PlanTekst);
         Assert.Equal((OfferteStatus.Goedgekeurd, WerkBonStatus.Gepland), await StatusAsync(o));
     }
 

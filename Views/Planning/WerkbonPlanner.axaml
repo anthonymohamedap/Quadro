@@ -22,7 +22,7 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="8,6"/>
-            <Setter Property="Margin" Value="0,0,8,8"/>
+            <Setter Property="Margin" Value="0,0,6,6"/>
             <Setter Property="MinHeight" Value="84"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="VerticalAlignment" Value="Stretch"/>
@@ -36,6 +36,9 @@
         </Style>
         <Style Selector="Button.dag.gekozen /template/ ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource WarningBg}"/>
+        </Style>
+        <Style Selector="Button.dag.weekend /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SurfaceMutedAlt}"/>
         </Style>
         <Style Selector="Button.dag.verleden">
             <Setter Property="Opacity" Value="0.5"/>
@@ -111,12 +114,12 @@
 
                 <ItemsControl x:Name="DagenLijst" ItemsSource="{Binding Dagen}" Margin="0,0,-8,0">
                     <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate><UniformGrid Columns="5"/></ItemsPanelTemplate>
+                        <ItemsPanelTemplate><UniformGrid Columns="7"/></ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:PlannerDag">
                             <Button Classes="dag" Classes.gekozen="{Binding IsGeselecteerd}" Classes.verleden="{Binding IsVerleden}"
-                                    Classes.dicht="{Binding IsGeblokkeerd}"
+                                    Classes.dicht="{Binding IsGeblokkeerd}" Classes.weekend="{Binding IsWeekend}"
                                     DragDrop.AllowDrop="{Binding KanPlannen}"
                                     Command="{Binding $parent[ItemsControl].((vm:WerkbonPlannerViewModel)DataContext).KiesDagCommand}"
                                     CommandParameter="{Binding}">
@@ -198,10 +201,10 @@
                                         <Border Classes="chip" Classes.ok="{Binding IsGepland}" Margin="0,0,6,4">
                                             <TextBlock Text="{Binding PlanTekst}" Classes="caption" FontWeight="SemiBold"/>
                                         </Border>
-                                        <Button Classes="klein" Content="herplannen" IsVisible="{Binding IsGepland}" Margin="0,0,4,4"
+                                        <Button Classes="klein" Content="herplannen" IsVisible="{Binding !HeeftMeerdereDelen}" Margin="0,0,4,4"
                                                 Command="{Binding $parent[ItemsControl].((vm:WerkbonPlannerViewModel)DataContext).HerplanCommand}"
                                                 CommandParameter="{Binding}"/>
-                                        <Button Classes="klein" Content="✕" IsVisible="{Binding IsGepland}" Margin="0,0,10,4"
+                                        <Button Classes="klein" Content="✕" IsVisible="{Binding !HeeftMeerdereDelen}" Margin="0,0,10,4"
                                                 ToolTip.Tip="Taak uit de planning halen"
                                                 Command="{Binding $parent[ItemsControl].((vm:WerkbonPlannerViewModel)DataContext).VerwijderTaakCommand}"
                                                 CommandParameter="{Binding}"/>
@@ -213,6 +216,22 @@
                                                 ToolTip.Tip="Bestellen bij de leverancier, zoals in de werkbon"
                                                 Command="{Binding $parent[ItemsControl].((vm:WerkbonPlannerViewModel)DataContext).BestellenCommand}"/>
                                     </WrapPanel>
+                                    <!-- Over meerdere dagen verdeeld: herplannen en ✕ per deel (zoals in de kalender) -->
+                                    <ItemsControl ItemsSource="{Binding Delen}" IsVisible="{Binding HeeftMeerdereDelen}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:PlannerDeel">
+                                                <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,0,4">
+                                                    <TextBlock Text="{Binding Tekst}" Classes="caption" VerticalAlignment="Center" MinWidth="170"/>
+                                                    <Button Classes="klein" Content="herplannen"
+                                                            Command="{Binding $parent[UserControl].((vm:WerkbonPlannerViewModel)DataContext).HerplanDeelCommand}"
+                                                            CommandParameter="{Binding}"/>
+                                                    <Button Classes="klein" Content="✕" ToolTip.Tip="Dit deel uit de planning halen"
+                                                            Command="{Binding $parent[UserControl].((vm:WerkbonPlannerViewModel)DataContext).VerwijderDeelCommand}"
+                                                            CommandParameter="{Binding}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                     <TextBlock Text="{Binding Opmerking, StringFormat='Opmerking: {0}'}" IsVisible="{Binding HeeftOpmerking}"
                                                Classes="caption" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
                                 </StackPanel>
