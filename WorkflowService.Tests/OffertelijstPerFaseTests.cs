@@ -151,11 +151,12 @@ public class OffertelijstPerFaseTests
         public string? Laatste;
         public Task OpenOfferteAsync(int offerteId) { Laatste = $"offerte {offerteId}"; return Task.CompletedTask; }
         public Task OpenVerkoopAsync(int offerteId) { Laatste = $"dossier {offerteId}"; return Task.CompletedTask; }
-        public Task NewOfferteAsync() { Laatste = "nieuw"; return Task.CompletedTask; }
+        public Task NewOfferteAsync() { Laatste = "nieuw (oud)"; return Task.CompletedTask; }
+        public Task NieuweVerkoopAsync() { Laatste = "nieuwe verkoop"; return Task.CompletedTask; }
     }
 
     [Fact]
-    public async Task Openen_opent_het_dossier_en_oud_scherm_het_offertescherm_US95()
+    public async Task Openen_en_nieuw_gaan_naar_het_dossier_US95()
     {
         await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
         var f = scope.Factory;
@@ -169,7 +170,8 @@ public class OffertelijstPerFaseTests
         await vm.OpenCommand.ExecuteAsync(null);
         Assert.Equal("dossier 419", nav.Laatste);
 
-        await vm.OpenOudSchermCommand.ExecuteAsync(null);
-        Assert.Equal("offerte 419", nav.Laatste);
+
+        await vm.NewCommand.ExecuteAsync(null);   // US-95: nieuwe verkoop in het dossier
+        Assert.Equal("nieuwe verkoop", nav.Laatste);
     }
 }

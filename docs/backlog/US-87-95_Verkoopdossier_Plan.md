@@ -339,7 +339,7 @@ Technisch: `IDocumentAfdrukService` + `DocumentPreviewWindow` (QuestPDF `Generat
 > - Het **dossier is de standaard ingang**: Verkopen "Openen"/dubbelklik, de blokken op het beginscherm en de verkopen van een klant openen het dossier (`IOfferteNavigationService.OpenVerkoopAsync`).
 > - Het oude offertescherm blijft bereikbaar: knop **Oud scherm** in Verkopen en menu ⋯ in het dossier.
 > - Beginscherm: "＋ Nieuwe verkoop" (was "Nieuwe offerte"); Planning is een pagina (US-92).
-> - **Nog niet** (wacht op het akkoord van Anthony en Veerle, beslist 02/11): Werkbonnen en Bestelbonnen uit het menu, het werkbonvenster en de oude lijsten verwijderen. Testlijst: `Testlijst_Verkoopdossier.md`.
+> - **Laatste stap gedaan 08/11 (Anthony: "doe laatste stap")**: Werkbonnen en Bestelbonnen uit het menu en van het beginscherm (tegel nu Leveranciers); verwijderd: `OfferteView`, `WerkBonLijstView(Model)`, `WerkBonDetailWindow`, `BestelbonnenView`, `PlanningCalendarWindow` + `PlanningKalender`. Wat ze deden zit in het dossier; twee kleine vensters vangen de rest op: **Lijsten bestellen…** (werktaken + Bestelling plaatsen, ook vanuit stap 2) en **Bestelbon en betalingen…** (in elke stap). `OpenOfferteAsync`/`NewOfferteAsync` openen voortaan het dossier. De ViewModels (`OfferteViewModel`, `WerkBonDetailViewModel`, `BestelbonnenViewModel`) blijven: het dossier gebruikt ze. Testlijst: `Testlijst_Verkoopdossier.md`.
 
 **Als** medewerker **wil ik** een korte zijbalk met de woorden die ik zelf gebruik, **zodat** ik de werkbon niet meer kwijt ben (P1, P13).
 
