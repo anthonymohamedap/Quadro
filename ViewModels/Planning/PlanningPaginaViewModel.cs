@@ -13,9 +13,10 @@ namespace QuadroApp.ViewModels;
 /// (offerte, Werkbonnen, Verkopen, dossier) opent hij met de inlijstingen van die werkbon, en
 /// "Terug" gaat naar het scherm waar je vandaan kwam.
 /// </summary>
-public partial class PlanningPaginaViewModel : IAsyncInitializable
+public partial class PlanningPaginaViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject, IAsyncInitializable
 {
     private readonly INavigationService _nav;
+    private readonly IDbContextFactory<AppDbContext> _factory;
 
     public PlanningPaginaViewModel(
         IDbContextFactory<AppDbContext> factory,
@@ -25,10 +26,15 @@ public partial class PlanningPaginaViewModel : IAsyncInitializable
         INavigationService nav)
     {
         _nav = nav;
+        _factory = factory;
         Kalender = new PlanningCalendarViewModel(factory, werkBonWorkflow, toast, statusWorkflow);
     }
 
     public PlanningCalendarViewModel Kalender { get; }
+
+    /// <summary>US-92 — dezelfde opmaak als stap 2 van het dossier (2 weken/maand, cijfers, dagdetails, weekdetail, blokkeren).</summary>
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    private WerkbonPlannerViewModel? planner;
 
     /// <summary>Werkbon waarvan de inlijstingen gepland worden; null = algemene planning (zijbalk).</summary>
     public int? WerkBonId { get; set; }
@@ -36,8 +42,14 @@ public partial class PlanningPaginaViewModel : IAsyncInitializable
     /// <summary>Waar "Terug" naartoe gaat; null = beginscherm.</summary>
     public Func<Task>? Terug { get; set; }
 
-    public Task InitializeAsync()
-        => WerkBonId is int id ? Kalender.InitializeAsync(id) : Kalender.InitializeGlobalAsync();
+    public async Task InitializeAsync()
+    {
+        if (WerkBonId is int id) await Kalender.InitializeAsync(id);
+        else await Kalender.InitializeGlobalAsync();
+        var planner = new WerkbonPlannerViewModel(Kalender, _factory, WerkBonId);
+        await planner.LaadAsync();
+        Planner = planner;
+    }
 
     [RelayCommand]
     private Task GaTerugAsync() => Terug is not null ? Terug() : _nav.NavigateToAsync<HomeViewModel>();
