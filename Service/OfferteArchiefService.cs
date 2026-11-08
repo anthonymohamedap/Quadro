@@ -18,6 +18,9 @@ namespace QuadroApp.Service
         private readonly IAuthService _auth;
         private readonly ILogger<OfferteArchiefService> _logger;
 
+        /// <summary>US-102 — zelfde JSON-opties voor archief en momentopname.</summary>
+        public static JsonSerializerOptions JsonOpties => _json;
+
         private static readonly JsonSerializerOptions _json = new()
         {
             WriteIndented = false,
@@ -299,7 +302,8 @@ namespace QuadroApp.Service
 
         // ─── Privé snapshot builder ────────────────────────────────────────────
 
-        private static OfferteArchiefSnapshot BouwSnapshot(Offerte offerte)
+        /// <summary>US-102 — ook gebruikt voor de momentopname bij het afronden van een verkoop.</summary>
+        public static OfferteArchiefSnapshot BouwSnapshot(Offerte offerte)
         {
             var snap = new OfferteArchiefSnapshot
             {

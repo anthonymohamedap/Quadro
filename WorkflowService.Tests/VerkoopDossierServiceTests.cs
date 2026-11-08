@@ -198,6 +198,111 @@ public class VerkoopDossierServiceTests
         Assert.Empty(dag.TakenDezeVerkoop);
     }
 
+    private static OntvangstService Ontvangsten(Opstelling o)
+    {
+        var pricing = new PricingService(o.Scope.Factory, new VastePrijsInstellingen(), new PricingEngine(), NullLogger<PricingService>.Instance);
+        return new OntvangstService(o.Scope.Factory, new TestAuthService(), new BestelbonWorkflowService(o.Scope.Factory, pricing, new TestAuthService()));
+    }
+
+    private sealed class BestelbonProvider(Opstelling o) : IServiceProvider
+    {
+        public object? GetService(Type t)
+        {
+            if (t != typeof(QuadroApp.ViewModels.BestelbonnenViewModel)) return null;
+            var pricing = new PricingService(o.Scope.Factory, new VastePrijsInstellingen(), new PricingEngine(), NullLogger<PricingService>.Instance);
+            var bw = new BestelbonWorkflowService(o.Scope.Factory, pricing, new TestAuthService());
+            return new QuadroApp.ViewModels.BestelbonnenViewModel(o.Scope.Factory, bw,
+                new BestelbonExportService(o.Scope.Factory, Array.Empty<IBestelbonExporter>()), new TestToastService(),
+                new TestNavigationService(), new OntvangstService(o.Scope.Factory, new TestAuthService(), bw), new TestPathOpener());
+        }
+    }
+
+    [Fact]
+    public async Task Momentopname_enkel_bij_afronden_en_maar_een_keer_US102()
+    {
+        var o = await OpstellingAsync(regels: 1);
+        await using var _ = o.Scope;
+        await PlanAsync(o, o.RegelIds);
+        await o.Dossier.StartProductieAsync(o.OfferteId);
+        await o.Dossier.MeldKlaarAsync(o.OfferteId);
+
+        Assert.False(await o.Dossier.MaakMomentopnameAsync(o.OfferteId));     // nog niet afgehaald/betaald
+        Assert.Null(await o.Dossier.GetMomentopnameAsync(o.OfferteId));
+
+        var ontvangsten = Ontvangsten(o);
+        var stand = await ontvangsten.GetAfrekenStandAsync(o.WerkBonId);
+        await ontvangsten.AfrekenenBijAfhalingAsync(o.WerkBonId, stand!.Stand.Rest, DateTime.Today, Betaalwijze.Cash);
+
+        Assert.True(await o.Dossier.MaakMomentopnameAsync(o.OfferteId));
+        Assert.False(await o.Dossier.MaakMomentopnameAsync(o.OfferteId));     // eenmalig
+
+        // Later een regel hernoemen verandert de momentopname niet.
+        await using (var db = await o.Scope.Factory.CreateDbContextAsync())
+        {
+            (await db.OfferteRegels.SingleAsync()).Titel = "Andere titel";
+            await db.SaveChangesAsync();
+        }
+        var moment = await o.Dossier.GetMomentopnameAsync(o.OfferteId);
+        Assert.NotNull(moment);
+        Assert.Equal("Sofie Claes", moment!.KlantNaam);
+        Assert.StartsWith("Inlijsting 1 · 1× 30×40 cm", Assert.Single(moment.Regels));
+    }
+
+    [Fact]
+    public async Task Dossier_stappen_3_tot_5_met_dezelfde_werkbon_en_bestelbon_US93()
+    {
+        var o = await OpstellingAsync(regels: 1);
+        await using var _ = o.Scope;
+        await PlanAsync(o, o.RegelIds);
+        await o.Dossier.StartProductieAsync(o.OfferteId);
+
+        var f = o.Scope.Factory;
+        var dialogs = new TestDialogService { ConfirmResult = true };
+        var dossier = new QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel(f, new VerkoopOverzichtService(f), o.Dossier,
+            new TestNavigationService(), new GeenOfferteNavigatie(), o.Workflow, o.WerkBonWorkflow, dialogs, new TestToastService(),
+            ontvangsten: Ontvangsten(o), services: new BestelbonProvider(o));
+        await dossier.ReceiveAsync(o.OfferteId);
+        await dossier.InitializeAsync();
+
+        // Stap 3: werkbon zoals in het werkbonvenster, stap overslaan mogelijk.
+        Assert.Equal(VerkoopStap.InProductie, dossier.Info!.Huidig);
+        Assert.True(dossier.IsStap3Zichtbaar);
+        Assert.True(dossier.KanOverslaan);
+        Assert.Single(dossier.WerkbonDetail!.Taken);
+
+        // Klaar om af te halen → stap 4 met de bestelbon.
+        await dossier.HoofdKnopCommand.ExecuteAsync(null);
+        Assert.Equal(VerkoopStap.KlaarOmAfTeHalen, dossier.Info!.Huidig);
+        Assert.True(dossier.IsStap45Zichtbaar);
+        Assert.True(dossier.HeeftBestelbonDetail);
+        Assert.False(dossier.KanOverslaan);
+
+        // Klant komt afhalen → afrekenen (er is een rest).
+        await dossier.HoofdKnopCommand.ExecuteAsync(null);
+        Assert.True(dossier.WerkbonDetail!.IsAfrekenenOpen);
+
+        // Betalen en afhalen → afgerond, momentopname bewaard.
+        await dossier.WerkbonDetail.BetalenCommand.ExecuteAsync(null);
+        for (var i = 0; i < 50 && dossier.Info?.IsAfgerond != true; i++) await Task.Delay(100);
+        Assert.True(dossier.Info!.IsAfgerond);
+        Assert.True(dossier.IsAfgerondMelding);
+        for (var i = 0; i < 30 && await o.Dossier.GetMomentopnameAsync(o.OfferteId) is null; i++) await Task.Delay(100);
+        Assert.NotNull(await o.Dossier.GetMomentopnameAsync(o.OfferteId));
+    }
+
+    [Fact]
+    public void Overslaan_vraagt_een_reden_US93()
+    {
+        var vm = new QuadroApp.ViewModels.Verkoop.StapOverslaanDialogViewModel(VerkoopStap.Werkbon);
+        Assert.True(vm.KanBevestigen);
+        Assert.Equal("Standaardkader uit voorraad", vm.Reden);
+        vm.GekozenReden = QuadroApp.ViewModels.Verkoop.StapOverslaanDialogViewModel.Andere;
+        Assert.False(vm.KanBevestigen);
+        vm.AndereReden = "  Klant had haast  ";
+        Assert.True(vm.KanBevestigen);
+        Assert.Equal("Klant had haast", vm.Reden);
+    }
+
     [Fact]
     public async Task Inplannen_verandert_de_offertestatus_niet_meer()
     {

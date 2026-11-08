@@ -1,0 +1,40 @@
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:QuadroApp.ViewModels.Verkoop"
+    x:Class="QuadroApp.Views.StapOverslaanDialog"
+    x:DataType="vm:StapOverslaanDialogViewModel"
+    Width="560"
+    SizeToContent="Height"
+    CanResize="False"
+    Title="Stap overslaan"
+    Background="{DynamicResource SurfaceMutedAlt}"
+    WindowStartupLocation="CenterOwner">
+
+    <!-- US-93: stap overslaan (mock stap 2/3 "overslaan") -->
+    <Border Padding="20">
+        <StackPanel Spacing="14">
+            <TextBlock Text="Stap overslaan" Classes="h1"/>
+            <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BrandYellow}"
+                    BorderThickness="2" CornerRadius="8" Padding="12,10">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding Wat}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding Gevolgen}" Classes="caption" TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextSecondary}"/>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Reden" Classes="label" Foreground="{DynamicResource TextSecondary}"/>
+                <ComboBox ItemsSource="{Binding Redenen}" SelectedItem="{Binding GekozenReden, Mode=TwoWay}" MinWidth="260"/>
+                <TextBox Text="{Binding AndereReden, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         Watermark="Andere reden…" MaxLength="200" IsVisible="{Binding IsAndere}"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <Button Content="Annuleren" Command="{Binding SluitCommand}" Padding="12,6" CornerRadius="6"/>
+                <Button Content="Overslaan" Command="{Binding BevestigCommand}" Classes="AccentBtn" Padding="12,6"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>
