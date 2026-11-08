@@ -151,6 +151,8 @@
                                           IsVisible="{Binding Stap1.KanTerugNaarVerzonden, FallbackValue=False}"/>
                                 <MenuItem Header="Ontgrendelen" Command="{Binding Stap1.OntgrendelenCommand, FallbackValue={x:Null}}"
                                           IsVisible="{Binding Stap1.IsOntgrendelenZichtbaar, FallbackValue=False}"/>
+                                <MenuItem Header="Werkbon afdrukken met prijzen" Command="{Binding WerkbonAfdrukkenMetPrijzenCommand}"
+                                          IsVisible="{Binding KanWerkbonAfdrukken}"/>
                                 <MenuItem Header="Werkbon openen" Command="{Binding OpenWerkBonCommand}"
                                           IsVisible="{Binding ToontWerkbonKnoppen}"/>
                                 <MenuItem Header="Offerte openen in het oude scherm" Command="{Binding OpenOfferteCommand}"/>
@@ -439,6 +441,10 @@
                     <!-- US-93: stap 2 en 3 — rechtstreeks naar Klaar om af te halen, met reden -->
                     <Button Content="⤼ Stap overslaan" Command="{Binding StapOverslaanCommand}"
                             IsVisible="{Binding KanOverslaan}" Padding="12,6" CornerRadius="6"/>
+                    <!-- US-94: werkbon voor het atelier (zonder prijzen), vanaf stap 2 -->
+                    <Button Content="🖨 Werkbon afdrukken" Command="{Binding WerkbonAfdrukkenCommand}"
+                            IsVisible="{Binding KanWerkbonAfdrukken}" Padding="12,6" CornerRadius="6"
+                            ToolTip.Tip="PDF in Documenten › QuadroApp › Werkbonnen, opent in het printvenster van het systeem"/>
                     <!-- US-93: bestelbon afdrukken in elke status (zoals op het scherm Bestelbonnen) -->
                     <Button Content="🖨 Bestelbon afdrukken" Command="{Binding BestelbonDetail.AfdrukkenCommand, FallbackValue={x:Null}}"
                             IsVisible="{Binding IsStap45Zichtbaar}" IsEnabled="{Binding HeeftBestelbonDetail}"
