@@ -316,6 +316,11 @@ Technisch: kind-ViewModels per stap; afrekenlogica uit `WerkBonDetailViewModel` 
 
 ### US-94 — Afdrukken werkbon / bestelbon
 
+> ✅ **Gebouwd 08/11/2026** (`feature/us94-afdrukken`, PR naar `dev`):
+> - **Werkbon-PDF** (`PdfWerkBonExporter`, QuestPDF zoals de weeklijst): "WERKBON 423" (= verkoopnummer), afhaaldatum, klant, telefoon, bestelbonnummer; per inlijsting aantal × titel — maat, geplande dag(en), lijst of standaardkader (naam + omschrijving, US-80) met bestelstatus, afwerkingen, inleg, opmerking. Standaard **zonder prijzen**; "Werkbon afdrukken met prijzen" in menu ⋯. Bewaard in Documenten › QuadroApp › Werkbonnen › Werkbon-423.pdf en geopend in het systeemvenster om af te drukken (beslist 02/11).
+> - Knop **🖨 Werkbon afdrukken** vanaf stap 2; **🖨 Bestelbon afdrukken** in stap 4/5 en "Bestelbon aanmaken/afdrukken" in stap 1 (bestaande export, ook voor een betaalde bon: "betaald").
+> - Niet gebouwd: eigen voorbeeldvenster (het systeemvenster toont de PDF al), afvinkvakjes/initialen op de werkbon (= US-106, later).
+
 **Als** medewerker **wil ik** elk document met één knop afdrukken of als PDF bewaren, **zodat** ik niet hoef te zoeken waar het bestand terechtkwam.
 
 1. Elk "… afdrukken" opent een voorbeeldvenster met de echte PDF en de knoppen Afdrukken, Bewaren als PDF, Sluiten; het pad (`Documenten › QuadroApp › Bestelbonnen › Bestelbon-2026-19.pdf`) staat eronder.
