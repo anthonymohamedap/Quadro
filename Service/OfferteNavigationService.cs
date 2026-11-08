@@ -27,6 +27,10 @@ public sealed class OfferteNavigationService : IOfferteNavigationService
         await _nav.NavigateToAsync(vm); // overload in nav (zie onder)
     }
 
+    /// <summary>US-95 — de verkoop openen als dossier, op de stap waar hij staat.</summary>
+    public Task OpenVerkoopAsync(int offerteId)
+        => _nav.NavigateToAsync<QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel, int>(offerteId);
+
     public async Task NewOfferteAsync()
     {
         var vm = _sp.GetRequiredService<OfferteViewModel>();

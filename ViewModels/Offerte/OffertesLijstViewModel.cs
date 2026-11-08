@@ -207,15 +207,15 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
     private async Task OpenAsync()
     {
         if (SelectedOfferte is null) return;
-        await _offerteNav.OpenOfferteAsync(SelectedOfferte.OfferteId);
+        await _offerteNav.OpenVerkoopAsync(SelectedOfferte.OfferteId);   // US-95: het dossier is de standaard
     }
 
-    /// <summary>US-90 — het nieuwe verkoopdossier, naast de oude schermen (fase B: Veerle test).</summary>
+    /// <summary>US-95 — het oude offertescherm, zolang Veerle en Anthony vergelijken (ook in het dossier, menu ⋯).</summary>
     [RelayCommand]
-    private async Task OpenDossierAsync()
+    private async Task OpenOudSchermAsync()
     {
         if (SelectedOfferte is null) return;
-        await _nav.NavigateToAsync<QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel, int>(SelectedOfferte.OfferteId);
+        await _offerteNav.OpenOfferteAsync(SelectedOfferte.OfferteId);
     }
 
     // ── US-89: knoppen van de Werkbonnenlijst ────────────────────────────────
