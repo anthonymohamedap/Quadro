@@ -43,5 +43,9 @@ public partial class VerkoopDossierViewModel
         }
     }
 
-    private void WerkAfdrukkenBij() => OnPropertyChanged(nameof(KanWerkbonAfdrukken));
+    private void WerkAfdrukkenBij()
+    {
+        OnPropertyChanged(nameof(KanWerkbonAfdrukken));
+        OnPropertyChanged(nameof(HeeftBestelbon));   // US-95: menu ⋯ "Bestelbon en betalingen…"
+    }
 }

@@ -231,7 +231,6 @@ public partial class App : Application
         services.AddTransient<PlanningPaginaViewModel>();   // US-92
         services.AddTransient<OfferteViewModel>();
         services.AddTransient<KlantDetailViewModel>();
-        services.AddTransient<WerkBonLijstViewModel>();
         services.AddTransient<ArchiefViewModel>();
         services.AddTransient<BestelbonnenViewModel>();
         services.AddTransient<ExportCenterViewModel>();

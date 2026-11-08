@@ -45,19 +45,9 @@ static class Schermen
 {
     static readonly Dictionary<string, Func<IDbContextFactory<AppDbContext>, Task<Control>>> Scenarios = new()
     {
-        ["offerte-1-concept"] = f => OfferteAsync(f, 419),
-        ["offerte-1b-verzonden"] = f => OfferteAsync(f, 418),
-        ["offerte-2-bevestigd"] = f => OfferteAsync(f, 412),
-        ["offerte-3-afgerond"] = f => OfferteAsync(f, 398),
-        ["offerte-4-overgeslagen"] = OvergeslagenAsync,
         ["offertelijst"] = f => OffertelijstAsync(f, VerkoopFase.OpenOffertes),
         ["offertelijst-werkbonnen"] = f => OffertelijstAsync(f, VerkoopFase.LopendeWerkbonnen),
         ["offertelijst-klaar"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await OffertelijstAsync(f, VerkoopFase.KlaarOmAfTeHalen); },
-        ["werkbonnenlijst"] = WerkbonnenlijstAsync,
-        ["werkbon-venster"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await WerkbonVensterAsync(f, 423, afrekenen: false); },
-        ["werkbon-venster-afrekenen"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await WerkbonVensterAsync(f, 423, afrekenen: true); },
-        ["planning-venster"] = f => PlanningVensterAsync(f, 412),
-        ["planning-venster-globaal"] = f => PlanningVensterAsync(f, null),
         ["planning-pagina"] = PlanningPaginaAsync,
         ["planning-pagina-werkbon"] = async f =>
         {
@@ -136,9 +126,30 @@ static class Schermen
             await vm.HoofdKnopCommand.ExecuteAsync(null);   // Bevestigen → Werkbon
             for (var i = 0; i < 50 && vm.Info?.Huidig != QuadroApp.Service.Verkoop.VerkoopStap.Werkbon; i++) await Task.Delay(100);
         }),
+        ["lijsten-bestellen"] = async f =>
+        {
+            await Breng412NaarAsync(f, QuadroApp.Service.Verkoop.VerkoopStap.Werkbon);
+            var toast = new TestToastService();
+            var wf = VolledigeWorkflow(f);
+            await using var db = await f.CreateDbContextAsync();
+            var wbId = await db.WerkBonnen.Where(w => w.Offerte.OfferteNummer == 412).Select(w => w.Id).SingleAsync();
+            var vm = new WerkBonDetailViewModel(f, wf, new GeenOfferteNavigatie(), toast, wbId, MaakOntvangsten(f));
+            await vm.LoadAsync();
+            return VensterInhoud(new LijstenBestellenDialog { DataContext = vm }, vm, 720);
+        },
+        ["bestelbon-dialoog"] = async f =>
+        {
+            await Breng412NaarAsync(f, QuadroApp.Service.Verkoop.VerkoopStap.KlaarOmAfTeHalen);
+            await using var db = await f.CreateDbContextAsync();
+            var offerteId = await db.Offertes.Where(o => o.OfferteNummer == 412).Select(o => o.Id).SingleAsync();
+            var vm = (BestelbonnenViewModel)new OfferteVmProvider(f).GetService(typeof(BestelbonnenViewModel))!;
+            await vm.InitializeAsync();
+            vm.GeselecteerdeBestelbon = vm.Bestelbonnen.First(b => b.OfferteId == offerteId);
+            await Task.Delay(300);
+            return VensterInhoud(new BestelbonDialog { DataContext = vm }, vm, 760);
+        },
         ["dossier-terug-gekeken"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 423, bekijk: QuadroApp.Service.Verkoop.VerkoopStap.Offerte); },
         ["dossier-annuleren"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await AnnulerenDialoogAsync(f, 421); },
-        ["bestelbonnen"] = BestelbonnenAsync,
         ["home"] = f => HomeAsync(f, metVandaag: true),
         ["home-leeg"] = f => HomeAsync(f, metVandaag: false),
         ["home-vol"] = async f => { await TestGegevens.SeedVeelAsync(f, 10); return await HomeAsync(f, metVandaag: false); },
@@ -188,17 +199,6 @@ static class Schermen
         Dispatcher.UIThread.RunJobs();
         venster.CaptureRenderedFrame()!.Save(pad);
         venster.Close();
-    }
-
-    static async Task<Control> OfferteAsync(IDbContextFactory<AppDbContext> f, int offerteNummer)
-    {
-        var vm = MaakOfferteVm(f);
-        await using var db = await f.CreateDbContextAsync();
-        var id = await db.Offertes.Where(o => o.OfferteNummer == offerteNummer).Select(o => o.Id).SingleAsync();
-        await vm.InitializeAsync();
-        await vm.LoadAsync(id);
-        await Task.Delay(300);
-        return new OfferteView { DataContext = vm };
     }
 
     static OfferteViewModel MaakOfferteVm(IDbContextFactory<AppDbContext> f)
@@ -281,21 +281,6 @@ static class Schermen
         if (afgerond) await dossier.MaakMomentopnameAsync(offerteId);
     }
 
-    /// <summary>US-87 — verkoop 412 met overgeslagen stappen (standaardkader uit voorraad): Klaar om af te halen.</summary>
-    static async Task<Control> OvergeslagenAsync(IDbContextFactory<AppDbContext> f)
-    {
-        await using (var db = await f.CreateDbContextAsync())
-        {
-            var offerte = await db.Offertes.Include(o => o.WerkBon).SingleAsync(o => o.OfferteNummer == 412);
-            offerte.Status = OfferteStatus.Besteld;
-            offerte.OvergeslagenStappen = VerkoopStapFlags.Werkbon | VerkoopStapFlags.Productie;
-            offerte.OverslaanReden = "Standaardkader uit voorraad";
-            offerte.WerkBon!.Status = WerkBonStatus.Afgewerkt;
-            await db.SaveChangesAsync();
-        }
-        return await OfferteAsync(f, 412);
-    }
-
     static async Task<Control> OffertelijstAsync(IDbContextFactory<AppDbContext> f, VerkoopFase tabblad)
     {
         var vm = new OffertesLijstViewModel(f, new GeenOfferteNavigatie(), new TestDialogService(),
@@ -325,6 +310,16 @@ static class Schermen
         if (daarna is not null) await daarna(vm);
         await Task.Delay(300);
         return new VerkoopDossierView { DataContext = vm };
+    }
+
+    /// <summary>US-95 — inhoud van een venster los renderen (zoals de dialogen).</summary>
+    static Control VensterInhoud(Window venster, object vm, double breedte)
+    {
+        var inhoud = (Control)venster.Content!;
+        venster.Content = null;
+        foreach (var stijl in venster.Styles.ToList()) { venster.Styles.Remove(stijl); inhoud.Styles.Add(stijl); }
+        inhoud.DataContext = vm;
+        return new Border { Width = breedte, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left, Child = inhoud };
     }
 
     /// <summary>US-93 — "⤼ Stap overslaan" (dialoog los gerenderd).</summary>
@@ -370,81 +365,6 @@ static class Schermen
         var vm = new PlanningPaginaViewModel(f, new WerkBonWorkflowService(f, wf), toast, wf, new TestNavigationService());
         await vm.InitializeAsync();
         return new QuadroApp.Views.Planning.PlanningPaginaView { DataContext = vm };
-    }
-
-    /// <summary>US-92 — het planningsvenster (oude schermen): inhoud los gerenderd.</summary>
-    static async Task<Control> PlanningVensterAsync(IDbContextFactory<AppDbContext> f, int? offerteNummer)
-    {
-        var toast = new TestToastService();
-        var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
-        var vm = new PlanningCalendarViewModel(f, new WerkBonWorkflowService(f, wf), toast, wf);
-        if (offerteNummer is int nr)
-        {
-            await using var db = await f.CreateDbContextAsync();
-            var wbId = await db.WerkBonnen.Where(w => w.Offerte.OfferteNummer == nr).Select(w => w.Id).SingleAsync();
-            await vm.InitializeAsync(wbId);
-        }
-        else
-            await vm.InitializeGlobalAsync();
-        var venster = new PlanningCalendarWindow { DataContext = vm };
-        var inhoud = (Control)venster.Content!;
-        venster.Content = null;
-        foreach (var stijl in venster.Styles.ToList())   // vóór US-92 stonden de stijlen op het venster
-        {
-            venster.Styles.Remove(stijl);
-            inhoud.Styles.Add(stijl);
-        }
-        inhoud.DataContext = vm;
-        return inhoud;
-    }
-
-    /// <summary>US-93 — het werkbonvenster (inhoud los gerenderd, zoals het planningsvenster).</summary>
-    static async Task<Control> WerkbonVensterAsync(IDbContextFactory<AppDbContext> f, int offerteNummer, bool afrekenen)
-    {
-        var toast = new TestToastService();
-        var auth = new TestAuthService();
-        var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
-        var pricing = new PricingService(f, new PricingSettingsProvider(f), new PricingEngine(), NullLogger<PricingService>.Instance);
-        var bestelbonWf = new BestelbonWorkflowService(f, pricing, auth);
-        await using var db = await f.CreateDbContextAsync();
-        var wbId = await db.WerkBonnen.Where(w => w.Offerte.OfferteNummer == offerteNummer).Select(w => w.Id).SingleAsync();
-        var vm = new WerkBonDetailViewModel(f, wf, new GeenOfferteNavigatie(), toast, wbId, new OntvangstService(f, auth, bestelbonWf));
-        await vm.LoadAsync();
-        if (afrekenen)
-            vm.AfrekenenCommand.Execute(null);   // al afgehaald met een rest (US-76)
-        var venster = new WerkBonDetailWindow { DataContext = vm };
-        var inhoud = (Control)venster.Content!;
-        venster.Content = null;
-        foreach (var stijl in venster.Styles.ToList()) { venster.Styles.Remove(stijl); inhoud.Styles.Add(stijl); }
-        inhoud.DataContext = vm;
-        return new Border { Width = 660, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left, Child = inhoud };
-    }
-
-    /// <summary>US-89 — de Werkbonnenlijst (blijft in het menu): werkbon = verkoopnummer.</summary>
-    static async Task<Control> WerkbonnenlijstAsync(IDbContextFactory<AppDbContext> f)
-    {
-        var toast = new TestToastService();
-        var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
-        var vm = new WerkBonLijstViewModel(f, new TestNavigationService(), new GeenOfferteNavigatie(),
-            new WerkBonWorkflowService(f, wf), wf, toast);
-        await vm.LoadAsync();
-        return new WerkBonLijstView { DataContext = vm };
-    }
-
-    static async Task<Control> BestelbonnenAsync(IDbContextFactory<AppDbContext> f)
-    {
-        await TestGegevens.SeedVandaagAsync(f);
-        var toast = new TestToastService();
-        var auth = new TestAuthService();
-        var pricing = new PricingService(f, new PricingSettingsProvider(f), new PricingEngine(), NullLogger<PricingService>.Instance);
-        var workflow = new BestelbonWorkflowService(f, pricing, auth);
-        var vm = new BestelbonnenViewModel(f, workflow,
-            new BestelbonExportService(f, new IBestelbonExporter[] { new PdfBestelbonExporter() }), toast,
-            new TestNavigationService(), new OntvangstService(f, auth, workflow), new TestPathOpener());
-        await vm.InitializeAsync();
-        vm.GeselecteerdeBestelbon = vm.Bestelbonnen.FirstOrDefault(b => b.BestelbonNummer == "2026-23");
-        await Task.Delay(300);
-        return new BestelbonnenView { DataContext = vm };
     }
 
     static async Task<Control> HomeAsync(IDbContextFactory<AppDbContext> f, bool metVandaag, bool voorraadOpen = false)
