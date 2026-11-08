@@ -145,4 +145,31 @@ public class OffertelijstPerFaseTests
         var regel = Assert.Single(await new VerkoopOverzichtService(scope.Factory).GetOverzichtAsync());
         Assert.Equal("Werkbon 426 · In uitvoering · 2 taken · 1/2 besteld", regel.WerkbonInfo);
     }
+
+    private sealed class OpnameNavigatie : QuadroApp.Service.Interfaces.IOfferteNavigationService
+    {
+        public string? Laatste;
+        public Task OpenOfferteAsync(int offerteId) { Laatste = $"offerte {offerteId}"; return Task.CompletedTask; }
+        public Task OpenVerkoopAsync(int offerteId) { Laatste = $"dossier {offerteId}"; return Task.CompletedTask; }
+        public Task NewOfferteAsync() { Laatste = "nieuw"; return Task.CompletedTask; }
+    }
+
+    [Fact]
+    public async Task Openen_opent_het_dossier_en_oud_scherm_het_offertescherm_US95()
+    {
+        await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
+        var f = scope.Factory;
+        var nav = new OpnameNavigatie();
+        var vm = new OffertesLijstViewModel(f, nav, new TestDialogService(), new TestNavigationService(), new TestToastService(),
+            new QuadroApp.Service.OfferteArchiefService(f, new TestAuthService(),
+                Microsoft.Extensions.Logging.Abstractions.NullLogger<QuadroApp.Service.OfferteArchiefService>.Instance),
+            new VerkoopOverzichtService(f));
+        vm.SelectedOfferte = Regel(419, "Test Klant-C", OfferteStatus.Concept);
+
+        await vm.OpenCommand.ExecuteAsync(null);
+        Assert.Equal("dossier 419", nav.Laatste);
+
+        await vm.OpenOudSchermCommand.ExecuteAsync(null);
+        Assert.Equal("offerte 419", nav.Laatste);
+    }
 }

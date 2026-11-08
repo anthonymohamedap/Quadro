@@ -145,7 +145,7 @@ namespace QuadroApp.ViewModels
             OpenArchiefCommand      = new AsyncRelayCommand(() => _nav.NavigateToAsync<ArchiefViewModel>());
             NieuweOfferteCommand    = new AsyncRelayCommand(() => _offerteNav.NewOfferteAsync());
             OpenVerkoopCommand      = new AsyncRelayCommand<VerkoopOverzichtRegel>(
-                r => r is null ? Task.CompletedTask : _offerteNav.OpenOfferteAsync(r.OfferteId));
+                r => r is null ? Task.CompletedTask : _offerteNav.OpenVerkoopAsync(r.OfferteId));   // US-95: dossier
         }
 
         public async Task InitializeAsync()
