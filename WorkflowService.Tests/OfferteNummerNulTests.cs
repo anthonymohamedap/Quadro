@@ -66,6 +66,63 @@ public class OfferteNummerNulTests : IDisposable
     }
 
     [Fact]
+    public async Task Tweede_correctie_herstelt_nummer_0_dat_via_het_archief_terugkwam()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite($"Data Source={Path.Combine(_dir, "archief.db")}")
+            .Options;
+        await using var db = new AppDbContext(options);
+
+        var migraties = db.Database.GetMigrations().ToList();
+        var index = migraties.FindIndex(m => m.EndsWith("_OfferteNummerNulNaArchief", StringComparison.Ordinal));
+        Assert.True(index > 0, "Migratie OfferteNummerNulNaArchief ontbreekt.");
+
+        var migrator = db.GetInfrastructure().GetRequiredService<IMigrator>();
+        await migrator.MigrateAsync(migraties[index - 1]);
+
+        db.Offertes.AddRange(
+            new Offerte { OfferteNummer = 30, Datum = DateTime.Today, Opmerking = "dertig" },
+            new Offerte { OfferteNummer = 0, Datum = DateTime.Today, Opmerking = "uit archief" });
+        await db.SaveChangesAsync();
+
+        await migrator.MigrateAsync();
+
+        var nummers = await db.Offertes.AsNoTracking().ToDictionaryAsync(o => o.Opmerking!, o => o.OfferteNummer);
+        Assert.Equal(30, nummers["dertig"]);
+        Assert.True(nummers["uit archief"] > 30);
+    }
+
+    [Fact]
+    public async Task Herstellen_uit_archief_met_nummer_0_geeft_een_nieuw_nummer()
+    {
+        await using var scope = await WorkflowService.Tests.TestInfrastructure.DbFactoryBuilder.CreateSqliteAsync();
+        var f = scope.Factory;
+        var archief = new OfferteArchiefService(f, new WorkflowService.Tests.TestInfrastructure.TestAuthService(),
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<OfferteArchiefService>.Instance);
+
+        int bestaandId, nulId;
+        await using (var db = await f.CreateDbContextAsync())
+        {
+            var bestaand = new Offerte { OfferteNummer = 41, Datum = DateTime.Today };
+            var nul = new Offerte { OfferteNummer = 0, Datum = DateTime.Today, Klant = new Klant { Voornaam = "Marleen", Achternaam = "Peeters" } };
+            db.Offertes.AddRange(bestaand, nul);
+            await db.SaveChangesAsync();
+            bestaandId = bestaand.Id;
+            nulId = nul.Id;
+        }
+
+        var nulArchief = await archief.ArchiveerAsync(nulId);
+        var bestaandArchief = await archief.ArchiveerAsync(bestaandId);
+
+        var hersteldNul = await archief.HerstellenAsync(nulArchief.Id);
+        var hersteldBestaand = await archief.HerstellenAsync(bestaandArchief.Id);
+
+        await using var check = await f.CreateDbContextAsync();
+        Assert.True(await check.Offertes.Where(o => o.Id == hersteldNul).Select(o => o.OfferteNummer).SingleAsync() > 41);
+        Assert.Equal(41, await check.Offertes.Where(o => o.Id == hersteldBestaand).Select(o => o.OfferteNummer).SingleAsync());   // nummer blijft
+    }
+
+    [Fact]
     public void Geen_waarschuwing_als_afhalen_op_of_na_de_besteldatum()
     {
         Assert.Null(AfhaalDatumControle.Waarschuwing(new DateTime(2026, 10, 26), new DateTime(2026, 10, 26)));

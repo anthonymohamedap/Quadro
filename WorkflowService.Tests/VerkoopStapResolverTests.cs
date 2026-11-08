@@ -76,7 +76,8 @@ public class VerkoopStapResolverTests
     public void Stap_en_reconciliatie_US48_zijn_het_eens(WerkBonStatus werkbon, BestelbonStatus? bon, OfferteStatus doel)
     {
         // De offertestatus die US-48 afleidt, levert met dezelfde werkbon/bon dezelfde stap op.
-        var bestelbon = bon is null ? null : new Bestelbon { Status = bon.Value };
+        // Genummerde bon: de klant heeft bevestigd (een voorlopige bon telt niet mee).
+        var bestelbon = bon is null ? null : new Bestelbon { VolgNr = 1, Status = bon.Value };
         Assert.Equal(doel, OfferteStatusReconciliatieService.BepaalDoelStatus(new WerkBon { Status = werkbon }, bestelbon));
 
         var metWerkbon = VerkoopStapResolver.Bepaal(doel, werkbon, bon, 0m);
