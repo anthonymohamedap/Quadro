@@ -718,6 +718,9 @@ namespace QuadroApp.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("AfgerondOp")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("AfhaalDatum")
                         .HasColumnType("TEXT");
 
@@ -754,6 +757,9 @@ namespace QuadroApp.Migrations
 
                     b.Property<decimal>("MeerPrijsIncl")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Momentopname")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("OfferteNummer")
                         .HasColumnType("INTEGER");

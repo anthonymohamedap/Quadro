@@ -54,6 +54,8 @@ static class Schermen
         ["offertelijst-werkbonnen"] = f => OffertelijstAsync(f, VerkoopFase.LopendeWerkbonnen),
         ["offertelijst-klaar"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await OffertelijstAsync(f, VerkoopFase.KlaarOmAfTeHalen); },
         ["werkbonnenlijst"] = WerkbonnenlijstAsync,
+        ["werkbon-venster"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await WerkbonVensterAsync(f, 423, afrekenen: false); },
+        ["werkbon-venster-afrekenen"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await WerkbonVensterAsync(f, 423, afrekenen: true); },
         ["planning-venster"] = f => PlanningVensterAsync(f, 412),
         ["planning-venster-globaal"] = f => PlanningVensterAsync(f, null),
         ["planning-pagina"] = PlanningPaginaAsync,
@@ -100,6 +102,12 @@ static class Schermen
             daarna: vm => { vm.Stap1!.SelectedRegel = vm.Stap1.Regels.FirstOrDefault(); return Task.CompletedTask; }),
         ["dossier-1-aanpassen-412"] = f => DossierAsync(f, 412, bekijk: QuadroApp.Service.Verkoop.VerkoopStap.Offerte,
             daarna: vm => { vm.OfferteAanpassenCommand.Execute(null); vm.Stap1!.SelectedRegel = vm.Stap1.Regels.FirstOrDefault(); return Task.CompletedTask; }),
+        ["dossier-3-productie"] = async f => { await Breng412NaarAsync(f, QuadroApp.Service.Verkoop.VerkoopStap.InProductie); return await DossierAsync(f, 412); },
+        ["dossier-3-overslaan"] = async f => { await Breng412NaarAsync(f, QuadroApp.Service.Verkoop.VerkoopStap.Werkbon); return await OverslaanDialoogAsync(); },
+        ["dossier-4-klaar-bon"] = async f => { await Breng412NaarAsync(f, QuadroApp.Service.Verkoop.VerkoopStap.KlaarOmAfTeHalen); return await DossierAsync(f, 412); },
+        ["dossier-4-afrekenen"] = async f => { await Breng412NaarAsync(f, QuadroApp.Service.Verkoop.VerkoopStap.KlaarOmAfTeHalen); return await DossierAsync(f, 412, daarna: vm => vm.HoofdKnopCommand.ExecuteAsync(null)); },
+        ["dossier-5-rest"] = async f => { await Breng412NaarAsync(f, QuadroApp.Service.Verkoop.VerkoopStap.AfgehaaldEnBetaald); return await DossierAsync(f, 412); },
+        ["dossier-5-afgerond"] = async f => { await Breng412NaarAsync(f, QuadroApp.Service.Verkoop.VerkoopStap.AfgehaaldEnBetaald, afgerond: true); return await DossierAsync(f, 412); },
         ["dossier-terug-gekeken"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 423, bekijk: QuadroApp.Service.Verkoop.VerkoopStap.Offerte); },
         ["dossier-annuleren"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await AnnulerenDialoogAsync(f, 421); },
         ["bestelbonnen"] = BestelbonnenAsync,
@@ -116,6 +124,11 @@ static class Schermen
     {
         ["home-klein"] = (1024, 768),
         ["dossier-1-lang"] = (1440, 2000),
+        ["dossier-3-productie"] = (1440, 1100),
+        ["dossier-4-klaar-bon"] = (1440, 1100),
+        ["dossier-4-afrekenen"] = (1440, 1200),
+        ["dossier-5-rest"] = (1440, 1100),
+        ["dossier-5-afgerond"] = (1440, 1100),
         ["dossier-2-lang"] = (1440, 1500),
         ["planning-pagina"] = (1440, 1300),
         ["planning-pagina-werkbon"] = (1440, 1300),
@@ -178,7 +191,65 @@ static class Schermen
     /// <summary>US-91 — het dossier vraagt een OfferteViewModel voor stap 1.</summary>
     sealed class OfferteVmProvider(IDbContextFactory<AppDbContext> f) : IServiceProvider
     {
-        public object? GetService(Type serviceType) => serviceType == typeof(OfferteViewModel) ? MaakOfferteVm(f) : null;
+        public object? GetService(Type serviceType)
+        {
+            if (serviceType == typeof(OfferteViewModel)) return MaakOfferteVm(f);
+            if (serviceType == typeof(BestelbonnenViewModel))   // US-93: stap 4/5
+            {
+                var auth = new TestAuthService();
+                var pricing = new PricingService(f, new PricingSettingsProvider(f), new PricingEngine(), NullLogger<PricingService>.Instance);
+                var wf = new BestelbonWorkflowService(f, pricing, auth);
+                return new BestelbonnenViewModel(f, wf, new BestelbonExportService(f, new IBestelbonExporter[] { new PdfBestelbonExporter() }),
+                    new TestToastService(), new TestNavigationService(), new OntvangstService(f, auth, wf), new TestPathOpener());
+            }
+            return null;
+        }
+    }
+
+    static OntvangstService MaakOntvangsten(IDbContextFactory<AppDbContext> f)
+    {
+        var auth = new TestAuthService();
+        var pricing = new PricingService(f, new PricingSettingsProvider(f), new PricingEngine(), NullLogger<PricingService>.Instance);
+        return new OntvangstService(f, auth, new BestelbonWorkflowService(f, pricing, auth));
+    }
+
+    /// <summary>US-93 — workflow met bestelbon-service (zoals in de app), voor de stappen 3–5.</summary>
+    static QuadroApp.Service.WorkflowService VolledigeWorkflow(IDbContextFactory<AppDbContext> f)
+    {
+        var auth = new TestAuthService();
+        var pricing = new PricingService(f, new PricingSettingsProvider(f), new PricingEngine(), NullLogger<PricingService>.Instance);
+        return new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, new TestToastService(),
+            new BestelbonWorkflowService(f, pricing, auth));
+    }
+
+    /// <summary>US-93 — verkoop 412 door de echte stappen brengen: plannen, productie, klaar, afhalen, betalen.</summary>
+    static async Task Breng412NaarAsync(IDbContextFactory<AppDbContext> f, QuadroApp.Service.Verkoop.VerkoopStap stap, bool afgerond = false)
+    {
+        var wf = VolledigeWorkflow(f);
+        var dossier = new QuadroApp.Service.Verkoop.VerkoopDossierService(f, wf, new TestAuthService());
+        int offerteId, wbId; int[] regels;
+        await using (var db = await f.CreateDbContextAsync())
+        {
+            var wb = await db.WerkBonnen.Where(w => w.Offerte.OfferteNummer == 412).Select(w => new { w.Id, w.OfferteId }).SingleAsync();
+            offerteId = wb.OfferteId; wbId = wb.Id;
+            regels = await db.OfferteRegels.Where(r => r.OfferteId == offerteId).Select(r => r.Id).ToArrayAsync();
+        }
+        var dag = DateTime.Today.AddDays(1);
+        while (dag.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday) dag = dag.AddDays(1);
+        foreach (var id in regels)
+            await new WerkBonWorkflowService(f, wf).PlanRegelMetDagCapaciteitAsync(wbId, id, dag, 45, 480, "Trouwfoto");
+        if (stap < QuadroApp.Service.Verkoop.VerkoopStap.InProductie) return;
+        await dossier.StartProductieAsync(offerteId);
+        if (stap < QuadroApp.Service.Verkoop.VerkoopStap.KlaarOmAfTeHalen) return;
+        await dossier.MeldKlaarAsync(offerteId);
+        if (stap < QuadroApp.Service.Verkoop.VerkoopStap.AfgehaaldEnBetaald) return;
+        var auth = new TestAuthService();
+        var pricing = new PricingService(f, new PricingSettingsProvider(f), new PricingEngine(), NullLogger<PricingService>.Instance);
+        var ontv = new OntvangstService(f, auth, new BestelbonWorkflowService(f, pricing, auth));
+        var stand = await ontv.GetAfrekenStandAsync(wbId);
+        var bedrag = afgerond ? stand!.Stand.Rest : 20m;
+        await ontv.AfrekenenBijAfhalingAsync(wbId, bedrag, DateTime.Today, Betaalwijze.Cash);
+        if (afgerond) await dossier.MaakMomentopnameAsync(offerteId);
     }
 
     /// <summary>US-87 — verkoop 412 met overgeslagen stappen (standaardkader uit voorraad): Klaar om af te halen.</summary>
@@ -211,12 +282,13 @@ static class Schermen
         QuadroApp.Service.Verkoop.VerkoopStap? bekijk = null, Func<QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel, Task>? daarna = null)
     {
         var toast = new TestToastService();
-        var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
+        var wf = VolledigeWorkflow(f);
         await using var db = await f.CreateDbContextAsync();
         var id = await db.Offertes.Where(o => o.OfferteNummer == offerteNummer).Select(o => o.Id).SingleAsync();
         var vm = new QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel(f, new VerkoopOverzichtService(f),
             new QuadroApp.Service.Verkoop.VerkoopDossierService(f, wf), new TestNavigationService(), new GeenOfferteNavigatie(),
-            wf, new WerkBonWorkflowService(f, wf), new TestDialogService(), toast, services: new OfferteVmProvider(f));
+            wf, new WerkBonWorkflowService(f, wf), new TestDialogService(), toast,
+            ontvangsten: MaakOntvangsten(f), services: new OfferteVmProvider(f));
         await vm.ReceiveAsync(id);
         await vm.InitializeAsync();
         if (bekijk is { } stap)
@@ -224,6 +296,21 @@ static class Schermen
         if (daarna is not null) await daarna(vm);
         await Task.Delay(300);
         return new VerkoopDossierView { DataContext = vm };
+    }
+
+    /// <summary>US-93 — "⤼ Stap overslaan" (dialoog los gerenderd).</summary>
+    static Task<Control> OverslaanDialoogAsync()
+    {
+        var vm = new QuadroApp.ViewModels.Verkoop.StapOverslaanDialogViewModel(QuadroApp.Service.Verkoop.VerkoopStap.Werkbon);
+        var dialog = new StapOverslaanDialog { DataContext = vm };
+        var inhoud = (Control)dialog.Content!;
+        dialog.Content = null;
+        inhoud.DataContext = vm;
+        return Task.FromResult<Control>(new Border
+        {
+            Background = Avalonia.Media.Brushes.Gray, Padding = new Avalonia.Thickness(200, 80),
+            Child = new Border { Width = 560, Background = Avalonia.Media.Brushes.White, Child = inhoud, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top }
+        });
     }
 
     /// <summary>US-90 — menu ⋯ "Verkoop annuleren…" (dialoog los gerenderd).</summary>
@@ -280,6 +367,28 @@ static class Schermen
         }
         inhoud.DataContext = vm;
         return inhoud;
+    }
+
+    /// <summary>US-93 — het werkbonvenster (inhoud los gerenderd, zoals het planningsvenster).</summary>
+    static async Task<Control> WerkbonVensterAsync(IDbContextFactory<AppDbContext> f, int offerteNummer, bool afrekenen)
+    {
+        var toast = new TestToastService();
+        var auth = new TestAuthService();
+        var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
+        var pricing = new PricingService(f, new PricingSettingsProvider(f), new PricingEngine(), NullLogger<PricingService>.Instance);
+        var bestelbonWf = new BestelbonWorkflowService(f, pricing, auth);
+        await using var db = await f.CreateDbContextAsync();
+        var wbId = await db.WerkBonnen.Where(w => w.Offerte.OfferteNummer == offerteNummer).Select(w => w.Id).SingleAsync();
+        var vm = new WerkBonDetailViewModel(f, wf, new GeenOfferteNavigatie(), toast, wbId, new OntvangstService(f, auth, bestelbonWf));
+        await vm.LoadAsync();
+        if (afrekenen)
+            vm.AfrekenenCommand.Execute(null);   // al afgehaald met een rest (US-76)
+        var venster = new WerkBonDetailWindow { DataContext = vm };
+        var inhoud = (Control)venster.Content!;
+        venster.Content = null;
+        foreach (var stijl in venster.Styles.ToList()) { venster.Styles.Remove(stijl); inhoud.Styles.Add(stijl); }
+        inhoud.DataContext = vm;
+        return new Border { Width = 660, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left, Child = inhoud };
     }
 
     /// <summary>US-89 — de Werkbonnenlijst (blijft in het menu): werkbon = verkoopnummer.</summary>

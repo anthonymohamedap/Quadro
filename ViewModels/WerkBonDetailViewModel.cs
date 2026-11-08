@@ -286,6 +286,16 @@ namespace QuadroApp.ViewModels
             await LoadAsync();
         }
 
+        /// <summary>
+        /// US-93 — "Klant komt afhalen ▶" in het verkoopdossier: hetzelfde als status Afgehaald kiezen en
+        /// "Opslaan status" (met een rest opent eerst het afrekenen, US-76).
+        /// </summary>
+        public async Task KlantKomtAfhalenAsync()
+        {
+            GeselecteerdeStatus = WerkBonStatus.Afgehaald;
+            await SaveStatusAsync();
+        }
+
         [RelayCommand]
         private async Task MarkeerLijstAlsBesteldAsync(WerkTaak? taak)
         {

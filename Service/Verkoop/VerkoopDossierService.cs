@@ -27,8 +27,17 @@ namespace QuadroApp.Service.Verkoop
         Betaalwijze Betaalwijze = Betaalwijze.Bancontact,
         DateTime? Datum = null);
 
+    /// <summary>US-102 — weergave van de momentopname bij het afronden.</summary>
+    public sealed record VerkoopMomentopname(DateTime GemaaktOp, string KlantNaam, IReadOnlyList<string> Regels, decimal TotaalIncl);
+
     public interface IVerkoopDossierService
     {
+        /// <summary>US-102 — bewaart eenmalig een momentopname als de verkoop afgehaald en volledig betaald is.</summary>
+        Task<bool> MaakMomentopnameAsync(int offerteId);
+
+        /// <summary>US-102 — de bewaarde momentopname (null als er (nog) geen is).</summary>
+        Task<VerkoopMomentopname?> GetMomentopnameAsync(int offerteId);
+
         /// <summary>Wat er nog ontbreekt om met de productie te starten (leeg = alles in orde).</summary>
         Task<IReadOnlyList<string>> WatOntbreektVoorProductieAsync(int offerteId);
 
@@ -243,6 +252,68 @@ namespace QuadroApp.Service.Verkoop
                 AangemaaktDoor = _auth?.CurrentUser?.GebruikersNaam
             });
             await db.SaveChangesAsync();
+        }
+
+        public async Task<bool> MaakMomentopnameAsync(int offerteId)
+        {
+            await using var db = await _factory.CreateDbContextAsync();
+            var offerte = await db.Offertes
+                .Include(o => o.Klant)
+                .Include(o => o.Regels).ThenInclude(r => r.TypeLijst)
+                .Include(o => o.Regels).ThenInclude(r => r.KantKlaarKader)
+                .Include(o => o.Regels).ThenInclude(r => r.Glas)
+                .Include(o => o.Regels).ThenInclude(r => r.PassePartout1)
+                .Include(o => o.Regels).ThenInclude(r => r.PassePartout2)
+                .Include(o => o.Regels).ThenInclude(r => r.DiepteKern)
+                .Include(o => o.Regels).ThenInclude(r => r.Opkleven)
+                .Include(o => o.Regels).ThenInclude(r => r.Rug)
+                .Include(o => o.WerkBon).ThenInclude(w => w!.Taken).ThenInclude(t => t.OfferteRegel)
+                .FirstOrDefaultAsync(o => o.Id == offerteId)
+                ?? throw new InvalidOperationException("Verkoop niet gevonden.");
+
+            if (offerte.Momentopname is not null) return false;   // eenmalig: de eerste blijft
+
+            // Enkel bij een afgeronde verkoop: werkbon afgehaald en bestelbon betaald.
+            var werkBonId = offerte.WerkBon?.Id;
+            var bonBetaald = await db.Bestelbonnen.AnyAsync(b =>
+                (b.OfferteId == offerteId || (werkBonId != null && b.WerkBonId == werkBonId)) && b.Status == BestelbonStatus.Betaald);
+            if (offerte.WerkBon?.Status != WerkBonStatus.Afgehaald || !bonBetaald) return false;
+
+            var snap = OfferteArchiefService.BouwSnapshot(offerte);
+            offerte.Momentopname = System.Text.Json.JsonSerializer.Serialize(snap, OfferteArchiefService.JsonOpties);
+            offerte.AfgerondOp = DateTime.Now;
+            await db.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<VerkoopMomentopname?> GetMomentopnameAsync(int offerteId)
+        {
+            await using var db = await _factory.CreateDbContextAsync();
+            var rij = await db.Offertes.AsNoTracking().Where(o => o.Id == offerteId)
+                .Select(o => new { o.Momentopname, o.AfgerondOp }).FirstOrDefaultAsync();
+            if (rij?.Momentopname is null) return null;
+
+            var snap = System.Text.Json.JsonSerializer.Deserialize<QuadroApp.Model.Snapshot.OfferteArchiefSnapshot>(
+                rij.Momentopname, OfferteArchiefService.JsonOpties);
+            if (snap is null) return null;
+
+            var klant = snap.Klant is { } k ? $"{k.Voornaam} {k.Achternaam}".Trim() : "zonder klant";
+            var regels = snap.Regels.Select(r =>
+            {
+                var delen = new List<string>
+                {
+                    $"{(string.IsNullOrWhiteSpace(r.Titel) ? "Inlijsting" : r.Titel)} · {r.AantalStuks}× {r.BreedteCm:0.#}×{r.HoogteCm:0.#} cm"
+                };
+                if (!string.IsNullOrWhiteSpace(r.KantKlaarKaderNaam)) delen.Add($"standaardkader {r.KantKlaarKaderNaam}");
+                else if (!string.IsNullOrWhiteSpace(r.TypeLijstNaam)) delen.Add($"lijst {r.TypeLijstNaam}");
+                var afw = new[] { r.GlasNaam, r.PassePartout1Naam, r.PassePartout2Naam, r.DiepteKernNaam, r.OpklevenNaam, r.RugNaam }
+                    .Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+                if (afw.Count > 0) delen.Add(string.Join(", ", afw));
+                delen.Add($"€ {r.TotaalInclBtw:#,##0.00}");
+                return string.Join(" · ", delen);
+            }).ToList();
+
+            return new VerkoopMomentopname(rij.AfgerondOp ?? snap.AangemaaktOp.ToLocalTime(), klant, regels, snap.Offerte.TotaalInclBtw);
         }
 
         private async Task<WerkBon> WerkBonVanAsync(int offerteId)
