@@ -150,6 +150,7 @@ public class VerkoopDossierServiceTests
         Assert.Equal(14, planner.Dagen.Count);                       // 2 weken, ook het weekend (planning kan daar werk zetten)
         Assert.Equal("2 nog te plannen", planner.KopRechts);
         Assert.False(planner.HeeftSelectie);
+        Assert.False(planner.Regels[0].IsEnkelGepland);              // geen herplannen/✕ zolang niet gepland
 
         planner.Regels[0].IsSelected = true;
         Assert.True(planner.HeeftSelectie);
@@ -158,6 +159,7 @@ public class VerkoopDossierServiceTests
 
         Assert.Equal("1 nog te plannen", planner.KopRechts);
         Assert.True(planner.Regels[0].IsGepland);
+        Assert.True(planner.Regels[0].IsEnkelGepland);
         Assert.False(planner.HeeftSelectie);                         // geplande regel niet meer geselecteerd
         Assert.Equal("te bestellen", planner.Regels[0].BestelTekst);
 
@@ -174,6 +176,26 @@ public class VerkoopDossierServiceTests
         await planner.VerwijderDeelCommand.ExecuteAsync(lang.Delen.Last());
         Assert.Equal("gepland " + VolgendeMaandag().ToString("ddd d/MM", new System.Globalization.CultureInfo("nl-BE")), planner.Regels[1].PlanTekst);
         Assert.Equal((OfferteStatus.Goedgekeurd, WerkBonStatus.Gepland), await StatusAsync(o));
+    }
+
+    [Fact]
+    public async Task Pagina_planning_zonder_werkbon_toont_de_nieuwe_planner_met_ander_werk_US92()
+    {
+        var o = await OpstellingAsync(regels: 1);
+        await using var _ = o.Scope;
+        await PlanAsync(o, o.RegelIds);
+
+        var pagina = new QuadroApp.ViewModels.PlanningPaginaViewModel(o.Scope.Factory, o.WerkBonWorkflow, new TestToastService(),
+            o.Workflow, new TestNavigationService());
+        await pagina.InitializeAsync();
+
+        var planner = pagina.Planner!;
+        Assert.False(planner.HeeftWerkBon);
+        Assert.Equal(2, planner.PlannerKolommen);
+        Assert.Empty(planner.Regels);
+        var dag = Assert.Single(planner.Dagen, d => d.Datum == VolgendeMaandag());
+        Assert.Equal(new[] { "Claes" }, dag.AnderWerk);
+        Assert.Empty(dag.TakenDezeVerkoop);
     }
 
     [Fact]

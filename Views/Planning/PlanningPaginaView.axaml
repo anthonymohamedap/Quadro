@@ -8,9 +8,12 @@
     x:DataType="vm:PlanningPaginaViewModel"
     Background="{DynamicResource SurfaceMuted}">
 
-    <!-- US-92: Planning als pagina (K14); zelfde kalender als het venster. -->
+    <!-- US-92: Planning als pagina (K14). -->
     <Grid RowDefinitions="Auto,*">
         <controls:QuadroHeader Title="PLANNING" BackCommand="{Binding GaTerugCommand}"/>
-        <planning:PlanningKalender Grid.Row="1" DataContext="{Binding Kalender}"/>
+        <!-- US-92: dezelfde opmaak als stap 2 van het dossier (Anthony 05/11: "overal de nieuwe") -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <planning:WerkbonPlanner Margin="24,16" DataContext="{Binding Planner}"/>
+        </ScrollViewer>
     </Grid>
 </UserControl>
