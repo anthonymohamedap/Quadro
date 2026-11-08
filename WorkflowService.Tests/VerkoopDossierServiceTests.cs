@@ -341,6 +341,31 @@ public class VerkoopDossierServiceTests
     }
 
     [Fact]
+    public async Task Bevestigen_maakt_de_bestelbon_definitief_en_klaar_houdt_hetzelfde_nummer()
+    {
+        // Anthony 08/11: de bestelbon wordt definitief bij het akkoord van de klant, niet pas op het einde.
+        var o = await OpstellingAsync(regels: 1);   // bevestigd zonder voorlopige bon
+        await using var _ = o.Scope;
+
+        string nummerBijAkkoord;
+        await using (var db = await o.Scope.Factory.CreateDbContextAsync())
+        {
+            var bon = await db.Bestelbonnen.SingleAsync(b => b.OfferteId == o.OfferteId);
+            Assert.NotNull(bon.VolgNr);
+            nummerBijAkkoord = bon.BestelbonNummer;
+            Assert.Matches(@"^\d{4}-\d+$", nummerBijAkkoord);
+        }
+
+        await PlanAsync(o, o.RegelIds);
+        await o.Dossier.StartProductieAsync(o.OfferteId);
+        var nummerBijKlaar = await o.Dossier.MeldKlaarAsync(o.OfferteId);
+
+        Assert.Equal(nummerBijAkkoord, nummerBijKlaar);
+        await using var check = await o.Scope.Factory.CreateDbContextAsync();
+        Assert.Equal(1, await check.Bestelbonnen.CountAsync());
+    }
+
+    [Fact]
     public async Task Inplannen_verandert_de_offertestatus_niet_meer()
     {
         var o = await OpstellingAsync();
