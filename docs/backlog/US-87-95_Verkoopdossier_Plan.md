@@ -335,6 +335,12 @@ Technisch: `IDocumentAfdrukService` + `DocumentPreviewWindow` (QuestPDF `Generat
 
 ### US-95 — Navigatie opruimen, Home
 
+> ✅ **Gebouwd 08/11/2026, beperkt tot wat beslist is** (`feature/us95-navigatie`, PR naar `dev`):
+> - Het **dossier is de standaard ingang**: Verkopen "Openen"/dubbelklik, de blokken op het beginscherm en de verkopen van een klant openen het dossier (`IOfferteNavigationService.OpenVerkoopAsync`).
+> - Het oude offertescherm blijft bereikbaar: knop **Oud scherm** in Verkopen en menu ⋯ in het dossier.
+> - Beginscherm: "＋ Nieuwe verkoop" (was "Nieuwe offerte"); Planning is een pagina (US-92).
+> - **Nog niet** (wacht op het akkoord van Anthony en Veerle, beslist 02/11): Werkbonnen en Bestelbonnen uit het menu, het werkbonvenster en de oude lijsten verwijderen. Testlijst: `Testlijst_Verkoopdossier.md`.
+
 **Als** medewerker **wil ik** een korte zijbalk met de woorden die ik zelf gebruik, **zodat** ik de werkbon niet meer kwijt ben (P1, P13).
 
 1. Zijbalk: **Verkopen · Winkelverkopen · Planning · Overzicht betalingen**, daaronder Klanten · Lijsten · Standaardkaders · Afwerkingen · Leveranciers · Instellingen.
