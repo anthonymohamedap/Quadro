@@ -3,8 +3,9 @@
 Voor Anthony en Veerle, op de branch `dev` na het mergen van #123 → #124 → #125 → #126 (in die volgorde).
 Vink af wat klopt; noteer wat niet klopt met het verkoopnummer erbij.
 
-Grondregel: **niets uit de oude schermen mag verdwijnen.** Het oude offertescherm, Werkbonnen,
-Bestelbonnen en het werkbonvenster blijven bereikbaar tot jullie akkoord zijn.
+Grondregel: **niets uit de oude schermen mag verdwijnen.** Sinds de laatste stap (US-95, 08/11) zijn het
+oude offertescherm, Werkbonnen (+ werkbonvenster), Bestelbonnen en het oude planningsvenster weg; elke
+functie zit in het dossier (zie 10).
 
 ## 0. Opstarten
 
@@ -16,7 +17,7 @@ Bestelbonnen en het werkbonvenster blijven bereikbaar tot jullie akkoord zijn.
 - [ ] Vijf tabbladen met aantallen: Open offertes · Lopende werkbonnen · Klaar om af te halen · Afgerond · Geannuleerd.
 - [ ] Zoeken op nummer, klant **en bestelbonnummer**; "Zoek in alle tabbladen"; jaarfilter.
 - [ ] Kolom Bestelbon (nummer of "voorlopig"); onder de fase de werkbon ("Werkbon 423 · Gepland · 2 taken · 1/2 besteld").
-- [ ] **Openen** of dubbelklik → het **dossier**. **Oud scherm** → het oude offertescherm.
+- [ ] **Openen** of dubbelklik → het **dossier**.
 - [ ] Lopende werkbonnen: Planning openen (pagina) en Weeklijst afdrukken.
 
 ## 2. Dossier — kop en stappenbalk
@@ -24,7 +25,7 @@ Bestelbonnen en het werkbonvenster blijven bereikbaar tot jullie akkoord zijn.
 - [ ] Kop: verkoopnummer · klant, adres/telefoon, afhaaldatum, fase; rechts totaal en nog te betalen.
 - [ ] Chips Offerte / Werkbon / Bestelbon / Voorschot; doorgestreept zolang ze niet bestaan.
 - [ ] Klik op een vorige stap of "◀ Vorige stap" = enkel bekijken ("Terug gekeken"); "Naar huidige stap ▶".
-- [ ] Menu ⋯: Opslaan, Berekenen, → Verzonden / ↩ Concept, Werkbon openen, Werkbon afdrukken met prijzen, Offerte openen in het oude scherm, Verkoop annuleren….
+- [ ] Menu ⋯: Opslaan, Berekenen, → Verzonden / ↩ Concept, Werkbon afdrukken met prijzen, Lijsten bestellen…, Bestelbon en betalingen…, Verkoop annuleren….
 
 ## 3. Stap 1 Offerte
 
@@ -77,8 +78,12 @@ Bestelbonnen en het werkbonvenster blijven bereikbaar tot jullie akkoord zijn.
 ## 9. Planning (menu)
 
 - [ ] Planning opent als pagina met dezelfde opmaak als stap 2 (zonder inlijstingen), met "Terug".
-- [ ] Vanuit Werkbonnen / Verkopen / offerte: met de inlijstingen van die werkbon; "Terug" naar waar je was.
+- [ ] Vanuit Verkopen (tab Lopende werkbonnen → Planning openen): met de inlijstingen van die werkbon; "Terug" naar Verkopen.
 
-## 10. Oude schermen (moeten nog werken)
+## 10. Oude schermen zijn weg — alles terug te vinden?
 
-- [ ] Oud offertescherm, Werkbonnen (+ werkbonvenster), Bestelbonnen: alles zoals vroeger.
+- [ ] Menu: geen Werkbonnen en Bestelbonnen meer; beginscherm met Verkopen en Leveranciers.
+- [ ] Werkbonnenlijst → Verkopen, tab Lopende werkbonnen (werkbon, status, taken, bestelvoortgang, Planning, Weeklijst).
+- [ ] Werkbonvenster → stap 3 (werktaken, Bestelling plaatsen), stap 4/5 (afrekenen); in stap 2 "Bestellen…" / menu ⋯ "Lijsten bestellen…".
+- [ ] Bestelbonnen → stap 4/5, en in elke stap menu ⋯ "Bestelbon en betalingen…" (gegevens, lijnen, Opslaan, Afdrukken, betalingen, Rest betaald); zoeken op bestelbonnummer in Verkopen.
+- [ ] Oud offertescherm → stap 1.

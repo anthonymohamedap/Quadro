@@ -497,7 +497,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
                 case { Huidig: VerkoopStap.Offerte }:
                     if (Stap1 is null)
                     {
-                        await OpenOfferteAsync();
+                        _toast.Error("De offerte kon niet geladen worden.");
                         return;
                     }
                     // Zelfde bevestiging als in het offertescherm (opslaan, werkbon, reservaties); daarna
@@ -538,14 +538,6 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
 
     // ── Bestaande schermen ───────────────────────────────────────────────────
 
-    [RelayCommand]
-    private async Task OpenOfferteAsync()
-    {
-        if (OfferteId == 0) return;   // nieuwe verkoop: eerst bewaren
-        await BewaarStap1Async();
-        StopBewaardTimer();
-        await _offerteNav.OpenOfferteAsync(OfferteId);
-    }
 
     // ── US-91: stap 1 laden, bewaren, aanpassen ──────────────────────────────
 
@@ -631,11 +623,14 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     private async Task OpenWerkBonAsync()
     {
         if (_offerte?.WerkBon is not { } wb) return;
+        // US-95: "Lijsten bestellen" (zelfde werktaken en "Bestelling plaatsen" als vroeger in het werkbonvenster).
         var vm = new WerkBonDetailViewModel(_factory, _workflow, _offerteNav, _toast, wb.Id, _ontvangsten);
         await vm.LoadAsync();
-        var window = new QuadroApp.Views.WerkBonDetailWindow { DataContext = vm };
+        var window = new QuadroApp.Views.LijstenBestellenDialog { DataContext = vm };
         if (EigenaarVenster() is { } owner)
             await window.ShowDialog(owner);
+        if (Planner is not null) await Planner.LaadAsync();
+        if (WerkbonDetail is not null) await WerkbonDetail.LoadAsync();
         await LaadAsync(naarHuidigeStap: true);
     }
 
@@ -700,10 +695,29 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     [RelayCommand]
     private async Task OpenBestelbonnenAsync()
     {
+        // US-95: bestelbon en betalingen van deze verkoop (vervangt het scherm Bestelbonnen), in elke stap.
+        if (_bestelbon is null)
+        {
+            _toast.Warning("Er is nog geen bestelbon voor deze verkoop.");
+            return;
+        }
         await BewaarStap1Async();
-        StopBewaardTimer();
-        await _nav.NavigateToAsync<BestelbonnenViewModel>();
+        if (_services?.GetService(typeof(BestelbonnenViewModel)) is not BestelbonnenViewModel vm) return;
+        await vm.InitializeAsync();
+        vm.GeselecteerdeBestelbon = vm.Bestelbonnen.FirstOrDefault(b => b.Id == _bestelbon.Id);
+        var window = new QuadroApp.Views.BestelbonDialog { DataContext = vm };
+        if (EigenaarVenster() is { } owner)
+            await window.ShowDialog(owner);
+        if (BekekenStap >= VerkoopStap.KlaarOmAfTeHalen) await LaadBestelbonDetailAsync(_bestelbon.Id);
+        await LaadAsync(naarHuidigeStap: true);
     }
+
+    /// <summary>US-95: in de samenvatting "Offerte bekijken" = stap 1 in het dossier (het oude scherm is weg).</summary>
+    [RelayCommand]
+    private Task NaarOfferteStapAsync() => BekijkStapCommand.ExecuteAsync(Stappen.FirstOrDefault(x => x.Stap == VerkoopStap.Offerte));
+
+    /// <summary>Menu ⋯ "Bestelbon en betalingen…" zodra er een bon is.</summary>
+    public bool HeeftBestelbon => _bestelbon is not null;
 
     // ── Menu ⋯ ───────────────────────────────────────────────────────────────
 

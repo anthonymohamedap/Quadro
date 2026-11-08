@@ -153,9 +153,10 @@
                                           IsVisible="{Binding Stap1.IsOntgrendelenZichtbaar, FallbackValue=False}"/>
                                 <MenuItem Header="Werkbon afdrukken met prijzen" Command="{Binding WerkbonAfdrukkenMetPrijzenCommand}"
                                           IsVisible="{Binding KanWerkbonAfdrukken}"/>
-                                <MenuItem Header="Werkbon openen" Command="{Binding OpenWerkBonCommand}"
+                                <MenuItem Header="Lijsten bestellen…" Command="{Binding OpenWerkBonCommand}"
                                           IsVisible="{Binding ToontWerkbonKnoppen}"/>
-                                <MenuItem Header="Offerte openen in het oude scherm" Command="{Binding OpenOfferteCommand}"/>
+                                <MenuItem Header="Bestelbon en betalingen…" Command="{Binding OpenBestelbonnenCommand}"
+                                          IsVisible="{Binding HeeftBestelbon}"/>
                                 <MenuItem Header="Verkoop annuleren…" Command="{Binding AnnulerenCommand}"
                                           IsEnabled="{Binding KanAnnuleren}"/>
                             </MenuFlyout>
@@ -289,13 +290,13 @@
 
                         <!-- Bestaande schermen (zelfde functies als nu) -->
                         <WrapPanel>
-                            <Button Content="Offerte openen" Command="{Binding OpenOfferteCommand}"
+                            <Button Content="Offerte bekijken" Command="{Binding NaarOfferteStapCommand}"
                                     IsVisible="{Binding ToontOfferteKnop}" Padding="10,5" CornerRadius="6" Margin="0,0,8,6"/>
-                            <Button Content="Werkbon openen" Command="{Binding OpenWerkBonCommand}"
+                            <Button Content="Lijsten bestellen…" Command="{Binding OpenWerkBonCommand}"
                                     IsVisible="{Binding ToontWerkbonKnoppen}" Padding="10,5" CornerRadius="6" Margin="0,0,8,6"/>
                             <Button Content="Planning openen" Command="{Binding OpenPlanningCommand}"
                                     IsVisible="{Binding ToontPlanningKnop}" Padding="10,5" CornerRadius="6" Margin="0,0,8,6"/>
-                            <Button Content="Bestelbonnen openen" Command="{Binding OpenBestelbonnenCommand}"
+                            <Button Content="Bestelbon en betalingen…" Command="{Binding OpenBestelbonnenCommand}"
                                     IsVisible="{Binding ToontBestelbonKnop}" Padding="10,5" CornerRadius="6" Margin="0,0,8,6"/>
                         </WrapPanel>
                     </StackPanel>

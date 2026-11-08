@@ -212,42 +212,16 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
     public static bool IsPrijsVastNaBevestiging(VerkoopStapInfo info)
         => !info.IsGeannuleerd && (info.IsAfgerond || info.Huidig >= VerkoopStap.Werkbon);
 
-    /// <summary>US-83 — opent het werkbonvenster (inplannen, status, afrekenen bij afhalen).</summary>
+    /// <summary>US-95 — het werkbonvenster is weg: de werkbon staat in het verkoopdossier (stappen 2–5).</summary>
     private async Task OpenWerkBonAsync()
     {
-        if (IsBusy) return;
-
-        var werkBon = GekoppeldeWerkBon;
-        if (werkBon is null)
+        var offerteId = _getOfferteId();
+        if (offerteId == 0 || GekoppeldeWerkBon is null)
         {
             Toast.Error("Geen werkbon gevonden. Bevestig de offerte eerst.");
             return;
         }
-
-        var owner = GetOwnerWindow();
-        if (owner is null) return;
-
-        try
-        {
-            IsBusy = true;
-
-            var vm = new WerkBonDetailViewModel(_dbFactory, _statusWorkflow, _offerteNav, Toast, werkBon.Id, _ontvangsten);
-            await vm.LoadAsync();
-
-            var window = new WerkBonDetailWindow { DataContext = vm };
-            await window.ShowDialog(owner);
-        }
-        catch (Exception ex)
-        {
-            await _dialogs.ShowErrorAsync("Werkbon openen mislukt", ex.GetBaseException().Message);
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-
-        // Status of betalingen kunnen in het venster gewijzigd zijn.
-        if (_reloadOnly is not null) await _reloadOnly();
+        await _offerteNav.OpenVerkoopAsync(offerteId);
     }
 
     /// <summary>US-83/US-82 — bestelbon afdrukken vanuit de stappenbalk, in elke status.</summary>
@@ -348,21 +322,7 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
                 return;
             }
 
-            var vm = new PlanningCalendarViewModel(_dbFactory, _werkBonWorkflow, Toast, _statusWorkflow);
-            await vm.InitializeAsync(werkBonId);
-
-            var window = new PlanningCalendarWindow { DataContext = vm };
-
-            if (App.Current?.ApplicationLifetime is
-                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                var owner = desktop.MainWindow;
-                if (owner is null) return;
-                await window.ShowDialog(owner);
-
-                // Herlaad de offerte zodat de via planning gezette afhaaldatum zichtbaar wordt.
-                if (_reloadOnly is not null) await _reloadOnly();
-            }
+            // US-95: het oude planningsvenster is weg; zonder planningspagina gebeurt er na het bevestigen niets meer.
         }
         catch (Exception ex)
         {
@@ -399,21 +359,7 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
                 return;
             }
 
-            var vm = new PlanningCalendarViewModel(_dbFactory, _werkBonWorkflow, Toast, _statusWorkflow);
-            await vm.InitializeAsync(werkBon.Id);
-
-            var window = new PlanningCalendarWindow { DataContext = vm };
-
-            if (App.Current?.ApplicationLifetime is
-                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                var owner = desktop.MainWindow;
-                if (owner is null) return;
-                await window.ShowDialog(owner);
-
-                // Herlaad de offerte zodat de via planning gezette afhaaldatum zichtbaar wordt.
-                if (_reloadOnly is not null) await _reloadOnly();
-            }
+            Toast.Warning("Open de planning via het menu Planning.");   // US-95: geen apart planningsvenster meer
         }
         catch (Exception ex)
         {
