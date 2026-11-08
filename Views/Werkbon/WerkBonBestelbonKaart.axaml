@@ -1,0 +1,26 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="using:QuadroApp.Converters"
+    x:Class="QuadroApp.Views.Werkbon.WerkBonBestelbonKaart"
+    x:CompileBindings="False">
+    <!-- US-93: gekoppelde bestelbon (alleen lezen). Uit WerkBonDetailWindow gehaald (inhoud ongewijzigd), ook gebruikt in het
+         verkoopdossier. DataContext = WerkBonDetailViewModel. -->
+                <Border Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1" CornerRadius="8" Padding="14,12"
+                        IsVisible="{Binding HeeftBestelbon}">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Bestelbon" Classes="h2"/>
+                        <WrapPanel>
+                            <TextBlock Text="{Binding Bestelbon.NummerLabel, StringFormat='Nr. {0}'}" FontWeight="SemiBold" Margin="0,0,16,0"/>
+                            <TextBlock Text="{Binding Bestelbon.Status, Converter={x:Static conv:StatusLabelConverter.Instance}, ConverterParameter='Status: {0}'}" Foreground="{DynamicResource TextSecondary}" Margin="0,0,16,0"/>
+                            <TextBlock Text="{Binding Bestelbon.TotaalInclBtw, StringFormat='Totaal: € {0:N2}'}" Foreground="{DynamicResource TextSecondary}"/>
+                        </WrapPanel>
+                        <WrapPanel>
+                            <TextBlock Text="{Binding Bestelbon.BestelbonDatum, StringFormat='Datum: {0:dd/MM/yyyy}'}" Foreground="{DynamicResource TextSecondary}" Margin="0,0,16,0"/>
+                            <TextBlock Text="{Binding Bestelbon.VervalDatum, StringFormat='Vervalt: {0:dd/MM/yyyy}'}" Foreground="{DynamicResource TextSecondary}"/>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+</UserControl>

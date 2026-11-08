@@ -151,7 +151,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     public string? VoetMelding => IsPlanningZichtbaar && Meldingen.Count > 0 ? string.Join(" ", Meldingen) : null;
 
     private bool _vernieuwtNaPlanning;
-    public bool IsSamenvattingZichtbaar => !IsStap1Zichtbaar && !IsPlanningZichtbaar;
+    public bool IsSamenvattingZichtbaar => !IsStap1Zichtbaar && !IsPlanningZichtbaar && !IsStap3Zichtbaar && !IsStap45Zichtbaar;
     public bool IsBestelbonKnopZichtbaar => IsStap1Zichtbaar && !IsTerugGekeken;
     public bool IsOfferteAanpassenZichtbaar =>
         IsStap1Zichtbaar && IsTerugGekeken && !IsOfferteAanpassen && Stap1 is { IsAlleenLezen: false } && Info is { IsGeannuleerd: false };
@@ -328,6 +328,8 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
                 _ => null
             };
             if (s == bekeken && toestand != StapToestand.Huidig) onder = "terug gekeken";
+            // US-93: afgerond = alle stappen klaar; de laatste is geen "terug gekeken" maar "afgerond".
+            if (info.IsAfgerond && s == info.Huidig) onder = "afgerond";
 
             return new DossierStap(s, VerkoopStapResolver.Titel(s), toestand, onder, s == bekeken);
         }).ToList();
@@ -400,6 +402,10 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
 
         HoofdKnopTekst = HoofdKnopVoor(Info);
         OnPropertyChanged(nameof(VoetMelding));
+
+        // US-93: stap 3 = werkbon, stap 4/5 = bestelbon + afrekenen (zelfde ViewModels als de oude schermen).
+        await LaadStappen345Async();
+        WerkStappen345Bij();
     }
 
     private static string PlanningTekst(WerkBon wb)
@@ -418,7 +424,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     public static string? HoofdKnopVoor(VerkoopStapInfo info) => info switch
     {
         { IsGeannuleerd: true } or { IsAfgerond: true } => null,
-        { IsAfgehaaldNogTeBetalen: true } => "Betaling registreren ▶",
+        { IsAfgehaaldNogTeBetalen: true } => "Afrekenen ▶",
         { Huidig: VerkoopStap.Offerte } => "Bevestigen → Werkbon ▶",
         { Huidig: VerkoopStap.Werkbon } => "Start productie ▶",
         { Huidig: VerkoopStap.InProductie } => "Klaar om af te halen ▶",
@@ -476,7 +482,9 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
             switch (Info)
             {
                 case { IsAfgehaaldNogTeBetalen: true }:
-                    await OpenBestelbonnenAsync();
+                    // US-93: afrekenen zoals "Afrekenen" in de werkbon (US-76), hier in stap 5.
+                    if (WerkbonDetail is null) await LaadStappen345Async();
+                    WerkbonDetail?.AfrekenenCommand.Execute(null);
                     return;
                 case { Huidig: VerkoopStap.Offerte }:
                     if (Stap1 is null)
@@ -504,10 +512,12 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
                         return;
                     var nr = await _dossier.MeldKlaarAsync(OfferteId);
                     _toast.Success(string.IsNullOrWhiteSpace(nr) ? "Klaar om af te halen." : $"Klaar om af te halen. Bestelbon {nr}.");
+                    StopStappen345();   // werkbon en bestelbon vers laden in stap 4
                     break;
                 case { Huidig: VerkoopStap.KlaarOmAfTeHalen }:
-                    // Afhalen en afrekenen gebeurt zoals nu in het werkbonvenster (US-76).
-                    await OpenWerkBonAsync();
+                    // US-93: zelfde als status Afgehaald + "Opslaan status": met een rest opent het afrekenen (US-76).
+                    if (WerkbonDetail is null) await LaadStappen345Async();
+                    if (WerkbonDetail is not null) await WerkbonDetail.KlantKomtAfhalenAsync();
                     return;
             }
             await LaadAsync(naarHuidigeStap: true);

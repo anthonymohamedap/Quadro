@@ -292,6 +292,15 @@ Technisch: `PlanningCalendarWindow.axaml(.cs)` → `PlanningView.axaml` (UserCon
 
 ### US-93 — Stappen 3–5, overslaan, afgerond, annuleren
 
+> ✅ **Gebouwd 08/11/2026** (`feature/us93-stappen-3-5`, PR naar `dev`) volgens de mocks en beslissingen hieronder (gaan vóór de AC):
+> - **Stap 3** = inhoud van het werkbonvenster (werktaken met titel, code, afmeting, inleg, duur, van/tot, afhalen, lijst/standaardkader, afwerking, opmerking, bestelstatus met bestelwijze en "Bestelling plaatsen"), planning, bestelbon en een kaart Offerte met **✎ Offerte aanpassen…** (= "Open offerte"). Hoofdknop **Klaar om af te halen ▶** (= status Afgewerkt).
+> - **Stap 4/5** = scherm Bestelbonnen voor deze bon (besteldatum, vervaldatum, opmerking, initialen, lijnen, Opslaan, betalingen met ✕, Betaling registreren, Rest betaald) + **🖨 Bestelbon afdrukken** in elke status. **Klant komt afhalen ▶** = status Afgehaald en, met een rest, het afrekenen van US-76 (bedrag, betaalwijze, datum, gesplitst, Annuleren / Later betalen / Betalen en afhalen). Afgehaald met rest: **Afrekenen ▶**.
+> - **Afgerond**: melding + **Ontgrendelen** (beheerder, US-101), bestelbon en betalingen alleen-lezen zoals nu.
+> - **⤼ Stap overslaan** (stap 2/3): reden Standaardkader uit voorraad / Klant neemt meteen mee / Andere… → meteen Klaar (beslist 02/11).
+> - **US-102 momentopname**: bij afronden eenmalig een JSON-momentopname (zelfde opbouw als het archief, `OfferteArchiefSnapshot`) in `Offerte.Momentopname` + `AfgerondOp` (migratie `Momentopname`, SQLite + Npgsql); getoond in stap 5. Afgerond buiten het dossier → bij het openen alsnog gemaakt. De bestelbon-PDF gebruikt de lijnen van de bon zelf (die veranderen niet mee).
+> - Werkbonvenster en scherm Bestelbonnen blijven pixel-gelijk (onderdelen in `Views/Werkbon/` en `Views/Bestelbon/`).
+> - Niet gebouwd (bestaat vandaag niet, beslist 02/11): afvinklijst/voortgang per inlijsting, wisselgeld, tijdlijn, "Nieuwe verkoop voor deze klant", "Meegeven".
+
 **Als** medewerker **wil ik** de verkoop met één knop per stap afwerken, **zodat** ik geen statuskeuzelijst meer nodig heb.
 
 1. **Stap 3 In productie** (K08): per inlijsting de voortgang (lijst besteld / binnen / ingelijst / nagekeken), lijsten bij de leverancier met "Lijst bestellen", planning, notitie voor het atelier. Hoofdknop "Klaar om af te halen ▶" met hint "maakt de bestelbon aan".

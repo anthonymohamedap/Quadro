@@ -5,6 +5,9 @@
     xmlns:ovm="clr-namespace:QuadroApp.ViewModels"
     xmlns:offerte="clr-namespace:QuadroApp.Views.Offerte"
     xmlns:planning="clr-namespace:QuadroApp.Views.Planning"
+    xmlns:werkbon="clr-namespace:QuadroApp.Views.Werkbon"
+    xmlns:bestelbon="clr-namespace:QuadroApp.Views.Bestelbon"
+    xmlns:conv="using:QuadroApp.Converters"
     x:Class="QuadroApp.Views.VerkoopDossierView"
     x:DataType="vm:VerkoopDossierViewModel"
     Background="{DynamicResource SurfaceMuted}">
@@ -301,6 +304,110 @@
                 <Panel IsVisible="{Binding IsPlanningZichtbaar}">
                     <planning:WerkbonPlanner DataContext="{Binding Planner}"/>
                 </Panel>
+
+                <!-- ── US-93: stap 3 In productie = inhoud van het werkbonvenster ── -->
+                <Grid IsVisible="{Binding IsStap3Zichtbaar}" ColumnDefinitions="1.6*,1*" ColumnSpacing="20">
+                    <StackPanel Spacing="10" IsEnabled="{Binding !IsTerugGekeken}">
+                        <TextBlock Text="Werktaken" Classes="h2"/>
+                        <werkbon:WerkBonTaken DataContext="{Binding WerkbonDetail}"/>
+                        <TextBlock Text="Nog geen werktaken: plan de inlijstingen in stap 2."
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   IsVisible="{Binding !WerkbonDetail.Taken.Count, FallbackValue=False}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="16">
+                        <werkbon:WerkBonPlanningKaart DataContext="{Binding WerkbonDetail}"/>
+                        <werkbon:WerkBonBestelbonKaart DataContext="{Binding WerkbonDetail}"
+                                                       IsVisible="{Binding HeeftBestelbon, FallbackValue=False}"/>
+                        <Border Classes="kaart">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Offerte" Classes="h2"/>
+                                <TextBlock Text="{Binding OfferteSamenvatting}" Foreground="{DynamicResource TextSecondary}"/>
+                                <Button Content="✎ Offerte aanpassen…" Command="{Binding OfferteAanpassenVanuitStapCommand}"
+                                        Padding="10,5" CornerRadius="6" HorizontalAlignment="Left"
+                                        ToolTip.Tip="Opent stap 1 om de offerte te wijzigen (zoals &quot;Open offerte&quot; in de werkbon)"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ── US-93: stap 4 en 5 = bestelbon (scherm Bestelbonnen) + afrekenen (US-76) ── -->
+                <StackPanel IsVisible="{Binding IsStap45Zichtbaar}" Spacing="16">
+                    <!-- Afgerond (US-101) -->
+                    <Border IsVisible="{Binding IsAfgerondMelding}" Background="{DynamicResource SuccessBg}"
+                            BorderBrush="{DynamicResource SuccessBorder}" BorderThickness="1" CornerRadius="8" Padding="12,8">
+                        <WrapPanel>
+                            <TextBlock Text="Afgehaald en volledig betaald: deze verkoop is afgerond en kan niet meer gewijzigd worden."
+                                       Foreground="{DynamicResource Success}" FontWeight="SemiBold" TextWrapping="Wrap"
+                                       VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <Button Content="Ontgrendelen" Command="{Binding OntgrendelenVanuitAfgerondCommand}" Classes="GhostBtn"
+                                    Padding="10,4" ToolTip.Tip="Enkel voor een beheerder: om een fout recht te zetten (US-101)"/>
+                        </WrapPanel>
+                    </Border>
+
+                    <Grid ColumnDefinitions="1*,1*" ColumnSpacing="20">
+                        <StackPanel Spacing="16">
+                            <!-- Afrekenen bij afhaling (zoals in de werkbon) -->
+                            <werkbon:WerkBonAfrekenen DataContext="{Binding WerkbonDetail}"
+                                                      IsVisible="{Binding IsAfrekenenOpen, FallbackValue=False}"/>
+
+                            <Border Classes="kaart" IsVisible="{Binding HeeftBestelbonDetail}">
+                                <StackPanel Spacing="12">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <TextBlock Text="{Binding BestelbonDetail.GeselecteerdeBestelbon.NummerLabel, StringFormat='Bestelbon {0}', FallbackValue=''}" Classes="h2"/>
+                                        <Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding BestelbonDetail.GeselecteerdeBestelbon.Status, Converter={x:Static conv:StatusLabelConverter.Instance}, FallbackValue=''}"
+                                                       Classes="caption" FontWeight="SemiBold"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <bestelbon:BestelbonVelden DataContext="{Binding BestelbonDetail}"/>
+                                    <bestelbon:BestelbonLijnen DataContext="{Binding BestelbonDetail}" Height="220"/>
+                                    <Button Content="Opslaan" Command="{Binding BestelbonDetail.SaveCommand, FallbackValue={x:Null}}"
+                                            IsVisible="{Binding BestelbonDetail.IsDraft, FallbackValue=False}"
+                                            Classes="AccentBtn" Padding="12,6" HorizontalAlignment="Left"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Classes="kaart" IsVisible="{Binding !HeeftBestelbonDetail}">
+                                <TextBlock Text="Nog geen bestelbon voor deze verkoop." Foreground="{DynamicResource TextSecondary}"/>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="16">
+                            <Border Classes="kaart" IsVisible="{Binding HeeftBestelbonDetail}">
+                                <StackPanel Spacing="10">
+                                    <bestelbon:BestelbonBetalingen DataContext="{Binding BestelbonDetail}"/>
+                                    <Button Content="Rest betaald" Command="{Binding BestelbonDetail.MarkeerBetaaldCommand, FallbackValue={x:Null}}"
+                                            IsVisible="{Binding BestelbonDetail.HeeftRest, FallbackValue=False}"
+                                            Padding="12,6" CornerRadius="6" HorizontalAlignment="Left"
+                                            ToolTip.Tip="Registreert het restbedrag als betaling met de gekozen betaalwijze en zet de bestelbon op Betaald"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Classes="kaart">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="{Binding WerkbonDetail.KopTitel, FallbackValue='Werkbon'}" Classes="h2"/>
+                                    <TextBlock Text="{Binding WerkbonDetail.PlanningSamenvatting, FallbackValue=''}"
+                                               Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding WerkbonDetail.WerkBon.Status, Converter={x:Static conv:WerkBonStatusToLabelConverter.Instance}, FallbackValue=''}"
+                                               Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                            </Border>
+                            <!-- US-102: momentopname bij het afronden -->
+                            <Border Classes="kaart" IsVisible="{Binding MomentopnameTekst, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Momentopname bij afronden" Classes="h2"/>
+                                    <TextBlock Text="{Binding MomentopnameTekst}" Classes="caption" TextWrapping="Wrap"
+                                               Foreground="{DynamicResource TextSecondary}"/>
+                                    <ItemsControl ItemsSource="{Binding MomentopnameRegels}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="x:String">
+                                                <TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,2"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
             </StackPanel>
         </ScrollViewer>
 
@@ -329,6 +436,13 @@
                     <Button Content="✎ Offerte aanpassen…" Command="{Binding OfferteAanpassenCommand}"
                             IsVisible="{Binding IsOfferteAanpassenZichtbaar}" Padding="12,6" CornerRadius="6"
                             ToolTip.Tip="De offerte na het akkoord nog wijzigen (zoals nu)"/>
+                    <!-- US-93: stap 2 en 3 — rechtstreeks naar Klaar om af te halen, met reden -->
+                    <Button Content="⤼ Stap overslaan" Command="{Binding StapOverslaanCommand}"
+                            IsVisible="{Binding KanOverslaan}" Padding="12,6" CornerRadius="6"/>
+                    <!-- US-93: bestelbon afdrukken in elke status (zoals op het scherm Bestelbonnen) -->
+                    <Button Content="🖨 Bestelbon afdrukken" Command="{Binding BestelbonDetail.AfdrukkenCommand, FallbackValue={x:Null}}"
+                            IsVisible="{Binding IsStap45Zichtbaar}" IsEnabled="{Binding HeeftBestelbonDetail}"
+                            Padding="12,6" CornerRadius="6"/>
                     <Button Content="Naar huidige stap ▶" Command="{Binding NaarHuidigeStapCommand}"
                             IsVisible="{Binding IsTerugGekeken}" Classes="AccentBtn" Padding="12,6"/>
                     <Button Content="{Binding HoofdKnopTekst}" Command="{Binding HoofdKnopCommand}"

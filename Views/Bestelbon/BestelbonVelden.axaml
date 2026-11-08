@@ -1,0 +1,24 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:QuadroApp.ViewModels"
+    xmlns:conv="clr-namespace:QuadroApp.Converters"
+    xmlns:m="clr-namespace:QuadroApp.Model.DB;assembly=QuadroApp.Data"
+    x:Class="QuadroApp.Views.Bestelbon.BestelbonVelden"
+    x:DataType="vm:BestelbonnenViewModel">
+    <!-- US-93: besteldatum, vervaldatum, opmerking, initialen. Uit BestelbonnenView gehaald (inhoud ongewijzigd), ook gebruikt in stap 4/5
+         van het verkoopdossier. DataContext = BestelbonnenViewModel. -->
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+            <TextBlock Text="Besteldatum" VerticalAlignment="Center"/>
+            <DatePicker Grid.Column="1" SelectedDate="{Binding BestelbonDatum, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
+
+            <TextBlock Grid.Row="1" Text="Vervaldatum" VerticalAlignment="Center"/>
+            <DatePicker Grid.Row="1" Grid.Column="1" SelectedDate="{Binding VervalDatum, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
+
+            <TextBlock Grid.Row="2" Text="Opmerking" VerticalAlignment="Center"/>
+            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Opmerking, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
+
+            <TextBlock Grid.Row="3" Text="Initialen" VerticalAlignment="Center"/>
+            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding AangenomenDoorInitialen, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
+          </Grid>
+</UserControl>

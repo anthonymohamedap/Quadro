@@ -5,6 +5,7 @@
              xmlns:conv="clr-namespace:QuadroApp.Converters"
              xmlns:m="clr-namespace:QuadroApp.Model.DB;assembly=QuadroApp.Data"
              x:Class="QuadroApp.Views.BestelbonnenView"
+             xmlns:bestelbon="clr-namespace:QuadroApp.Views.Bestelbon"
              x:DataType="vm:BestelbonnenViewModel"
              Background="{DynamicResource SurfaceMutedAlt}"
              Foreground="{DynamicResource TextPrimary}">
@@ -47,103 +48,12 @@
         <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="12">
           <TextBlock Text="Bestelbon details" Classes="h2" TextTrimming="CharacterEllipsis"/>
 
-          <Grid Grid.Row="1" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
-            <TextBlock Text="Besteldatum" VerticalAlignment="Center"/>
-            <DatePicker Grid.Column="1" SelectedDate="{Binding BestelbonDatum, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
+          <bestelbon:BestelbonVelden Grid.Row="1"/>
 
-            <TextBlock Grid.Row="1" Text="Vervaldatum" VerticalAlignment="Center"/>
-            <DatePicker Grid.Row="1" Grid.Column="1" SelectedDate="{Binding VervalDatum, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
-
-            <TextBlock Grid.Row="2" Text="Opmerking" VerticalAlignment="Center"/>
-            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Opmerking, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
-
-            <TextBlock Grid.Row="3" Text="Initialen" VerticalAlignment="Center"/>
-            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding AangenomenDoorInitialen, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
-          </Grid>
-
-          <Border Grid.Row="2"
-                  BorderBrush="{DynamicResource BorderSubtle}"
-                  BorderThickness="1"
-                  CornerRadius="8"
-                  Background="{DynamicResource SurfaceMutedAlt}"
-                  MinHeight="120"
-                  Padding="6">
-            <ListBox ItemsSource="{Binding Lijnen}" BorderThickness="0" Background="Transparent">
-              <ListBox.ItemTemplate>
-                <DataTemplate>
-                  <Grid ColumnDefinitions="2.6*,0.7*,0.9*,0.7*,0.9*" Margin="0,2">
-                    <TextBlock Text="{Binding Omschrijving, Converter={x:Static conv:BestelbonOmschrijvingConverter.Instance}}" TextWrapping="Wrap"/>
-                    <TextBlock Grid.Column="1" Text="{Binding Aantal, StringFormat='{}{0:0.##}'}" HorizontalAlignment="Right"/>
-                    <TextBlock Grid.Column="2" Text="{Binding PrijsExcl}" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
-                    <TextBlock Grid.Column="3" Text="{Binding BtwPct}" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
-                    <TextBlock Grid.Column="4" Text="{Binding TotaalIncl}" HorizontalAlignment="Right" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                  </Grid>
-                </DataTemplate>
-              </ListBox.ItemTemplate>
-            </ListBox>
-          </Border>
+          <bestelbon:BestelbonLijnen Grid.Row="2"/>
 
           <!-- US-70: betalingen (vooraf / bij afhalen / achteraf; meerdere mogelijk, bv. cash + kaart) -->
-          <Border Grid.Row="3"
-                  BorderBrush="{DynamicResource BorderSubtle}"
-                  BorderThickness="1"
-                  CornerRadius="8"
-                  Padding="10"
-                  IsVisible="{Binding GeselecteerdeBestelbon, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <StackPanel Spacing="8">
-              <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Text="Betalingen" Classes="h3"/>
-                <TextBlock Grid.Column="1" VerticalAlignment="Center">
-                  <Run Text="Totaal"/>
-                  <Run Text="{Binding StandTotaal, StringFormat='€ {0:0.00}'}" FontWeight="SemiBold"/>
-                  <Run Text="  ·  voorschot"/>
-                  <Run Text="{Binding StandVoorschot, StringFormat='€ {0:0.00}'}"/>
-                  <Run Text="  ·  betaald"/>
-                  <Run Text="{Binding StandBetaald, StringFormat='€ {0:0.00}'}"/>
-                  <Run Text="  ·  nog te betalen"/>
-                  <Run Text="{Binding StandRest, StringFormat='€ {0:0.00}'}" FontWeight="Bold"/>
-                </TextBlock>
-              </Grid>
-
-              <ItemsControl ItemsSource="{Binding Betalingen}">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate x:DataType="m:Ontvangst">
-                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10" Margin="0,2">
-                      <TextBlock VerticalAlignment="Center" Text="{Binding Datum, StringFormat='{}{0:dd/MM/yyyy}'}"/>
-                      <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Betaalwijze, Converter={x:Static conv:BetaalwijzeToLabelConverter.Instance}}"/>
-                      <TextBlock Grid.Column="2" VerticalAlignment="Center" FontWeight="SemiBold" Text="{Binding BedragIncl, StringFormat='€ {0:0.00}'}"/>
-                      <Button Grid.Column="3" Content="&#x2715;" Width="28" Height="24" Padding="0"
-                              HorizontalContentAlignment="Center"
-                              Background="{DynamicResource BorderSubtle}" Foreground="{DynamicResource TextPrimary}"
-                              ToolTip.Tip="Betaling verwijderen"
-                              Command="{Binding $parent[ItemsControl].((vm:BestelbonnenViewModel)DataContext).VerwijderBetalingCommand}"
-                              CommandParameter="{Binding}"/>
-                    </Grid>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
-
-              <!-- US-74: twee rijen — de datumkiezer is te breed om naast bedrag en betaalwijze te passen. -->
-              <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="6" RowSpacing="6" IsVisible="{Binding HeeftRest}">
-                <NumericUpDown Grid.Row="0" Grid.Column="0" MinWidth="0" HorizontalAlignment="Stretch"
-                               Minimum="0" Increment="5" FormatString="'€ '0.00" Watermark="Bedrag"
-                               Value="{Binding NieuweBetalingBedrag, Mode=TwoWay}"/>
-                <ComboBox Grid.Row="0" Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch"
-                          ItemsSource="{Binding BetaalwijzeOpties}"
-                          SelectedItem="{Binding NieuweBetalingBetaalwijze, Mode=TwoWay}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate x:DataType="m:Betaalwijze">
-                            <TextBlock Text="{Binding Converter={x:Static conv:BetaalwijzeToLabelConverter.Instance}}"/>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-                <DatePicker Grid.Row="1" Grid.Column="0" MinWidth="0" HorizontalAlignment="Stretch"
-                            SelectedDate="{Binding NieuweBetalingDatum, Mode=TwoWay}"/>
-                <Button Grid.Row="1" Grid.Column="1" Classes="AccentBtn" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Betaling registreren" Command="{Binding RegistreerBetalingCommand}"/>
-              </Grid>
-            </StackPanel>
-          </Border>
+          <bestelbon:BestelbonBetalingen Grid.Row="3" IsVisible="{Binding GeselecteerdeBestelbon, Converter={x:Static ObjectConverters.IsNotNull}}"/>
 
           <WrapPanel Grid.Row="4">
             <Button Classes="AccentBtn" Content="Opslaan" Command="{Binding SaveCommand}" Margin="0,0,8,6" Padding="12,8"/>

@@ -93,6 +93,16 @@ namespace QuadroApp.Model.DB
         /// <summary>US-87 — verplichte reden bij annuleren.</summary>
         public string? AnnuleerReden { get; set; }
 
+        /// <summary>US-102 — wanneer de verkoop afgehaald en volledig betaald was (afgerond).</summary>
+        public DateTime? AfgerondOp { get; set; }
+
+        /// <summary>
+        /// US-102 — momentopname (JSON, zelfde opbouw als het archief: <c>OfferteArchiefSnapshot</c>) van
+        /// offerte, klant en inlijstingen bij het afronden, zodat latere wijzigingen aan lijsten, afwerkingen,
+        /// standaardkaders of klant een afgeronde verkoop niet meer veranderen.
+        /// </summary>
+        public string? Momentopname { get; set; }
+
         // 🔹 Restbedrag (niet in DB nodig maar mag)
         [NotMapped]
         public decimal RestTeBetalen =>
