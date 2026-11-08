@@ -1,0 +1,17 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="using:QuadroApp.Converters"
+    x:Class="QuadroApp.Views.Werkbon.WerkBonPlanningKaart"
+    x:CompileBindings="False">
+    <!-- US-93: planning-samenvatting van de werkbon. Uit WerkBonDetailWindow gehaald (inhoud ongewijzigd), ook gebruikt in het
+         verkoopdossier. DataContext = WerkBonDetailViewModel. -->
+                <Border Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1" CornerRadius="8" Padding="14,12">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Planning" Classes="h2"/>
+                        <TextBlock Text="{Binding PlanningSamenvatting}" Foreground="{DynamicResource TextSecondary}"/>
+                    </StackPanel>
+                </Border>
+</UserControl>

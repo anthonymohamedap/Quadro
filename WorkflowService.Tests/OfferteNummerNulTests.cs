@@ -80,10 +80,9 @@ public class OfferteNummerNulTests : IDisposable
         var migrator = db.GetInfrastructure().GetRequiredService<IMigrator>();
         await migrator.MigrateAsync(migraties[index - 1]);
 
-        db.Offertes.AddRange(
-            new Offerte { OfferteNummer = 30, Datum = DateTime.Today, Opmerking = "dertig" },
-            new Offerte { OfferteNummer = 0, Datum = DateTime.Today, Opmerking = "uit archief" });
-        await db.SaveChangesAsync();
+        // Via SQL: het EF-model heeft intussen kolommen die op dit schema nog niet bestaan.
+        await InsertAsync(db, "Offertes", new() { ["OfferteNummer"] = 30, ["Datum"] = "2026-10-01 00:00:00", ["Opmerking"] = "dertig" });
+        await InsertAsync(db, "Offertes", new() { ["OfferteNummer"] = 0, ["Datum"] = "2026-10-01 00:00:00", ["Opmerking"] = "uit archief" });
 
         await migrator.MigrateAsync();
 

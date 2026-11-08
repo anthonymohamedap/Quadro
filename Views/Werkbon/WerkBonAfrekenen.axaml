@@ -1,0 +1,50 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="using:QuadroApp.Converters"
+    x:Class="QuadroApp.Views.Werkbon.WerkBonAfrekenen"
+    x:CompileBindings="False">
+    <!-- US-93: afrekenen bij afhaling (US-76). Uit WerkBonDetailWindow gehaald (inhoud ongewijzigd), ook gebruikt in het
+         verkoopdossier. DataContext = WerkBonDetailViewModel. -->
+                <Border IsVisible="{Binding IsAfrekenenOpen}"
+                        Background="{DynamicResource WarningBg}"
+                        BorderBrush="{DynamicResource BorderSubtle}"
+                        BorderThickness="1" CornerRadius="8" Padding="14,12">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{Binding AfrekenTitel}" FontWeight="Bold" FontSize="15" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+                        <TextBlock Text="{Binding AfrekenDetail}" Classes="caption" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondary}"/>
+
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="6" RowSpacing="6">
+                            <NumericUpDown Grid.Row="0" Grid.Column="0" MinWidth="0" HorizontalAlignment="Stretch"
+                                           Minimum="0" Increment="5" FormatString="'€ '0.00" Watermark="Bedrag"
+                                           Value="{Binding AfrekenBedrag, Mode=TwoWay}"/>
+                            <ComboBox Grid.Row="0" Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch"
+                                      ItemsSource="{Binding BetaalwijzeOpties}"
+                                      SelectedItem="{Binding AfrekenBetaalwijze, Mode=TwoWay}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={x:Static conv:BetaalwijzeToLabelConverter.Instance}}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <DatePicker Grid.Row="1" Grid.Column="0" MinWidth="0" HorizontalAlignment="Stretch"
+                                        SelectedDate="{Binding AfrekenDatum, Mode=TwoWay}"/>
+                        </Grid>
+
+                        <TextBlock Text="Gesplitst betalen (bv. deels cash, deels kaart)? Vul eerst het eerste bedrag in — daarna wordt de rest gevraagd."
+                                   Classes="caption" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
+
+                        <WrapPanel HorizontalAlignment="Right">
+                            <Button Content="Annuleren" Classes="MainBtn" Margin="0,0,6,0"
+                                    Command="{Binding AnnuleerAfrekenenCommand}"/>
+                            <Button Content="Later betalen" Classes="MainBtn" Margin="0,0,6,0"
+                                    ToolTip.Tip="Werkbon wel op Afgehaald, de bestelbon blijft openstaan"
+                                    Command="{Binding LaterBetalenCommand}"/>
+                            <Button Content="Betalen en afhalen" Classes="AccentBtn"
+                                    Command="{Binding BetalenCommand}"/>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+</UserControl>

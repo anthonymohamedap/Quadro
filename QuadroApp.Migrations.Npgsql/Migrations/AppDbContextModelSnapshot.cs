@@ -759,6 +759,9 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("AfgerondOp")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime?>("AfhaalDatum")
                         .HasColumnType("timestamp with time zone");
 
@@ -795,6 +798,9 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
 
                     b.Property<decimal>("MeerPrijsIncl")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Momentopname")
+                        .HasColumnType("text");
 
                     b.Property<int>("OfferteNummer")
                         .HasColumnType("integer");
