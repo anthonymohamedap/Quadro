@@ -1507,7 +1507,19 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                 };
 
                 db.Offertes.Attach(offerteStub);
-                db.Entry(offerteStub).State = EntityState.Modified;
+                // Fix: enkel de velden die dit scherm bewaart als gewijzigd markeren. Met de hele rij
+                // op Modified werden velden die niet in de stub staan (o.a. het offertenummer) leeg
+                // weggeschreven: na opslaan stond de offerte op nummer 0 ("Werkbon 0").
+                var entry = db.Entry(offerteStub);
+                foreach (var veld in new[]
+                {
+                    nameof(Offerte.KlantId), nameof(Offerte.Datum), nameof(Offerte.Opmerking),
+                    nameof(Offerte.GeplandeDatum), nameof(Offerte.AfhaalDatum), nameof(Offerte.DeadlineDatum),
+                    nameof(Offerte.GeschatteMinuten), nameof(Offerte.Status), nameof(Offerte.KortingPct),
+                    nameof(Offerte.MeerPrijsIncl), nameof(Offerte.IsVoorschotBetaald), nameof(Offerte.VoorschotBedrag),
+                    nameof(Offerte.SubtotaalExBtw), nameof(Offerte.BtwBedrag), nameof(Offerte.TotaalInclBtw)
+                })
+                    entry.Property(veld).IsModified = true;
 
                 var existingRules = await db.OfferteRegels
                     .Where(x => x.OfferteId == Offerte.Id)
