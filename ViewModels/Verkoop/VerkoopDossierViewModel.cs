@@ -198,7 +198,11 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
         return Task.CompletedTask;
     }
 
-    public async Task InitializeAsync() => await LaadAsync(naarHuidigeStap: true);
+    public async Task InitializeAsync()
+    {
+        if (OfferteId == 0) await StartNieuweVerkoopAsync();   // "+ Nieuwe verkoop" (fix 08/11)
+        else await LaadAsync(naarHuidigeStap: true);
+    }
 
     public async Task LaadAsync(bool naarHuidigeStap = false)
     {
@@ -469,6 +473,10 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     {
         StopPlanning();
         await BewaarStap1Async();
+        if (HeeftOnbewaardeNieuweVerkoop()
+            && !await _dialogs.ConfirmAsync("Nieuwe verkoop niet bewaard",
+                "Deze nieuwe verkoop kon nog niet bewaard worden (kies eerst een klant). Toch teruggaan? Wat je ingaf gaat dan verloren."))
+            return;
         StopBewaardTimer();
         await _nav.NavigateToAsync<OffertesLijstViewModel>();
     }
@@ -533,6 +541,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     [RelayCommand]
     private async Task OpenOfferteAsync()
     {
+        if (OfferteId == 0) return;   // nieuwe verkoop: eerst bewaren
         await BewaarStap1Async();
         StopBewaardTimer();
         await _offerteNav.OpenOfferteAsync(OfferteId);
@@ -561,6 +570,8 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
 
     private async Task NaBevestigenAsync()
     {
+        // Nieuwe verkoop: bevestigen bewaart eerst; neem het nummer over als dat nog niet gebeurd is.
+        if (OfferteId == 0 && Stap1?.Offerte is { Id: > 0 } nieuw) OfferteId = nieuw.Id;
         _bewaardeVingerafdruk = Stap1?.Vingerafdruk();
         _toast.Success("De klant is akkoord: de werkbon is aangemaakt. Plan nu het werk in.");
         await LaadAsync(naarHuidigeStap: true);
@@ -602,7 +613,9 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     private void WerkBewaardTekstBij()
     {
         if (Stap1 is not { } vm || !vm.KanBewerken) { BewaardTekst = null; return; }
-        BewaardTekst = vm.Vingerafdruk() == _bewaardeVingerafdruk ? "bewaard ✓" : "nog niet bewaard — wordt bewaard bij het verlaten van deze stap";
+        BewaardTekst = vm.Offerte is { Id: 0 }
+            ? "nog niet bewaard — wordt bewaard bij het verlaten van deze stap (kies eerst een klant)"
+            : vm.Vingerafdruk() == _bewaardeVingerafdruk ? "bewaard ✓" : "nog niet bewaard — wordt bewaard bij het verlaten van deze stap";
     }
 
     private void StartBewaardTimer()

@@ -31,6 +31,10 @@ public sealed class OfferteNavigationService : IOfferteNavigationService
     public Task OpenVerkoopAsync(int offerteId)
         => _nav.NavigateToAsync<QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel, int>(offerteId);
 
+    /// <summary>Fix 08/11 — nieuwe verkoop = dossier met OfferteId 0 (stap 1, nog niet bewaard).</summary>
+    public Task NieuweVerkoopAsync()
+        => _nav.NavigateToAsync<QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel, int>(0);
+
     public async Task NewOfferteAsync()
     {
         var vm = _sp.GetRequiredService<OfferteViewModel>();

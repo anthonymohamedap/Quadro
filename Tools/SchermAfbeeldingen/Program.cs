@@ -119,6 +119,18 @@ static class Schermen
             new PdfWerkBonExporter().Export(data, metPrijzen: true);
             return new TextBlock { Text = pad };
         },
+        ["dossier-nieuw"] = async f =>
+        {
+            var wf = VolledigeWorkflow(f);
+            var vm = new QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel(f, new VerkoopOverzichtService(f),
+                new QuadroApp.Service.Verkoop.VerkoopDossierService(f, wf), new TestNavigationService(), new GeenOfferteNavigatie(),
+                wf, new WerkBonWorkflowService(f, wf), new TestDialogService(), new TestToastService(),
+                ontvangsten: MaakOntvangsten(f), services: new OfferteVmProvider(f));
+            await vm.ReceiveAsync(0);   // "+ Nieuwe verkoop"
+            await vm.InitializeAsync();
+            await Task.Delay(300);
+            return new VerkoopDossierView { DataContext = vm };
+        },
         ["dossier-terug-gekeken"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 423, bekijk: QuadroApp.Service.Verkoop.VerkoopStap.Offerte); },
         ["dossier-annuleren"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await AnnulerenDialoogAsync(f, 421); },
         ["bestelbonnen"] = BestelbonnenAsync,
