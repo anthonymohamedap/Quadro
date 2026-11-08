@@ -138,4 +138,74 @@ public class DossierStap1Tests
         Assert.Equal("Poster A3", (await db.OfferteRegels.SingleAsync()).Titel);
         Assert.Equal("bewaard ✓", dossier.BewaardTekst);
     }
+
+    [Fact]
+    public async Task Nieuwe_verkoop_start_in_het_dossier_en_gaat_na_bevestigen_naar_stap_2()
+    {
+        // Fix 08/11: "+ Nieuwe verkoop" → stap 1 van het dossier, niet het oude offertescherm.
+        var (scope, _) = await SeedAsync();
+        await using var __ = scope;
+        var f = scope.Factory;
+        await using (var db = await f.CreateDbContextAsync())
+        {
+            db.Klanten.Add(new Klant { Voornaam = "An", Achternaam = "Mertens" });
+            await db.SaveChangesAsync();
+        }
+
+        var toast = new TestToastService();
+        var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
+        var dossier = new VerkoopDossierViewModel(f, new VerkoopOverzichtService(f), new VerkoopDossierService(f, wf),
+            new TestNavigationService(), new GeenOfferteNavigatie(), wf, new WerkBonWorkflowService(f, wf),
+            new TestDialogService(), toast, services: new Provider(f));
+        await dossier.ReceiveAsync(0);
+        await dossier.InitializeAsync();
+
+        Assert.True(dossier.IsNieuw);
+        Assert.True(dossier.IsStap1Zichtbaar);
+        Assert.Equal("Nieuwe verkoop", dossier.Titel);
+        Assert.Equal("Bevestigen → Werkbon ▶", dossier.HoofdKnopTekst);
+
+        var vm = dossier.Stap1!;
+        vm.SelectedKlant = vm.GefilterdeKlanten.First(k => k.Achternaam == "Mertens");
+        vm.RegelToevoegenCommand.Execute(null);
+        vm.Regels.First().Titel = "Poster";
+
+        await dossier.HoofdKnopCommand.ExecuteAsync(null);   // Bevestigen → Werkbon
+        for (var i = 0; i < 50 && dossier.Info?.Huidig != VerkoopStap.Werkbon; i++) await Task.Delay(100);
+
+        Assert.False(dossier.IsNieuw);
+        Assert.Equal(VerkoopStap.Werkbon, dossier.Info!.Huidig);
+        Assert.StartsWith("Verkoop ", dossier.Titel);
+        await using var check = await f.CreateDbContextAsync();
+        var offerte = await check.Offertes.Include(o => o.WerkBon).SingleAsync(o => o.Id == dossier.OfferteId);
+        Assert.True(offerte.OfferteNummer > 0, $"nummer={offerte.OfferteNummer} id={offerte.Id} titel={dossier.Titel}");
+        Assert.NotNull(offerte.WerkBon);
+    }
+
+    [Fact]
+    public async Task Offerte_opslaan_houdt_de_velden_van_het_dossier()
+    {
+        // Fix 08/11: opslaan schreef ook velden weg die het offertescherm niet kent (nummer, overslaan, momentopname).
+        var (scope, id) = await SeedAsync();
+        await using var _ = scope;
+        await using (var db = await scope.Factory.CreateDbContextAsync())
+        {
+            var o = await db.Offertes.SingleAsync(x => x.Id == id);
+            o.OvergeslagenStappen = QuadroApp.Model.DB.VerkoopStapFlags.Werkbon;
+            o.OverslaanReden = "Standaardkader uit voorraad";
+            o.Momentopname = "{}";
+            await db.SaveChangesAsync();
+        }
+
+        var vm = await LaadVmAsync(scope.Factory, id);
+        vm.Regels.First().Titel = "Gewijzigd";
+        await vm.SaveCoreAsync(reloadAfterSave: true);
+
+        await using var check = await scope.Factory.CreateDbContextAsync();
+        var bewaard = await check.Offertes.SingleAsync(x => x.Id == id);
+        Assert.Equal(419, bewaard.OfferteNummer);
+        Assert.Equal(QuadroApp.Model.DB.VerkoopStapFlags.Werkbon, bewaard.OvergeslagenStappen);
+        Assert.Equal("Standaardkader uit voorraad", bewaard.OverslaanReden);
+        Assert.Equal("{}", bewaard.Momentopname);
+    }
 }

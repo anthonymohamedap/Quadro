@@ -11,6 +11,9 @@ namespace QuadroApp.Service.Interfaces
         /// offertescherm blijft bereikbaar via <see cref="OpenOfferteAsync"/> (menu ⋯ in het dossier).
         /// </summary>
         Task OpenVerkoopAsync(int offerteId) => OpenOfferteAsync(offerteId);
+
+        /// <summary>Fix 08/11 — een nieuwe verkoop start in stap 1 van het dossier (niet meer in het oude offertescherm).</summary>
+        Task NieuweVerkoopAsync() => NewOfferteAsync();
         Task NewOfferteAsync();
     }
 }
