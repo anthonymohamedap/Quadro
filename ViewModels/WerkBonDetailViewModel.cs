@@ -331,7 +331,7 @@ namespace QuadroApp.ViewModels
             }
 
             RequestClose?.Invoke();
-            await _offerteNav.OpenOfferteAsync(offerteId);
+            await _offerteNav.OpenVerkoopAsync(offerteId);   // fix 08/11: het dossier, niet het oude scherm
         }
 
         [RelayCommand]
