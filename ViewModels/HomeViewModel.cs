@@ -98,12 +98,9 @@ namespace QuadroApp.ViewModels
         public IAsyncRelayCommand OpenWinkelVerkopenCommand { get; }
         public IAsyncRelayCommand OpenOverzichtBetalingenCommand { get; }
         public IAsyncRelayCommand OpenPlanningCommand { get; }
-        public IAsyncRelayCommand OpenOfferteCommand { get; }
         public IAsyncRelayCommand OpenOffertesLijstCommand { get; }
-        public IAsyncRelayCommand OpenWerkBonCommand { get; }
         public IAsyncRelayCommand OpenAfwerkingsOptiesCommand { get; }
         public IAsyncRelayCommand OpenLeveranciersCommand { get; }
-        public IAsyncRelayCommand OpenBestelbonnenCommand { get; }
         public IAsyncRelayCommand OpenExportCenterCommand { get; }
         public IAsyncRelayCommand OpenInstellingenCommand { get; }
         public IAsyncRelayCommand OpenArchiefCommand { get; }
@@ -129,8 +126,6 @@ namespace QuadroApp.ViewModels
 
             OpenPlanningCommand = new AsyncRelayCommand(OpenPlanningAsync);
             OpenInstellingenCommand = new AsyncRelayCommand(OpenInstellingenAsync);
-
-            OpenWerkBonCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<WerkBonLijstViewModel>());
             OpenKlantenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<KlantenViewModel>());
             OpenAfwerkingsOptiesCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<AfwerkingenViewModel>());
             OpenLijstenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<LijstenViewModel>());
@@ -138,9 +133,7 @@ namespace QuadroApp.ViewModels
             OpenWinkelVerkopenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<WinkelVerkopenViewModel>());
             OpenOverzichtBetalingenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OverzichtBetalingenViewModel>());
             OpenLeveranciersCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<LeveranciersViewModel>());
-            OpenOfferteCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OfferteViewModel>());
             OpenOffertesLijstCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OffertesLijstViewModel>());
-            OpenBestelbonnenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<BestelbonnenViewModel>());
             OpenExportCenterCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<ExportCenterViewModel>());
             OpenArchiefCommand      = new AsyncRelayCommand(() => _nav.NavigateToAsync<ArchiefViewModel>());
             NieuweOfferteCommand    = new AsyncRelayCommand(() => _offerteNav.NieuweVerkoopAsync());   // fix 08/11: in het dossier

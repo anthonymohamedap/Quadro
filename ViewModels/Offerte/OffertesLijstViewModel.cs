@@ -210,13 +210,6 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
         await _offerteNav.OpenVerkoopAsync(SelectedOfferte.OfferteId);   // US-95: het dossier is de standaard
     }
 
-    /// <summary>US-95 — het oude offertescherm, zolang Veerle en Anthony vergelijken (ook in het dossier, menu ⋯).</summary>
-    [RelayCommand]
-    private async Task OpenOudSchermAsync()
-    {
-        if (SelectedOfferte is null) return;
-        await _offerteNav.OpenOfferteAsync(SelectedOfferte.OfferteId);
-    }
 
     // ── US-89: knoppen van de Werkbonnenlijst ────────────────────────────────
 

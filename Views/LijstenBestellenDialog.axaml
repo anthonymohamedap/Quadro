@@ -1,0 +1,34 @@
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:werkbon="clr-namespace:QuadroApp.Views.Werkbon"
+    x:Class="QuadroApp.Views.LijstenBestellenDialog"
+    x:CompileBindings="False"
+    Width="720" Height="760" MinWidth="560" MinHeight="420"
+    WindowStartupLocation="CenterOwner"
+    Title="{Binding KopTitel, StringFormat='Lijsten bestellen — {0}'}"
+    Background="{DynamicResource SurfaceMuted}">
+
+    <!-- US-95: vervangt het werkbonvenster voor "Bestellen…" in stap 2 van het dossier:
+         dezelfde werktaken met bestelstatus, bestelwijze en "Bestelling plaatsen". -->
+    <Grid RowDefinitions="Auto,*,Auto">
+        <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="0,0,0,1" Padding="20,14">
+            <StackPanel Spacing="4">
+                <TextBlock Text="{Binding KopTitel, StringFormat='Lijsten bestellen — {0}'}" Classes="h2"/>
+                <TextBlock Text="{Binding KlantNaam}" Foreground="{DynamicResource TextSecondary}"/>
+            </StackPanel>
+        </Border>
+        <ScrollViewer Grid.Row="1" Padding="20,16" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Nog geen werktaken: plan eerst de inlijstingen in."
+                           Foreground="{DynamicResource TextSecondary}" IsVisible="{Binding !Taken.Count}"/>
+                <werkbon:WerkBonTaken/>
+            </StackPanel>
+        </ScrollViewer>
+        <Border Grid.Row="2" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="0,1,0,0" Padding="20,12">
+            <Button Content="Sluiten" Classes="MainBtn" HorizontalAlignment="Right" Click="Sluiten_Click"/>
+        </Border>
+    </Grid>
+</Window>

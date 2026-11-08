@@ -90,13 +90,6 @@
                             Padding="10,5"
                             Margin="0,0,8,6"
                             ToolTip.Tip="Open de geselecteerde verkoop (of dubbelklik op een rij)"/>
-                    <!-- US-95: Openen = het dossier; het oude offertescherm blijft bereikbaar tot het akkoord -->
-                    <Button Content="Oud scherm"
-                            Command="{Binding OpenOudSchermCommand}"
-                            CornerRadius="6"
-                            Padding="10,5"
-                            Margin="0,0,8,6"
-                            ToolTip.Tip="Open de offerte in het oude offertescherm (zoals vroeger)"/>
                     <Button Content="&#x21BB; Vernieuwen"
                             Command="{Binding LoadCommand}"
                             CornerRadius="6"
