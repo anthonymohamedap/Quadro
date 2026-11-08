@@ -589,15 +589,37 @@ public sealed class BestelbonWorkflowService : IBestelbonWorkflowService
         }
     }
 
-    /// <summary>Bij "Bevestigen → Werkbon": een voorlopige bon van deze offerte krijgt nu zijn volgnummer.</summary>
+    /// <summary>
+    /// Bij "Bevestigen → Werkbon" wordt de bestelbon definitief (Anthony 08/11): een voorlopige bon krijgt
+    /// zijn volgnummer, en is er nog geen bon, dan wordt hij nu aangemaakt mét volgnummer (vroeger pas bij
+    /// "Klaar om af te halen"). Bij Klaar wordt dezelfde bon enkel nog bijgewerkt.
+    /// </summary>
     public async Task KenVolgnummerToeBijBevestigingAsync(int offerteId)
     {
-        await using var db = await _factory.CreateDbContextAsync();
-        var bestelbon = await db.Bestelbonnen.FirstOrDefaultAsync(f => f.OfferteId == offerteId && f.VolgNr == null);
-        if (bestelbon is null || bestelbon.Status == BestelbonStatus.Geannuleerd)
-            return;
+        await using (var db = await _factory.CreateDbContextAsync())
+        {
+            var bestaand = await db.Bestelbonnen
+                .Where(f => f.OfferteId == offerteId || (f.WerkBon != null && f.WerkBon.OfferteId == offerteId))
+                .FirstOrDefaultAsync();
+            if (bestaand is not null)
+            {
+                if (bestaand.VolgNr is null && bestaand.Status != BestelbonStatus.Geannuleerd)
+                    await KenVolgnummerToeAsync(db, bestaand);
+                return;
+            }
+        }
 
-        await KenVolgnummerToeAsync(db, bestelbon);
+        // Nog geen bon: nu aanmaken. De offerte is bevestigd, dus hij krijgt meteen zijn volgnummer.
+        // Lukt dat niet (bv. offerte zonder prijzen), dan gaat de bevestiging gewoon door en ontstaat
+        // de bon zoals vroeger bij "Klaar om af te halen".
+        try
+        {
+            await MaakBestelbonVanOfferteAsync(offerteId);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or DbUpdateException)
+        {
+            System.Diagnostics.Trace.TraceWarning($"Bestelbon voor offerte {offerteId} kon niet aangemaakt worden bij de bevestiging: {ex.Message}");
+        }
     }
 
     private async Task EnsureOfferteCalculatedAsync(Offerte offerte)
