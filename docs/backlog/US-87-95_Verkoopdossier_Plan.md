@@ -391,7 +391,7 @@ Verder:
   - daarna: "Dupliceren als nieuwe verkoop" (nieuw nummer) of "Heropenen" (enkel beheerder, zolang er geen werkbon was).
 - **Controle vóór Bevestigen**: alle meldingen samen naast de grijze knop ("2 dingen te doen: …").
 - **Bevestigen** springt naar stap 2 in het dossier (geen planning-popup meer), met optioneel "bon meteen afdrukken".
-- **Bon bij bevestigen**: zoals nu. Een voorlopige bon krijgt bij "Bevestigen" zijn volgnummer; zonder voorlopige bon ontstaat de bon pas bij "Klaar".
+- **Bon bij bevestigen**: ~~zoals nu (zonder voorlopige bon pas bij "Klaar")~~ → **gewijzigd 08/11 (Anthony): de bestelbon wordt definitief bij "Bevestigen → Werkbon"**: een voorlopige bon krijgt zijn volgnummer, en zonder voorlopige bon wordt hij dan aangemaakt mét volgnummer. Bij "Klaar" wordt dezelfde bon enkel bijgewerkt (zelfde nummer).
 - **Prijslogica blijft exact zoals nu** (`PricingEngine` niet wijzigen): afgesproken prijs en meerprijs ingegeven incl. btw; extra kost en standaardkaderprijs excl.; meerprijs niet als aparte regel op de bestelbon (US-26), wel in het totaal; korting op totaal ook over inlijstingen met een afgesproken prijs. Het dossier verandert enkel de schermen (o.a. een paneel "Prijsopbouw" dat de bestaande berekening toont).
 
 Mock: `docs/backlog/mock-verkoopdossier/` (HTML, in de browser openen).

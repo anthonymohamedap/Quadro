@@ -32,6 +32,8 @@ Bestelbonnen en het werkbonvenster blijven bereikbaar tot jullie akkoord zijn.
 - [ ] Iets wijzigen en een andere stap kiezen → automatisch bewaard ("bewaard ✓").
 - [ ] "Bestelbon aanmaken/afdrukken" werkt zoals vroeger.
 - [ ] "Bevestigen → Werkbon ▶" → je komt in stap 2 (geen planningvenster meer).
+- [ ] Na "Bevestigen → Werkbon" staat de chip **Bestelbon 2026-…** er meteen (definitief bij het akkoord); bij "Klaar" blijft het hetzelfde nummer.
+- [ ] "+ Nieuwe verkoop" opent stap 1 van het dossier; na bewaren krijgt de verkoop zijn nummer.
 - [ ] Na het akkoord: stap 1 terugkijken is alleen-lezen; "✎ Offerte aanpassen…" maakt hem bewerkbaar.
 
 ## 4. Stap 2 Werkbon (planning)

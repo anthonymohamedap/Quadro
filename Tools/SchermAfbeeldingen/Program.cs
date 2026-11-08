@@ -131,6 +131,11 @@ static class Schermen
             await Task.Delay(300);
             return new VerkoopDossierView { DataContext = vm };
         },
+        ["dossier-2-na-bevestigen"] = f => DossierAsync(f, 419, daarna: async vm =>
+        {
+            await vm.HoofdKnopCommand.ExecuteAsync(null);   // Bevestigen → Werkbon
+            for (var i = 0; i < 50 && vm.Info?.Huidig != QuadroApp.Service.Verkoop.VerkoopStap.Werkbon; i++) await Task.Delay(100);
+        }),
         ["dossier-terug-gekeken"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 423, bekijk: QuadroApp.Service.Verkoop.VerkoopStap.Offerte); },
         ["dossier-annuleren"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await AnnulerenDialoogAsync(f, 421); },
         ["bestelbonnen"] = BestelbonnenAsync,
@@ -200,9 +205,10 @@ static class Schermen
     {
         var toast = new TestToastService();
         var auth = new TestAuthService();
-        var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
         var pricing = new PricingService(f, new PricingSettingsProvider(f), new PricingEngine(), NullLogger<PricingService>.Instance);
         var bestelbonWf = new BestelbonWorkflowService(f, pricing, auth);
+        // Zoals in de app: de workflow kent de bestelbon-service (bon definitief bij het bevestigen).
+        var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast, bestelbonWf);
         var vm = new OfferteViewModel(f, new TestNavigationService(), new TestDialogService(), pricing,
             new OfferteWorkflowService(f, wf), new WerkBonWorkflowService(f, wf), wf, bestelbonWf,
             new BestelbonExportService(f, new IBestelbonExporter[] { new PdfBestelbonExporter() }), new TestFilePickerService(),
