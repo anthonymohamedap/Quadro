@@ -291,6 +291,43 @@ public class VerkoopDossierServiceTests
     }
 
     [Fact]
+    public async Task Werkbon_pdf_zonder_en_met_prijzen_US94()
+    {
+        var o = await OpstellingAsync(regels: 2);
+        await using var _ = o.Scope;
+        await PlanAsync(o, o.RegelIds[0]);
+
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;   // zoals App.axaml.cs
+        var data = await PdfWerkBonExporter.LeesAsync(o.Scope.Factory, o.WerkBonId);
+        Assert.Equal(423, data.Nummer);                                   // werkbon = verkoopnummer
+        Assert.StartsWith("Sofie Claes", data.KlantRegel);
+        Assert.Equal(2, data.Regels.Count);
+        Assert.StartsWith("1 × Inlijsting 1 — 30 × 40 cm", data.Regels[0].Kop);
+        Assert.StartsWith("gepland ", data.Regels[0].Gepland);
+        Assert.Null(data.Regels[1].Gepland);
+        Assert.Equal("Geen lijst gekozen", data.Regels[1].LijstOfKader);
+
+        var vorigeHome = Environment.GetEnvironmentVariable("HOME");
+        var map = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "QuadroWerkbonPdf_" + Guid.NewGuid().ToString("N"));
+        System.IO.Directory.CreateDirectory(map);
+        Environment.SetEnvironmentVariable("HOME", map);
+        try
+        {
+            var zonder = new PdfWerkBonExporter().Export(data, metPrijzen: false);
+            var met = new PdfWerkBonExporter().Export(data, metPrijzen: true);
+            Assert.EndsWith("Werkbon-423.pdf", zonder);
+            Assert.EndsWith("Werkbon-423-met-prijzen.pdf", met);
+            Assert.True(new System.IO.FileInfo(zonder).Length > 500);
+            Assert.True(System.IO.File.Exists(met));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("HOME", vorigeHome);
+            try { System.IO.Directory.Delete(map, true); } catch (System.IO.IOException) { }
+        }
+    }
+
+    [Fact]
     public void Overslaan_vraagt_een_reden_US93()
     {
         var vm = new QuadroApp.ViewModels.Verkoop.StapOverslaanDialogViewModel(VerkoopStap.Werkbon);

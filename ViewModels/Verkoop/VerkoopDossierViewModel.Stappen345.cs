@@ -58,6 +58,7 @@ public partial class VerkoopDossierViewModel
         OnPropertyChanged(nameof(KanOverslaan));
         OnPropertyChanged(nameof(OfferteSamenvatting));
         OnPropertyChanged(nameof(IsSamenvattingZichtbaar));
+        WerkAfdrukkenBij();   // US-94
     }
 
     private async Task LaadStappen345Async()

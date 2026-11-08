@@ -108,6 +108,17 @@ static class Schermen
         ["dossier-4-afrekenen"] = async f => { await Breng412NaarAsync(f, QuadroApp.Service.Verkoop.VerkoopStap.KlaarOmAfTeHalen); return await DossierAsync(f, 412, daarna: vm => vm.HoofdKnopCommand.ExecuteAsync(null)); },
         ["dossier-5-rest"] = async f => { await Breng412NaarAsync(f, QuadroApp.Service.Verkoop.VerkoopStap.AfgehaaldEnBetaald); return await DossierAsync(f, 412); },
         ["dossier-5-afgerond"] = async f => { await Breng412NaarAsync(f, QuadroApp.Service.Verkoop.VerkoopStap.AfgehaaldEnBetaald, afgerond: true); return await DossierAsync(f, 412); },
+        ["werkbon-pdf"] = async f =>
+        {
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;   // zoals App.axaml.cs
+            await Breng412NaarAsync(f, QuadroApp.Service.Verkoop.VerkoopStap.InProductie);
+            await using var db = await f.CreateDbContextAsync();
+            var wbId = await db.WerkBonnen.Where(w => w.Offerte.OfferteNummer == 412).Select(w => w.Id).SingleAsync();
+            var data = await PdfWerkBonExporter.LeesAsync(f, wbId);
+            var pad = new PdfWerkBonExporter().Export(data, metPrijzen: false);
+            new PdfWerkBonExporter().Export(data, metPrijzen: true);
+            return new TextBlock { Text = pad };
+        },
         ["dossier-terug-gekeken"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await DossierAsync(f, 423, bekijk: QuadroApp.Service.Verkoop.VerkoopStap.Offerte); },
         ["dossier-annuleren"] = async f => { await TestGegevens.SeedVandaagAsync(f); return await AnnulerenDialoogAsync(f, 421); },
         ["bestelbonnen"] = BestelbonnenAsync,
