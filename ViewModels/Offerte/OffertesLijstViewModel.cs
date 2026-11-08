@@ -201,7 +201,7 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
     // ── Navigatie ────────────────────────────────────────────────────────────
 
     [RelayCommand]
-    private async Task NewAsync() => await _offerteNav.NewOfferteAsync();
+    private async Task NewAsync() => await _offerteNav.NieuweVerkoopAsync();   // fix 08/11: in het dossier
 
     [RelayCommand]
     private async Task OpenAsync()

@@ -143,7 +143,7 @@ namespace QuadroApp.ViewModels
             OpenBestelbonnenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<BestelbonnenViewModel>());
             OpenExportCenterCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<ExportCenterViewModel>());
             OpenArchiefCommand      = new AsyncRelayCommand(() => _nav.NavigateToAsync<ArchiefViewModel>());
-            NieuweOfferteCommand    = new AsyncRelayCommand(() => _offerteNav.NewOfferteAsync());
+            NieuweOfferteCommand    = new AsyncRelayCommand(() => _offerteNav.NieuweVerkoopAsync());   // fix 08/11: in het dossier
             OpenVerkoopCommand      = new AsyncRelayCommand<VerkoopOverzichtRegel>(
                 r => r is null ? Task.CompletedTask : _offerteNav.OpenVerkoopAsync(r.OfferteId));   // US-95: dossier
         }
