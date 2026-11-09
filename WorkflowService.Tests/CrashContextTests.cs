@@ -43,4 +43,15 @@ public class CrashContextTests
         Assert.Contains("Scherm: (onbekend)", tekst);
         Assert.Contains("Laatste acties: (geen)", tekst);
     }
+
+    [Fact]
+    public void NoteerActie_HoudtEenRegel_ZonderNieuweRegelsOfNul()
+    {
+        CrashContext.Leeg();
+        CrashContext.NoteerActie("klik 'Jan\r\nHash: x\0'");
+        var tekst = CrashContext.Beschrijf("test");
+        Assert.DoesNotContain("\nHash:", tekst);
+        Assert.False(tekst.Contains((char)0));
+        Assert.Equal(1, tekst.Split('\n').Count(r => r.StartsWith("  [")));
+    }
 }

@@ -28,6 +28,9 @@ public static class CrashContext
     public static void NoteerActie(string actie)
     {
         if (string.IsNullOrWhiteSpace(actie)) return;
+        // Eén regel, zodat het blokformaat van crash.log (en de Hash-regel erna) nooit kan breken.
+        actie = actie.Replace("\0", "").ReplaceLineEndings(" ").Trim();
+        if (actie.Length == 0) return;
         lock (Slot)
         {
             Acties.Enqueue($"[{DateTime.Now:HH:mm:ss}] {actie}");
@@ -48,6 +51,12 @@ public static class CrashContext
             foreach (var a in Acties) sb.Append("\n  ").Append(a);
             return sb.ToString();
         }
+    }
+
+    /// <summary>Momentopname van het scherm en de laatste acties (nieuwste laatst), voor de foutlog in de database.</summary>
+    public static (string? Scherm, IReadOnlyList<string> Acties) Momentopname()
+    {
+        lock (Slot) return (_scherm, Acties.ToList());
     }
 
     /// <summary>Enkel voor testen.</summary>
