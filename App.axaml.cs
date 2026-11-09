@@ -62,14 +62,19 @@ public partial class App : Application
 
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
-            LogException(e.ExceptionObject as Exception);
+            LogException(e.ExceptionObject as Exception, "AppDomain.UnhandledException (achtergrondthread)");
         };
 
         TaskScheduler.UnobservedTaskException += (_, e) =>
         {
-            LogException(e.Exception);
+            LogException(e.Exception, "TaskScheduler.UnobservedTaskException (Task zonder await, boven bij GC)");
             e.SetObserved();
         };
+
+        // crash.log: onthoud op welke knoppen laatst geklikt werd (enkel voor het logboek).
+        Button.ClickEvent.AddClassHandler<Button>(
+            (b, _) => CrashContext.NoteerActie(BeschrijfKnop(b)),
+            Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
 
         // ==============================
         // 2️⃣ DEPENDENCY INJECTION
@@ -246,9 +251,12 @@ public partial class App : Application
         Dispatcher.UIThread.UnhandledException += (_, e) =>
         {
             e.Handled = true;
-            LogToFile(e.Exception);
+            LogToFile(e.Exception, "UI-thread (enkel toast)");
             ShowErrorToast(e.Exception);
         };
+
+        // crash.log: onthoud welk scherm open staat.
+        Services.GetRequiredService<INavigationService>().CurrentViewModelChanged += CrashContext.NoteerScherm;
 
         // ==============================
         // 6️⃣ MAIN WINDOW — open first so the user sees the app immediately
@@ -297,7 +305,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            LogException(ex);
+            LogException(ex, "Opstarten database");
             if (mainVm is not null)
                 await Dispatcher.UIThread.InvokeAsync(() =>
                     mainVm.InitError = $"Database kon niet worden gestart: {ex.Message}");
@@ -470,11 +478,25 @@ public partial class App : Application
     }
 
     /// <summary>Schrijf een exception naar crash.log (faalt nooit zelf).</summary>
-    private static void LogToFile(Exception? ex)
+    private static void LogToFile(Exception? ex, string bron)
     {
         if (ex == null) return;
-        try { File.AppendAllText(_crashLogPath, $"[{DateTime.Now}] {ex}\n\n"); }
+        try { File.AppendAllText(_crashLogPath, $"[{DateTime.Now}] {CrashContext.Beschrijf(bron)}\n{ex}\n\n"); }
         catch { /* logging mag de app nooit laten vallen */ }
+    }
+
+    /// <summary>Korte omschrijving van een knop voor crash.log: tekst of tooltip, het object erachter
+    /// (scherm of rij) en het venster.</summary>
+    private static string BeschrijfKnop(Button b)
+    {
+        try
+        {
+            var tekst = b.Content as string ?? ToolTip.GetTip(b) as string ?? b.Name ?? "(knop zonder tekst)";
+            var context = b.DataContext?.GetType().Name ?? "-";
+            var venster = TopLevel.GetTopLevel(b) is Window w && !string.IsNullOrEmpty(w.Title) ? $", venster '{w.Title}'" : "";
+            return $"klik '{tekst.Trim()}' ({context}{venster})";
+        }
+        catch { return "klik (onbekende knop)"; }
     }
 
     /// <summary>Toon een nette foutmelding-toast i.p.v. te crashen (UI-thread veilig).</summary>
@@ -496,11 +518,11 @@ public partial class App : Application
         catch { /* een fout-handler mag nooit zelf falen */ }
     }
 
-    private static void LogException(Exception? ex)
+    private static void LogException(Exception? ex, string bron)
     {
         if (ex == null) return;
 
-        LogToFile(ex);
+        LogToFile(ex, bron);
 
         // US-31: ook naar het gestructureerde log (wanneer DI al opgestart is).
         try { _logger?.LogError(ex, "Onafgevangen exceptie: {Message}", ex.Message); }
