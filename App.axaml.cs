@@ -14,6 +14,7 @@ using QuadroApp.Service.Import;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Service.Pricing;
 using QuadroApp.Service.Backup;
+using QuadroApp.Service.Foutlog;
 using QuadroApp.Service.Security;
 using QuadroApp.Service.Toast;
 using QuadroApp.Validation;
@@ -21,6 +22,7 @@ using QuadroApp.ViewModels;
 using Serilog;
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace QuadroApp;
@@ -37,6 +39,23 @@ public partial class App : Application
     /// macOS   : ~/Library/Application Support/QuadroApp/crash.log
     /// </summary>
     private static readonly string _crashLogPath = BuildCrashLogPath();
+
+    /// <summary>
+    /// Crash-registratie (crash.log + FoutLogs-tabel). Werkt al vóór DI bestaat: de factory en de
+    /// gebruiker worden pas bij een fout opgevraagd en zijn null/leeg zolang <see cref="Services"/> ontbreekt.
+    /// </summary>
+    private static readonly FoutRegistratie _foutRegistratie = new(
+        _crashLogPath,
+        () => Services?.GetService<IDbContextFactory<AppDbContext>>(),
+        () =>
+        {
+            try { return Services?.GetService<IAuthService>()?.CurrentUser?.GebruikersNaam; }
+            catch { return null; }
+        },
+        Environment.MachineName,
+        FoutRegistratie.HuidigeAppVersie());
+
+    private static int _foutImportGestart;
 
     private static string BuildCrashLogPath()
     {
@@ -62,12 +81,14 @@ public partial class App : Application
 
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
-            LogException(e.ExceptionObject as Exception, "AppDomain.UnhandledException (achtergrondthread)");
+            LogException(e.ExceptionObject as Exception, FoutLogBron.Achtergrondthread,
+                "AppDomain.UnhandledException", wachtOpDb: e.IsTerminating);
         };
 
         TaskScheduler.UnobservedTaskException += (_, e) =>
         {
-            LogException(e.Exception, "TaskScheduler.UnobservedTaskException (Task zonder await, boven bij GC)");
+            LogException(e.Exception, FoutLogBron.UnobservedTask,
+                "TaskScheduler.UnobservedTaskException, Task zonder await, boven bij GC");
             e.SetObserved();
         };
 
@@ -178,6 +199,7 @@ public partial class App : Application
         // US-32: authenticatie & autorisatie (singleton — CurrentUser is app-breed)
         services.AddSingleton<IAuthService, AuthService>();
         services.AddSingleton<IAuditService, AuditService>(); // US-40
+        services.AddSingleton<QuadroApp.Service.Foutlog.IFoutLogService, QuadroApp.Service.Foutlog.FoutLogService>();
         services.AddSingleton<IOfferteStatusReconciliatieService, OfferteStatusReconciliatieService>(); // US-48
 
         // US-34: daily automatic backups (SQLite online-backup API)
@@ -241,6 +263,7 @@ public partial class App : Application
         services.AddTransient<ViewModels.Gebruikers.WachtwoordWijzigViewModel>();
         services.AddTransient<ViewModels.Gebruikers.GebruikersBeheerViewModel>();
         services.AddTransient<ViewModels.Gebruikers.AuditLogViewModel>();
+        services.AddTransient<ViewModels.Gebruikers.FoutmeldingenViewModel>();
 
         Services = services.BuildServiceProvider();
         _logger = Services.GetRequiredService<ILogger<App>>();
@@ -251,9 +274,12 @@ public partial class App : Application
         Dispatcher.UIThread.UnhandledException += (_, e) =>
         {
             e.Handled = true;
-            LogToFile(e.Exception, "UI-thread (enkel toast)");
+            LogToFile(e.Exception, FoutLogBron.UiThread, "enkel toast");
             ShowErrorToast(e.Exception);
         };
+
+        // Foutlog: na de eerste login crash.log eenmalig inlezen in de database.
+        PlanCrashLogImport();
 
         // crash.log: onthoud welk scherm open staat.
         Services.GetRequiredService<INavigationService>().CurrentViewModelChanged += CrashContext.NoteerScherm;
@@ -305,7 +331,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            LogException(ex, "Opstarten database");
+            LogException(ex, FoutLogBron.Opstarten, "database");
             if (mainVm is not null)
                 await Dispatcher.UIThread.InvokeAsync(() =>
                     mainVm.InitError = $"Database kon niet worden gestart: {ex.Message}");
@@ -478,11 +504,59 @@ public partial class App : Application
     }
 
     /// <summary>Schrijf een exception naar crash.log (faalt nooit zelf).</summary>
-    private static void LogToFile(Exception? ex, string bron)
+    private static void LogToFile(Exception? ex, string bron, string? toelichting = null, bool wachtOpDb = false)
     {
         if (ex == null) return;
-        try { File.AppendAllText(_crashLogPath, $"[{DateTime.Now}] {CrashContext.Beschrijf(bron)}\n{ex}\n\n"); }
+        try
+        {
+            // crash.log wordt synchroon geschreven; de database-kant loopt op de achtergrond.
+            var taak = _foutRegistratie.Registreer(ex, bron, toelichting: toelichting);
+            if (wachtOpDb) taak.Wait(TimeSpan.FromSeconds(2));   // proces gaat eraan: kort wachten
+        }
         catch { /* logging mag de app nooit laten vallen */ }
+    }
+
+    /// <summary>
+    /// Na de eerste succesvolle login (één keer per app-run): crash.log inlezen in de database en
+    /// oude bekeken fouten opruimen. Op de achtergrond, vertraagt opstarten en login niet.
+    /// </summary>
+    private static void PlanCrashLogImport()
+    {
+        try
+        {
+            var auth = Services.GetRequiredService<IAuthService>();
+
+            void OnChanged(object? sender, EventArgs e) => Start();
+
+            void Start()
+            {
+                if (auth.CurrentUser is null) return;
+                if (Interlocked.Exchange(ref _foutImportGestart, 1) == 1) return;
+                auth.CurrentUserChanged -= OnChanged;
+
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var factory = Services.GetService<IDbContextFactory<AppDbContext>>();
+                        if (factory is null) return;
+                        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+                        await CrashLogImporter.ImporteerAsync(factory, _crashLogPath, Environment.MachineName, cts.Token);
+                        await CrashLogImporter.RuimOpAsync(factory, DateTime.UtcNow, cts.Token);
+                    }
+                    catch
+                    {
+                        // DB niet bereikbaar: bij de volgende login opnieuw proberen.
+                        Interlocked.Exchange(ref _foutImportGestart, 0);
+                        try { auth.CurrentUserChanged += OnChanged; } catch { /* nooit laten vallen */ }
+                    }
+                });
+            }
+
+            auth.CurrentUserChanged += OnChanged;
+            Start();   // voor het geval er al iemand ingelogd is
+        }
+        catch { /* nooit laten vallen */ }
     }
 
     /// <summary>Korte omschrijving van een knop voor crash.log: tekst of tooltip, het object erachter
@@ -491,10 +565,18 @@ public partial class App : Application
     {
         try
         {
-            var tekst = b.Content as string ?? ToolTip.GetTip(b) as string ?? b.Name ?? "(knop zonder tekst)";
             var context = b.DataContext?.GetType().Name ?? "-";
             var venster = TopLevel.GetTopLevel(b) is Window w && !string.IsNullOrEmpty(w.Title) ? $", venster '{w.Title}'" : "";
-            return $"klik '{tekst.Trim()}' ({context}{venster})";
+
+            // Een knop in een rij (DataContext is geen ViewModel van een scherm) kan klantnamen in de tekst hebben:
+            // dan enkel het type van de rij loggen.
+            if (!context.EndsWith("ViewModel", StringComparison.Ordinal))
+                return $"klik (rij {context}{venster})";
+
+            var tekst = b.Content as string ?? ToolTip.GetTip(b) as string ?? b.Name ?? "(knop zonder tekst)";
+            tekst = tekst.ReplaceLineEndings(" ").Trim();
+            if (tekst.Length > 40) tekst = tekst[..39] + "…";
+            return $"klik '{tekst}' ({context}{venster})";
         }
         catch { return "klik (onbekende knop)"; }
     }
@@ -518,11 +600,11 @@ public partial class App : Application
         catch { /* een fout-handler mag nooit zelf falen */ }
     }
 
-    private static void LogException(Exception? ex, string bron)
+    private static void LogException(Exception? ex, string bron, string? toelichting = null, bool wachtOpDb = false)
     {
         if (ex == null) return;
 
-        LogToFile(ex, bron);
+        LogToFile(ex, bron, toelichting, wachtOpDb);
 
         // US-31: ook naar het gestructureerde log (wanneer DI al opgestart is).
         try { _logger?.LogError(ex, "Onafgevangen exceptie: {Message}", ex.Message); }
