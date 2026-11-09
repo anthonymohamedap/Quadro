@@ -1,25 +1,16 @@
 using Avalonia.Controls;
-using QuadroApp.ViewModels;
-using System;
 
 namespace QuadroApp.Views;
 
+/// <summary>
+/// Voorbeeld van de bestelbon. Feedback Veerle: de PDF ging vroeger bij het openen van dit venster
+/// automatisch open in een ander programma (bv. Edge op volledig scherm), waardoor het leek alsof je
+/// uit Quadro was en niet terug kon. Nu opent de PDF enkel met de knop «PDF openen».
+/// </summary>
 public partial class BestelbonPreviewWindow : Window
 {
-    private bool _previewOpened;
-
     public BestelbonPreviewWindow()
     {
         InitializeComponent();
-        Opened += OnOpened;
-    }
-
-    private async void OnOpened(object? sender, EventArgs e)
-    {
-        if (_previewOpened || DataContext is not BestelbonPreviewViewModel vm)
-            return;
-
-        _previewOpened = true;
-        await vm.OpenPreviewCommand.ExecuteAsync(null);
     }
 }
