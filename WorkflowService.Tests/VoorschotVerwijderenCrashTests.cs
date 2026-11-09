@@ -7,6 +7,8 @@ using QuadroApp.Model.DB;
 using QuadroApp.Service;
 using QuadroApp.Service.Interfaces;
 using QuadroApp.Service.Pricing;
+using QuadroApp.Service.Verkoop;
+using QuadroApp.ViewModels.Verkoop;
 using QuadroApp.Validation;
 using QuadroApp.ViewModels;
 using System;
@@ -602,6 +604,103 @@ public class VoorschotVerwijderenCrashTests
         ToonToasts("BestelbonVm 2x snel", toast);
         var (_, bon) = await StandAsync(s);
         _out.WriteLine($"bon status {bon.Status}; betalingen scherm {vm.Betalingen.Count}; DB {(await s.Ontvangsten.GetBetalingenAsync(s.BestelbonId)).Count}");
+        Assert.Empty(toast.ErrorMessages);
+        guard.AssertGeen();
+    }
+
+    // ───────────────────────── 4. dev: VerkoopDossier (VernieuwNaWerkbonAsync via StandRest) ─────────────────────────
+
+    private sealed class DossierProvider(Scope s, TestToastService toast) : IServiceProvider
+    {
+        public object? GetService(Type t)
+        {
+            if (t == typeof(BestelbonnenViewModel))
+                return new BestelbonnenViewModel(s.Factory, s.BestelbonWf,
+                    new BestelbonExportService(s.Factory, Array.Empty<IBestelbonExporter>()), toast,
+                    new TestNavigationService(), s.Ontvangsten, new TestPathOpener());
+            if (t == typeof(OfferteViewModel))
+                return new OfferteViewModel(s.Factory, new TestNavigationService(), new TestDialogService(), s.Pricing,
+                    new OfferteWorkflowService(s.Factory, s.StatusWf), new WerkBonWorkflowService(s.Factory, s.StatusWf), s.StatusWf, s.BestelbonWf,
+                    new BestelbonExportService(s.Factory, Array.Empty<IBestelbonExporter>()), new TestFilePickerService(),
+                    new OfferteValidator(s.Factory), toast, new KlantValidator(s.Factory), new KlantDialogService(),
+                    s.Ontvangsten, new TestPathOpener(), new GeenOfferteNavigatie(), s.Auth);
+            return null;
+        }
+    }
+
+    private async Task<(VerkoopDossierViewModel dossier, TestToastService toast)> MaakDossierAsync(Scope s, WerkBonStatus werkbon = WerkBonStatus.Afgewerkt)
+    {
+        await using (var db = await s.Factory.CreateDbContextAsync())
+        {
+            var wb = await db.WerkBonnen.SingleAsync(w => w.Id == s.WerkBonId);
+            wb.Status = werkbon;
+            var o = await db.Offertes.SingleAsync(x => x.Id == s.OfferteId);
+            o.Status = OfferteStatus.Afgewerkt;
+            await db.SaveChangesAsync();
+        }
+        await s.BestelbonWf.MarkeerKlaarVoorExportAsync(s.BestelbonId);
+
+        var toast = new TestToastService();
+        var dossier = new VerkoopDossierViewModel(s.Factory, new VerkoopOverzichtService(s.Factory), new VerkoopDossierService(s.Factory, s.StatusWf),
+            new TestNavigationService(), new GeenOfferteNavigatie(), s.StatusWf, new WerkBonWorkflowService(s.Factory, s.StatusWf),
+            new TestDialogService(), toast, s.Ontvangsten, new DossierProvider(s, toast));
+        await dossier.ReceiveAsync(s.OfferteId);
+        await dossier.InitializeAsync();
+        await WachtOpAsync(() => dossier.BestelbonDetail?.GeselecteerdeBestelbon is not null);
+        return (dossier, toast);
+    }
+
+    [Fact]
+    public async Task Dossier_betaling_verwijderen_via_bestelbondetail_vernieuwt_dossier_zonder_fouten()
+    {
+        using var guard = new OnobserveerdGuard();
+        await using var s = await MaakScopeAsync();
+        await s.Ontvangsten.RegistreerBetalingAsync(s.BestelbonId, 62m, DateTime.Today, Betaalwijze.Cash);
+        var (dossier, toast) = await MaakDossierAsync(s);
+        Assert.NotNull(dossier.BestelbonDetail);   // dossier staat in stap 4 met bestelbon-detail
+        await WachtOpAsync(() => dossier.BestelbonDetail!.Betalingen.Count == 1);
+
+        await dossier.BestelbonDetail!.VerwijderBetalingCommand.ExecuteAsync(dossier.BestelbonDetail.Betalingen[0]);
+        await Task.Delay(1500);   // VernieuwNaWerkbonAsync: Task.Delay(250) + LaadAsync
+        ToonToasts("Dossier betaling", toast);
+
+        Assert.Empty(toast.ErrorMessages);
+        guard.AssertGeen();
+    }
+
+    [Fact]
+    public async Task Dossier_voorschot_verwijderen_via_bestelbondetail_ICommand_twee_keer_snel()
+    {
+        using var guard = new OnobserveerdGuard();
+        await using var s = await MaakScopeAsync();
+        var (dossier, toast) = await MaakDossierAsync(s);
+        Assert.NotNull(dossier.BestelbonDetail);
+        var v = await VoorschottenAsync(s);
+
+        ICommand cmd = dossier.BestelbonDetail!.VerwijderBetalingCommand;
+        cmd.Execute(v[0]);
+        cmd.Execute(v[1]);
+        await Task.Delay(2000);
+        ToonToasts("Dossier 2x snel", toast);
+
+        Assert.Empty(toast.ErrorMessages);
+        guard.AssertGeen();
+    }
+
+    [Fact]
+    public async Task Dossier_betaald_dan_voorschot_verwijderen_via_bestelbondetail()
+    {
+        using var guard = new OnobserveerdGuard();
+        await using var s = await MaakScopeAsync();
+        var (dossier, toast) = await MaakDossierAsync(s);
+        var stand = await s.Ontvangsten.GetBetaalStandAsync(s.BestelbonId);
+        await s.Ontvangsten.RegistreerBetalingAsync(s.BestelbonId, stand.Rest, DateTime.Today, Betaalwijze.Cash);
+        var v = (await VoorschottenAsync(s))[0];
+
+        await dossier.BestelbonDetail!.VerwijderBetalingCommand.ExecuteAsync(v);
+        await Task.Delay(2000);
+        ToonToasts("Dossier betaald→voorschot weg", toast);
+
         Assert.Empty(toast.ErrorMessages);
         guard.AssertGeen();
     }
