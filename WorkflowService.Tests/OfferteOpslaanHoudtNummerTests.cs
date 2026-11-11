@@ -71,6 +71,60 @@ public class OfferteOpslaanHoudtNummerTests
     }
 
     [Fact]
+    public async Task Opslaan_zet_het_werkbontotaal_gelijk_aan_de_offerte()
+    {
+        // Feedback Veerle (#48/#49): tweede inlijsting na het bevestigen → de werkbon bleef op het
+        // totaal van de eerste staan, terwijl de bestelbon wel klopte.
+        await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
+        var f = scope.Factory;
+        int id;
+        await using (var db = await f.CreateDbContextAsync())
+        {
+            foreach (var (c, n) in new[] { ('G', "Glas"), ('P', "Passe-partout"), ('D', "Diepte"), ('O', "Opkleven"), ('R', "Rug") })
+                db.AfwerkingsGroepen.Add(new AfwerkingsGroep { Code = c, Naam = n });
+            var offerte = new Offerte
+            {
+                OfferteNummer = 48, Datum = DateTime.Today, Status = OfferteStatus.Goedgekeurd,
+                TotaalInclBtw = 120m,
+                Klant = new Klant { Voornaam = "Marleen", Achternaam = "Peeters" },
+                Regels =
+                {
+                    new OfferteRegel { Titel = "Trouwfoto", AantalStuks = 1, BreedteCm = 50, HoogteCm = 70, TotaalInclBtw = 45m },
+                    new OfferteRegel { Titel = "Diploma", AantalStuks = 1, BreedteCm = 30, HoogteCm = 40, TotaalInclBtw = 75m }
+                },
+                WerkBon = new WerkBon { Status = WerkBonStatus.Gepland, TotaalPrijsIncl = 45m }
+            };
+            db.Offertes.Add(offerte);
+            await db.SaveChangesAsync();
+            id = offerte.Id;
+        }
+
+        var vm = MaakViewModel(f);
+        await vm.InitializeAsync();
+        await vm.LoadAsync(id);
+        await vm.SaveCoreAsync(reloadAfterSave: true);
+
+        await using var check = await f.CreateDbContextAsync();
+        var offerteNa = await check.Offertes.Include(o => o.WerkBon).SingleAsync(o => o.Id == id);
+        Assert.Equal(offerteNa.TotaalInclBtw, offerteNa.WerkBon!.TotaalPrijsIncl);
+        Assert.NotEqual(45m, offerteNa.WerkBon.TotaalPrijsIncl);
+    }
+
+    private static OfferteViewModel MaakViewModel(IDbContextFactory<QuadroApp.Data.AppDbContext> f)
+    {
+        var toast = new TestToastService();
+        var auth = new TestAuthService();
+        var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
+        var pricing = new PricingService(f, new PricingSettingsProvider(f), new PricingEngine(), NullLogger<PricingService>.Instance);
+        var bestelbonWf = new BestelbonWorkflowService(f, pricing, auth);
+        return new OfferteViewModel(f, new TestNavigationService(), new TestDialogService(), pricing,
+            new OfferteWorkflowService(f, wf), new WerkBonWorkflowService(f, wf), wf, bestelbonWf,
+            new BestelbonExportService(f, Array.Empty<IBestelbonExporter>()), new TestFilePickerService(),
+            new OfferteValidator(f), toast, new KlantValidator(f), new KlantDialogService(),
+            new OntvangstService(f, auth, bestelbonWf), new TestPathOpener(), new GeenOfferteNavigatie(), auth);
+    }
+
+    [Fact]
     public async Task Migratie_herstelt_nummers_0_die_door_opslaan_ontstonden()
     {
         var map = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "QuadroNummerOpslaan_" + Guid.NewGuid().ToString("N"));

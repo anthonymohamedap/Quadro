@@ -292,6 +292,7 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             mainVm = Services.GetRequiredService<MainWindowViewModel>();
+            QuadroApp.Views.VensterGrootte.Registreer();   // vensters nooit groter dan het scherm
             desktop.MainWindow = new MainWindow { DataContext = mainVm };
         }
 
