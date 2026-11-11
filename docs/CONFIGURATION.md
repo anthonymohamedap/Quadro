@@ -48,7 +48,7 @@ Logs staan in `%LOCALAPPDATA%\QuadroApp\logs\quadro-JJJJMMDD.log` (macOS: `~/Lib
 { "Logging": { "MinimumLevel": "Debug" } }
 ```
 
-Geldige niveaus: `Verbose`, `Debug`, `Information` (standaard), `Warning`, `Error`. Onafgevangen crashes staan zowel in het log als in `crash.log`.
+Geldige niveaus: `Verbose`, `Debug`, `Information` (standaard), `Warning`, `Error`. Onafgevangen crashes staan zowel in het log als in `crash.log`, en ook in de tabel `FoutLogs` (zie `docs/backlog/Foutlog_in_DB.md`); de beheerder leest ze in Instellingen → Foutmeldingen.
 
 ## Databaseschema per provider (REL-02)
 
