@@ -24,6 +24,10 @@ public partial class InstellingenWindow : Window
             if (auditKnop is not null)
                 auditKnop.IsVisible = auth.HeeftPermissie(Permissie.AuditInzien);
 
+            var foutKnop = this.FindControl<Button>("FoutmeldingenKnop");
+            if (foutKnop is not null)
+                foutKnop.IsVisible = FoutmeldingenViewModel.IsZichtbaarVoor(auth);
+
             var reconKnop = this.FindControl<Button>("StatusReconciliatieKnop");
             if (reconKnop is not null)
                 reconKnop.IsVisible = auth.HeeftPermissie(Permissie.GebruikersBeheren);
@@ -58,6 +62,15 @@ public partial class InstellingenWindow : Window
         var venster = new AuditLogWindow
         {
             DataContext = App.Services.GetRequiredService<AuditLogViewModel>()
+        };
+        await venster.ShowDialog(this);
+    }
+
+    private async void Foutmeldingen_Click(object? sender, RoutedEventArgs e)
+    {
+        var venster = new FoutmeldingenWindow
+        {
+            DataContext = App.Services.GetRequiredService<FoutmeldingenViewModel>()
         };
         await venster.ShowDialog(this);
     }

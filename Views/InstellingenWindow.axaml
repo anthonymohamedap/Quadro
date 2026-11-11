@@ -72,6 +72,11 @@
                                     Content="Auditlogboek"
                                     Classes="GhostBtn"
                                     Click="AuditLog_Click"/>
+                            <Button x:Name="FoutmeldingenKnop"
+                                    Content="Foutmeldingen"
+                                    Classes="GhostBtn"
+                                    IsVisible="False"
+                                    Click="Foutmeldingen_Click"/>
                             <Button x:Name="StatusReconciliatieKnop"
                                     Content="Herbereken offertestatussen"
                                     Classes="GhostBtn"
