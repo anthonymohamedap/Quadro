@@ -295,8 +295,13 @@ public partial class OfferteWorkflowViewModel : AsyncViewModelBase
         {
             IsBusy = true;
 
-            if (_getOfferteId() == 0)
-                await _saveAndReload();
+            // Feedback Veerle: altijd eerst herberekenen en opslaan, ook bij een bestaande offerte.
+            // Anders kreeg de werkbon het totaal van vóór de laatste wijziging (bv. een tweede
+            // inlijsting die nog niet bewaard was).
+            if (!await _runValidation(true))
+                return;
+            await _berekenAsync();
+            await _saveAndReload();
 
             var offerteId = _getOfferteId();
             if (offerteId == 0)

@@ -24,12 +24,13 @@
 
         <Border Grid.Row="1" Margin="18,18,18,0" Padding="14" Background="{DynamicResource InfoBg}" BorderBrush="{DynamicResource InfoBorder}" BorderThickness="1" CornerRadius="8">
             <StackPanel Spacing="8">
-                <TextBlock Text="De PDF-preview wordt geopend in je standaard PDF-viewer."
+                <TextBlock Text="Met «PDF openen» zie je de bestelbon zoals de klant hem krijgt. Die opent in een apart programma (bv. Edge): sluit dat venster om hier terug te komen."
                            Classes="body"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource InfoText}"
                            TextWrapping="Wrap"/>
-                <TextBlock Text="{Binding PreviewPad}" Classes="caption" TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding PreviewPad}" Classes="caption" TextWrapping="Wrap"
+                           IsVisible="{Binding PreviewPad, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
             </StackPanel>
         </Border>
 
@@ -146,7 +147,7 @@
 
         <Border Grid.Row="3" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1,1,1,0" Padding="18,12">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                <Button Content="Open preview" MinWidth="110" Command="{Binding OpenPreviewCommand}"/>
+                <Button Content="PDF openen" MinWidth="110" Command="{Binding OpenPreviewCommand}"/>
                 <Button Content="Opslaan bij offerte"
                         MinWidth="130"
                         Command="{Binding BewaarBijOfferteCommand}"
