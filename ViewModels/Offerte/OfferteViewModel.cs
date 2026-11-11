@@ -1519,6 +1519,13 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                         ApplyToDbRegel(dbRule, vmRule);
                     }
                 }
+
+                // Feedback Veerle: de werkbon bewaart een kopie van het offertetotaal. Werd er na
+                // het bevestigen nog een inlijsting toegevoegd of gewijzigd, dan bleef de werkbon op
+                // het oude totaal staan (enkel de prijs van de eerste inlijsting). Mee bijwerken.
+                var werkBon = await db.WerkBonnen.FirstOrDefaultAsync(w => w.OfferteId == Offerte.Id);
+                if (werkBon is not null && werkBon.TotaalPrijsIncl != Offerte.TotaalInclBtw)
+                    werkBon.TotaalPrijsIncl = Offerte.TotaalInclBtw;
             }
 
             if (shouldSaveAtEnd)
