@@ -54,6 +54,15 @@ static class Schermen
         ["offertelijst"] = f => OffertelijstAsync(f, VerkoopFase.OpenOffertes),
         ["offertelijst-werkbonnen"] = f => OffertelijstAsync(f, VerkoopFase.LopendeWerkbonnen),
         ["bestelbonnen"] = BestelbonnenAsync,
+        ["foutmeldingen"] = async f =>
+        {
+            await TestGegevens.SeedFoutmeldingenAsync(f);
+            var vm = new QuadroApp.ViewModels.Gebruikers.FoutmeldingenViewModel(
+                new QuadroApp.Service.Foutlog.FoutLogService(f, new TestAuthService()));
+            await vm.LadenCommand.ExecuteAsync(null);
+            vm.Geselecteerd = vm.Rijen.First();
+            return new FoutmeldingenView { DataContext = vm };
+        },
         ["bestelbon-voorbeeld"] = BestelbonVoorbeeldAsync,
         ["home"] = f => HomeAsync(f, metVandaag: true),
         ["home-leeg"] = f => HomeAsync(f, metVandaag: false),
@@ -330,7 +339,41 @@ sealed class RenderApp : Application
         Styles.Add(new FluentTheme());
         Styles.Add(new StyleInclude(new Uri("avares://QuadroApp/"))
         {
+            Source = new Uri("avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml")   // zoals App.axaml: anders renderen DataGrids leeg
+        });
+        Styles.Add(new StyleInclude(new Uri("avares://QuadroApp/"))
+        {
             Source = new Uri("avares://QuadroApp/Styles/QuadroTheme.axaml")
         });
+    }
+}
+
+/// <summary>Fictieve foutmeldingen (geen klantgegevens) voor het beheerdersscherm Foutmeldingen.</summary>
+static partial class TestGegevens
+{
+    public static async Task SeedFoutmeldingenAsync(IDbContextFactory<AppDbContext> f)
+    {
+        await using var db = await f.CreateDbContextAsync();
+        var nu = DateTime.UtcNow;
+        FoutLog L(int minutenGeleden, string bron, string pc, string scherm, string type, string melding, string trace, bool bekeken = false) => new()
+        {
+            Tijdstip = new DateTime(nu.Year, nu.Month, nu.Day, nu.Hour, nu.Minute, 0, DateTimeKind.Utc).AddMinutes(-minutenGeleden),
+            Bron = bron, Computernaam = pc, Scherm = scherm, ExceptionType = type, Melding = melding,
+            Stacktrace = $"{type}: {melding}\n{trace}", AppVersie = "1.14.2", Gebruiker = "veerle",
+            LaatsteKlikken = "Verkoop > Dossier openen\nStap 2: Werkbon\nKnop: Plan in agenda",
+            Hash = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N"), IsBekeken = bekeken
+        };
+        db.FoutLogs.AddRange(
+            L(35, "UI-thread", "KASSA-PC", "VerkoopDossierViewModel", "System.NullReferenceException", "Object reference not set to an instance of an object.",
+              "   at QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel.VernieuwNaWerkbonAsync() in VerkoopDossierViewModel.cs:line 412\n   at QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel.HoofdKnopAsync() in VerkoopDossierViewModel.cs:line 233\n   at CommunityToolkit.Mvvm.Input.AsyncRelayCommand.Execute(Object parameter)"),
+            L(180, "UnobservedTask", "ATELIER-PC", "OfferteViewModel", "Microsoft.EntityFrameworkCore.DbUpdateException", "An error occurred while saving the entity changes.",
+              "   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)\n   at QuadroApp.ViewModels.OfferteViewModel.SaveAsync() in OfferteViewModel.cs:line 1187"),
+            L(1500, "UI-thread", "KASSA-PC", "OfferteViewModel", "System.InvalidOperationException", "Sequence contains no elements",
+              "   at System.Linq.ThrowHelper.ThrowNoElementsException()\n   at QuadroApp.ViewModels.OfferteViewModel.BerekenAsync() in OfferteViewModel.cs:line 764"),
+            L(2900, "Geïmporteerd", "ATELIER-PC", "PlanningPaginaViewModel", "System.TimeoutException", "De bewerking is verlopen.",
+              "   at QuadroApp.Service.WerkBonWorkflowService.PlanRegelMetDagCapaciteitAsync(Int32 werkBonId, Int32 regelId, DateTime dag) in WerkBonWorkflowService.cs:line 98"),
+            L(5800, "UnobservedTask", "KASSA-PC", "VerkoopDossierViewModel", "System.ObjectDisposedException", "Cannot access a disposed object.",
+              "   at QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel.LaadAsync() in VerkoopDossierViewModel.cs:line 151", bekeken: true));
+        await db.SaveChangesAsync();
     }
 }

@@ -22,6 +22,7 @@ namespace QuadroApp.Data
         public DbSet<Instelling> Instellingen => Set<Instelling>();
         public DbSet<Gebruiker> Gebruikers => Set<Gebruiker>();
         public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+        public DbSet<FoutLog> FoutLogs => Set<FoutLog>();
         public DbSet<Leverancier> Leveranciers => Set<Leverancier>();
         public DbSet<LeverancierBestelling> LeverancierBestellingen => Set<LeverancierBestelling>();
         public DbSet<LeverancierBestelLijn> LeverancierBestelLijnen => Set<LeverancierBestelLijn>();
@@ -50,6 +51,10 @@ namespace QuadroApp.Data
             // ── US-36: AuditLog (alleen-schrijven) ───────────────────────────
             b.Entity<AuditLog>().HasIndex(a => a.Tijdstip);
             b.Entity<AuditLog>().HasIndex(a => new { a.EntiteitType, a.EntiteitId });
+
+            // ── FoutLogs: crashmeldingen, uniek op hash (geen dubbels) ───────
+            b.Entity<FoutLog>().HasIndex(f => f.Hash).IsUnique();
+            b.Entity<FoutLog>().HasIndex(f => f.Tijdstip);
 
             // ── Globale soft-delete query filters ────────────────────────────
             // Gebruik .IgnoreQueryFilters() als je gearchiveerde records wél nodig hebt.
