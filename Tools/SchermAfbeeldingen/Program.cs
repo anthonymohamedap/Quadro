@@ -28,6 +28,8 @@ var nl = System.Globalization.CultureInfo.GetCultureInfo("nl-BE");
 System.Globalization.CultureInfo.DefaultThreadCurrentCulture = nl;
 System.Globalization.CultureInfo.CurrentCulture = nl;
 
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;   // voor de PDF-voorbeelden
+
 var uitvoer = args.Length > 0 ? args[0] : "schermafbeeldingen";
 var gekozen = args.Skip(1).ToHashSet(StringComparer.OrdinalIgnoreCase);
 Directory.CreateDirectory(uitvoer);
@@ -159,6 +161,7 @@ static class Schermen
             vm.Geselecteerd = vm.Rijen.First();
             return new FoutmeldingenView { DataContext = vm };
         },
+        ["bestelbon-voorbeeld"] = BestelbonVoorbeeldAsync,
         ["home"] = f => HomeAsync(f, metVandaag: true),
         ["home-leeg"] = f => HomeAsync(f, metVandaag: false),
         ["home-vol"] = async f => { await TestGegevens.SeedVeelAsync(f, 10); return await HomeAsync(f, metVandaag: false); },
@@ -182,6 +185,7 @@ static class Schermen
         ["planning-pagina-werkbon"] = (1440, 1300),
         ["dossier-2-gepland"] = (1440, 1500),
         ["dossier-2-delen"] = (1440, 1500),
+        ["bestelbon-voorbeeld"] = (860, 620),
     };
 
     public static async Task AllesAsync(string uitvoer, HashSet<string> gekozen)
@@ -201,7 +205,10 @@ static class Schermen
     /// <summary>Toont het scherm in een venster van 1440×900 (zoals op de Mac) en bewaart een PNG.</summary>
     public static async Task RenderAsync(Control scherm, string pad, int breedte = 1440, int hoogte = 900)
     {
-        var venster = new Window { Width = breedte, Height = hoogte, Content = scherm };
+        // Een eigen venster (bv. het bestelbon-voorbeeld) wordt zelf getoond.
+        var venster = scherm as Window ?? new Window { Content = scherm };
+        venster.Width = breedte;
+        venster.Height = hoogte;
         venster.Show();
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(200);
@@ -374,6 +381,24 @@ static class Schermen
         var vm = new PlanningPaginaViewModel(f, new WerkBonWorkflowService(f, wf), toast, wf, new TestNavigationService());
         await vm.InitializeAsync();
         return new QuadroApp.Views.Planning.PlanningPaginaView { DataContext = vm };
+    }
+
+    /// <summary>"Bestelbon bekijken": het voorbeeldvenster; de PDF opent pas met de knop «PDF openen».</summary>
+    static async Task<Control> BestelbonVoorbeeldAsync(IDbContextFactory<AppDbContext> f)
+    {
+        await TestGegevens.SeedVandaagAsync(f);
+        var toast = new TestToastService();
+        var auth = new TestAuthService();
+        var pricing = new PricingService(f, new PricingSettingsProvider(f), new PricingEngine(), NullLogger<PricingService>.Instance);
+        var workflow = new BestelbonWorkflowService(f, pricing, auth);
+        await using var db = await f.CreateDbContextAsync();
+        var id = await db.Bestelbonnen.Where(b => b.BestelbonNummer == "2026-23").Select(b => b.Id).SingleAsync();
+        var bon = (await workflow.GetBestelbonAsync(id))!;
+        var vm = new BestelbonPreviewViewModel(bon.Id, bon, workflow,
+            new BestelbonExportService(f, new IBestelbonExporter[] { new PdfBestelbonExporter() }),
+            new TestFilePickerService(), toast);
+        await vm.InitializeAsync();
+        return new BestelbonPreviewWindow { DataContext = vm };
     }
 
     static async Task<Control> HomeAsync(IDbContextFactory<AppDbContext> f, bool metVandaag, bool voorraadOpen = false)
