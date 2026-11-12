@@ -37,6 +37,7 @@ Directory.CreateDirectory(uitvoer);
 AppBuilder.Configure<RenderApp>().UseSkia()
     .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
     .SetupWithoutStarting();
+QuadroApp.Views.DatumKiezerTekst.Registreer();   // zoals in App: "dag/maand/jaar" in lege datumkiezers
 
 // De app wacht op de UI-thread; die moet hier zelf verwerkt worden zolang er gerenderd wordt.
 var job = Schermen.AllesAsync(uitvoer, gekozen);
@@ -64,6 +65,8 @@ static class Schermen
             return new FoutmeldingenView { DataContext = vm };
         },
         ["bestelbon-voorbeeld"] = BestelbonVoorbeeldAsync,
+        ["standaardkaders"] = StandaardkadersAsync,
+        ["winkelverkopen-na-opslaan"] = WinkelverkopenNaOpslaanAsync,
         ["home"] = f => HomeAsync(f, metVandaag: true),
         ["home-leeg"] = f => HomeAsync(f, metVandaag: false),
         ["home-vol"] = async f => { await TestGegevens.SeedVeelAsync(f, 10); return await HomeAsync(f, metVandaag: false); },
@@ -171,6 +174,37 @@ static class Schermen
             new TestFilePickerService(), toast);
         await vm.InitializeAsync();
         return new BestelbonPreviewWindow { DataContext = vm };
+    }
+
+    /// <summary>Standaardkaders: prijs incl. btw in de lijst en in het invoerveld (feedback 12/11).</summary>
+    static async Task<Control> StandaardkadersAsync(IDbContextFactory<AppDbContext> f)
+    {
+        var vm = new KantKlaarKaderenViewModel(f, new TestNavigationService(), new TestDialogService(), new TestToastService());
+        await vm.InitializeAsync();
+        vm.NieuwCommand.Execute(null);
+        vm.GeselecteerdeKader!.Naam = "Quadrum";
+        vm.GeselecteerdeKader.Beschrijving = "Hout naturel 30×40";
+        vm.GeselecteerdeKader.PrijsPerStukIncl = 29.95m;
+        await vm.SaveCommand.ExecuteAsync(null);
+        vm.GeselecteerdeKader = vm.GefilterdeKaders.First(k => k.Naam == "C2");
+        return new KantKlaarKaderenView { DataContext = vm };
+    }
+
+    /// <summary>Winkelverkopen: na "Opslaan" staat de verkoop meteen in de lijst, zonder "Ververs".
+    /// De periodefilter staat leeg, zodat de lege datumkiezers "dag/maand/jaar" tonen.</summary>
+    static async Task<Control> WinkelverkopenNaOpslaanAsync(IDbContextFactory<AppDbContext> f)
+    {
+        var vm = new WinkelVerkopenViewModel(f, new TestNavigationService(), new TestDialogService(), new TestToastService(), new TestAuthService());
+        await vm.InitializeAsync();
+        vm.NieuwCommand.Execute(null);
+        vm.GeselecteerdeVerkoop!.Omschrijving = "Wenskaart Quadro";
+        vm.GeselecteerdeVerkoop.Aantal = 2;
+        vm.GeselecteerdeVerkoop.PrijsPerStukIncl = 3.50m;
+        await vm.SaveCommand.ExecuteAsync(null);
+        vm.NieuwCommand.Execute(null);
+        vm.FilterVanaf = null;   // lege datumkiezers: "dag / maand / jaar"
+        vm.FilterTot = null;
+        return new WinkelVerkopenView { DataContext = vm };
     }
 
     static async Task<Control> HomeAsync(IDbContextFactory<AppDbContext> f, bool metVandaag, bool voorraadOpen = false)
