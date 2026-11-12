@@ -143,6 +143,7 @@ public partial class KantKlaarKaderenViewModel : ObservableObject, IAsyncInitial
             await db.SaveChangesAsync();
 
             _toast.Success("Standaardkader opgeslagen.");
+            IsBusy = false;   // anders slaat LoadAsync het herladen over (het scherm staat nog op 'bezig')
             await LoadAsync();
 
             IsDetailOpen = false;
@@ -187,6 +188,7 @@ public partial class KantKlaarKaderenViewModel : ObservableObject, IAsyncInitial
             dbKader.IsGearchiveerd = true;
             await db.SaveChangesAsync();
 
+            IsBusy = false;   // anders slaat LoadAsync het herladen over (het scherm staat nog op 'bezig')
             await LoadAsync();
 
             IsDetailOpen = false;

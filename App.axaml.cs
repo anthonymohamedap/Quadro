@@ -293,6 +293,7 @@ public partial class App : Application
         {
             mainVm = Services.GetRequiredService<MainWindowViewModel>();
             QuadroApp.Views.VensterGrootte.Registreer();   // vensters nooit groter dan het scherm
+            QuadroApp.Views.DatumKiezerTekst.Registreer();  // "dag/maand/jaar" i.p.v. "day/month/year"
             desktop.MainWindow = new MainWindow { DataContext = mainVm };
         }
 
