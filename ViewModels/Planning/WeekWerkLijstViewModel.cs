@@ -86,9 +86,12 @@ public partial class WeekWerkLijstViewModel : ObservableObject
             .ThenBy(t => t.GeplandVan)
             .ToListAsync();
 
+        // Feedback Veerle (12/11): per klant groeperen (niet per achternaam: twee klanten met
+        // dezelfde achternaam vielen samen) en een naam tonen, ook als de achternaam leeg is.
         var grouped = taken
-            .GroupBy(t => t.WerkBon?.Offerte?.Klant?.Achternaam?.ToUpperInvariant() ?? "ONBEKEND")
-            .OrderBy(g => g.Key);
+            .GroupBy(t => t.WerkBon?.Offerte?.KlantId ?? 0)
+            .Select(g => (Naam: KlantKop(g.First().WerkBon?.Offerte?.Klant), Taken: g))
+            .OrderBy(g => g.Naam, StringComparer.CurrentCultureIgnoreCase);
 
         Blocks.Clear();
 
@@ -96,15 +99,28 @@ public partial class WeekWerkLijstViewModel : ObservableObject
         {
             var block = new KlantWeekBlock
             {
-                KlantNaam = g.Key,
+                KlantNaam = g.Naam,
                 Items = new ObservableCollection<WeekWerkItem>(
-                    g.Select(t => WeekWerkItem.FromTaak(t))
+                    g.Taken.Select(t => WeekWerkItem.FromTaak(t))
                 )
             };
             Blocks.Add(block);
         }
     }
 
+
+    /// <summary>Kop van een klant op de weeklijst: ACHTERNAAM Voornaam; is een van beide leeg,
+    /// dan wat er wel is ("ONBEKEND" als er niets is).</summary>
+    public static string KlantKop(Klant? klant)
+    {
+        var achternaam = klant?.Achternaam?.Trim() ?? "";
+        var voornaam = klant?.Voornaam?.Trim() ?? "";
+        if (achternaam.Length == 0 && voornaam.Length == 0) return "ONBEKEND";
+        if (achternaam.Length == 0) return voornaam.ToUpperInvariant();
+        return voornaam.Length == 0
+            ? achternaam.ToUpperInvariant()
+            : $"{achternaam.ToUpperInvariant()} {voornaam}";
+    }
 
     [RelayCommand]
     private async Task MarkeerBesteldAsync(WeekWerkItem item)
