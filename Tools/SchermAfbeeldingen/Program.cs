@@ -37,6 +37,7 @@ Directory.CreateDirectory(uitvoer);
 AppBuilder.Configure<RenderApp>().UseSkia()
     .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
     .SetupWithoutStarting();
+QuadroApp.Views.DatumKiezerTekst.Registreer();   // zoals in App: "dag/maand/jaar" in lege datumkiezers
 
 // De app wacht op de UI-thread; die moet hier zelf verwerkt worden zolang er gerenderd wordt.
 var job = Schermen.AllesAsync(uitvoer, gekozen);
@@ -64,6 +65,9 @@ static class Schermen
             return new FoutmeldingenView { DataContext = vm };
         },
         ["bestelbon-voorbeeld"] = BestelbonVoorbeeldAsync,
+        ["standaardkaders"] = StandaardkadersAsync,
+        ["weeklijst-pdf"] = WeeklijstPdfAsync,
+        ["winkelverkopen-na-opslaan"] = WinkelverkopenNaOpslaanAsync,
         ["home"] = f => HomeAsync(f, metVandaag: true),
         ["home-leeg"] = f => HomeAsync(f, metVandaag: false),
         ["home-vol"] = async f => { await TestGegevens.SeedVeelAsync(f, 10); return await HomeAsync(f, metVandaag: false); },
@@ -171,6 +175,66 @@ static class Schermen
             new TestFilePickerService(), toast);
         await vm.InitializeAsync();
         return new BestelbonPreviewWindow { DataContext = vm };
+    }
+
+    /// <summary>Standaardkaders: prijs incl. btw in de lijst en in het invoerveld (feedback 12/11).</summary>
+    static async Task<Control> StandaardkadersAsync(IDbContextFactory<AppDbContext> f)
+    {
+        var vm = new KantKlaarKaderenViewModel(f, new TestNavigationService(), new TestDialogService(), new TestToastService());
+        await vm.InitializeAsync();
+        vm.NieuwCommand.Execute(null);
+        vm.GeselecteerdeKader!.Naam = "Quadrum";
+        vm.GeselecteerdeKader.Beschrijving = "Hout naturel 30×40";
+        vm.GeselecteerdeKader.PrijsPerStukIncl = 29.95m;
+        await vm.SaveCommand.ExecuteAsync(null);
+        vm.GeselecteerdeKader = vm.GefilterdeKaders.First(k => k.Naam == "C2");
+        return new KantKlaarKaderenView { DataContext = vm };
+    }
+
+    /// <summary>Winkelverkopen: na "Opslaan" staat de verkoop meteen in de lijst, zonder "Ververs".
+    /// De periodefilter staat leeg, zodat de lege datumkiezers "dag/maand/jaar" tonen.</summary>
+    static async Task<Control> WinkelverkopenNaOpslaanAsync(IDbContextFactory<AppDbContext> f)
+    {
+        var vm = new WinkelVerkopenViewModel(f, new TestNavigationService(), new TestDialogService(), new TestToastService(), new TestAuthService());
+        await vm.InitializeAsync();
+        vm.NieuwCommand.Execute(null);
+        vm.GeselecteerdeVerkoop!.Omschrijving = "Wenskaart Quadro";
+        vm.GeselecteerdeVerkoop.Aantal = 2;
+        vm.GeselecteerdeVerkoop.PrijsPerStukIncl = 3.50m;
+        await vm.SaveCommand.ExecuteAsync(null);
+        vm.NieuwCommand.Execute(null);
+        vm.FilterVanaf = null;   // lege datumkiezers: "dag / maand / jaar"
+        vm.FilterTot = null;
+        return new WinkelVerkopenView { DataContext = vm };
+    }
+
+    /// <summary>Weeklijst als PDF (week 46/2026): een klant zonder achternaam en twee klanten met
+    /// dezelfde achternaam (feedback 12/11). Het pad van de PDF staat in de afbeelding.</summary>
+    static async Task<Control> WeeklijstPdfAsync(IDbContextFactory<AppDbContext> f)
+    {
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+        var maandag = new DateTime(2026, 11, 9);
+        await using (var db = await f.CreateDbContextAsync())
+        {
+            var nr = 900;
+            void Taak(Klant klant, string titel, decimal b, decimal h)
+            {
+                var regel = new OfferteRegel { Titel = titel, AantalStuks = 1, BreedteCm = b, HoogteCm = h };
+                var offerte = new Offerte { OfferteNummer = nr++, Datum = maandag, Status = OfferteStatus.Goedgekeurd, Klant = klant, Regels = { regel } };
+                var bon = new WerkBon { Offerte = offerte, Status = WerkBonStatus.Gepland };
+                db.WerkTaken.Add(new WerkTaak { WerkBon = bon, OfferteRegel = regel, Omschrijving = titel, DuurMinuten = 60,
+                    GeplandVan = maandag.AddDays(3).AddHours(10), GeplandTot = maandag.AddDays(3).AddHours(11) });
+            }
+            Taak(new Klant { Voornaam = "Voetbalploeg KFC", Achternaam = "" }, "Foto voetbalploeg", 30, 40);
+            Taak(new Klant { Voornaam = "Jan", Achternaam = "Peeters" }, "Litho Magritte", 40, 50);
+            Taak(new Klant { Voornaam = "An", Achternaam = "Peeters" }, "Aquarel in clipskader", 50, 40);
+            await db.SaveChangesAsync();
+        }
+        var vm = new WeekWerkLijstViewModel(f, new QuadroApp.Service.WorkflowService(
+            f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, new TestToastService()));
+        await vm.InitializeAsync(2026, 46);
+        var pad = new PdfWeekLijstExporter().Export(2026, 46, vm.Blocks.ToList());
+        return new TextBlock { Text = Path.GetFullPath(pad) };
     }
 
     static async Task<Control> HomeAsync(IDbContextFactory<AppDbContext> f, bool metVandaag, bool voorraadOpen = false)

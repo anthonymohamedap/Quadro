@@ -109,7 +109,7 @@
                                                        ToolTip.Tip="{Binding Beschrijving}"/>
 
                                             <TextBlock Grid.Column="2"
-                                                       Text="{Binding PrijsPerStukExcl, StringFormat='{}€ {0:0.00}'}"
+                                                       Text="{Binding PrijsPerStukIncl, StringFormat='{}€ {0:0.00} incl.'}"
                                                        TextTrimming="CharacterEllipsis"/>
                                         </Grid>
                                     </Border>
@@ -186,8 +186,8 @@
                                          TextWrapping="Wrap"
                                          MinHeight="70"/>
 
-                                <TextBlock Text="Prijs per stuk (excl. btw)" Grid.Row="2" Grid.Column="0" Classes="label" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                                <NumericUpDown Foreground="{DynamicResource TextPrimary}" Value="{Binding GeselecteerdeKader.PrijsPerStukExcl, Mode=TwoWay}" Grid.Row="2" Grid.Column="1"/>
+                                <TextBlock Text="Prijs per stuk (incl. btw)" Grid.Row="2" Grid.Column="0" Classes="label" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                <NumericUpDown Foreground="{DynamicResource TextPrimary}" Value="{Binding GeselecteerdeKader.PrijsPerStukIncl, Mode=TwoWay}" FormatString="0.00" Increment="1" Minimum="0" Grid.Row="2" Grid.Column="1"/>
 
                             </Grid>
 
