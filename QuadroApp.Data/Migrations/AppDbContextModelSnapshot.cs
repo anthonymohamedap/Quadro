@@ -607,7 +607,7 @@ namespace QuadroApp.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("PrijsPerStukExcl")
-                        .HasPrecision(18, 2)
+                        .HasPrecision(18, 4)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

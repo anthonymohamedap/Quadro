@@ -140,7 +140,7 @@
 										<DataTemplate x:DataType="m:KantKlaarKader">
 											<Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
 												<TextBlock Text="{Binding Weergave}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Weergave}"/>
-												<TextBlock Grid.Column="1" Text="{Binding PrijsPerStukExcl, StringFormat='€ {0:0.00} excl.'}"
+												<TextBlock Grid.Column="1" Text="{Binding PrijsPerStukIncl, StringFormat='€ {0:0.00} incl.'}"
 												           Classes="caption" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
 											</Grid>
 										</DataTemplate>
