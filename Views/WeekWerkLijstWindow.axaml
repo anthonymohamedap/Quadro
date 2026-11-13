@@ -118,9 +118,8 @@
 														<!-- Linker info: zoveel mogelijk zoals je foto (plain text) -->
 														<StackPanel Grid.Column="0" Spacing="2">
 															<TextBlock Text="{Binding Stuks, StringFormat='{}{0} stuks in te lijsten:'}"
-																	   FontWeight="Bold"
 																	   Foreground="{DynamicResource TextPrimary}"/>
-															<TextBlock Text="{Binding Omschrijving}" Foreground="{DynamicResource TextPrimary}"/>
+															<TextBlock Text="{Binding Omschrijving}" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
 															<TextBlock Text="{Binding RegelOpmerking, StringFormat='opmerking: {0}'}" FontStyle="Italic" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" IsVisible="{Binding RegelOpmerking, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
 															<Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="16" Margin="0,6,0,0">
