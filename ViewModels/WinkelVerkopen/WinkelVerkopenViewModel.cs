@@ -314,6 +314,7 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
             await db.SaveChangesAsync();
 
             _toast.Success("Winkelverkoop opgeslagen.");
+            IsBusy = false;   // anders slaat LoadAsync het herladen over (het scherm staat nog op 'bezig')
             await LoadAsync();
 
             IsDetailOpen = false;
@@ -365,6 +366,7 @@ public partial class WinkelVerkopenViewModel : ObservableObject, IAsyncInitializ
             db.Ontvangsten.Remove(dbVerkoop);
             await db.SaveChangesAsync();
 
+            IsBusy = false;   // anders slaat LoadAsync het herladen over (het scherm staat nog op 'bezig')
             await LoadAsync();
 
             IsDetailOpen = false;
