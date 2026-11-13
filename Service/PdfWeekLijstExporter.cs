@@ -139,10 +139,10 @@ public sealed class PdfWeekLijstExporter
                     left.Spacing(1);
 
                     // Stuks + omschrijving
-                    left.Item().Text($"{item.Stuks} stuks in te lijsten:")
-                        .Bold().FontSize(10);
+                    // Feedback Veerle (12/11): wat ingelijst moet worden in het vet, niet het aantal.
+                    left.Item().Text($"{item.Stuks} stuks in te lijsten:").FontSize(9);
                     if (!string.IsNullOrWhiteSpace(item.Omschrijving))
-                        left.Item().Text(item.Omschrijving).FontSize(9);
+                        left.Item().Text(item.Omschrijving).Bold().FontSize(10);
 
                     // Afmetingen / lijst / afw op één regel
                     var metaparts = new List<string>();
