@@ -369,6 +369,7 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
             }
 
             _toast.Success("Lijst opgeslagen.");
+            IsBusy = false;   // anders slaat LoadAsync het herladen over (het scherm staat nog op 'bezig')
             await LoadAsync();
 
             IsDetailOpen = false;
@@ -379,6 +380,7 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
             // REL-03: iemand anders wijzigde deze lijst intussen — nette melding + herladen.
             Foutmelding = conflict;
             _toast.Warning(conflict);
+            IsBusy = false;   // anders slaat LoadAsync het herladen over (het scherm staat nog op 'bezig')
             await LoadAsync();
         }
         catch (Exception ex)
@@ -407,6 +409,7 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
                 return;
             }
 
+            IsBusy = false;   // anders slaat LoadAsync het herladen over (het scherm staat nog op 'bezig')
             await LoadAsync();
             _toast.Success("Import van lijsten voltooid.");
         }
@@ -463,6 +466,7 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
             dbLijst.IsGearchiveerd = true;
             await db.SaveChangesAsync();
 
+            IsBusy = false;   // anders slaat LoadAsync het herladen over (het scherm staat nog op 'bezig')
             await LoadAsync();
 
             IsDetailOpen = false;

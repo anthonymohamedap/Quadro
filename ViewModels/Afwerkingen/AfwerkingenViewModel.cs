@@ -200,6 +200,7 @@ public partial class AfwerkingenViewModel : AsyncViewModelBase
                 return;
             }
 
+            IsBusy = false;   // anders slaat LoadAsync het herladen over (het scherm staat nog op 'bezig')
             await LoadAsync();
             _toast.Success("Import van afwerkingen voltooid.");
             Status = "Import klaar";

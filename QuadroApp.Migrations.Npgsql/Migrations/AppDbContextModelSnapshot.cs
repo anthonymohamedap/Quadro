@@ -640,8 +640,8 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                         .HasColumnType("character varying(200)");
 
                     b.Property<decimal>("PrijsPerStukExcl")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
 
                     b.HasKey("Id");
 

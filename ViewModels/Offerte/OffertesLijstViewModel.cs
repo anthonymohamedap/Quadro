@@ -221,6 +221,7 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
         {
             await _archiefService.ArchiveerAsync(SelectedOfferte.OfferteId);
             _toast.Success($"Offerte #{SelectedOfferte.OfferteNummer} gearchiveerd.");
+            IsBusy = false;   // anders slaat LoadAsync het herladen over (het scherm staat nog op 'bezig')
             await LoadAsync();
         }
         catch (Exception ex)
