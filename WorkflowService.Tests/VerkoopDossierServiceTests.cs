@@ -297,7 +297,6 @@ public class VerkoopDossierServiceTests
         await using var _ = o.Scope;
         await PlanAsync(o, o.RegelIds[0]);
 
-        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;   // zoals App.axaml.cs
         var data = await PdfWerkBonExporter.LeesAsync(o.Scope.Factory, o.WerkBonId);
         Assert.Equal(423, data.Nummer);                                   // werkbon = verkoopnummer
         Assert.StartsWith("Sofie Claes", data.KlantRegel);

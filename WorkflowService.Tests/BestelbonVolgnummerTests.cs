@@ -114,7 +114,6 @@ public class BestelbonVolgnummerTests
     [Fact]
     public async Task Voorlopige_bon_afdrukken_telt_niet_mee_voor_de_boekhouding()
     {
-        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
         var id = await SeedAsync(scope, 412);
         var bon = await Sut(scope.Factory).MaakBestelbonVanOfferteAsync(id);
