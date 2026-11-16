@@ -1,5 +1,7 @@
 # Plan — één verkoop = één dossier (US-87 → US-95)
 
+> Nota 16/11/2026: stap 2 heet in de app en in de code **Werkbon** (afspraak met Veerle); waar hieronder nog "Bestelling" staat voor stap 2 of `BevestigAlsBestellingAsync`, is dat de oorspronkelijke ontwerpnaam. Stand van het plan: alle stories US-87 → US-95 en US-102 zijn gebouwd en zitten in `dev`.
+
 Stand 26/10/2026. Bron: canvas "QuadroApp – huidige flow (as-is) – nov 2026", pagina **5 · Concept: verkoopdossier** (schermen K01–K14, to-be flow, klikbaar mini-prototype), met de pijnpunten P1–P15 van pagina 4.
 
 ## Uitgangspunt
@@ -8,8 +10,8 @@ Vandaag is één inlijsting verspreid over drie schermen en drie nummers: offert
 
 - **Eén scherm Verkopen** vervangt Prijsberekening, Bestellingen en Bestelbonnen.
 - **Een verkoop is een dossier.** Offerte, werkbon, bestelbon en betalingen hangen eronder.
-- **Vijf stappen**: 1 Offerte · 2 Bestelling · 3 In productie · 4 Klaar om af te halen · 5 Afgehaald & betaald. Open je een verkoop, dan sta je op de stap waar je gestopt was. Vorige stappen kun je terug bekijken.
-- **Stappen overslaan**: Bestelling en/of In productie (bv. standaardkader uit voorraad). Offerte en Afhalen niet.
+- **Vijf stappen**: 1 Offerte · 2 Werkbon · 3 In productie · 4 Klaar om af te halen · 5 Afgehaald & betaald. Open je een verkoop, dan sta je op de stap waar je gestopt was. Vorige stappen kun je terug bekijken.
+- **Stappen overslaan**: Werkbon en/of In productie (bv. standaardkader uit voorraad). Offerte en Afhalen niet.
 - **Eén nummer**: verkoop 412 = offertenummer, staat vast vanaf de start. De bestelbon houdt zijn eigen volgnummer 2026-19 (boekhouding).
 - **Afdrukken** = PDF-voorbeeld + "Afdrukken" / "Bewaren als PDF" in een vaste map, ongeacht de status.
 - **Planning** wordt een pagina in het hoofdvenster (geen popup) en zit ook in stap 2 van het dossier.
@@ -40,7 +42,7 @@ Nieuwe pure functie `VerkoopStapResolver.Bepaal(offerte, werkBon?, factuur?, bet
 | Stap | Voorwaarde (bestaande statussen) |
 |---|---|
 | 1 Offerte | offerte Concept / Verzonden, geen werkbon |
-| 2 Bestelling | werkbon Gepland |
+| 2 Werkbon | werkbon Gepland |
 | 3 In productie | werkbon InUitvoering |
 | 4 Klaar om af te halen | werkbon Afgewerkt (bestelbon bestaat) |
 | 5 Afhalen en betalen | werkbon Afgehaald en rest > 0 ("afgehaald, nog te betalen") |
@@ -53,7 +55,7 @@ Een stap die in `OvergeslagenStappen` staat, krijgt status *Overgeslagen* in pla
 
 Op `Offerte`:
 
-- `OvergeslagenStappen` (`int`, `[Flags] enum VerkoopStapFlags { Bestelling = 1, Productie = 2 }`)
+- `OvergeslagenStappen` (`int`, `[Flags] enum VerkoopStapFlags { Werkbon = 1, Productie = 2 }`)
 - `OverslaanReden` (`string?`, max 200)
 - `GeannuleerdOp` (`DateTime?`), `AnnuleerReden` (`string?`, max 300)
 
