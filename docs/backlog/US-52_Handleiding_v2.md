@@ -5,7 +5,7 @@
 > waarin elke knop en functie benoemd wordt én de macOS install/update-stappen (toestemmingen +
 > wachtwoord) staan, zodat een niet-technische gebruiker niets kan stukmaken.
 >
-> **Bestaat al:** `docs/QuadroApp_Handleiding.docx` (v1, tekst, 18 hoofdstukken). Gebruik dit als
+> **Bestaat al:** `docs/archief/QuadroApp_Handleiding.docx` (v1, tekst, 18 hoofdstukken). Gebruik dit als
 > basis en breid het uit — niet vanaf nul herbeginnen.
 
 ---
@@ -97,12 +97,12 @@ moet doen, zodat ze niets kapotmaken:
 
 ## Aanpak voor de agent
 
-1. Lees `docs/QuadroApp_Handleiding.docx` (v1) als vertrekpunt.
+1. Lees `docs/archief/QuadroApp_Handleiding.docx` (v1) als vertrekpunt.
 2. Lever eerst een **shotlist** op (genummerd, per scherm/knop) en vraag Anthony de screenshots te maken.
 3. Bouw de v2-`.docx` met de docx-skill: neem de v1-tekst over, verfijn per scherm, en voeg de
    afbeeldingen + annotatie-verwijzingen toe.
 4. Schrijf het nieuwe Mac-installatie/update-hoofdstuk op basis van `CLOUD_ROLLOUT_RUNBOOK.md`.
 5. Rendeer naar PDF en controleer elke pagina visueel voor levering.
 
-**Bronnen:** `docs/QuadroApp_Handleiding.docx`, `docs/CLOUD_ROLLOUT_RUNBOOK.md`,
+**Bronnen:** `docs/archief/QuadroApp_Handleiding.docx`, `docs/CLOUD_ROLLOUT_RUNBOOK.md`,
 `docs/backlog/REL04c_CloudPostgres_Plan.md`, en de schermenlijst hierboven.
