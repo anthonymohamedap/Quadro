@@ -13,9 +13,6 @@ public class BestelbonAfdrukkenTests : IDisposable
 {
     private readonly string _map = Path.Combine(Path.GetTempPath(), "quadro-us82-" + Guid.NewGuid().ToString("N"));
 
-    public BestelbonAfdrukkenTests()
-        => QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
-
     public void Dispose()
     {
         if (Directory.Exists(_map)) Directory.Delete(_map, recursive: true);
