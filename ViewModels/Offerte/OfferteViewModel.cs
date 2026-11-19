@@ -146,9 +146,10 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
 
         await using (var db = await _dbFactory.CreateDbContextAsync())
         {
-            var rv = await db.Offertes.AsNoTracking().Where(o => o.Id == Offerte.Id)
-                .Select(o => o.RowVersion).FirstOrDefaultAsync();
-            Offerte.RowVersion = rv;
+            // Hele rij laden: PgVersie bestaat enkel op PostgreSQL en kan daarom niet in een Select.
+            var vers = await db.Offertes.AsNoTracking().FirstOrDefaultAsync(o => o.Id == Offerte.Id);
+            Offerte.RowVersion = vers?.RowVersion;
+            Offerte.PgVersie = vers?.PgVersie ?? 0;
         }
 
         OnPropertyChanged(nameof(VoorschotBedragInput));
@@ -1472,6 +1473,7 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
             if (Offerte.Datum == default) Offerte.Datum = DateTime.Today;
 
             var shouldSaveAtEnd = true;
+            Offerte? bewaardeStub = null;
 
             if (Offerte.Id == 0)
             {
@@ -1503,10 +1505,13 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
                     // RowVersion must be included so EF Core can detect concurrent edits.
                     // If two users save the same version, the second save throws
                     // DbUpdateConcurrencyException and we show a clear Dutch message.
-                    RowVersion = Offerte.RowVersion
+                    RowVersion = Offerte.RowVersion,
+                    // A-04: op PostgreSQL is xmin het token (PgVersie); de kopie moet de geladen versie meedragen.
+                    PgVersie = Offerte.PgVersie
                 };
 
                 db.Offertes.Attach(offerteStub);
+                bewaardeStub = offerteStub;
                 // Fix: enkel de velden die dit scherm bewaart als gewijzigd markeren. Met de hele rij
                 // op Modified werden velden die niet in de stub staan (o.a. het offertenummer) leeg
                 // weggeschreven: na opslaan stond de offerte op nummer 0 ("Werkbon 0").
@@ -1553,6 +1558,14 @@ public partial class OfferteViewModel : AsyncViewModelBase, IAsyncInitializable
 
             if (shouldSaveAtEnd)
                 await db.SaveChangesAsync();
+
+            // A-04: de database gaf de rij een nieuwe versie; neem die over, anders geeft een volgende
+            // "Opslaan" zonder herladen een onterechte melding "gelijktijdig gewijzigd".
+            if (bewaardeStub is not null)
+            {
+                Offerte.PgVersie = bewaardeStub.PgVersie;
+                Offerte.RowVersion = bewaardeStub.RowVersion;
+            }
 
             Toast.Success("Offerte opgeslagen");
 
