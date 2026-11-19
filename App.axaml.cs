@@ -266,6 +266,8 @@ public partial class App : Application
         services.AddTransient<ViewModels.Gebruikers.GebruikersBeheerViewModel>();
         services.AddTransient<ViewModels.Gebruikers.AuditLogViewModel>();
         services.AddTransient<ViewModels.Gebruikers.FoutmeldingenViewModel>();
+        services.AddTransient<IStartklaarService, StartklaarService>();   // start op 1 januari
+        services.AddTransient<ViewModels.Gebruikers.StartklaarViewModel>();
 
         Services = services.BuildServiceProvider();
         _logger = Services.GetRequiredService<ILogger<App>>();
@@ -721,6 +723,19 @@ public partial class App : Application
         // US-34: daily backup — runs after DB init, never blocks or crashes startup.
         var backupService = scope.ServiceProvider.GetRequiredService<IBackupService>();
         await backupService.RunDailyBackupAsync();
+
+        // Auditlog: regels ouder dan 30 dagen weg, anders blijft de tabel groeien (afspraak 19/11/2026).
+        try
+        {
+            var factory = provider.GetRequiredService<IDbContextFactory<AppDbContext>>();
+            var weg = await AuditService.RuimOudeRegelsOpAsync(factory, DateTime.UtcNow);
+            if (weg > 0)
+                _logger.LogInformation("[Startup] {Aantal} auditregels ouder dan {Dagen} dagen verwijderd.", weg, AuditService.BewaarDagen);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[Startup] Opruimen van het auditlog mislukt; volgende start opnieuw.");
+        }
     }
 
     /// <summary>US-31: leest één configuratiewaarde uit appsettings.json (null bij afwezigheid/fout).</summary>
