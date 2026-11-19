@@ -163,6 +163,8 @@ static class Schermen
             return new FoutmeldingenView { DataContext = vm };
         },
         ["bestelbon-voorbeeld"] = BestelbonVoorbeeldAsync,
+        ["startklaar"] = f => StartklaarAsync(f, uitvoeren: false),
+        ["startklaar-klaar"] = f => StartklaarAsync(f, uitvoeren: true),
         ["standaardkaders"] = StandaardkadersAsync,
         ["weeklijst-pdf"] = WeeklijstPdfAsync,
         ["winkelverkopen-na-opslaan"] = WinkelverkopenNaOpslaanAsync,
@@ -190,6 +192,8 @@ static class Schermen
         ["dossier-2-gepland"] = (1440, 1500),
         ["dossier-2-delen"] = (1440, 1500),
         ["bestelbon-voorbeeld"] = (860, 620),
+        ["startklaar"] = (820, 680),
+        ["startklaar-klaar"] = (820, 680),
     };
 
     public static async Task AllesAsync(string uitvoer, HashSet<string> gekozen)
@@ -463,6 +467,18 @@ static class Schermen
         await vm.InitializeAsync(2026, 46);
         var pad = new PdfWeekLijstExporter().Export(2026, 46, vm.Blocks.ToList());
         return new TextBlock { Text = Path.GetFullPath(pad) };
+    }
+
+    /// <summary>Instellingen → Startklaar maken: vóór (aantallen, STARTKLAAR ingetypt) en na het wissen.</summary>
+    static async Task<Control> StartklaarAsync(IDbContextFactory<AppDbContext> f, bool uitvoeren)
+    {
+        await TestGegevens.SeedVandaagAsync(f);
+        var vm = new QuadroApp.ViewModels.Gebruikers.StartklaarViewModel(
+            new StartklaarService(f, new TestAuthService()), new TestToastService());
+        await vm.LadenAsync();
+        vm.Bevestiging = "STARTKLAAR";
+        if (uitvoeren) await vm.UitvoerenCommand.ExecuteAsync(null);
+        return new StartklaarWindow { DataContext = vm };
     }
 
     static async Task<Control> HomeAsync(IDbContextFactory<AppDbContext> f, bool metVandaag, bool voorraadOpen = false)
