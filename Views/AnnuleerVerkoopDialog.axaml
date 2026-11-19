@@ -28,10 +28,10 @@
                 <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="14" RowSpacing="6">
                     <TextBlock Text="Werkbon" FontWeight="SemiBold"/>
                     <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
-                               Text="vervalt; planning vrij; momentopname in het archief (zoals nu)"/>
+                               Text="vervalt; planning vrij; momentopname in het archief"/>
                     <TextBlock Grid.Row="1" Text="Voorraad" FontWeight="SemiBold"/>
                     <TextBlock Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
-                               Text="reservaties vrij; open leveranciersbestellingen geannuleerd (zoals nu)"/>
+                               Text="reservaties vrij; open leveranciersbestellingen geannuleerd"/>
                     <TextBlock Grid.Row="2" Text="Bestelbon" FontWeight="SemiBold"/>
                     <TextBlock Grid.Row="2" Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
                                Text="{Binding BestelbonTekst}"/>

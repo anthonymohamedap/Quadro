@@ -516,7 +516,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
                     break;
                 case { Huidig: VerkoopStap.InProductie }:
                     if (!await _dialogs.ConfirmAsync("Klaar om af te halen?",
-                            "De werkbon gaat naar \"Klaar om af te halen\": gereserveerde stukken worden verbruikt en de bestelbon wordt aangemaakt of bijgewerkt (zoals nu)."))
+                            "De werkbon gaat naar \"Klaar om af te halen\": gereserveerde stukken worden verbruikt en de bestelbon wordt aangemaakt of bijgewerkt."))
                         return;
                     var nr = await _dossier.MeldKlaarAsync(OfferteId);
                     _toast.Success(string.IsNullOrWhiteSpace(nr) ? "Klaar om af te halen." : $"Klaar om af te halen. Bestelbon {nr}.");
