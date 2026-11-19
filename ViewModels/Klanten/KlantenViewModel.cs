@@ -42,7 +42,20 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
     [NotifyCanExecuteChangedFor(nameof(OpenKlantDetailCommand))]
     [NotifyCanExecuteChangedFor(nameof(EditCommand))]
     [NotifyCanExecuteChangedFor(nameof(DeleteCommand))]
+    [NotifyCanExecuteChangedFor(nameof(TerugzettenCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DefinitiefVerwijderenCommand))]
     private Klant? selectedKlant;
+
+    /// <summary>Afspraak 19/11/2026: gearchiveerde klanten tonen, terugzetten of definitief verwijderen.</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(TerugzettenCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DefinitiefVerwijderenCommand))]
+    private bool toonGearchiveerd;
+
+    /// <summary>Het vinkje "Toon gearchiveerde" enkel voor wie klanten mag archiveren.</summary>
+    public bool MagArchiefBeheren => _auth.HeeftPermissie(QuadroApp.Service.Security.Permissie.KlantVerwijderen);
+
+    private QuadroApp.Service.ArchiefBeheerService ArchiefBeheer => new(_dbFactory, _auth);
 
     [ObservableProperty] private string? foutmelding;
     [ObservableProperty] private bool isLoading;
@@ -168,11 +181,13 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
 
             await using var db = await _dbFactory.CreateDbContextAsync();
 
-            var list = await db.Klanten
-                .AsNoTracking()
-                .OrderBy(k => k.Achternaam)
-                .ThenBy(k => k.Voornaam)
-                .ToListAsync();
+            var list = ToonGearchiveerd
+                ? await ArchiefBeheer.GearchiveerdeKlantenAsync()
+                : await db.Klanten
+                    .AsNoTracking()
+                    .OrderBy(k => k.Achternaam)
+                    .ThenBy(k => k.Voornaam)
+                    .ToListAsync();
 
             Klanten = new ObservableCollection<Klant>(list);
             ApplyFilter();
@@ -337,6 +352,57 @@ public partial class KlantenViewModel : ObservableObject, IAsyncInitializable
         );
 
         NotifyActionCommands();
+    }
+
+    partial void OnToonGearchiveerdChanged(bool value)
+    {
+        SelectedKlant = null;
+        _ = LoadAsync();
+    }
+
+    private bool CanArchiefActie() => ToonGearchiveerd && SelectedKlant is not null && CanRunAction();
+
+    [RelayCommand(CanExecute = nameof(CanArchiefActie))]
+    private async Task TerugzettenAsync()
+    {
+        if (SelectedKlant is not { } klant) return;
+        try
+        {
+            await ArchiefBeheer.ZetKlantTerugAsync(klant.Id);
+            _toast.Success($"{klant.Voornaam} {klant.Achternaam}".Trim() + " staat weer bij de klanten.");
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            await _dialogs.ShowErrorAsync("Terugzetten mislukt", ex.GetBaseException().Message);
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanArchiefActie))]
+    private async Task DefinitiefVerwijderenAsync()
+    {
+        if (SelectedKlant is not { } klant) return;
+        var naam = $"{klant.Voornaam} {klant.Achternaam}".Trim();
+        try
+        {
+            var reden = await ArchiefBeheer.WaaromKlantNietWegAsync(klant.Id);
+            if (reden is not null)
+            {
+                await _dialogs.ShowErrorAsync("Definitief verwijderen kan niet", reden);
+                return;
+            }
+            var ok = await _dialogs.ConfirmAsync("Klant definitief verwijderen",
+                $"{naam} definitief verwijderen? Dit kan niet ongedaan gemaakt worden.");
+            if (!ok) return;
+
+            await ArchiefBeheer.VerwijderKlantDefinitiefAsync(klant.Id);
+            _toast.Success($"{naam} is definitief verwijderd.");
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            await _dialogs.ShowErrorAsync("Verwijderen mislukt", ex.GetBaseException().Message);
+        }
     }
 
     private bool CanEdit() => SelectedKlant is not null && CanRunAction();
