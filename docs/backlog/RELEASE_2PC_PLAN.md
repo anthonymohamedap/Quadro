@@ -5,7 +5,7 @@
 > de codebase-audit (`docs/archief/CODEBASE_AUDIT_2026-07-22.md`), de enterprise-backlog
 > (`UserStories_EnterpriseReady.md`), de klantfeedback van Veerle & Kurt
 > (`UserStories_VeerleKurt_v2.md`), het UI-plan (`UI_OPTIMIZATION_PLAN.md`) en
-> `docs/archief/cleanup-candidates.md`.
+> `docs/cleanup-candidates.md`.
 >
 > **Hoe te gebruiken.** Elk blok hieronder is één werksessie in een aparte chat. Bij elke stap staat
 > een **kant-en-klare prompt** die je kan kopiëren. Werkwijze overal identiek: aparte feature-branch,
@@ -261,7 +261,7 @@ docs/deployment-checklist.
 
 ## Categorie 4 — Optionele hygiëne (na de release, blokkeert niets)
 
-Bron: audit P7–P10 + `docs/archief/cleanup-candidates.md`.
+Bron: audit P7–P10 + `docs/cleanup-candidates.md`.
 
 - **REL-H1 — `AsSplitQuery()`** op de brede Include-ketens in `FactuurWorkflowService` (audit 3.2). S.
 - **REL-H2 — Dode code verwijderen** na de smoke-checklist: `LoginWindow`/`LoginViewModel` (vervangen
@@ -277,7 +277,7 @@ Bron: audit P7–P10 + `docs/archief/cleanup-candidates.md`.
 **PROMPT (voorbeeld):**
 ```
 Voer REL-H2 uit volgens docs/backlog/RELEASE_2PC_PLAN.md (categorie 4). Doorloop eerst de runtime-
-smoke-checklist uit docs/archief/cleanup-candidates.md, verwijder daarna de bevestigde dode code (LoginWindow,
+smoke-checklist uit docs/cleanup-candidates.md, verwijder daarna de bevestigde dode code (LoginWindow,
 LoginViewModel, legacy import-dialogen + IDialogService-methodes) en bepaal of EPPlus weg kan.
 Branch chore/cleanup-dead-code. .\verify.ps1 groen.
 ```

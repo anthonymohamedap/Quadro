@@ -98,9 +98,12 @@ namespace QuadroApp.ViewModels
         public IAsyncRelayCommand OpenWinkelVerkopenCommand { get; }
         public IAsyncRelayCommand OpenOverzichtBetalingenCommand { get; }
         public IAsyncRelayCommand OpenPlanningCommand { get; }
+        public IAsyncRelayCommand OpenOfferteCommand { get; }
         public IAsyncRelayCommand OpenOffertesLijstCommand { get; }
+        public IAsyncRelayCommand OpenWerkBonCommand { get; }
         public IAsyncRelayCommand OpenAfwerkingsOptiesCommand { get; }
         public IAsyncRelayCommand OpenLeveranciersCommand { get; }
+        public IAsyncRelayCommand OpenBestelbonnenCommand { get; }
         public IAsyncRelayCommand OpenExportCenterCommand { get; }
         public IAsyncRelayCommand OpenInstellingenCommand { get; }
         public IAsyncRelayCommand OpenArchiefCommand { get; }
@@ -126,6 +129,8 @@ namespace QuadroApp.ViewModels
 
             OpenPlanningCommand = new AsyncRelayCommand(OpenPlanningAsync);
             OpenInstellingenCommand = new AsyncRelayCommand(OpenInstellingenAsync);
+
+            OpenWerkBonCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<WerkBonLijstViewModel>());
             OpenKlantenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<KlantenViewModel>());
             OpenAfwerkingsOptiesCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<AfwerkingenViewModel>());
             OpenLijstenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<LijstenViewModel>());
@@ -133,12 +138,14 @@ namespace QuadroApp.ViewModels
             OpenWinkelVerkopenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<WinkelVerkopenViewModel>());
             OpenOverzichtBetalingenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OverzichtBetalingenViewModel>());
             OpenLeveranciersCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<LeveranciersViewModel>());
+            OpenOfferteCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OfferteViewModel>());
             OpenOffertesLijstCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<OffertesLijstViewModel>());
+            OpenBestelbonnenCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<BestelbonnenViewModel>());
             OpenExportCenterCommand = new AsyncRelayCommand(() => _nav.NavigateToAsync<ExportCenterViewModel>());
             OpenArchiefCommand      = new AsyncRelayCommand(() => _nav.NavigateToAsync<ArchiefViewModel>());
-            NieuweOfferteCommand    = new AsyncRelayCommand(() => _offerteNav.NieuweVerkoopAsync());   // fix 08/11: in het dossier
+            NieuweOfferteCommand    = new AsyncRelayCommand(() => _offerteNav.NewOfferteAsync());
             OpenVerkoopCommand      = new AsyncRelayCommand<VerkoopOverzichtRegel>(
-                r => r is null ? Task.CompletedTask : _offerteNav.OpenVerkoopAsync(r.OfferteId));   // US-95: dossier
+                r => r is null ? Task.CompletedTask : _offerteNav.OpenOfferteAsync(r.OfferteId));
         }
 
         public async Task InitializeAsync()
@@ -204,8 +211,26 @@ namespace QuadroApp.ViewModels
             }
         }
 
-        /// <summary>US-92 — Planning opent als pagina in het hoofdvenster (niet meer als los venster).</summary>
-        private Task OpenPlanningAsync() => _nav.NavigateToAsync<PlanningPaginaViewModel>();
+        private async Task OpenPlanningAsync()
+        {
+            var vm = new PlanningCalendarViewModel(_factory, _workflow, _toast, _statusWorkflow);
+            await vm.InitializeGlobalAsync();
+
+            var window = new PlanningCalendarWindow
+            {
+                DataContext = vm
+            };
+
+            if (App.Current?.ApplicationLifetime is
+                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                var owner = desktop.MainWindow;
+                if (owner is null)
+                    return;
+
+                await window.ShowDialog(owner);
+            }
+        }
 
         private async Task OpenInstellingenAsync()
         {

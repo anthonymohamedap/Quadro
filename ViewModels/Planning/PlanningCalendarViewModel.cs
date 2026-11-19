@@ -618,7 +618,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             var r = t.OfferteRegel;
             WeekRows.Add(new WeekRow
             {
-                BonNr = t.WerkBon?.Offerte?.OfferteNummer ?? t.WerkBonId,   // werkbon = verkoopnummer
+                BonNr = t.WerkBonId,
                 DuurMin = t.DuurMinuten,
                 Datum = t.GeplandVan.Date,
                 KlantNaam = t.WerkBon?.Offerte?.Klant?.Achternaam ?? "",

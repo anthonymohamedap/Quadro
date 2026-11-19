@@ -17,7 +17,7 @@
 - [ ] **Rechten:** gebruiker `quadro` heeft **volledige rechten** op database `quadrodb` (gedaan tijdens de test).
 - [ ] **Backups + PITR** staan aan; retentie ingesteld op **7–30 dagen**.
 - [ ] **Encryptie-at-rest**: status bekeken en beslist (aan laten of aanvaard restrisico). Noteer de keuze in `docs/GDPR.md`.
-- [ ] **Allowed IPs**: enkel de publieke IP-adressen van het atelier en van de beheerder (geen `0.0.0.0/0`: dan kan iedereen op het internet proberen aan te melden en is het wachtwoord de enige bescherming). Daarnaast een **lang, willekeurig `quadro`-wachtwoord + TLS**.
+- [ ] **Allowed IPs**: `0.0.0.0/0` (of verfijnd). Beveiliging leunt op het **sterke `quadro`-wachtwoord + TLS** — controleer dat het wachtwoord lang en willekeurig is.
 - [ ] **DPA van Scaleway getekend** en Scaleway in het **verwerkingsregister** gezet (GDPR).
 
 ## Deel 2 — Data vullen (eenmalig, in de app op één pc)
@@ -87,7 +87,7 @@ Let op: noodwerk op lokale SQLite maakt data aan die niet vanzelf terug samenvlo
 
 | Symptoom | Waarschijnlijke oorzaak | Oplossing |
 |---|---|---|
-| Time-out / kan niet verbinden | Allowed IPs blokkeert deze pc | In Scaleway het publieke IP-adres van deze pc toevoegen (opzoeken via bv. whatismyip.com); niet `0.0.0.0/0` |
+| Time-out / kan niet verbinden | Allowed IPs blokkeert deze pc | In Scaleway `0.0.0.0/0` (of het juiste publieke IP) toevoegen |
 | `28P01 password authentication failed` | Verkeerd/niet-gezet secret | `.\Scripts\set-db-secret.ps1` opnieuw met het cloud-wachtwoord |
 | `42501 permission denied for database` | `quadro` mist rechten op `quadrodb` | In de console `quadro` volledige rechten op `quadrodb` geven |
 | SSL-fout | `SSL Mode` ontbreekt | Zorg dat `;SSL Mode=Require` in de connection string staat |

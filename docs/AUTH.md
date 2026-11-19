@@ -23,7 +23,6 @@ Bij de allereerste start (of een lege database) wordt automatisch één beheerde
 | Leverancier verwijderen | ✅ | ❌ |
 | Lijst archiveren/verwijderen | ✅ | ❌ |
 | Gebruikers beheren | ✅ | ❌ |
-| Foutmeldingen inzien (Instellingen → Foutmeldingen) | ✅ | ❌ |
 
 ## Techniek
 

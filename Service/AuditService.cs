@@ -72,19 +72,4 @@ public sealed class AuditService : IAuditService
 
         return (gebruikers, types, acties);
     }
-
-    /// <summary>Hoe lang auditregels bewaard worden (afspraak met Anthony, 19/11/2026).</summary>
-    public const int BewaarDagen = 30;
-
-    /// <summary>
-    /// Verwijdert auditregels ouder dan <see cref="BewaarDagen"/> dagen, zodat de tabel niet blijft groeien.
-    /// Draait bij het opstarten van de app; er blijft altijd een venster van de laatste 30 dagen over.
-    /// Rechtstreeks verwijderd (geen nieuwe auditregels voor het opruimen zelf). Geeft het aantal verwijderde rijen terug.
-    /// </summary>
-    public static async Task<int> RuimOudeRegelsOpAsync(IDbContextFactory<AppDbContext> factory, DateTime nuUtc)
-    {
-        var grens = nuUtc.AddDays(-BewaarDagen);
-        await using var db = await factory.CreateDbContextAsync();
-        return await db.AuditLogs.Where(a => a.Tijdstip < grens).ExecuteDeleteAsync();
-    }
 }

@@ -1,7 +1,5 @@
 # Plan — één verkoop = één dossier (US-87 → US-95)
 
-> Nota 16/11/2026: stap 2 heet in de app en in de code **Werkbon** (afspraak met Veerle); waar hieronder nog "Bestelling" staat voor stap 2 of `BevestigAlsBestellingAsync`, is dat de oorspronkelijke ontwerpnaam. Stand van het plan: alle stories US-87 → US-95 en US-102 zijn gebouwd en zitten in `dev`.
-
 Stand 26/10/2026. Bron: canvas "QuadroApp – huidige flow (as-is) – nov 2026", pagina **5 · Concept: verkoopdossier** (schermen K01–K14, to-be flow, klikbaar mini-prototype), met de pijnpunten P1–P15 van pagina 4.
 
 ## Uitgangspunt
@@ -10,8 +8,8 @@ Vandaag is één inlijsting verspreid over drie schermen en drie nummers: offert
 
 - **Eén scherm Verkopen** vervangt Prijsberekening, Bestellingen en Bestelbonnen.
 - **Een verkoop is een dossier.** Offerte, werkbon, bestelbon en betalingen hangen eronder.
-- **Vijf stappen**: 1 Offerte · 2 Werkbon · 3 In productie · 4 Klaar om af te halen · 5 Afgehaald & betaald. Open je een verkoop, dan sta je op de stap waar je gestopt was. Vorige stappen kun je terug bekijken.
-- **Stappen overslaan**: Werkbon en/of In productie (bv. standaardkader uit voorraad). Offerte en Afhalen niet.
+- **Vijf stappen**: 1 Offerte · 2 Bestelling · 3 In productie · 4 Klaar om af te halen · 5 Afgehaald & betaald. Open je een verkoop, dan sta je op de stap waar je gestopt was. Vorige stappen kun je terug bekijken.
+- **Stappen overslaan**: Bestelling en/of In productie (bv. standaardkader uit voorraad). Offerte en Afhalen niet.
 - **Eén nummer**: verkoop 412 = offertenummer, staat vast vanaf de start. De bestelbon houdt zijn eigen volgnummer 2026-19 (boekhouding).
 - **Afdrukken** = PDF-voorbeeld + "Afdrukken" / "Bewaren als PDF" in een vaste map, ongeacht de status.
 - **Planning** wordt een pagina in het hoofdvenster (geen popup) en zit ook in stap 2 van het dossier.
@@ -42,7 +40,7 @@ Nieuwe pure functie `VerkoopStapResolver.Bepaal(offerte, werkBon?, factuur?, bet
 | Stap | Voorwaarde (bestaande statussen) |
 |---|---|
 | 1 Offerte | offerte Concept / Verzonden, geen werkbon |
-| 2 Werkbon | werkbon Gepland |
+| 2 Bestelling | werkbon Gepland |
 | 3 In productie | werkbon InUitvoering |
 | 4 Klaar om af te halen | werkbon Afgewerkt (bestelbon bestaat) |
 | 5 Afhalen en betalen | werkbon Afgehaald en rest > 0 ("afgehaald, nog te betalen") |
@@ -55,7 +53,7 @@ Een stap die in `OvergeslagenStappen` staat, krijgt status *Overgeslagen* in pla
 
 Op `Offerte`:
 
-- `OvergeslagenStappen` (`int`, `[Flags] enum VerkoopStapFlags { Werkbon = 1, Productie = 2 }`)
+- `OvergeslagenStappen` (`int`, `[Flags] enum VerkoopStapFlags { Bestelling = 1, Productie = 2 }`)
 - `OverslaanReden` (`string?`, max 200)
 - `GeannuleerdOp` (`DateTime?`), `AnnuleerReden` (`string?`, max 300)
 
@@ -164,14 +162,6 @@ Na de sprint krimpt US-87 tot datamodel + `VerkoopDossierService`, en US-89 tot 
 
 ### US-87 — Fundament: stapbepaling, datamodel, dossierservice
 
-> ✅ **Gebouwd 02/11/2026** (`feature/us87-fundament-verkoopdossier`, PR naar `dev`):
-> - Datamodel: `Offerte.OvergeslagenStappen` (`VerkoopStapFlags`: Werkbon, Productie), `OverslaanReden`, `GeannuleerdOp`, `AnnuleerReden`; migratie `Verkoopdossier` (SQLite + Npgsql, enkel AddColumn).
-> - `VerkoopStapResolver`/stappenbalk: toestand **Overgeslagen** (doorgestreept, ⤼).
-> - `VerkoopDossierService`: `WatOntbreektVoorProductieAsync`, `StartProductieAsync` (alles gepland + afhaaldatum), `ZetWeekInProductieAsync` (weeklijst afgedrukt), `MeldKlaarAsync`, `SlaOverNaarKlaarAsync` (met reden), `AnnuleerAsync` (reden + voorschot terugbetalen/houden).
-> - Gedragswijzigingen (beslist): inplannen zet de offerte niet meer op In productie (was US-51); de weeklijst afdrukken zet volledig geplande verkopen van die week op In productie; annuleren kan ook na Klaar (niet na afhalen/betalen), bestelbon gaat mee op Geannuleerd, reden bij het archief.
-> - Prijslogica en schermen ongewijzigd (behalve de stappenbalk-weergave en een melding na het afdrukken van de weeklijst). Nog niet gedaan: `StartVerkoopAsync` (nummer bij aanmaken bestaat al sinds US-81) en `RekenAfEnHaalAfAsync` (bestaat als `AfrekenenBijAfhalingAsync`, wordt in US-93 gebruikt).
-
-
 **Als** ontwikkelaar **wil ik** één plek die bepaalt in welke stap een verkoop zit en die elke stapovergang uitvoert, **zodat** offerte, werkbon en bestelbon nooit meer uit de pas lopen.
 
 Acceptatiecriteria:
@@ -203,13 +193,6 @@ Technisch: `Betaalwijze.cs` + weergavenaam (`BetaalwijzeLabels`), dezelfde migra
 
 ### US-89 — Scherm Verkopen + Nieuwe verkoop
 
-> ✅ **Gebouwd 02/11/2026** (`feature/us89-scherm-verkopen`, PR naar `dev`) volgens de mock `verkopen.html` (gaat vóór de AC hieronder):
-> - De offertelijst heet nu **Verkopen** (menu en tegel op het beginscherm); zelfde 5 tabbladen, zoeken, jaarfilter, "Zoek in alle tabbladen", Openen (dubbelklik), Vernieuwen, Naar archief, Archief bekijken.
-> - Nieuw in de lijst: kolom **Bestelbon** (2026-24, "voorlopig" of —), onder de fase de werkbon zoals in de Werkbonnenlijst ("Werkbon 426 · In uitvoering · 2 taken · 1/2 besteld"), zoeken ook op bestelbonnummer.
-> - Tabblad Lopende werkbonnen: ook **Planning openen** en **Weeklijst afdrukken** (zelfde vensters als in Werkbonnen).
-> - **Werkbon = verkoopnummer** in de Werkbonnenlijst (ook zoeken), het werkbonvenster, de planning en de weeklijst (`bonnr.`). Enkel weergave.
-> - "+ Nieuwe verkoop" opent zoals vandaag een nieuwe offerte (geen aparte dialoog K02: zou een extra functie zijn). Werkbonnen en Bestelbonnen blijven in het menu. Geen kaarten bovenaan.
-
 **Als** medewerker **wil ik** alle verkopen op één plek zien, per fase, **zodat** ik meteen zie wat vandaag af te halen of nog te betalen is.
 
 1. Kaarten bovenaan: "Vandaag af te halen" (afhaaldatum = vandaag, stap 4/5) en "Afgehaald, nog te betalen" (met bedrag).
@@ -224,16 +207,6 @@ Technisch: `ViewModels/Verkopen/VerkopenViewModel.cs` + `Views/VerkopenView.axam
 ---
 
 ### US-90 — Dossier-schil
-
-> ✅ **Gebouwd 02/11/2026** (`feature/us90-dossier-schil`, PR naar `dev`):
-> - `VerkoopDossierViewModel` + `VerkoopDossierView`: kop (◀ Verkopen, "Verkoop 423 · klant", adres · telefoon · afhalen, fase), rechts totaal en nog te betalen, menu ⋯ (Offerte openen, Verkoop annuleren…).
-> - Chips Offerte / Werkbon / Bestelbon / Voorschot, gestreept zolang ze niet bestaan.
-> - Stappenbalk: klaar (✓ + datum offerte/werkbon), huidig ("hier ben je"), overgeslagen (gestreept), nog te doen (niet klikbaar). Klik op een bereikte stap of "◀ Vorige stap" = **terug kijken** (enkel bekijken, melding bovenaan, "Naar huidige stap ▶").
-> - Stapinhoud = samenvatting + knoppen naar de **bestaande schermen** (offerte, werkbonvenster, planning, bestelbonnen); US-91–93 zetten die inhoud in de stap zelf.
-> - Voetbalk: Stap n van 5 en hoofdknop: Offerte openen ▶ · Start productie ▶ (zegt wat ontbreekt) · Klaar om af te halen ▶ (bevestigen) · Klant komt afhalen ▶ (werkbonvenster, afrekenen zoals US-76) · Betaling registreren ▶ (bestelbonnen).
-> - Annuleren: dialoog met verplichte reden, gevolgen (zoals nu) en voorschot terugbetalen (betaalwijze) of houden.
-> - Ingang: knop **"Dossier (nieuw)"** in Verkopen, naast Openen (fase B: oude schermen blijven de standaard).
-> - Fix: "ontvangen" telt ook betalingen op de bestelbon zonder OfferteId.
 
 **Als** medewerker **wil ik** bij het openen van een verkoop op de stap staan waar ik gestopt was, **zodat** ik niet hoef te zoeken wat de volgende stap is.
 
@@ -250,14 +223,6 @@ Technisch: `VerkoopDossierViewModel` (houdt `OfferteId`, `StapInfo`, `BekekenSta
 
 ### US-91 — Stap 1 Offerte + voorschot
 
-> ✅ **Gebouwd 03/11/2026** (`feature/us91-stap1-offerte`, PR naar `dev`):
-> - `OfferteView.axaml` opgesplitst in vijf controls (`Views/Offerte/`): `OfferteKlantKaart`, `OfferteRegelsKaart`, `OfferteRegelEditor`, `OffertePrijsKaart`, `OfferteTotalen`. Het oude offertescherm gebruikt ze op dezelfde plaats (render pixel-gelijk).
-> - Stap 1 in het dossier = dezelfde `OfferteViewModel`: links **Inlijsting details** (+ afwerkingen, afwerkingscode), rechts klant, **Inlijstingen**, prijsaanpassingen + voorschot ontvangen, totalen en bonstatus.
-> - Voetbalk stap 1: **Bestelbon aanmaken/afdrukken** (zelfde knop) en **Bevestigen → Werkbon ▶** (zelfde bevestiging; daarna stap 2 in het dossier i.p.v. de planning-popup). Menu ⋯: Opslaan, Berekenen/Prijzen herberekenen, → Verzonden / ↩ Concept / ↩ Verzonden, Ontgrendelen, Offerte openen in het oude scherm.
-> - **Automatisch bewaren**: bij het verlaten van stap 1 (andere stap, Verkopen, menu-acties) als er iets gewijzigd is; voet toont "bewaard ✓" / "nog niet bewaard". Niet bij elke toets: opslaan herlaadt de offerte (selectie en keuzelijsten springen dan terug).
-> - Stap 1 **terugkijken** na het akkoord = alleen-lezen; **✎ Offerte aanpassen…** maakt hem bewerkbaar (zoals nu: prijs vast, "Prijzen herberekenen" in ⋯).
-> - Niet gedaan (staat niet in de mock of zou een functie toevoegen): snelknoppen 25 % / 50 % / Volledig bij het voorschot, "+ Nieuwe verkoop" rechtstreeks in het dossier (opent nog het offertescherm), compactere klantkaart. Voorschot werkt zoals nu (bedrag, betaalwijze, datum, Registreren).
-
 **Als** medewerker **wil ik** de offerte opmaken in het dossier, **zodat** prijs, voorschot en afdrukken samen staan.
 
 1. Links de inlijstingen als kaarten (titel, prijs, maat, lijst of standaardkader, afwerkingen) + "+ Inlijsting"; onderaan subtotaal, btw, korting/meerprijs, totaal, voorschot, nog te betalen.
@@ -272,14 +237,6 @@ Technisch: de bestaande `OfferteViewModel` (1 798 regels) + `OfferteRegelViewMod
 
 ### US-92 — Planning als pagina en in stap 2
 
-> ✅ **Gebouwd 03/11/2026** (`feature/us92-planning-pagina`, PR naar `dev`):
-> - `PlanningCalendarWindow` → herbruikbaar blok `Views/Planning/PlanningKalender` (inhoud, slepen, dag kiezen, herplannen, taak verwijderen, tijd-dialoog ongewijzigd). Het venster blijft enkel als terugvaloptie (pixel-gelijk) en wordt in US-95 weggehaald.
-> - **Planning opent overal als pagina** (`PlanningPaginaViewModel`/`PlanningPaginaView`), niet meer als los venster: zijbalk/beginscherm, Werkbonnen ("Planning openen"), Verkopen, het offertescherm (na "Bevestigen → Werkbon" en "Planning bekijken"; die bewaart de offerte eerst) en het dossier. Vanuit een werkbon met zijn inlijstingen; "← Terug" gaat naar het scherm waar je vandaan kwam (Anthony 03/11: "ik zie alleen de oude planning die openspringt").
-> - **Stap 2 in het dossier**: dezelfde kalender met de inlijstingen van deze werkbon (slepen, Plan op geselecteerde dag, Plan per regel). Na elke planwijziging werken kop (afhaaldatum = laatste plandag) en "wat ontbreekt" bij; de stap blijft Werkbon tot **Start productie ▶**.
-> - **Stap 2 volgens de mock** (Anthony 05/11: "bouw de mock"; "de sidebar moet er niet staan, ik moet gewoon verder kunnen met de verkoop of terug naar de offerte"): `WerkbonPlanner` — links de werkdagen (**2 weken** of **maand**, ◀ Vandaag ▶) met bezetting, het werk van deze verkoop en de afhaaldag; rechts **Werkbon · inlijstingen** met per inlijsting duur, lijst/afwerking, "nog niet gepland" / "gepland di 10/11" + herplannen + ✕, bestelstatus + "Bestellen…" (opent het bestellen zoals nu), opmerking; onderaan "Plan per regel" en "Plan op di 10/11". Slepen naar een dag werkt. Ook zaterdag en zondag staan erin (de planning kan daar werk zetten), en een inlijsting die over meerdere dagen verdeeld is toont elk deel met herplannen/✕. Geen zijpaneel; "wat ontbreekt" staat in de voetbalk naast Start productie. Alle acties gaan via dezelfde uitvoering als de pagina Planning (planlogica ongewijzigd). Ook in stap 2 (Anthony 05/11, "de zijbalk" was de navigatiebalk links in de mock, niet het planningspaneel): de cijfers bovenaan met legende rustig/vol/geblokkeerd, bezetting per dag in % met dezelfde kleuren, dagdetails met alle taken van de gekozen dag (ook andere verkopen; herplannen/verwijderen), weekdetail en dag/week blokkeren. Dat zijn dezelfde blokken als de pagina Planning (`PlanningKpiBalk`, `PlanningDagDetails`, `PlanningWeekDetail`, `PlanningBlokkeren`, stijlen in `PlanningStijlen.axaml`); daarna kreeg ook de **pagina Planning** dezelfde opmaak (Anthony 05/11: "overal de nieuwe"): vanuit de zijbalk de planner over de volle breedte met per dag ook de klanten van het werk, vanuit een werkbon (Werkbonnen, Verkopen, offerte) met de inlijstingen rechts. Het oude maandvenster (`PlanningCalendarWindow`/`PlanningKalender`) wordt nergens meer geopend en verdwijnt in US-95.
-> - P6 (standaardkader i.p.v. "Geen lijst gekozen") was al opgelost in US-80; zichtbaar in stap 2.
-> - Niet in deze story: "Werkbon afdrukken" (US-94) en "Stap overslaan" (US-93) in de voetbalk; het bestel-dialoogvenster uit de mock (bestellen gebeurt zoals nu in de werkbon).
-
 **Als** medewerker **wil ik** de planner in het hoofdvenster, **zodat** hij niet als los venster achter de app verdwijnt.
 
 1. Zijbalk "Planning" opent de kalender als pagina (K14).
@@ -293,15 +250,6 @@ Technisch: `PlanningCalendarWindow.axaml(.cs)` → `PlanningView.axaml` (UserCon
 ---
 
 ### US-93 — Stappen 3–5, overslaan, afgerond, annuleren
-
-> ✅ **Gebouwd 08/11/2026** (`feature/us93-stappen-3-5`, PR naar `dev`) volgens de mocks en beslissingen hieronder (gaan vóór de AC):
-> - **Stap 3** = inhoud van het werkbonvenster (werktaken met titel, code, afmeting, inleg, duur, van/tot, afhalen, lijst/standaardkader, afwerking, opmerking, bestelstatus met bestelwijze en "Bestelling plaatsen"), planning, bestelbon en een kaart Offerte met **✎ Offerte aanpassen…** (= "Open offerte"). Hoofdknop **Klaar om af te halen ▶** (= status Afgewerkt).
-> - **Stap 4/5** = scherm Bestelbonnen voor deze bon (besteldatum, vervaldatum, opmerking, initialen, lijnen, Opslaan, betalingen met ✕, Betaling registreren, Rest betaald) + **🖨 Bestelbon afdrukken** in elke status. **Klant komt afhalen ▶** = status Afgehaald en, met een rest, het afrekenen van US-76 (bedrag, betaalwijze, datum, gesplitst, Annuleren / Later betalen / Betalen en afhalen). Afgehaald met rest: **Afrekenen ▶**.
-> - **Afgerond**: melding + **Ontgrendelen** (beheerder, US-101), bestelbon en betalingen alleen-lezen zoals nu.
-> - **⤼ Stap overslaan** (stap 2/3): reden Standaardkader uit voorraad / Klant neemt meteen mee / Andere… → meteen Klaar (beslist 02/11).
-> - **US-102 momentopname**: bij afronden eenmalig een JSON-momentopname (zelfde opbouw als het archief, `OfferteArchiefSnapshot`) in `Offerte.Momentopname` + `AfgerondOp` (migratie `Momentopname`, SQLite + Npgsql); getoond in stap 5. Afgerond buiten het dossier → bij het openen alsnog gemaakt. De bestelbon-PDF gebruikt de lijnen van de bon zelf (die veranderen niet mee).
-> - Werkbonvenster en scherm Bestelbonnen blijven pixel-gelijk (onderdelen in `Views/Werkbon/` en `Views/Bestelbon/`).
-> - Niet gebouwd (bestaat vandaag niet, beslist 02/11): afvinklijst/voortgang per inlijsting, wisselgeld, tijdlijn, "Nieuwe verkoop voor deze klant", "Meegeven".
 
 **Als** medewerker **wil ik** de verkoop met één knop per stap afwerken, **zodat** ik geen statuskeuzelijst meer nodig heb.
 
@@ -318,11 +266,6 @@ Technisch: kind-ViewModels per stap; afrekenlogica uit `WerkBonDetailViewModel` 
 
 ### US-94 — Afdrukken werkbon / bestelbon
 
-> ✅ **Gebouwd 08/11/2026** (`feature/us94-afdrukken`, PR naar `dev`):
-> - **Werkbon-PDF** (`PdfWerkBonExporter`, QuestPDF zoals de weeklijst): "WERKBON 423" (= verkoopnummer), afhaaldatum, klant, telefoon, bestelbonnummer; per inlijsting aantal × titel — maat, geplande dag(en), lijst of standaardkader (naam + omschrijving, US-80) met bestelstatus, afwerkingen, inleg, opmerking. Standaard **zonder prijzen**; "Werkbon afdrukken met prijzen" in menu ⋯. Bewaard in Documenten › QuadroApp › Werkbonnen › Werkbon-423.pdf en geopend in het systeemvenster om af te drukken (beslist 02/11).
-> - Knop **🖨 Werkbon afdrukken** vanaf stap 2; **🖨 Bestelbon afdrukken** in stap 4/5 en "Bestelbon aanmaken/afdrukken" in stap 1 (bestaande export, ook voor een betaalde bon: "betaald").
-> - Niet gebouwd: eigen voorbeeldvenster (het systeemvenster toont de PDF al), afvinkvakjes/initialen op de werkbon (= US-106, later).
-
 **Als** medewerker **wil ik** elk document met één knop afdrukken of als PDF bewaren, **zodat** ik niet hoef te zoeken waar het bestand terechtkwam.
 
 1. Elk "… afdrukken" opent een voorbeeldvenster met de echte PDF en de knoppen Afdrukken, Bewaren als PDF, Sluiten; het pad (`Documenten › QuadroApp › Bestelbonnen › Bestelbon-2026-19.pdf`) staat eronder.
@@ -336,12 +279,6 @@ Technisch: `IDocumentAfdrukService` + `DocumentPreviewWindow` (QuestPDF `Generat
 ---
 
 ### US-95 — Navigatie opruimen, Home
-
-> ✅ **Gebouwd 08/11/2026, beperkt tot wat beslist is** (`feature/us95-navigatie`, PR naar `dev`):
-> - Het **dossier is de standaard ingang**: Verkopen "Openen"/dubbelklik, de blokken op het beginscherm en de verkopen van een klant openen het dossier (`IOfferteNavigationService.OpenVerkoopAsync`).
-> - Het oude offertescherm blijft bereikbaar: knop **Oud scherm** in Verkopen en menu ⋯ in het dossier.
-> - Beginscherm: "＋ Nieuwe verkoop" (was "Nieuwe offerte"); Planning is een pagina (US-92).
-> - **Laatste stap gedaan 08/11 (Anthony: "doe laatste stap")**: Werkbonnen en Bestelbonnen uit het menu en van het beginscherm (tegel nu Leveranciers); verwijderd: `OfferteView`, `WerkBonLijstView(Model)`, `WerkBonDetailWindow`, `BestelbonnenView`, `PlanningCalendarWindow` + `PlanningKalender`. Wat ze deden zit in het dossier; twee kleine vensters vangen de rest op: **Lijsten bestellen…** (werktaken + Bestelling plaatsen, ook vanuit stap 2) en **Bestelbon en betalingen…** (in elke stap). `OpenOfferteAsync`/`NewOfferteAsync` openen voortaan het dossier. De ViewModels (`OfferteViewModel`, `WerkBonDetailViewModel`, `BestelbonnenViewModel`) blijven: het dossier gebruikt ze. Testlijst: `Testlijst_Verkoopdossier.md`.
 
 **Als** medewerker **wil ik** een korte zijbalk met de woorden die ik zelf gebruik, **zodat** ik de werkbon niet meer kwijt ben (P1, P13).
 
@@ -358,90 +295,6 @@ Technisch: `IDocumentAfdrukService` + `DocumentPreviewWindow` (QuestPDF `Generat
 - **Fase C (US-92–94)**: planner en afdrukken. Grootste risico: `PlanningCalendarWindow` → UserControl (drag & drop in code-behind) en het opsplitsen van `OfferteView.axaml` (1 057 regels). Eerst verhuizen zonder gedrag te veranderen, dan pas in het dossier hangen.
 - **Fase D (US-95)**: pas na akkoord van Veerle de oude schermen weg.
 - Bestaande data: elke bestaande offerte krijgt automatisch een stap via de resolver; geen datamigratie nodig behalve betaalwijzen. Offertes die vandaag op InProductie staan met werkbon Gepland (P10) tonen stap 2 — klopt met de werkelijkheid.
-
-## Beslissingen (Anthony, 02/11/2026)
-
-Alle open vragen zijn beantwoord; de oorspronkelijke vragen staan hieronder ter referentie.
-
-| # | Vraag | Beslist |
-|---|---|---|
-| 1 | Vorige stap | **Enkel bekijken** (alleen-lezen, label "Terug gekeken"). Na het akkoord iets wijzigen kan via "Prijzen herberekenen" (US-100); niet terug naar Concept na een werkbon (US-103). |
-| 2 | — | Beslist in US-79 (Cheque/Proton → Cash). |
-| 3 | Annuleren met voorschot | **Kiezen bij het annuleren**: voorschot terugbetalen (negatieve betaling, met betaalwijze) of laten staan (bv. annuleringskost). |
-| 4 | Printer en exemplaren | **Printvenster van het systeem**: voorbeeld in de app, daarna het gewone printvenster (macOS/Windows). Geen printerkeuze in de app. |
-| 5 | Bestelbon bij overslaan | **Pas bij "Klaar"**. Alleen als Bestelling én Productie overgeslagen worden, komt de bestelbon meteen. |
-| 6 | Afhaaldatum vóór besteldatum | Al opgelost in US-81 (waarschuwing) en US-96 (niet plannen in het verleden). |
-| 7 | Verzonden | **Blijft zoals nu**: "→ Verzonden" en "↩ Concept" bestaan nog zolang er geen werkbon is (US-103 haalde enkel het terugzetten ná de werkbon weg). In het dossier staan ze in het menu ⋯. |
-| 8 | Werkbonvenster | **Verdwijnt na de test door Veerle**: eerst het dossier naast de oude schermen (fase B), pas na haar akkoord weg (US-95). |
-| 9 | Annuleren na Klaar | **Ja, iedereen**, met verplichte reden. De bestelbon wordt "Geannuleerd"; het nummer blijft bestaan voor de boekhouding. Transitietabel uitbreiden (Afgewerkt/Besteld → Geannuleerd). |
-| 10 | — | Beslist: volgnummer pas na bevestiging. |
-
-Verder:
-- **US-102** (momentopname bij afronden) wordt gebouwd **samen met de stap "Afgerond" (US-93, K13)**.
-- **Aanpak**: eerst een **mock** van het scherm Verkopen en het dossier (zoals bij het beginscherm, US-105), daarna US-87 en per fase.
-
-### Stap 1 Offerte (mock goedgekeurd 02/11/2026)
-
-- **Afhaaldatum**: niet verplicht om te bevestigen; wel verplicht vóór "Start productie" (stap 2 → 3).
-- **Voorlopige bestelbon**: kan altijd gemaakt en afgedrukt worden zolang de klant niet bevestigd heeft (V423, geen volgnummer).
-- **Bewaren**: automatisch (± 0,8 s na de laatste wijziging, "bewaard ✓" in de kop); de knop "Opslaan" verdwijnt.
-- **Verwijderen vervalt**: een verkoop wordt altijd **geannuleerd**, ook een lege ("per vergissing aangemaakt"). Afhandeling:
-  - reden verplicht (Klant ziet af · Te duur · Per vergissing aangemaakt · Andere);
-  - offerte → Geannuleerd, alleen-lezen; het nummer blijft (geen gaten); datum, wie en reden bewaard;
-  - voorlopige bon vervalt (had geen volgnummer, dus niets in de boekhouding);
-  - voorschot: kiezen tussen terugbetalen (negatieve betaling met betaalwijze en datum) of houden (annuleringskost);
-  - daarna: "Dupliceren als nieuwe verkoop" (nieuw nummer) of "Heropenen" (enkel beheerder, zolang er geen werkbon was).
-- **Controle vóór Bevestigen**: alle meldingen samen naast de grijze knop ("2 dingen te doen: …").
-- **Bevestigen** springt naar stap 2 in het dossier (geen planning-popup meer), met optioneel "bon meteen afdrukken".
-- **Bon bij bevestigen**: ~~zoals nu (zonder voorlopige bon pas bij "Klaar")~~ → **gewijzigd 08/11 (Anthony): de bestelbon wordt definitief bij "Bevestigen → Werkbon"**: een voorlopige bon krijgt zijn volgnummer, en zonder voorlopige bon wordt hij dan aangemaakt mét volgnummer. Bij "Klaar" wordt dezelfde bon enkel bijgewerkt (zelfde nummer).
-- **Prijslogica blijft exact zoals nu** (`PricingEngine` niet wijzigen): afgesproken prijs en meerprijs ingegeven incl. btw; extra kost en standaardkaderprijs excl.; meerprijs niet als aparte regel op de bestelbon (US-26), wel in het totaal; korting op totaal ook over inlijstingen met een afgesproken prijs. Het dossier verandert enkel de schermen (o.a. een paneel "Prijsopbouw" dat de bestaande berekening toont).
-
-Mock: `docs/backlog/mock-verkoopdossier/` (HTML, in de browser openen).
-
-### Grondregel (Anthony, 02/11/2026)
-
-**De functies veranderen niet; enkel de flow wordt duidelijker en logischer.** Niets uit de huidige versie mag verdwijnen en er komt niet te veel extra bij. Elk veld en elke knop van de huidige schermen (offerte, werkbon, planning, bestelbon) moet in het dossier terug te vinden zijn. De mock van stap 1 is daarom herzien: alle velden van `OfferteView` (o.a. inleg B × H en inleg nr., 6 afwerkingen met type + variant, afwerkingscode Toepassen/Genereren, ✏/📋 bij de lijst, afhaaldatum en opmerking per regel, prijs deze inlijsting) staan erin; toevoegingen die er vandaag niet zijn (prijsopbouw-paneel, extra werk/extra kost op het scherm, eerdere verkopen, verkoop dupliceren, heropenen) zijn eruit.
-
-**Indeling stap 1** (Anthony, 02/11): links **"Inlijsting details"** (vroeger "Regel details": duidelijker voor de gebruiker), rechts klant, inlijstingen, prijsaanpassingen/voorschot en totalen.
-
-### Stap 2 Werkbon (02/11/2026)
-
-- **Offerte aanpassen na het akkoord**: ja, zoals nu ("Offerte aanpassen…" opent stap 1; "Prijzen herberekenen" vraagt bevestiging; werkbon, planning en reservaties volgen).
-- **In productie**: met de knop "Start productie", of vanzelf wanneer de **weeklijst** van die week wordt afgedrukt (alle volledig geplande verkopen op die lijst). Inplannen alleen zet de offerte niet meer op In productie.
-- **Start productie zonder volledige planning**: nee. Verplicht: alle inlijstingen gepland en een afhaaldatum. Stap overslaan kan daarom enkel rechtstreeks naar "Klaar".
-- Planning blijft zoals nu (8 u/dag, niet in het verleden, Plan op dag / Plan per regel / slepen, herplannen, taak verwijderen, afhaaldatum = laatste plandag, weeklijst).
-
-### Stap 3 In productie (mock 02/11/2026)
-
-- Inhoud = het huidige werkbonvenster: werktaken per inlijsting (titel, code, afmeting, inleg, duur, van/tot, afhalen, lijst/standaardkader, afwerking, opmerking), bestelstatus met "Bestelling plaatsen", planning, bestelbongegevens.
-- "Klaar om af te halen ▶" = status Afgewerkt (nu via statuskeuze + "Opslaan status"); gevolgen zoals nu (voorraad verbruikt, bestelbon, offerte → Besteld). Status terugzetten kan niet (zoals nu).
-- "Open offerte" wordt "Offerte aanpassen…". Geen afvinklijst/initialen (bestaat vandaag niet).
-
-### Stap 4 en 5 (mock 02/11/2026)
-
-- Stap 4 = Bestelbonnen-scherm in het dossier: besteldatum, vervaldatum, initialen, opmerking, lijnen, "Bestelbon gegevens…" (met waarschuwing US-81), afdrukken in elke status, betalingen (✕, registreren, Rest betaald).
-- "Klant komt afhalen ▶" = status Afgehaald en opent het afrekenen van vandaag (US-76): bedrag, betaalwijze, datum, gesplitst betalen, Annuleren / Later betalen / Betalen en afhalen.
-- Stap 5: afgehaald met rest → betalen zoals op het Bestelbonnen-scherm; alles betaald → afgerond en vergrendeld, "Ontgrendelen" enkel beheerder (US-101). Momentopname = US-102.
-- Niet toegevoegd (bestaat vandaag niet): wisselgeld bij afrekenen, tijdlijn, "Nieuwe verkoop voor deze klant", afvinklijst "meegeven".
-
-### Lijst Verkopen (mock 02/11/2026)
-
-- Zelfde 5 tabbladen als de huidige offertelijst (US-84) met aantallen: Open offertes, Lopende werkbonnen, Klaar om af te halen, Afgerond, Geannuleerd (niet de 8 uit de eerste schets).
-- Zoeken op nummer, klant **of bestelbonnummer** (zoals de Bestelbonnenlijst), "Zoek in alle tabbladen", jaarfilter.
-- Kolommen van de offertelijst (Nr., Klant + e-mail, Datum, Fase, Afhalen, Totaal incl.) + Bestelbon; bij werkbonnen onder de fase: werkbon #, status, taken, bestelvoortgang (zoals de Werkbonnenlijst).
-- Knoppen zoals nu: Openen, Vernieuwen, Nieuw(e verkoop), Naar archief, Archief bekijken; bij werkbonnen ook Planning en Werklijst van een week.
-- Menu: **Werkbonnen en Bestelbonnen blijven** tot Anthony en Veerle akkoord zijn (US-95). Geen kaartjes bovenaan (staan al op het beginscherm, US-86/105).
-- Eerste schets `dossier.html` verwijderd (bevatte toevoegingen).
-
-### Nummers (Anthony, 02/11/2026)
-
-- **Werkbon = verkoopnummer**: verkoop 423 heeft werkbon 423, overal (lijst, dossier, werkbon-PDF, weeklijst, planning). Vandaag toont de werkbonlijst "Werkbon #57" (het interne `WerkBon.Id`); dat wordt het `OfferteNummer`. Enkel weergave, geen databasewijziging.
-- **Bestelbon houdt zijn eigen volgnummer** (2026-24): wettelijk doorlopend per jaar voor de boekhouding; vóór het akkoord voorlopig V423. Waar nuttig staat erbij "bij verkoop 423".
-- Verkoopnummer = offertenummer: hoogste ooit uitgereikte nummer + 1 (`OfferteNummering`), ook over het archief.
-
-### Werkwijze (02/11/2026)
-
-Alle stories van het verkoopdossier (US-87 → US-95, US-102) gaan naar de branch **`dev`**: feature-branch vanaf `dev`, PR naar `dev`. Pas als Anthony (en Veerle) akkoord zijn, gaat `dev` in één keer naar `main`. Andere werk (fixes, losse stories) blijft rechtstreeks naar `main` gaan; `dev` wordt dan regelmatig bijgewerkt met `main`.
 
 ## Open vragen (voor Veerle / Anthony)
 
