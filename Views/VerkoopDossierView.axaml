@@ -438,7 +438,7 @@
                             FontWeight="Bold" Padding="12,6" CornerRadius="6"/>
                     <Button Content="✎ Offerte aanpassen…" Command="{Binding OfferteAanpassenCommand}"
                             IsVisible="{Binding IsOfferteAanpassenZichtbaar}" Padding="12,6" CornerRadius="6"
-                            ToolTip.Tip="De offerte na het akkoord nog wijzigen (zoals nu)"/>
+                            ToolTip.Tip="De offerte na het akkoord nog wijzigen"/>
                     <!-- US-93: stap 2 en 3 — rechtstreeks naar Klaar om af te halen, met reden -->
                     <Button Content="⤼ Stap overslaan" Command="{Binding StapOverslaanCommand}"
                             IsVisible="{Binding KanOverslaan}" Padding="12,6" CornerRadius="6"/>
