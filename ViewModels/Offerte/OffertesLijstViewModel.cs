@@ -256,6 +256,15 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
     {
         if (SelectedOfferte is null) return;
 
+        // Lopende verkoop (werkbon, productie, klaar of afgehaald maar nog niet betaald): eerst annuleren.
+        if (!QuadroApp.Service.OfferteArchiefService.MagNaarArchief(SelectedOfferte.Fase))
+        {
+            await _dialogs.ShowErrorAsync("Niet naar archief",
+                $"Verkoop #{SelectedOfferte.OfferteNummer} loopt nog. {QuadroApp.Service.OfferteArchiefService.EerstAnnulerenMelding}\n\n" +
+                "Naar archief kan enkel bij een open offerte (nog geen werkbon), een geannuleerde of een afgeronde verkoop.");
+            return;
+        }
+
         var klantNaam = !string.IsNullOrWhiteSpace(SelectedOfferte.KlantNaam)
             ? SelectedOfferte.KlantNaam
             : $"offerte #{SelectedOfferte.OfferteNummer}";

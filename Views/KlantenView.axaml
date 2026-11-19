@@ -10,6 +10,14 @@
 			<Grid Grid.Row="1" ColumnDefinitions="Auto,*" ColumnSpacing="12">
 				<TextBox Grid.Column="0" MinWidth="220" Watermark="Zoek klant…" Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 				<WrapPanel Grid.Column="1">
+					<!-- Afspraak 19/11/2026: gearchiveerde klanten tonen, terugzetten of definitief verwijderen. -->
+					<CheckBox Content="Toon gearchiveerde" IsChecked="{Binding ToonGearchiveerd}" IsVisible="{Binding MagArchiefBeheren}"
+							  VerticalAlignment="Center" Margin="0,0,12,6"/>
+					<Button Content="↩ Terugzetten" Command="{Binding TerugzettenCommand}" Classes="MainBtn" Margin="0,0,8,6"
+							IsVisible="{Binding ToonGearchiveerd}"/>
+					<Button Content="Definitief verwijderen" Command="{Binding DefinitiefVerwijderenCommand}" Classes="DangerBtn" Margin="0,0,8,6"
+							IsVisible="{Binding ToonGearchiveerd}"/>
+					<WrapPanel IsVisible="{Binding !ToonGearchiveerd}">
 					<Button Content="➕ Nieuw" Command="{Binding NewCommand}" Classes="MainBtn" Margin="0,0,8,6"/>
 					<Button Content="✏️ Bewerken" Command="{Binding EditCommand}" Classes="MainBtn" Margin="0,0,8,6"/>
 					<Button Content="📂 Details bekijken" Command="{Binding OpenKlantDetailCommand}" CommandParameter="{Binding SelectedKlant}" Classes="MainBtn" Margin="0,0,8,6"/>
@@ -18,10 +26,14 @@
 					<Button Content="📥 Excel-import" Command="{Binding ImportExcelCommand}" Classes="MainBtn" Margin="0,0,8,6"/>
 					<Button Content="🖨️ Afdrukken" Command="{Binding AfdrukkenCommand}" Classes="MainBtn" Margin="0,0,0,6"
 							ToolTip.Tip="Print de huidige (gefilterde) lijst als PDF"/>
+					</WrapPanel>
 				</WrapPanel>
 			</Grid>
 			<Border Grid.Row="2" Background="{DynamicResource WarningBg}" BorderBrush="{DynamicResource BrandYellow}" BorderThickness="1" CornerRadius="8" Padding="10">
-				<TextBlock Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" Text="Selecteer een klant en gebruik ‘Bewerken’ of ‘Details bekijken’. Dubbelklik op een rij om meteen naar de details te gaan."/>
+				<Panel>
+					<TextBlock Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" IsVisible="{Binding !ToonGearchiveerd}" Text="Selecteer een klant en gebruik ‘Bewerken’ of ‘Details bekijken’. Dubbelklik op een rij om meteen naar de details te gaan."/>
+					<TextBlock Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" IsVisible="{Binding ToonGearchiveerd}" Text="Gearchiveerde klanten. ‘Terugzetten’ zet een klant terug in de lijst. ‘Definitief verwijderen’ kan enkel als de klant nergens meer gebruikt wordt."/>
+				</Panel>
 			</Border>
 			<Grid Grid.Row="3" ColumnDefinitions="2*,2.5*,1.5*,3*,2*,3*" ColumnSpacing="8" Margin="16,0,16,0">
 				<TextBlock Text="Naam" Grid.Column="0" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>

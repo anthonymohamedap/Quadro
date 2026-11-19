@@ -164,6 +164,9 @@ static class Schermen
         },
         ["bestelbon-voorbeeld"] = BestelbonVoorbeeldAsync,
         ["startklaar"] = f => StartklaarAsync(f, uitvoeren: false),
+        ["klanten"] = f => KlantenAsync(f, gearchiveerd: false),
+        ["klanten-gearchiveerd"] = f => KlantenAsync(f, gearchiveerd: true),
+        ["lijsten-gearchiveerd"] = LijstenGearchiveerdAsync,
         ["startklaar-klaar"] = f => StartklaarAsync(f, uitvoeren: true),
         ["standaardkaders"] = StandaardkadersAsync,
         ["weeklijst-pdf"] = WeeklijstPdfAsync,
@@ -479,6 +482,53 @@ static class Schermen
         vm.Bevestiging = "STARTKLAAR";
         if (uitvoeren) await vm.UitvoerenCommand.ExecuteAsync(null);
         return new StartklaarWindow { DataContext = vm };
+    }
+
+    /// <summary>Klanten: gewone lijst of "Toon gearchiveerde" met Terugzetten / Definitief verwijderen (19/11/2026).</summary>
+    static async Task<Control> KlantenAsync(IDbContextFactory<AppDbContext> f, bool gearchiveerd)
+    {
+        await using (var db = await f.CreateDbContextAsync())
+        {
+            db.Klanten.Add(new Klant { Voornaam = "Oude", Achternaam = "Klant", Gemeente = "Leuven", IsGearchiveerd = true, GearchiveerdOp = DateTime.UtcNow });
+            db.Klanten.Add(new Klant { Voornaam = "Verhuisd", Achternaam = "Peeters", Gemeente = "Diest", IsGearchiveerd = true, GearchiveerdOp = DateTime.UtcNow });
+            await db.SaveChangesAsync();
+        }
+        var toast = new TestToastService();
+        var vm = new KlantenViewModel(f, new TestNavigationService(), new KlantValidator(f), new TestDialogService(), new KlantDialogService(),
+            new QuadroApp.Service.Import.KlantImportDefinition(new QuadroApp.Service.Import.ImportService(f, new QuadroApp.Service.Import.ClosedXmlExcelParser(), NullLogger<QuadroApp.Service.Import.ImportService>.Instance),
+                new QuadroApp.Service.Import.KlantExcelMap(), new QuadroApp.Service.Import.KlantImportValidator(), new QuadroApp.Service.Import.KlantImportCommitter()),
+            toast, new TestAuthService());
+        await vm.InitializeAsync();
+        if (gearchiveerd)
+        {
+            vm.ToonGearchiveerd = true;
+            for (var i = 0; i < 50 && vm.FilteredKlanten.Count == 0; i++) await Task.Delay(50);
+            vm.SelectedKlant = vm.FilteredKlanten.FirstOrDefault();
+        }
+        return new KlantenView { DataContext = vm };
+    }
+
+    /// <summary>Lijsten met "Toon gearchiveerde" aan (19/11/2026).</summary>
+    static async Task<Control> LijstenGearchiveerdAsync(IDbContextFactory<AppDbContext> f)
+    {
+        await using (var db = await f.CreateDbContextAsync())
+        {
+            var lev = new Leverancier { Naam = "ICO" };
+            db.TypeLijsten.Add(new TypeLijst { Artikelnummer = "0303/132", Levcode = "ICO-132", Leverancier = lev, BreedteCm = 30, Soort = "HOU", IsGearchiveerd = true });
+            db.TypeLijsten.Add(new TypeLijst { Artikelnummer = "406/9N", Levcode = "ICO-9N", Leverancier = lev, BreedteCm = 20, Soort = "ALU", IsGearchiveerd = true });
+            db.TypeLijsten.Add(new TypeLijst { Artikelnummer = "112005/8E", Levcode = "ICO-8E", Leverancier = lev, BreedteCm = 25, Soort = "HOU" });
+            await db.SaveChangesAsync();
+        }
+        var toast = new TestToastService();
+        var vm = new LijstenViewModel(f, new TestNavigationService(), new TestDialogService(), new LijstDialogService(),
+            new QuadroApp.Service.Import.TypeLijstImportDefinition(new QuadroApp.Service.Import.ImportService(f, new QuadroApp.Service.Import.ClosedXmlExcelParser(), NullLogger<QuadroApp.Service.Import.ImportService>.Instance),
+                new QuadroApp.Service.Import.TypeLijstExcelMap(), new QuadroApp.Service.Import.TypeLijstImportValidator(), new QuadroApp.Service.Import.TypeLijstImportCommitter()),
+            new TypeLijstValidator(f), toast, new TestAuthService());
+        await vm.InitializeAsync();
+        vm.ToonGearchiveerd = true;
+        for (var i = 0; i < 50 && vm.PagedLijsten.Count == 0; i++) await Task.Delay(50);
+        vm.GeselecteerdeLijst = vm.PagedLijsten.FirstOrDefault();
+        return new LijstenView { DataContext = vm };
     }
 
     static async Task<Control> HomeAsync(IDbContextFactory<AppDbContext> f, bool metVandaag, bool voorraadOpen = false)

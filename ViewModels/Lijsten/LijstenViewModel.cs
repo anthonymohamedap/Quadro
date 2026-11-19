@@ -49,7 +49,20 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
     [NotifyCanExecuteChangedFor(nameof(EditCommand))]
     [NotifyCanExecuteChangedFor(nameof(DeleteCommand))]
     [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+    [NotifyCanExecuteChangedFor(nameof(TerugzettenCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DefinitiefVerwijderenCommand))]
     private TypeLijst? geselecteerdeLijst;
+
+    /// <summary>Afspraak 19/11/2026: gearchiveerde lijsten tonen, terugzetten of definitief verwijderen.</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(TerugzettenCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DefinitiefVerwijderenCommand))]
+    private bool toonGearchiveerd;
+
+    /// <summary>Het vinkje "Toon gearchiveerde" enkel voor wie lijsten mag archiveren.</summary>
+    public bool MagArchiefBeheren => _auth.HeeftPermissie(QuadroApp.Service.Security.Permissie.LijstVerwijderen);
+
+    private QuadroApp.Service.ArchiefBeheerService ArchiefBeheer => new(_dbFactory, _auth);
 
     [ObservableProperty] private bool isDetailOpen;
     [ObservableProperty] private string zoekterm = string.Empty;
@@ -127,7 +140,8 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
 
     partial void OnGeselecteerdeLijstChanged(TypeLijst? value)
     {
-        IsDetailOpen = value is not null;
+        // In de lijst met gearchiveerde lijsten opent er geen bewerkpaneel.
+        IsDetailOpen = value is not null && !ToonGearchiveerd;
         SyncSelectedLeverancierFromLijst();
     }
 
@@ -237,11 +251,13 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
                 .OrderBy(l => l.Naam)
                 .ToListAsync();
 
-            var lijstenData = await db.TypeLijsten
-                .Include(t => t.Leverancier)
-                .AsNoTracking()
-                .OrderBy(t => t.Artikelnummer)
-                .ToListAsync();
+            var lijstenData = ToonGearchiveerd
+                ? await ArchiefBeheer.GearchiveerdeLijstenAsync()
+                : await db.TypeLijsten
+                    .Include(t => t.Leverancier)
+                    .AsNoTracking()
+                    .OrderBy(t => t.Artikelnummer)
+                    .ToListAsync();
 
             Lijsten = new ObservableCollection<TypeLijst>(lijstenData);
             GefilterdeLeveranciers = new ObservableCollection<Leverancier>(Leveranciers);
@@ -283,6 +299,57 @@ public partial class LijstenViewModel : ObservableObject, IAsyncInitializable
 
     [RelayCommand]
     private async Task RefreshAsync() => await LoadAsync();
+
+    partial void OnToonGearchiveerdChanged(bool value)
+    {
+        GeselecteerdeLijst = null;
+        IsDetailOpen = false;
+        _ = LoadAsync();
+    }
+
+    private bool CanArchiefActie() => ToonGearchiveerd && GeselecteerdeLijst is not null && !IsBusy;
+
+    [RelayCommand(CanExecute = nameof(CanArchiefActie))]
+    private async Task TerugzettenAsync()
+    {
+        if (GeselecteerdeLijst is not { } lijst) return;
+        try
+        {
+            await ArchiefBeheer.ZetLijstTerugAsync(lijst.Id);
+            _toast.Success($"Lijst {lijst.Artikelnummer} staat weer bij de lijsten.");
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            await _dialogs.ShowErrorAsync("Terugzetten mislukt", ex.GetBaseException().Message);
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanArchiefActie))]
+    private async Task DefinitiefVerwijderenAsync()
+    {
+        if (GeselecteerdeLijst is not { } lijst) return;
+        try
+        {
+            var reden = await ArchiefBeheer.WaaromLijstNietWegAsync(lijst.Id);
+            if (reden is not null)
+            {
+                await _dialogs.ShowErrorAsync("Definitief verwijderen kan niet", reden);
+                return;
+            }
+            var ok = await _dialogs.ConfirmAsync("Lijst definitief verwijderen",
+                $"Lijst {lijst.Artikelnummer} definitief verwijderen? Dit kan niet ongedaan gemaakt worden.");
+            if (!ok) return;
+
+            await ArchiefBeheer.VerwijderLijstDefinitiefAsync(lijst.Id);
+            _toast.Success($"Lijst {lijst.Artikelnummer} is definitief verwijderd.");
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            await _dialogs.ShowErrorAsync("Verwijderen mislukt", ex.GetBaseException().Message);
+        }
+    }
 
     private bool CanEdit() => GeselecteerdeLijst is not null;
     private bool CanDelete() => GeselecteerdeLijst is not null;
