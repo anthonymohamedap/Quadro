@@ -1,0 +1,93 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+	<!-- US-92: stijlen van de planningskalender (dagtegels, capaciteitsbalk, vlakke lijsten),
+	     gedeeld door PlanningKalender en de losse blokken. Uitsluitend theme-tokens. -->
+
+		<!-- Dagtegels -->
+		<Style Selector="Border.DayTile">
+			<Setter Property="Background"  Value="{DynamicResource Surface}"/>
+			<Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+			<Setter Property="BorderThickness" Value="2"/>
+			<Setter Property="CornerRadius" Value="8"/>
+		</Style>
+		<Style Selector="Border.DayTile.weekend">
+			<Setter Property="Background" Value="{DynamicResource SurfaceMutedAlt}"/>
+		</Style>
+		<Style Selector="Border.DayTile.otherMonth">
+			<Setter Property="Opacity" Value="0.55"/>
+		</Style>
+		<Style Selector="Border.DayTile.today">
+			<Setter Property="Background"  Value="{DynamicResource InfoBg}"/>
+			<Setter Property="BorderBrush" Value="{DynamicResource InfoBorder}"/>
+		</Style>
+		<Style Selector="Border.DayTile.blocked">
+			<Setter Property="Background"  Value="{DynamicResource DangerBg}"/>
+			<Setter Property="BorderBrush" Value="{DynamicResource Danger}"/>
+		</Style>
+		<Style Selector="Border.DayTile.selected">
+			<Setter Property="BorderBrush" Value="{DynamicResource BrandYellow}"/>
+		</Style>
+		<Style Selector="Border.DayTile:pointerover">
+			<Setter Property="BorderBrush" Value="{DynamicResource BrandYellow}"/>
+		</Style>
+
+		<!-- Capaciteitsbalk: proportioneel (0..1), kleur per niveau.
+		     Eigen template zodat de vulling altijd de Foreground volgt,
+		     onafhankelijk van het (Huskui-)theme-template. -->
+		<Style Selector="ProgressBar.Capacity">
+			<Setter Property="Minimum"  Value="0"/>
+			<Setter Property="Maximum"  Value="1"/>
+			<Setter Property="Height"   Value="4"/>
+			<Setter Property="MinWidth" Value="0"/>
+			<Setter Property="Foreground" Value="{DynamicResource CapacityLow}"/>
+			<Setter Property="Background" Value="{DynamicResource BorderSubtle}"/>
+			<Setter Property="Template">
+				<ControlTemplate>
+					<Border Background="{TemplateBinding Background}"
+							CornerRadius="2"
+							ClipToBounds="True">
+						<Border Name="PART_Indicator"
+								Background="{TemplateBinding Foreground}"
+								CornerRadius="2"
+								HorizontalAlignment="Left"/>
+					</Border>
+				</ControlTemplate>
+			</Setter>
+		</Style>
+		<Style Selector="ProgressBar.capLow">
+			<Setter Property="Foreground" Value="{DynamicResource CapacityLow}"/>
+		</Style>
+		<Style Selector="ProgressBar.capMid">
+			<Setter Property="Foreground" Value="{DynamicResource CapacityMid}"/>
+		</Style>
+		<Style Selector="ProgressBar.capHigh">
+			<Setter Property="Foreground" Value="{DynamicResource CapacityHigh}"/>
+		</Style>
+		<Style Selector="ProgressBar.capFull">
+			<Setter Property="Foreground" Value="{DynamicResource CapacityFull}"/>
+		</Style>
+
+		<!-- Vlakke lijsten (maandgrid, weektabel, regels): geen item-chrome -->
+		<Style Selector="ListBox">
+			<Setter Property="Background"      Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="0"/>
+			<Setter Property="Padding"         Value="0"/>
+		</Style>
+		<Style Selector="ListBoxItem">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="Padding"    Value="0"/>
+			<Setter Property="Margin"     Value="0"/>
+		</Style>
+		<Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+			<Setter Property="Background" Value="Transparent"/>
+		</Style>
+		<Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="Transparent"/>
+		</Style>
+
+		<Style Selector="Rectangle.Divider">
+			<Setter Property="Height" Value="1"/>
+			<Setter Property="Fill"   Value="{DynamicResource BorderSubtle}"/>
+			<Setter Property="Margin" Value="0,4"/>
+		</Style>
+</Styles>

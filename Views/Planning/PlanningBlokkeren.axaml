@@ -1,0 +1,30 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="QuadroApp.Views.Planning.PlanningBlokkeren"
+    x:CompileBindings="False">
+	<!-- US-92: dag of week blokkeren met reden. Uit PlanningKalender gehaald (inhoud ongewijzigd) zodat ook stap 2 van het
+	     dossier het gebruikt. DataContext = PlanningCalendarViewModel. -->
+	<UserControl.Styles>
+		<StyleInclude Source="avares://QuadroApp/Views/Planning/PlanningStijlen.axaml"/>
+	</UserControl.Styles>
+	<StackPanel Spacing="0">
+							<!-- ══ DAG/WEEK BLOKKEREN (uitzonderingsactie, onderaan) ══ -->
+							<StackPanel Spacing="6" Margin="0,0,0,8">
+								<TextBlock Text="BLOKKEREN" Classes="caption" FontWeight="SemiBold"/>
+								<TextBox Watermark="Reden (optioneel)..."
+										 Text="{Binding BlokkeerReden, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+										 IsVisible="{Binding !IsGeselecteerdeDagGeblokkeerd}"/>
+								<WrapPanel>
+									<Button Content="{Binding BlokkeerDagButtonText}"
+											Command="{Binding ToggleBlokkeerDagCommand}"
+											Classes="DangerBtn"
+											Margin="0,0,8,6"/>
+									<Button Content="🔒 Blokkeer/deblokkeer week"
+											Command="{Binding ToggleBlokkeerWeekCommand}"
+											Classes="DangerBtn"
+											Margin="0,0,0,6"/>
+								</WrapPanel>
+							</StackPanel>
+	</StackPanel>
+</UserControl>

@@ -56,6 +56,11 @@
         <Style Selector="TextBlock.stapTitel.actief">
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
         </Style>
+        <!-- US-87: overgeslagen stap (bv. standaardkader uit voorraad) is doorgestreept -->
+        <Style Selector="TextBlock.stapTitel.overgeslagen">
+            <Setter Property="TextDecorations" Value="Strikethrough"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+        </Style>
     </UserControl.Styles>
 
     <Border Background="{DynamicResource Surface}"
@@ -79,7 +84,7 @@
                                                Text="{Binding Bolletje}"/>
                                 </Border>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Classes="stapTitel" Classes.actief="{Binding !IsNogTeDoen}" Text="{Binding Titel}"
+                                    <TextBlock Classes="stapTitel" Classes.actief="{Binding !IsNogTeDoen}" Classes.overgeslagen="{Binding IsOvergeslagen}" Text="{Binding Titel}"
                                                ToolTip.Tip="{Binding Uitleg}"/>
                                     <TextBlock Text="hier ben je" Classes="caption" Foreground="{DynamicResource Warning}"
                                                IsVisible="{Binding IsHuidig}"/>

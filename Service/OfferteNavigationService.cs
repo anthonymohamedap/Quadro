@@ -18,20 +18,17 @@ public sealed class OfferteNavigationService : IOfferteNavigationService
         _nav = nav;
     }
 
-    public async Task OpenOfferteAsync(int offerteId)
-    {
-        var vm = _sp.GetRequiredService<OfferteViewModel>();
-        await vm.InitializeAsync();
-        await vm.LoadCatalogAsync();
-        await vm.LoadAsync(offerteId);
-        await _nav.NavigateToAsync(vm); // overload in nav (zie onder)
-    }
+    /// <summary>US-95: het oude offertescherm is weg; een offerte openen = de verkoop in het dossier.</summary>
+    public Task OpenOfferteAsync(int offerteId) => OpenVerkoopAsync(offerteId);
 
-    public async Task NewOfferteAsync()
-    {
-        var vm = _sp.GetRequiredService<OfferteViewModel>();
-        await vm.InitializeAsync();
-        await vm.NewAsync();
-        await _nav.NavigateToAsync(vm);
-    }
+    /// <summary>US-95 — de verkoop openen als dossier, op de stap waar hij staat.</summary>
+    public Task OpenVerkoopAsync(int offerteId)
+        => _nav.NavigateToAsync<QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel, int>(offerteId);
+
+    /// <summary>Fix 08/11 — nieuwe verkoop = dossier met OfferteId 0 (stap 1, nog niet bewaard).</summary>
+    public Task NieuweVerkoopAsync()
+        => _nav.NavigateToAsync<QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel, int>(0);
+
+    /// <summary>US-95: nieuwe offerte = nieuwe verkoop in het dossier.</summary>
+    public Task NewOfferteAsync() => NieuweVerkoopAsync();
 }

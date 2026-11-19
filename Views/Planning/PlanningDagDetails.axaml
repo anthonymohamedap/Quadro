@@ -1,0 +1,128 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="QuadroApp.Views.Planning.PlanningDagDetails"
+    x:CompileBindings="False">
+	<!-- US-92: dagdetails: gepland/beschikbaar, geblokkeerd, taken van de dag (herplannen/verwijderen). Uit PlanningKalender gehaald (inhoud ongewijzigd) zodat ook stap 2 van het
+	     dossier het gebruikt. DataContext = PlanningCalendarViewModel. -->
+	<UserControl.Styles>
+		<StyleInclude Source="avares://QuadroApp/Views/Planning/PlanningStijlen.axaml"/>
+	</UserControl.Styles>
+	<StackPanel Spacing="0">
+							<!-- ══ DAG DETAILS ══ -->
+							<StackPanel Spacing="2" Margin="0,0,0,12">
+								<TextBlock Text="DAG DETAILS" Classes="caption" FontWeight="SemiBold"/>
+								<TextBlock Text="{Binding SelectedDateLang}"
+										   Classes="h3"
+										   Margin="0,4,0,0"
+										   TextTrimming="CharacterEllipsis"
+										   ToolTip.Tip="{Binding SelectedDateLang}"/>
+							</StackPanel>
+								<Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="8" Padding="12,8" Margin="0,0,0,12">
+									<Grid ColumnDefinitions="*,*">
+										<StackPanel Grid.Column="0" Spacing="1">
+											<TextBlock Text="Gepland" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+											<TextBlock Text="{Binding DagGeplandLabel}" Classes="body" FontWeight="SemiBold"/>
+										</StackPanel>
+										<StackPanel Grid.Column="1" Spacing="1">
+											<TextBlock Text="Beschikbaar" Classes="caption" Foreground="{DynamicResource TextSecondary}"/>
+											<TextBlock Text="{Binding DagVrijLabel}" Classes="body" FontWeight="SemiBold"/>
+										</StackPanel>
+									</Grid>
+								</Border>
+
+							<!-- Geblokkeerd indicator -->
+							<Border IsVisible="{Binding IsGeselecteerdeDagGeblokkeerd}"
+									Background="{DynamicResource DangerBg}"
+									BorderBrush="{DynamicResource Danger}"
+									BorderThickness="1"
+									CornerRadius="8"
+									Padding="14,10"
+									Margin="0,0,0,12">
+								<StackPanel Spacing="4">
+									<StackPanel Orientation="Horizontal" Spacing="10">
+										<Border Width="14" Height="14" CornerRadius="7" Background="{DynamicResource Danger}" VerticalAlignment="Center"/>
+										<TextBlock Text="Deze dag is geblokkeerd — er kunnen geen taken worden ingepland."
+												   Classes="label"
+												   Foreground="{DynamicResource Danger}"
+												   TextWrapping="Wrap"
+												   VerticalAlignment="Center"/>
+									</StackPanel>
+									<TextBlock Text="{Binding GeselecteerdeDagRedenTekst}"
+											   IsVisible="{Binding GeselecteerdeDagRedenTekst, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+											   Classes="caption"
+											   Foreground="{DynamicResource Danger}"
+											   FontStyle="Italic"
+											   Margin="30,0,0,0"
+											   TextWrapping="Wrap"/>
+								</StackPanel>
+							</Border>
+
+							<!-- Tasks for selected day -->
+							<ItemsControl ItemsSource="{Binding TakenVanDag}"
+										  Margin="0,0,0,4">
+								<ItemsControl.ItemTemplate>
+									<DataTemplate>
+										<Border Background="{DynamicResource SurfaceMutedAlt}"
+												BorderBrush="{DynamicResource BorderSubtle}"
+												BorderThickness="1"
+												Padding="12,10"
+												Margin="0,0,0,8"
+												CornerRadius="8"
+												Cursor="Hand">
+
+											<Border.ContextMenu>
+												<ContextMenu>
+													<MenuItem Header="Herplannen"
+															  Click="OnHerplanMenuClick"/>
+													<MenuItem Header="Verwijderen"
+															  Click="OnVerwijderMenuClick"/>
+												</ContextMenu>
+											</Border.ContextMenu>
+
+											<StackPanel Spacing="6">
+<Grid ColumnDefinitions="*,Auto">
+												<StackPanel Spacing="3">
+													<TextBlock Text="{Binding WerkBon.Offerte.OfferteNummer, StringFormat='Werkbon {0}'}"
+															   Classes="body"
+															   FontWeight="Bold"/>
+													<TextBlock Text="{Binding WerkBon.Offerte.Klant.Achternaam}"
+															   Classes="label"
+															   Foreground="{DynamicResource TextSecondary}"
+															   TextTrimming="CharacterEllipsis"
+															   ToolTip.Tip="{Binding WerkBon.Offerte.Klant.Achternaam}"/>
+													<TextBlock Text="{Binding Omschrijving}"
+															   Classes="label"
+															   Foreground="{DynamicResource TextSecondary}"
+															   TextTrimming="CharacterEllipsis"
+															   ToolTip.Tip="{Binding Omschrijving}"/>
+												</StackPanel>
+												<Border Grid.Column="1"
+														Background="{DynamicResource SurfaceHeader}"
+														CornerRadius="20"
+														Padding="8,3"
+														VerticalAlignment="Top">
+													<TextBlock Text="{Binding DuurMinuten, StringFormat='{}{0} min'}"
+															   Classes="caption"/>
+												</Border>
+											</Grid>
+											<StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right" Margin="0,8,0,0">
+												<Button Content="Herplannen" Classes="GhostBtn" Padding="8,3" Command="{Binding $parent[ItemsControl].DataContext.HerplanTaakCommand}" CommandParameter="{Binding}"/>
+												<Button Content="Verwijderen" Classes="DangerBtn" Padding="8,3" Command="{Binding $parent[ItemsControl].DataContext.VerwijderTaakCommand}" CommandParameter="{Binding}"/>
+											</StackPanel>
+										</StackPanel>
+										</Border>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
+
+							<!-- Empty day state -->
+							<Border IsVisible="{Binding !TakenVanDag.Count}"
+									Padding="0,8,0,8">
+								<TextBlock Text="Geen taken gepland voor deze dag."
+										   Classes="caption"
+										   HorizontalAlignment="Center"/>
+							</Border>
+
+	</StackPanel>
+</UserControl>

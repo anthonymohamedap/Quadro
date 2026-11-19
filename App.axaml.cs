@@ -191,6 +191,7 @@ public partial class App : Application
         services.AddScoped<IOntvangstService, OntvangstService>();   // US-69/US-70
         services.AddScoped<IBetalingsOverzichtService, BetalingsOverzichtService>();   // US-67
         services.AddScoped<QuadroApp.Service.Verkoop.IVerkoopOverzichtService, QuadroApp.Service.Verkoop.VerkoopOverzichtService>();   // US-84
+        services.AddScoped<QuadroApp.Service.Verkoop.IVerkoopDossierService, QuadroApp.Service.Verkoop.VerkoopDossierService>();   // US-87
         services.AddScoped<IBestelbonExportService, BestelbonExportService>();
         services.AddScoped<ICentralExcelExportService, CentralExcelExportService>();
         services.AddScoped<IBestelbonExporter, PdfBestelbonExporter>();
@@ -253,9 +254,10 @@ public partial class App : Application
         services.AddTransient<LeveranciersViewModel>();
         services.AddTransient<AfwerkingenViewModel>();
         services.AddTransient<OffertesLijstViewModel>();
+        services.AddTransient<QuadroApp.ViewModels.Verkoop.VerkoopDossierViewModel>();   // US-90
+        services.AddTransient<PlanningPaginaViewModel>();   // US-92
         services.AddTransient<OfferteViewModel>();
         services.AddTransient<KlantDetailViewModel>();
-        services.AddTransient<WerkBonLijstViewModel>();
         services.AddTransient<ArchiefViewModel>();
         services.AddTransient<BestelbonnenViewModel>();
         services.AddTransient<ExportCenterViewModel>();
@@ -264,6 +266,8 @@ public partial class App : Application
         services.AddTransient<ViewModels.Gebruikers.GebruikersBeheerViewModel>();
         services.AddTransient<ViewModels.Gebruikers.AuditLogViewModel>();
         services.AddTransient<ViewModels.Gebruikers.FoutmeldingenViewModel>();
+        services.AddTransient<IStartklaarService, StartklaarService>();   // start op 1 januari
+        services.AddTransient<ViewModels.Gebruikers.StartklaarViewModel>();
 
         Services = services.BuildServiceProvider();
         _logger = Services.GetRequiredService<ILogger<App>>();
@@ -719,6 +723,19 @@ public partial class App : Application
         // US-34: daily backup — runs after DB init, never blocks or crashes startup.
         var backupService = scope.ServiceProvider.GetRequiredService<IBackupService>();
         await backupService.RunDailyBackupAsync();
+
+        // Auditlog: regels ouder dan 30 dagen weg, anders blijft de tabel groeien (afspraak 19/11/2026).
+        try
+        {
+            var factory = provider.GetRequiredService<IDbContextFactory<AppDbContext>>();
+            var weg = await AuditService.RuimOudeRegelsOpAsync(factory, DateTime.UtcNow);
+            if (weg > 0)
+                _logger.LogInformation("[Startup] {Aantal} auditregels ouder dan {Dagen} dagen verwijderd.", weg, AuditService.BewaarDagen);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[Startup] Opruimen van het auditlog mislukt; volgende start opnieuw.");
+        }
     }
 
     /// <summary>US-31: leest één configuratiewaarde uit appsettings.json (null bij afwezigheid/fout).</summary>

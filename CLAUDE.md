@@ -25,6 +25,7 @@ Bekende valkuilen bij het renderen:
 ## Werkwijze
 
 - Eén story per branch: `feature/usNN-korte-naam` (docs: `docs/…`, fixes los van een story: `fix/…`). Nooit rechtstreeks op `main`.
+- **Verkoopdossier (US-87 → US-95, US-102)**: branch vanaf `dev`, PR naar `dev` (niet naar `main`). `dev` gaat pas naar `main` na akkoord van Anthony. Prijslogica (`PricingEngine`) niet wijzigen. **Functies blijven zoals nu, niets uit de huidige schermen mag verdwijnen; enkel de flow wordt duidelijker** (geen extra functies zonder akkoord). Plan + beslissingen: `docs/backlog/US-87-95_Verkoopdossier_Plan.md`, mock: `docs/backlog/mock-verkoopdossier/`.
 - Commits in het Nederlands, conventional: `feat(scope): … (US-NN)`, `fix(scope): …`, `docs(backlog): …`.
 - Stories en plannen staan in `docs/backlog/` (bv. `Sprint_2026-11_US-79-86.md`, `US-87-95_Verkoopdossier_Plan.md`). Nieuwe story = nieuw bestand of sectie daar.
 - Vóór push: `dotnet build Quadro.sln` en `dotnet test WorkflowService.Tests/WorkflowService.Tests.csproj` groen, en `dotnet list Quadro.sln package --vulnerable --include-transitive` zonder kwetsbare pakketten (CI faalt anders).
@@ -34,7 +35,7 @@ Bekende valkuilen bij het renderen:
 
 - **Offerte**: de prijsberekening, met offertenummer (412).
 - **Bestelbon**: wat de klant krijgt; vóór het akkoord *voorlopig* (geen volgnummer), daarna 2026-19. Nooit "factuur" op het scherm (US-99).
-- **Werkbon**: de bon voor het atelier. Ontstaat als de klant akkoord gaat ("Bevestigen → Werkbon"); stap 2 in de stappenbalk heet "Werkbon", menu en scherm "Werkbonnen".
+- **Werkbon**: de bon voor het atelier. Ontstaat als de klant akkoord gaat ("Bevestigen → Werkbon"); stap 2 in de stappenbalk heet "Werkbon"; de werkbon staat in het verkoopdossier (US-95: geen apart menu "Werkbonnen" meer).
 - **Bestelling**: enkel nog een bestelling bij de leverancier (lijst bestellen). Niet gebruiken voor een bevestigde offerte.
 - Betaalwijzen: Bancontact, Cash, Credit card, Overschrijving.
 - Statussen op het scherm altijd via `StatusLabels` / `StatusLabelConverter`, nooit de enumnaam.

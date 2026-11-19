@@ -1,0 +1,47 @@
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:QuadroApp.ViewModels"
+    xmlns:conv="clr-namespace:QuadroApp.Converters"
+    xmlns:bestelbon="clr-namespace:QuadroApp.Views.Bestelbon"
+    x:Class="QuadroApp.Views.BestelbonDialog"
+    x:DataType="vm:BestelbonnenViewModel"
+    Width="760" Height="820" MinWidth="600" MinHeight="520"
+    WindowStartupLocation="CenterOwner"
+    Title="Bestelbon en betalingen"
+    Background="{DynamicResource SurfaceMuted}">
+
+    <!-- US-95: vervangt het scherm Bestelbonnen voor één verkoop (menu ⋯ in het dossier): zelfde
+         gegevens, lijnen, Opslaan, Afdrukken, betalingen en Rest betaald, in elke stap. -->
+    <Grid RowDefinitions="Auto,*,Auto">
+        <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="0,0,0,1" Padding="20,14">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="{Binding GeselecteerdeBestelbon.NummerLabel, StringFormat='Bestelbon {0}', FallbackValue='Bestelbon'}" Classes="h2"/>
+                <Border Background="{DynamicResource SurfaceMutedAlt}" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding GeselecteerdeBestelbon.Status, Converter={x:Static conv:StatusLabelConverter.Instance}, FallbackValue=''}"
+                               Classes="caption" FontWeight="SemiBold"/>
+                </Border>
+            </StackPanel>
+        </Border>
+        <ScrollViewer Grid.Row="1" Padding="20,16" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="14">
+                <bestelbon:BestelbonVelden/>
+                <bestelbon:BestelbonLijnen Height="220"/>
+                <bestelbon:BestelbonBetalingen/>
+            </StackPanel>
+        </ScrollViewer>
+        <Border Grid.Row="2" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="0,1,0,0" Padding="20,12">
+            <Grid ColumnDefinitions="*,Auto">
+                <WrapPanel>
+                    <Button Classes="AccentBtn" Content="Opslaan" Command="{Binding SaveCommand}" Margin="0,0,8,0" Padding="12,8"/>
+                    <Button Classes="AccentBtn" Content="Afdrukken" Command="{Binding AfdrukkenCommand}" Margin="0,0,8,0" Padding="12,8"/>
+                    <Button Classes="AccentBtn" Content="Rest betaald" Command="{Binding MarkeerBetaaldCommand}" Padding="12,8"
+                            ToolTip.Tip="Registreert het restbedrag als betaling met de gekozen betaalwijze en zet de bestelbon op Betaald"/>
+                </WrapPanel>
+                <Button Grid.Column="1" Content="Sluiten" Classes="MainBtn" Click="Sluiten_Click"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

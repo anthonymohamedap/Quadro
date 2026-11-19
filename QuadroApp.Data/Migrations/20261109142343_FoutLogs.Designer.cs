@@ -787,7 +787,14 @@ namespace QuadroApp.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("AfgerondOp")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("AfhaalDatum")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AnnuleerReden")
+                        .HasMaxLength(300)
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("BtwBedrag")
@@ -797,6 +804,9 @@ namespace QuadroApp.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("DeadlineDatum")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("GeannuleerdOp")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("GeplandeDatum")
@@ -817,10 +827,20 @@ namespace QuadroApp.Migrations
                     b.Property<decimal>("MeerPrijsIncl")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("Momentopname")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("OfferteNummer")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Opmerking")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("OvergeslagenStappen")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("OverslaanReden")
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<byte[]>("RowVersion")

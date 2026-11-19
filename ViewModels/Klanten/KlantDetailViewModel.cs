@@ -108,13 +108,13 @@ public partial class KlantDetailViewModel : ObservableObject, IAsyncInitializabl
         if (target is null)
             return;
 
-        await _offerteNav.OpenOfferteAsync(target.Id);
+        await _offerteNav.OpenVerkoopAsync(target.Id);   // US-95: dossier
     }
 
     [RelayCommand]
     private async Task NieuweOfferteAsync()
     {
-        await _offerteNav.NewOfferteAsync();
+        await _offerteNav.NieuweVerkoopAsync();   // fix 08/11: in het dossier
     }
 
     [RelayCommand]
