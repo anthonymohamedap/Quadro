@@ -263,6 +263,12 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<uint>("PgVersie")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.Property<byte[]>("RowVersion")
                         .HasColumnType("bytea");
 
@@ -295,12 +301,6 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
 
                     b.Property<int?>("WerkBonId")
                         .HasColumnType("integer");
-
-                    b.Property<uint>("xmin")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("xid")
-                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -883,9 +883,13 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<byte[]>("RowVersion")
+                    b.Property<uint>("PgVersie")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<byte[]>("RowVersion")
                         .HasColumnType("bytea");
 
                     b.Property<string>("Status")
@@ -1267,6 +1271,12 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<uint>("PgVersie")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.Property<decimal>("PrijsPerMeter")
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
@@ -1292,12 +1302,6 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.Property<decimal?>("WinstFactor")
                         .HasPrecision(6, 3)
                         .HasColumnType("numeric(6,3)");
-
-                    b.Property<uint>("xmin")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("xid")
-                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -1425,6 +1429,12 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.Property<int>("OfferteId")
                         .HasColumnType("integer");
 
+                    b.Property<uint>("PgVersie")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.Property<byte[]>("RowVersion")
                         .HasColumnType("bytea");
 
@@ -1439,12 +1449,6 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.Property<decimal>("TotaalPrijsIncl")
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
-
-                    b.Property<uint>("xmin")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("xid")
-                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -1561,13 +1565,17 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<uint>("PgVersie")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.Property<string>("Resource")
                         .HasMaxLength(80)
                         .HasColumnType("character varying(80)");
 
                     b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("bytea");
 
                     b.Property<string>("VoorraadStatus")
