@@ -91,7 +91,7 @@ namespace QuadroApp.ViewModels
             // zodat de gebruiker bij elke opstart enkel het wachtwoord hoeft te typen.
             LoginGebruikersnaam = LastLoginStore.Read();
 
-            // US-32: auto-lock na inactiviteit (standaard 15 min)
+            // US-32: auto-lock na inactiviteit (60 min, afspraak 19/11/2026; was 15 min)
             _idleTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
             _idleTimer.Tick += (_, _) =>
             {
@@ -110,7 +110,7 @@ namespace QuadroApp.ViewModels
         private DateTime _laatsteActiviteit = DateTime.Now;
 
         /// <summary>Auto-lock drempel in minuten.</summary>
-        public int LockNaMinuten { get; set; } = 15;
+        public int LockNaMinuten { get; set; } = 60;
 
         /// <summary>Gefired na login wanneer het wachtwoord verplicht gewijzigd moet worden (MainWindow opent de dialoog).</summary>
         public event EventHandler? WachtwoordWijzigenVereist;

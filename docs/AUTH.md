@@ -2,7 +2,7 @@
 
 ## Hoe het werkt
 
-Bij het opstarten toont QuadroApp een aanmeldscherm. Na 15 minuten zonder muis- of toetsenbordactiviteit vergrendelt de app automatisch en moet er opnieuw aangemeld worden.
+Bij het opstarten toont QuadroApp een aanmeldscherm. Na 60 minuten zonder muis- of toetsenbordactiviteit vergrendelt de app automatisch en moet er opnieuw aangemeld worden.
 
 ## Eerste keer
 
