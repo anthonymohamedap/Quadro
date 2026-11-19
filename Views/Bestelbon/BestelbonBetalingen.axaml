@@ -25,7 +25,8 @@
                   <Run Text="  ·  betaald"/>
                   <Run Text="{Binding StandBetaald, StringFormat='€ {0:0.00}'}"/>
                   <Run Text="  ·  nog te betalen"/>
-                  <Run Text="{Binding StandRest, StringFormat='€ {0:0.00}'}" FontWeight="Bold"/>
+                  <Run Text="{Binding StandRest, StringFormat='€ {0:0.00}'}" FontWeight="Bold"
+                       Foreground="{Binding StandRest, Converter={x:Static conv:NietNulNaarDangerBrushConverter.Instance}}"/>
                 </TextBlock>
               </Grid>
 
