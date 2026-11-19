@@ -1,0 +1,80 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:QuadroApp.ViewModels"
+    xmlns:m="clr-namespace:QuadroApp.Model.DB;assembly=QuadroApp.Data"
+    xmlns:conv="clr-namespace:QuadroApp.Converters"
+    x:Class="QuadroApp.Views.Offerte.OfferteKlantKaart"
+    x:DataType="vm:OfferteViewModel">
+    <!-- US-91: deel van het offertescherm, hergebruikt in OfferteView en in stap 1 van het verkoopdossier.
+         Inhoud ongewijzigd overgenomen uit OfferteView.axaml. -->
+					<!-- KLANT -->
+					<Border Classes="quadro-card" IsEnabled="{Binding KanBewerken}">
+						<Grid RowDefinitions="Auto,Auto"
+                              ColumnDefinitions="*,Auto"
+                              RowSpacing="10"
+                              ColumnSpacing="10">
+
+							<StackPanel Spacing="6">
+
+								<!-- Huidige klant -->
+								<Border Background="{DynamicResource InfoBg}"
+										CornerRadius="6"
+										Padding="6">
+
+									<StackPanel Spacing="2">
+											<TextBlock FontWeight="SemiBold"
+													   Foreground="{DynamicResource InfoText}"
+													   TextTrimming="CharacterEllipsis"
+													   ToolTip.Tip="{Binding SelectedKlant.VolledigeNaam}"
+													   Text="{Binding SelectedKlant.VolledigeNaam, TargetNullValue='Geen klant geselecteerd'}"/>
+											<StackPanel Spacing="0" IsVisible="{Binding SelectedKlant, Converter={x:Static ObjectConverters.IsNotNull}}">
+												<TextBlock Classes="caption" Foreground="{DynamicResource InfoText}" TextTrimming="CharacterEllipsis"
+														   Text="{Binding SelectedKlant.Telefoon}"
+														   IsVisible="{Binding SelectedKlant.Telefoon, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+												<TextBlock Classes="caption" Foreground="{DynamicResource InfoText}" TextTrimming="CharacterEllipsis"
+														   Text="{Binding SelectedKlant.Email}"
+														   IsVisible="{Binding SelectedKlant.Email, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+												<TextBlock Classes="caption" Foreground="{DynamicResource InfoText}" TextTrimming="CharacterEllipsis"
+														   Text="{Binding SelectedKlant.Gemeente}"
+														   IsVisible="{Binding SelectedKlant.Gemeente, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+											</StackPanel>
+										</StackPanel>
+								</Border>
+								<!-- Zoek -->
+								<TextBox Watermark="Zoek klant..."
+										 Text="{Binding KlantZoekterm, UpdateSourceTrigger=PropertyChanged}"/>
+
+								<!-- Selectie -->
+								<ComboBox ItemsSource="{Binding GefilterdeKlanten}"
+										  SelectedItem="{Binding SelectedKlant, Mode=TwoWay}"
+										  MaxDropDownHeight="250">
+
+									<ComboBox.ItemTemplate>
+										<DataTemplate x:DataType="m:Klant">
+											<StackPanel Spacing="0">
+													<TextBlock FontWeight="SemiBold" TextTrimming="CharacterEllipsis">
+														<Run Text="{Binding Voornaam}" />
+														<Run Text=" " />
+														<Run Text="{Binding Achternaam}" />
+													</TextBlock>
+													<TextBlock Classes="caption" Foreground="{DynamicResource TextSecondary}"
+															   TextTrimming="CharacterEllipsis"
+															   Text="{Binding Gemeente}"
+															   IsVisible="{Binding Gemeente, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+												</StackPanel>
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+
+								</ComboBox>
+
+							</StackPanel>
+
+							<Button Grid.Row="1"
+                                    Grid.Column="1"
+                                    Content="+ Nieuwe klant"
+                                    Command="{Binding NieuweKlantCommand}"
+                                    Classes="AccentBtn"/>
+						</Grid>
+					</Border>
+</UserControl>

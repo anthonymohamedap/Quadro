@@ -1,0 +1,102 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>Logica stap 2</title>
+<style>
+:root{--yellow:#F5C242;--txt:#222;--sec:#6B7280;--bd:#E5E7EB;--bg:#F4F5F7;--gr:#047857;--grBg:#ECFDF5;--red:#991B1B;--redBg:#FEF2F2;--blue:#1D4ED8;--blueBg:#EFF6FF;--wa:#92400E;--waBg:#FFFBEB}
+*{box-sizing:border-box}body{margin:0;font-family:"Inter","Segoe UI",system-ui,sans-serif;color:var(--txt);background:var(--bg);font-size:13.5px;padding:28px 32px}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:16px;margin:0 0 10px}.sec{color:var(--sec)}
+.card{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:16px 18px;margin-top:16px}
+.flow{display:flex;align-items:stretch;gap:0;margin-top:6px}
+.box{border:1.5px solid var(--bd);border-radius:10px;padding:10px 12px;background:#fff;width:200px;flex:none}.box b{display:block;margin-bottom:3px}
+.box.y{border-color:var(--yellow);background:var(--waBg)}.box.g{border-color:#86EFAC;background:var(--grBg)}.box.r{border-color:#FCA5A5;background:var(--redBg)}
+.arr{display:grid;place-items:center;width:44px;color:var(--sec);font-size:20px;flex:none}
+.arr small{font-size:10.5px;display:block;text-align:center;line-height:1.2}
+table{width:100%;border-collapse:collapse}th{text-align:left;font-size:12px;color:var(--sec);padding:6px 8px;border-bottom:1px solid var(--bd)}td{padding:7px 8px;border-bottom:1px solid var(--bd);vertical-align:top}
+.ok{color:var(--gr);font-weight:700}.nee{color:var(--red);font-weight:700}.w{color:var(--wa);font-weight:700}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.q{border-left:4px solid var(--yellow);background:var(--waBg);padding:8px 12px;border-radius:6px;margin-top:8px}
+code{background:#F3F4F6;border-radius:4px;padding:0 4px;font-size:12px}
+</style></head><body>
+<h1>Stap 2 Werkbon — logica</h1><div class="sec">Van "Bevestigen → Werkbon" tot "Start productie". Zwart = zoals de app nu al werkt, <b style="color:#1D4ED8">blauw</b> = nieuw in het dossier. Prijs staat vast sinds het bevestigen (US-100).</div>
+
+<div class="card"><h2>Verloop</h2>
+ <div class="flow">
+  <div class="box g"><b>Bevestigd</b><span class="sec">werkbon (Gepland), bon 2026-24 als er een voorlopige was, lijsten gereserveerd</span></div>
+  <div class="arr">→</div>
+  <div class="box y"><b>Inplannen</b><span class="sec">per inlijsting op een dag; afhaaldatum = laatste plandag</span></div>
+  <div class="arr">→<small>indien nodig</small></div>
+  <div class="box"><b>Lijsten bestellen</b><span class="sec">te weinig voorraad → bestelling bij de leverancier</span></div>
+  <div class="arr">→</div>
+  <div class="box g"><b>Start productie</b><span class="sec">knop, of vanzelf bij het afdrukken van de weeklijst</span></div>
+  <div class="arr">→</div>
+  <div class="box"><b>Stap 3 In productie</b><span class="sec">afvinken per inlijsting</span></div>
+ </div>
+ <div class="flow" style="margin-top:10px"><div style="width:244px"></div><div class="box" style="width:300px"><b>Stap overslaan</b><span class="sec">⤼ meteen naar Klaar (bv. standaardkader uit voorraad), met reden</span></div><div style="width:20px"></div><div class="box r" style="width:300px"><b>Klant haakt af</b><span class="sec">⋯ → Annuleren: werkbon, planning, voorraad, leverancier, bon, voorschot</span></div></div>
+</div>
+
+<div class="g2">
+<div class="card"><h2>Inplannen (zoals nu)</h2>
+ <table>
+  <tr><td>Duur</td><td>som van de werkminuten (lijst + afwerkingen + extra werk) × aantal; minstens 15 min</td></tr>
+  <tr><td>Capaciteit</td><td>8 u per dag; past het niet, dan loopt het door naar de volgende dag</td></tr>
+  <tr><td>Hoe</td><td>inlijstingen aanvinken + "Plan op [dag]" (start 9:00), "Plan per regel", of slepen naar een dag; herplannen en taak verwijderen kan</td></tr>
+  <tr><td>Verleden</td><td>niet plannen vóór vandaag (US-96)</td></tr>
+  <tr><td>Afhaaldatum</td><td>wordt de <b>laatste plandag</b> (US-27, overschrijft); daarna met de hand wijzigen mag</td></tr>
+  <tr><td>Weeklijst</td><td>afdrukken vanuit de planning (US-98)</td></tr>
+  <tr><td style="color:var(--blue)">Waar</td><td style="color:var(--blue)">in het dossier (kalender + inlijstingen naast elkaar) en als pagina "Planning" in het menu — geen popup meer</td></tr>
+ </table></div>
+<div class="card"><h2>Voorraad en lijsten bestellen (zoals nu)</h2>
+ <table>
+  <tr><td>Reserveren</td><td>bij het bevestigen; nodig = omtrek + verlies (bv. 2,80 m → 3,1 m)</td></tr>
+  <tr><td>Te weinig</td><td>"Bestellen…" bij de inlijsting: leverancier van de lijst, besteldatum</td></tr>
+  <tr><td>Bestelwijze</td><td>Verstek (op maat) · In lengte · Gemonteerd (nooit uit eigen voorraad)</td></tr>
+  <tr><td>Ontvangen</td><td>in Leveranciers › bestellingen; "lijst binnen" volgt in stap 3</td></tr>
+  <tr><td>Standaardkader</td><td>uit voorraad, gereserveerd per stuk</td></tr>
+  <tr><td>Verbruik</td><td>bij "Klaar om af te halen" (werkbon Afgewerkt)</td></tr>
+  <tr><td>Melding</td><td>onder minimum / te laat → Voorraad &amp; leveringen op het beginscherm</td></tr>
+ </table></div>
+</div>
+
+<div class="g2">
+<div class="card"><h2>Start productie (beslist 02/11)</h2>
+ <table>
+  <tr><td>Verplicht</td><td><b>alle inlijstingen gepland</b> én afhaaldatum ingevuld; anders blijft de knop grijs met uitleg</td></tr>
+  <tr><td>Wanneer</td><td>knop "Start productie", <b>of vanzelf wanneer de weeklijst van die week wordt afgedrukt</b> (US-98): alle volledig geplande verkopen op die lijst gaan naar In productie</td></tr>
+  <tr><td>Waarschuwing</td><td>lijst besteld maar nog niet binnen — starten mag wel (zoals nu)</td></tr>
+  <tr><td>Gevolg</td><td>werkbon → In uitvoering, offerte → In productie, dossier naar stap 3</td></tr>
+  <tr><td>Verschil met nu</td><td>nu zet het <b>inplannen</b> de offerte al op In productie (US-51); dat verschuift naar het afdrukken van de weeklijst / de knop</td></tr>
+ </table></div>
+<div class="card"><h2>Stap overslaan</h2>
+ <table>
+  <tr><td>Werkbon + In productie</td><td>→ meteen Klaar om af te halen; voorraad verbruikt; bon (bestaat al of wordt nu gemaakt)</td></tr>
+  <tr><td>Enkel inplannen</td><td><b>niet</b> mogelijk: productie vraagt een volledige planning (beslist 02/11)</td></tr>
+  <tr><td>Reden</td><td>Standaardkader uit voorraad · Klant neemt meteen mee · Andere</td></tr>
+  <tr><td>Stappenbalk</td><td>overgeslagen stappen gestreept</td></tr>
+  <tr><td>Wanneer</td><td>vanuit stap 2 en 3</td></tr>
+ </table></div>
+</div>
+
+<div class="g2">
+<div class="card"><h2>Annuleren in stap 2</h2>
+ <table>
+  <tr><td>Reden</td><td>verplicht (zoals stap 1)</td></tr>
+  <tr><td>Werkbon</td><td>vervalt; planning vrij; momentopname in het archief (zoals nu)</td></tr>
+  <tr><td>Voorraad</td><td>reservaties vrij; open leveranciersbestellingen geannuleerd (zoals nu)</td></tr>
+  <tr><td>Bestelbon</td><td>2026-24 → Geannuleerd; nummer blijft</td></tr>
+  <tr><td>Voorschot</td><td>terugbetalen of houden (zoals stap 1)</td></tr>
+ </table></div>
+<div class="card"><h2>Afdrukken</h2>
+ <table>
+  <tr><td>Werkbon</td><td style="color:var(--blue)">nieuwe PDF (US-94): per inlijsting maat, lijst/kader, afwerkingen, plandag, notitie, afvinkvakjes, initialen; standaard <b>zonder prijzen</b></td></tr>
+  <tr><td>Map</td><td>Documenten › QuadroApp › Werkbonnen › Werkbon-423.pdf</td></tr>
+  <tr><td>Printen</td><td>printvenster van het systeem</td></tr>
+  <tr><td>Weeklijst</td><td>zoals nu (US-98)</td></tr>
+ </table></div>
+</div>
+
+<div class="card"><h2>Beslist (02/11)</h2>
+ <table>
+  <tr><td>Offerte aanpassen na akkoord</td><td><b>ja</b>, zoals nu: "Offerte aanpassen…" opent stap 1; "Prijzen herberekenen" vraagt bevestiging; werkbon, planning en reservaties volgen</td></tr>
+  <tr><td>In productie</td><td>bij het afdrukken van de weeklijst van die week (of met de knop)</td></tr>
+  <tr><td>Start zonder volledige planning</td><td><b>nee</b></td></tr>
+  <tr><td>Algemeen</td><td>functies blijven zoals nu; niets uit de huidige versie verdwijnt; enkel de flow wordt duidelijker</td></tr>
+ </table></div>
+</body></html>

@@ -1,6 +1,8 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:QuadroApp.ViewModels"
+             xmlns:vmv="using:QuadroApp.ViewModels.Verkoop"
+             xmlns:planningv="using:QuadroApp.Views.Planning"
              xmlns:views="using:QuadroApp.Views"
              xmlns:huskui="https://github.com/d3ara1n/Huskui.Avalonia"
              x:Class="QuadroApp.App">
@@ -49,8 +51,14 @@
 			<views:LeveranciersView/>
 		</DataTemplate>
 
-		<DataTemplate DataType="{x:Type vm:OfferteViewModel}">
-			<views:OfferteView/>
+		<!-- US-92: planning als pagina -->
+		<DataTemplate DataType="{x:Type vm:PlanningPaginaViewModel}">
+			<planningv:PlanningPaginaView/>
+		</DataTemplate>
+
+		<!-- US-90: verkoopdossier -->
+		<DataTemplate DataType="{x:Type vmv:VerkoopDossierViewModel}">
+			<views:VerkoopDossierView/>
 		</DataTemplate>
 
 		<DataTemplate DataType="{x:Type vm:OffertesLijstViewModel}">
@@ -65,17 +73,9 @@
 			<views:AfwerkingenView/>
 		</DataTemplate>
 
-		<DataTemplate DataType="vm:WerkBonLijstViewModel">
-			<views:WerkBonLijstView/>
-		</DataTemplate>
-
 		<DataTemplate DataType="vm:ArchiefViewModel">
 			<views:ArchiefView/>
 		</DataTemplate>
-
- 		<DataTemplate DataType="{x:Type vm:BestelbonnenViewModel}">
- 			<views:BestelbonnenView/>
- 		</DataTemplate>
 
 		<DataTemplate DataType="{x:Type vm:ExportCenterViewModel}">
 			<views:ExportCenterView/>

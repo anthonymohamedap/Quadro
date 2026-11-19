@@ -18,8 +18,23 @@ permissions:
   contents: write   # Required to create GitHub Releases and upload assets
 
 jobs:
+  # V-04: eerst de testen. Geen release als er een test faalt.
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Test
+        run: dotnet test WorkflowService.Tests/WorkflowService.Tests.csproj -c Release
+
   release:
+    needs: test
     strategy:
+      # V-04: faalt de Mac-build (bv. Apple-overeenkomst verlopen), dan loopt de Windows-build
+      # gewoon verder in plaats van mee gestopt te worden.
+      fail-fast: false
       matrix:
         include:
           # ── Windows (Anthony + any future Windows clients) ──
@@ -45,7 +60,7 @@ jobs:
       # ── 1. Checkout ───────────────────────────────────────────────────────────
       - uses: actions/checkout@v4
 
-      # ── 2. .NET 9 ─────────────────────────────────────────────────────────────
+      # ── 2. .NET 10 ────────────────────────────────────────────────────────────
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
@@ -115,10 +130,17 @@ jobs:
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          xcrun notarytool store-credentials "QuadroNotary" \
+          if [ -z "$APPLE_ID" ] || [ -z "$APPLE_ID_PASSWORD" ] || [ -z "$APPLE_TEAM_ID" ]; then
+            echo "::error::Apple-gegevens ontbreken: zet de secrets APPLE_ID, APPLE_ID_PASSWORD en APPLE_TEAM_ID in GitHub (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+          if ! xcrun notarytool store-credentials "QuadroNotary" \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_ID_PASSWORD" \
-            --team-id "$APPLE_TEAM_ID"
+            --team-id "$APPLE_TEAM_ID"; then
+            echo "::error::Apple weigert de aanmelding voor de notarisatie. Meestal is er een Apple-overeenkomst verlopen of niet getekend: ga naar developer.apple.com/account (en appstoreconnect.apple.com > Business), aanvaard de overeenkomst en start daarna 'Re-run all jobs'. Kan ook: app-specifiek wachtwoord (APPLE_ID_PASSWORD) verlopen."
+            exit 1
+          fi
 
       - name: Pack (macOS, with notarization)
         if: matrix.rid == 'osx-arm64'
