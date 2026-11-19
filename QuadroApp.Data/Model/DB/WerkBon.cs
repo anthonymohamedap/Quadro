@@ -35,6 +35,11 @@ namespace QuadroApp.Model.DB
 
         [Timestamp] public byte[]? RowVersion { get; set; }
 
+        /// <summary>A-04 — versie van de rij op PostgreSQL (systeemkolom xmin), om gelijktijdig wijzigen te
+        /// merken. Een gewone eigenschap (geen shadow) zodat ze meereist met een kopie die later bewaard wordt.
+        /// Op SQLite niet gebruikt (daar dient RowVersion).</summary>
+        public uint PgVersie { get; set; }
+
         public ICollection<WerkTaak> Taken { get; set; } = new List<WerkTaak>();
 
         // ── US-51: afgeleide weergave voor de werkbonnenlijst (niet in DB) ──────

@@ -460,27 +460,35 @@ namespace QuadroApp.Data
             // detectie niet op PostgreSQL (byte[] verandert nooit → conflict wordt nooit gezien).
             // Alleen de entiteiten die op SQLite écht een token hebben ([Timestamp]) krijgen xmin,
             // zodat het gedrag tussen beide providers identiek blijft.
+            // A-04 (november 2026): ook Offerte en WerkTaak, en de versie is nu een gewone eigenschap
+            // (PgVersie) in plaats van een shadow-property. Een shadow-xmin ging verloren als een scherm een
+            // losgekoppelde kopie bewaarde (Attach + Modified, of de offerte-stub): de WHERE xmin = 0 trof
+            // nooit een rij, waardoor bv. het bewaren van een lijst op PostgreSQL altijd faalde.
+            var bewaakt = new[] { typeof(Bestelbon), typeof(TypeLijst), typeof(WerkBon), typeof(Offerte), typeof(WerkTaak) };
             if (Database.IsNpgsql())
             {
-                foreach (var clrType in new[] { typeof(Bestelbon), typeof(TypeLijst), typeof(WerkBon) })
+                foreach (var clrType in bewaakt)
                 {
                     var et = b.Entity(clrType);
                     // De byte[]-kolom blijft bestaan (data-import kopieert per kolomnaam) maar is
                     // op PostgreSQL géén token meer; xmin neemt die rol over.
                     et.Property("RowVersion").IsConcurrencyToken(false).ValueGeneratedNever();
 
-                    // Equivalent van Npgsql's UseXminAsConcurrencyToken(), maar via kern-EF API
-                    // zodat het niet afhangt van de extensiemethode: de systeemkolom xmin als
-                    // shadow-property die PostgreSQL bij elke wijziging zelf ophoogt.
-                    // NB: de Npgsql-SQL-generator slaat de systeemkolom xmin over in CREATE TABLE
-                    // (zowel bij EnsureCreated als bij migraties); de xmin-regel in het gegenereerde
-                    // migratiebestand is enkel model-metadata en maakt géén echte kolom aan.
-                    et.Property<uint>("xmin")
+                    // De systeemkolom xmin, die PostgreSQL bij elke wijziging zelf ophoogt, als token.
+                    // NB: de Npgsql-SQL-generator slaat de systeemkolom xmin over bij het aanmaken van
+                    // tabellen en kolommen; in een migratie is ze enkel model-metadata.
+                    et.Property(nameof(Offerte.PgVersie))
                       .HasColumnName("xmin")
                       .HasColumnType("xid")
                       .ValueGeneratedOnAddOrUpdate()
                       .IsConcurrencyToken();
                 }
+            }
+            else
+            {
+                // SQLite: RowVersion is het token; PgVersie bestaat daar niet.
+                foreach (var clrType in bewaakt)
+                    b.Entity(clrType).Ignore(nameof(Offerte.PgVersie));
             }
         }
         public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
