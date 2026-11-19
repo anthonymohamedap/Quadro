@@ -57,12 +57,21 @@
                              Text="{Binding Zoekterm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
                     <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                        <!-- Afspraak 19/11/2026: gearchiveerde lijsten tonen, terugzetten of definitief verwijderen. -->
+                        <CheckBox Content="Toon gearchiveerde" IsChecked="{Binding ToonGearchiveerd}" IsVisible="{Binding MagArchiefBeheren}"
+                                  VerticalAlignment="Center" Margin="0,0,12,6"/>
+                        <Button Content="↩ Terugzetten" Command="{Binding TerugzettenCommand}" Classes="MainBtn" Margin="0,0,6,6"
+                                IsVisible="{Binding ToonGearchiveerd}"/>
+                        <Button Content="Definitief verwijderen" Command="{Binding DefinitiefVerwijderenCommand}" Classes="DangerBtn" Margin="0,0,6,6"
+                                IsVisible="{Binding ToonGearchiveerd}"/>
+                        <WrapPanel IsVisible="{Binding !ToonGearchiveerd}">
                         <Button Content="➕ Nieuw" Command="{Binding NieuwCommand}" Classes="MainBtn" Margin="0,0,6,6" IsVisible="{Binding MagPrijzenWijzigen}"/>
                         <Button Content="🗑️ Verwijderen" Command="{Binding DeleteCommand}" Classes="MainBtn" Margin="0,0,6,6" IsVisible="{Binding MagPrijzenWijzigen}"/>
                         <Button Content="💾 Opslaan" Command="{Binding SaveCommand}" Classes="MainBtn" Margin="0,0,6,6" IsVisible="{Binding MagPrijzenWijzigen}"/>
                         <Button Content="🔄 Ververs" Command="{Binding RefreshCommand}" Classes="MainBtn" Margin="0,0,6,6"/>
                         <Button Content="📥 Excel-import" Command="{Binding ImportExcelCommand}" Classes="MainBtn" Margin="0,0,6,6" IsVisible="{Binding MagPrijzenWijzigen}"/>
                         <Button Content="🧩 Bulk bijwerken" Command="{Binding BulkPrijsUpdateCommand}" Classes="MainBtn" Margin="0,0,0,6" IsVisible="{Binding MagPrijzenWijzigen}"/>
+                        </WrapPanel>
                     </WrapPanel>
                 </Grid>
 
