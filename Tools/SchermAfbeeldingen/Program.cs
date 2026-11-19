@@ -38,6 +38,7 @@ AppBuilder.Configure<RenderApp>().UseSkia()
     .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
     .SetupWithoutStarting();
 QuadroApp.Views.DatumKiezerTekst.Registreer();   // zoals in App: "dag/maand/jaar" in lege datumkiezers
+QuadroApp.Views.GetalInvoerFout.Registreer(Application.Current!);   // zoals in App: duidelijke tekst bij een fout getal
 
 // De app wacht op de UI-thread; die moet hier zelf verwerkt worden zolang er gerenderd wordt.
 var job = Schermen.AllesAsync(uitvoer, gekozen);
@@ -161,6 +162,21 @@ static class Schermen
             await vm.LadenCommand.ExecuteAsync(null);
             vm.Geselecteerd = vm.Rijen.First();
             return new FoutmeldingenView { DataContext = vm };
+        },
+        ["getalveld-leeg"] = async f =>
+        {
+            // Aantal stuks leegmaken en het veld verlaten: duidelijke tekst i.p.v. InvalidCastException.
+            var scherm = await DossierAsync(f, 419, daarna: vm => { vm.Stap1!.SelectedRegel = vm.Stap1.Regels.First(); return Task.CompletedTask; });
+            var venster = new Window { Content = scherm, Width = 1440, Height = 900 };
+            venster.Show();
+            Dispatcher.UIThread.RunJobs();
+            await Task.Delay(200);
+            var velden = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(venster).OfType<NumericUpDown>().ToList();
+            velden[0].Focus();
+            velden[0].Text = "";
+            velden[1].Focus();
+            Dispatcher.UIThread.RunJobs();
+            return venster;
         },
         ["bestelbon-voorbeeld"] = BestelbonVoorbeeldAsync,
         ["startklaar"] = f => StartklaarAsync(f, uitvoeren: false),
