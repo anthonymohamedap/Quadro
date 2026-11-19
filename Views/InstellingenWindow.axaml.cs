@@ -31,6 +31,10 @@ public partial class InstellingenWindow : Window
             var reconKnop = this.FindControl<Button>("StatusReconciliatieKnop");
             if (reconKnop is not null)
                 reconKnop.IsVisible = auth.HeeftPermissie(Permissie.GebruikersBeheren);
+
+            var startklaar = this.FindControl<Border>("StartklaarKaart");
+            if (startklaar is not null)
+                startklaar.IsVisible = auth.HeeftPermissie(Permissie.GebruikersBeheren);
         };
     }
 
@@ -71,6 +75,16 @@ public partial class InstellingenWindow : Window
         var venster = new FoutmeldingenWindow
         {
             DataContext = App.Services.GetRequiredService<FoutmeldingenViewModel>()
+        };
+        await venster.ShowDialog(this);
+    }
+
+    // Start op 1 januari: testgegevens wissen (StartklaarService).
+    private async void Startklaar_Click(object? sender, RoutedEventArgs e)
+    {
+        var venster = new StartklaarWindow
+        {
+            DataContext = App.Services.GetRequiredService<StartklaarViewModel>()
         };
         await venster.ShowDialog(this);
     }
