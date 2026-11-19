@@ -744,3 +744,46 @@ Wat niet met zekerheid vast te stellen was.
 15. **De cijfers "gedekt door testen"** zijn gebaseerd op klassenamen die in testbestanden voorkomen, niet op een dekkingsmeting. Controle: `dotnet test --collect:"XPlat Code Coverage"`.
 16. **QuestPDF 2024.7.1 met de Community-licentie**: of het atelier binnen de voorwaarden valt, is een vraag voor Anthony, niet iets wat uit de code blijkt.
 17. **Ureninschattingen** zijn ruwe schattingen voor iemand die de code kent.
+
+---
+
+## 9. Uitkomst van de controle (16 november 2026)
+
+Na het rapport zijn de punten uit hoofdstuk 8 nagegaan waar dat zonder de productiedatabase kon. Niets aan de app gewijzigd.
+
+| # | Punt | Uitkomst | Bewijs |
+|---|---|---|---|
+| 1 | Gelijktijdig wijzigen op PostgreSQL | **Bevestigd: werkt niet voor `Offerte` en `WerkTaak`.** Twee verbindingen laden dezelfde rij, beide bewaren: de tweede overschrijft de eerste zonder melding. `WerkBon` (controle) geeft wel `DbUpdateConcurrencyException`. A-04 is dus een echte fout zodra er op twee pc's tegelijk gewerkt wordt. | Lokale PostgreSQL 16.15, database opgebouwd met de Npgsql-migraties van `dev` (`MigrateAsync`), proef met twee `AppDbContext`'s per entiteit. |
+| 2 | Staat v1.3.27 bij Veerle | Niet na te gaan vanaf hier; release staat op GitHub (Windows + macOS). | — |
+| 3 | `RELEASE_PAT` verlopen | Niet uit te lezen; vernieuwen blijft de oplossing (V-03). | — |
+| 4 | Runs van 11/11 op "queued" | Elf runs hangen in een tussenstatus; annuleren via de API geeft 409 "has not been queued yet". Onschadelijk; met de hand te verwijderen in Actions. | `actions/runs/{id}/cancel` → 409 |
+| 5 | Updates bij een privé repo | **Updates stoppen als de repo privé wordt.** De app haalt releases anoniem op: `GithubSource(repoUrl, accessToken: null, …)`. A-01(c) dus niet uitvoeren zonder eerst de updatebron te verplaatsen (bv. een aparte publieke repo enkel voor releases). | `Service/VelopackUpdateChecker.cs:31-34` |
+| 6 | Oude SQLite-installaties | Vraag voor Anthony. | — |
+| 7 | Upgrade `main` → `dev` | **SQLite: in orde** (test `UpgradeMainNaarDevTests`, PR #140). PostgreSQL: de twee migraties voegen enkel kolommen toe aan `Offertes`; een proef op een kopie van productie blijft aangeraden. | PR #140 |
+| 8 | Dubbele of nul-offertenummers in productie | Vraag voor Anthony; query hieronder. | — |
+| 9 | Voorraadmutaties/bestellijnen van gearchiveerde lijsten | Productvraag voor Veerle (zie hieronder). | `AppDbContext.cs:61-68` |
+| 10 | Bewaren de "scoped" services toestand | **Nee.** Geen van de 19 heeft een veranderlijk veld of een eigen `AppDbContext`; alle gebruiken `IDbContextFactory`. Er wordt in de app geen scope per scherm gemaakt, dus ze leven als één gedeelde instantie — dat is veilig. V-30 heeft daarmee laag risico. | zoektocht naar niet-`readonly` velden en `AppDbContext`-parameters in `Service/` en `Validation/` |
+| 11 | "(zoals nu)" in het annuleervenster | **Rest uit het ontwerp** (mock: "dit gebeurt nu al"). Komt twee keer voor; voor de gebruiker betekenisloos. Kan weg (schermtekst, kleine fix). | `Views/AnnuleerVerkoopDialog.axaml:31, 34`, sinds US-90 (`fe11680`) |
+| 12 | Klantgegevens in de handleiding-afbeeldingen | **In orde:** testgegevens (Jan Peeters, Sofie Vermeulen, Art & Co BV uit `DatabaseSeeder`). | steekproef `klanten-lijst.png`, `bestelbon-pdf.png`, `klant-detail.png`, `offertes-overzicht.png` |
+| 13 | `Tmds.DBus.Protocol` | **Bewuste beveiligingspin** ("override vulnerable transitive deps"), sinds mei 2026. Laten staan. | commit `da9da21` |
+| 14 | Ongebruikte private leden | Niet nagegaan (vraagt Rider/Visual Studio). | — |
+| 15 | Testdekking | **Gemeten (coverlet, 564 testen):** Service 59 %, ViewModels 39 %, Validation 45 %, Converters 35 %, QuadroApp.Data 86 %. Nul dekking op `AfwerkingenViewModel`, `KlantenViewModel`, `LeveranciersViewModel`, `LijstenViewModel`, `WerkBonArchiefService`, `App.axaml.cs`. `OfferteViewModel` 58 %, `VerkoopDossierViewModel` 66 %. Bevestigt de prioriteit van V-21 (vangnet vóór refactor). | `dotnet test --collect:"XPlat Code Coverage"` met tijdelijk `coverlet.collector` 6.0.4 (niet gecommit) |
+
+**Query voor punt 8** (alleen lezen, op de productiedatabase):
+
+```sql
+SELECT "OfferteNummer", COUNT(*) AS aantal
+FROM "Offertes"
+GROUP BY "OfferteNummer"
+HAVING COUNT(*) > 1 OR "OfferteNummer" = 0
+ORDER BY "OfferteNummer";
+```
+
+Geen rijen = geen dubbele of nul-nummers; dan kan A-03 (unieke index) zonder voorbereiding.
+
+**Vraag voor Veerle bij punt 9:** "Als je een lijst archiveert omdat ze niet meer verkocht wordt, mag ze dan ook verdwijnen uit de voorraadgeschiedenis en uit oude leveranciersbestellingen, of moet ze daar blijven staan?"
+
+**Gevolgen voor de voorstellen**
+
+- **A-04 wordt dringend** zodra twee pc's tegelijk werken: bevestigde fout, niet langer een vermoeden. Oplossing: `Offerte` en `WerkTaak` toevoegen aan de `xmin`-lijst in `AppDbContext.cs:467`, met een Npgsql-migratie en een test op PostgreSQL (T-05).
+- **A-01(c) (repo privé)** breekt de updates; eerst de updatebron verplaatsen. A-01(a) en (b) (Allowed IPs, wachtwoord) staan daar los van en blijven dringend.
