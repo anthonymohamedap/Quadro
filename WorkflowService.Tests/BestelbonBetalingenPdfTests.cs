@@ -73,6 +73,7 @@ public class BestelbonBetalingenPdfTests
         var map = Path.Combine(Path.GetTempPath(), "quadro-us73-" + Guid.NewGuid().ToString("N"));
         try
         {
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
             var result = await new PdfBestelbonExporter().ExportAsync(Bon(259.05m, 222m, BestelbonStatus.KlaarVoorExport, 20m, 17.05m), map);
             Assert.True(result.Success, result.Message);
             Assert.True(File.Exists(result.BestandPad));

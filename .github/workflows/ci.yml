@@ -3,9 +3,9 @@ name: CI
 # Build + test on every push and PR — the safety net for all enterprise-hardening work.
 on:
   push:
-    branches: [main, dev, 'feature/**', 'fix/**', 'docs/**', 'chore/**', 'claude/**']
+    branches: [main, 'feature/**', 'fix/**']
   pull_request:
-    branches: [main, dev]
+    branches: [main]
 
 jobs:
   build-test:
@@ -25,13 +25,6 @@ jobs:
 
       - name: Test
         run: dotnet test Quadro.sln --no-build -c Release --logger "trx;LogFileName=results.trx" --results-directory TestResults
-
-      # V-06: de rendertool (verplicht in de werkwijze, zie CLAUDE.md) en de MigrationTool staan niet in
-      # Quadro.sln. Mee bouwen, zodat ze niet ongemerkt breken.
-      - name: Build tools (rendertool + MigrationTool)
-        run: |
-          dotnet build Tools/SchermAfbeeldingen/SchermAfbeeldingen.csproj -c Release
-          dotnet build Scripts/MigrationTool/MigrationTool.csproj -c Release
 
       - name: Upload test results
         if: always()

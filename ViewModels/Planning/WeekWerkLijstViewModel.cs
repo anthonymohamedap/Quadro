@@ -161,7 +161,7 @@ public partial class WeekWerkLijstViewModel : ObservableObject
 
     // ── PDF afdrukken ──────────────────────────────────────────────────────────
     [RelayCommand]
-    private async Task PrintPdfAsync()
+    private void PrintPdf()
     {
         try
         {
@@ -176,8 +176,6 @@ public partial class WeekWerkLijstViewModel : ObservableObject
                 FileName = path,
                 UseShellExecute = true
             });
-
-            await ZetWeekInProductieAsync();
         }
         catch (Exception ex)
         {
@@ -186,22 +184,6 @@ public partial class WeekWerkLijstViewModel : ObservableObject
                 Microsoft.Extensions.Logging.LoggerExtensions.LogError(_logger, ex, "[WeekLijst PDF] Fout: {Message}", ex.Message);
             _toast?.Error($"PDF openen mislukt: {ex.Message}");
         }
-    }
-
-    /// <summary>
-    /// US-87 (beslist 02/11): de weeklijst afdrukken betekent dat het werk van die week start —
-    /// elke volledig geplande verkoop op de lijst gaat naar "In productie".
-    /// </summary>
-    public async Task<int> ZetWeekInProductieAsync()
-    {
-        var maandag = ISOWeek.ToDateTime(Year, WeekNr, DayOfWeek.Monday);
-        var aantal = await new QuadroApp.Service.Verkoop.VerkoopDossierService(_factory, _workflow)
-            .ZetWeekInProductieAsync(maandag);
-        if (aantal > 0)
-            _toast?.Success(aantal == 1
-                ? "1 verkoop staat nu In productie."
-                : $"{aantal} verkopen staan nu In productie.");
-        return aantal;
     }
 
     // Save 1 notitie (per taak)
@@ -228,7 +210,7 @@ public class KlantWeekBlock
 public partial class WeekWerkItem : ObservableObject
 {
     public int TaakId { get; init; }
-    public int BonNr { get; init; }           // verkoopnummer (= werkbonnummer)
+    public int BonNr { get; init; }           // WerkBon.Id
     public int Stuks { get; init; }
     public decimal Breedte { get; init; }
     public decimal Hoogte { get; init; }
@@ -302,7 +284,7 @@ public partial class WeekWerkItem : ObservableObject
         return new WeekWerkItem
         {
             TaakId = t.Id,
-            BonNr = t.WerkBon?.Offerte?.OfferteNummer ?? t.WerkBonId,   // werkbon = verkoopnummer
+            BonNr = t.WerkBonId,
             Stuks = r?.AantalStuks ?? 0,
             Breedte = r?.BreedteCm ?? 0,
             Hoogte = r?.HoogteCm ?? 0,
