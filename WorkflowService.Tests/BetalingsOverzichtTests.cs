@@ -100,7 +100,7 @@ public class BetalingsOverzichtTests
 
         Assert.All(d.Regels.Where(r => r.Betaalwijze != Betaalwijze.CreditCard && r.Soort != OntvangstSoort.Winkelverkoop),
             r => { Assert.Equal("2026-012", r.Bon); Assert.Equal(2026, r.Jaar); });
-        Assert.Equal("offerte 42", d.Regels.Single(r => r.Betaalwijze == Betaalwijze.CreditCard).Bon);
+        Assert.Equal("voorlopig · 42", d.Regels.Single(r => r.Betaalwijze == Betaalwijze.CreditCard).Bon);
         Assert.Equal(string.Empty, d.Regels.Single(r => r.Soort == OntvangstSoort.Winkelverkoop).Bon);
 
         Assert.Equal(103.50m, overzicht.Cash);

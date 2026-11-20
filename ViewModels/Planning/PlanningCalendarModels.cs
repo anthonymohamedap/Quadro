@@ -58,7 +58,7 @@ public class DayRow
 
 public class WeekRow
 {
-    public int BonNr { get; set; }
+    public string BonNr { get; set; } = "";
     public int DuurMin { get; set; }
     public DateTime Datum { get; set; }
     public string KlantNaam { get; set; } = "";
@@ -68,9 +68,9 @@ public class WeekRow
     public string Dag { get; set; } = "";
 
     // US-49 — weekdetail: bon-referentie + gecombineerd lijstlabel voor één kolom.
-    public string BonLabel => $"#{BonNr}";
+    public string BonLabel => BonNr;
     public string DuurLabel => $"{DuurMin}m";
-    public string KlantTip => $"Bon #{BonNr} — {KlantNaam}";
+    public string KlantTip => $"Verkoop {BonNr} — {KlantNaam}";
     public string LijstLabel =>
         string.IsNullOrWhiteSpace(Lijst)
             ? (string.IsNullOrWhiteSpace(LijstType) ? "–" : LijstType)

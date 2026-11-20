@@ -73,14 +73,14 @@ public class BeginschermTests
         try
         {
             var klaar = Regel(421, "Peeters", OfferteStatus.Afgewerkt, WerkBonStatus.Afgewerkt, null, 136.5m, Vandaag);
-            Assert.Equal("Offerte 421", klaar.BonTekst);
+            Assert.Equal("Verkoop voorlopig · 421", klaar.BonTekst);
             Assert.Equal("nog € 136,50", klaar.NogTeBetalenTekst);
             Assert.Equal("Klaar", klaar.StapKortTekst);
             Assert.Equal("€ 136,50", klaar.BedragTekst);
 
             var afgehaald = Regel(423, "Claes", OfferteStatus.Besteld, WerkBonStatus.Afgehaald, BestelbonStatus.Geexporteerd, 145m, Vandaag)
                 with { BestelbonNummer = "2026-23" };
-            Assert.Equal("Offerte 423 · Bestelbon 2026-23", afgehaald.BonTekst);
+            Assert.Equal("Verkoop 2026-23", afgehaald.BonTekst);
             Assert.Equal("Al afgehaald", afgehaald.StapKortTekst);
             Assert.Equal("afgehaald 12/11", afgehaald.AfhaalDatumTekst);
 
