@@ -122,6 +122,14 @@
                     <Button Grid.Column="5" Content="▶" Command="{Binding VolgendeCommand}" Padding="10,4" CornerRadius="6"/>
                 </Grid>
 
+                <!-- Details van de gekozen dag/week in een venster (vroeger onderaan de planning) -->
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="📋 Dagdetail" Click="Dagdetail_Click" Padding="10,4" CornerRadius="6"
+                            ToolTip.Tip="Taken van de gekozen dag, herplannen en dag/week blokkeren"/>
+                    <Button Content="📅 Weekdetail" Click="Weekdetail_Click" Padding="10,4" CornerRadius="6"
+                            ToolTip.Tip="Werk per dag van de week van de gekozen dag"/>
+                </StackPanel>
+
                 <ItemsControl x:Name="DagenLijst" ItemsSource="{Binding Dagen}" Margin="0,0,-8,0">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate><UniformGrid Columns="7"/></ItemsPanelTemplate>
@@ -273,19 +281,7 @@
         </Border>
     </Grid>
 
-    <!-- ── Dagdetails | weekdetail + blokkeren (zelfde blokken als de pagina Planning) ── -->
-    <Grid ColumnDefinitions="1.25*,1*" ColumnSpacing="16">
-        <Border Classes="kaart" VerticalAlignment="Top">
-            <planning:PlanningDagDetails DataContext="{Binding Kalender}"/>
-        </Border>
-        <StackPanel Grid.Column="1" Spacing="16">
-            <Border Classes="kaart">
-                <planning:PlanningWeekDetail DataContext="{Binding Kalender}"/>
-            </Border>
-            <Border Classes="kaart">
-                <planning:PlanningBlokkeren DataContext="{Binding Kalender}"/>
-            </Border>
-        </StackPanel>
-    </Grid>
+    <!-- Dagdetail (met blokkeren) en weekdetail staan niet meer onderaan maar openen in een eigen venster
+         via de knoppen "Dagdetail" en "Weekdetail" boven de dagen (Anthony 20/11: minder druk scherm). -->
     </StackPanel>
 </UserControl>
