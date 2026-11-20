@@ -127,7 +127,7 @@ public sealed class PdfBestelbonExporter : IBestelbonExporter
                 {
                     // Prijsvoorstel vóór het akkoord: nog geen volgnummer en nog geen besteldatum.
                     right.Item().AlignRight().Text("voorlopige bestelbon").SemiBold();
-                    right.Item().AlignRight().Text($"bij offerte {bestelbon.BestelbonNummer.TrimStart('V')}");
+                    right.Item().AlignRight().Text($"nr. {bestelbon.NummerLabel}");
                     right.Item().AlignRight().Text($"datum {bestelbon.BestelbonDatum:dd/MM/yyyy}");
                 }
                 else

@@ -85,6 +85,7 @@ public partial class WeekWerkLijstViewModel : ObservableObject
             .OrderBy(t => t.WerkBonId)
             .ThenBy(t => t.GeplandVan)
             .ToListAsync();
+        await QuadroApp.Service.Verkoop.VerkoopNummers.VulAsync(db, taken.Select(t => t.WerkBon));   // "bonnr." = het ene verkoopnummer
 
         // Feedback Veerle (12/11): per klant groeperen (niet per achternaam: twee klanten met
         // dezelfde achternaam vielen samen) en een naam tonen, ook als de achternaam leeg is.
@@ -228,7 +229,7 @@ public class KlantWeekBlock
 public partial class WeekWerkItem : ObservableObject
 {
     public int TaakId { get; init; }
-    public int BonNr { get; init; }           // verkoopnummer (= werkbonnummer)
+    public string BonNr { get; init; } = "";   // één nummer per verkoop (bestelbonnummer of "voorlopig · 412")
     public int Stuks { get; init; }
     public decimal Breedte { get; init; }
     public decimal Hoogte { get; init; }
@@ -302,7 +303,7 @@ public partial class WeekWerkItem : ObservableObject
         return new WeekWerkItem
         {
             TaakId = t.Id,
-            BonNr = t.WerkBon?.Offerte?.OfferteNummer ?? t.WerkBonId,   // werkbon = verkoopnummer
+            BonNr = t.WerkBon?.VerkoopNummerTekst ?? "",   // één nummer per verkoop
             Stuks = r?.AantalStuks ?? 0,
             Breedte = r?.BreedteCm ?? 0,
             Hoogte = r?.HoogteCm ?? 0,

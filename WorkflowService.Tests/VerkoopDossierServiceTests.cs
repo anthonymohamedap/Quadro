@@ -298,7 +298,7 @@ public class VerkoopDossierServiceTests
         await PlanAsync(o, o.RegelIds[0]);
 
         var data = await PdfWerkBonExporter.LeesAsync(o.Scope.Factory, o.WerkBonId);
-        Assert.Equal(423, data.Nummer);                                   // werkbon = verkoopnummer
+        Assert.Equal("2026-1", data.Nummer);                                    // één nummer per verkoop
         Assert.StartsWith("Sofie Claes", data.KlantRegel);
         Assert.Equal(2, data.Regels.Count);
         Assert.StartsWith("1 × Inlijsting 1 — 30 × 40 cm", data.Regels[0].Kop);
@@ -314,8 +314,8 @@ public class VerkoopDossierServiceTests
         {
             var zonder = new PdfWerkBonExporter().Export(data, metPrijzen: false);
             var met = new PdfWerkBonExporter().Export(data, metPrijzen: true);
-            Assert.EndsWith("Werkbon-423.pdf", zonder);
-            Assert.EndsWith("Werkbon-423-met-prijzen.pdf", met);
+            Assert.EndsWith("Werkbon-2026-1.pdf", zonder);
+            Assert.EndsWith("Werkbon-2026-1-met-prijzen.pdf", met);
             Assert.True(new System.IO.FileInfo(zonder).Length > 500);
             Assert.True(System.IO.File.Exists(met));
         }
