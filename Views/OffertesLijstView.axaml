@@ -133,7 +133,7 @@
             </Grid>
 
             <Grid Grid.Row="3"
-                  ColumnDefinitions="0.6*,2.2*,1*,2.4*,1*,1*,1.1*"
+                  ColumnDefinitions="1*,2.2*,1*,2.2*,1*,1*,1.1*"
                   ColumnSpacing="8"
                   Margin="16,0,16,0">
                 <TextBlock Text="Nr."          Grid.Column="0" Classes="label" Foreground="{DynamicResource TextHeading}" TextTrimming="CharacterEllipsis"/>
@@ -161,12 +161,12 @@
 
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="sv:VerkoopOverzichtRegel">
-                            <Grid ColumnDefinitions="0.6*,2.2*,1*,2.4*,1*,1*,1.1*"
+                            <Grid ColumnDefinitions="1*,2.2*,1*,2.2*,1*,1*,1.1*"
                                   VerticalAlignment="Center"
                                   ColumnSpacing="8">
 
                                 <TextBlock Grid.Column="0"
-                                           Text="{Binding OfferteNummer}"
+                                           Text="{Binding NummerTekst}"
                                            Classes="h3"
                                            VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis"/>

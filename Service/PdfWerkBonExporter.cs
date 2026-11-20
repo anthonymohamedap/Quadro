@@ -20,7 +20,7 @@ public sealed record WerkBonPdfRegel(
 
 /// <summary>US-94 — gegevens voor de werkbon-PDF (werkbon = verkoopnummer).</summary>
 public sealed record WerkBonPdfData(
-    int Nummer, string KlantRegel, DateTime? AfhaalDatum, IReadOnlyList<WerkBonPdfRegel> Regels, decimal TotaalIncl);
+    string Nummer, string KlantRegel, DateTime? AfhaalDatum, IReadOnlyList<WerkBonPdfRegel> Regels, decimal TotaalIncl);
 
 /// <summary>
 /// US-94 — werkbon voor het atelier als A4-PDF (QuestPDF, zelfde aanpak als de weeklijst). Standaard
@@ -76,7 +76,7 @@ public sealed class PdfWerkBonExporter
             if (!string.IsNullOrWhiteSpace(k.Telefoon)) delen.Add(k.Telefoon!);
         }
         delen.Add($"werkbon van {wb.AangemaaktOp:dd/MM/yyyy}");
-        if (!string.IsNullOrWhiteSpace(bonNummer)) delen.Add($"bestelbon {bonNummer}");
+        // Het bestelbonnummer is nu zelf het nummer van de werkbon (één nummer per verkoop): niet herhalen.
 
         var pdfRegels = regels.Select(r =>
         {
@@ -101,15 +101,18 @@ public sealed class PdfWerkBonExporter
                 r.TotaalInclBtw);
         }).ToList();
 
-        return new WerkBonPdfData(wb.Offerte?.OfferteNummer ?? wb.Id, string.Join(" · ", delen),
+        return new WerkBonPdfData(VerkoopNummer.Tekst(wb.Offerte?.OfferteNummer ?? 0, bonNummer), string.Join(" · ", delen),
             wb.AfhaalDatum ?? wb.Offerte?.AfhaalDatum, pdfRegels, pdfRegels.Sum(x => x.PrijsIncl));
     }
+
+    /// <summary>"voorlopig · 412" → "voorlopig-412" (geen spaties of middenpunt in een bestandsnaam).</summary>
+    private static string BestandsNaam(string nummer) => nummer.Replace(" · ", "-").Replace('/', '-');
 
     /// <summary>Maakt de PDF en geeft het pad terug.</summary>
     public string Export(WerkBonPdfData data, bool metPrijzen)
     {
         Directory.CreateDirectory(Map);
-        var pad = Path.Combine(Map, metPrijzen ? $"Werkbon-{data.Nummer}-met-prijzen.pdf" : $"Werkbon-{data.Nummer}.pdf");
+        var pad = Path.Combine(Map, metPrijzen ? $"Werkbon-{BestandsNaam(data.Nummer)}-met-prijzen.pdf" : $"Werkbon-{BestandsNaam(data.Nummer)}.pdf");
 
         Document.Create(container =>
         {

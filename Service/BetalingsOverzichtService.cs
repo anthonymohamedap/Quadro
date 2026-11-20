@@ -89,7 +89,7 @@ public sealed class BetalingsOverzichtService : IBetalingsOverzichtService
                 }
                 else if (o.OfferteNummer is int nr && nr > 0)
                 {
-                    bon = $"offerte {nr}";
+                    bon = VerkoopNummer.Tekst(nr, (string?)null);   // "voorlopig · 412"
                 }
             }
 

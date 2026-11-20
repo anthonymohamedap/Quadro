@@ -23,12 +23,12 @@ public class VerkoopDossierViewModelTests
     private static void ChipsControleren()
     {
         var chips = VerkoopDossierViewModel.BouwChips(419, heeftWerkBon: false, bestelbon: null, voorschot: 0m);
-        Assert.Equal(new[] { "Offerte 419", "Werkbon 419", "Bestelbon", "Voorschot" }, chips.Select(c => c.Tekst));
+        Assert.Equal(new[] { "Offerte voorlopig · 419", "Werkbon voorlopig · 419", "Bestelbon", "Voorschot" }, chips.Select(c => c.Tekst));
         Assert.Equal(new[] { true, false, false, false }, chips.Select(c => c.Bestaat));
 
         var bon = new Bestelbon { VolgNr = 24, BestelbonNummer = "2026-24" };
         chips = VerkoopDossierViewModel.BouwChips(423, true, bon, 100m);
-        Assert.Equal(new[] { "Offerte 423", "Werkbon 423", "Bestelbon 2026-24", "Voorschot € 100,00" }, chips.Select(c => c.Tekst));
+        Assert.Equal(new[] { "Offerte 2026-24", "Werkbon 2026-24", "Bestelbon 2026-24", "Voorschot € 100,00" }, chips.Select(c => c.Tekst));
         Assert.All(chips, c => Assert.True(c.Bestaat));
 
         Assert.Equal("Bestelbon voorlopig", VerkoopDossierViewModel.BouwChips(427, false, new Bestelbon(), 0m)[2].Tekst);
