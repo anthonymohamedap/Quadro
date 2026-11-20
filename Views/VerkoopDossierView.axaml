@@ -8,6 +8,7 @@
     xmlns:werkbon="clr-namespace:QuadroApp.Views.Werkbon"
     xmlns:bestelbon="clr-namespace:QuadroApp.Views.Bestelbon"
     xmlns:conv="using:QuadroApp.Converters"
+    xmlns:controls="clr-namespace:QuadroApp.Views.Controls"
     x:Class="QuadroApp.Views.VerkoopDossierView"
     x:DataType="vm:VerkoopDossierViewModel"
     Background="{DynamicResource SurfaceMuted}">
@@ -100,16 +101,17 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,Auto,*,Auto">
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+
+        <!-- Zelfde Quadro-balk als de andere schermen; "⬅ Terug" gaat naar Verkopen (was de link "◀ Verkopen" in de kop). -->
+        <controls:QuadroHeader Title="VERKOOP" BackCommand="{Binding TerugNaarVerkopenCommand}"/>
 
         <!-- ── Kop ── -->
-        <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}"
+        <Border Grid.Row="1" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}"
                 BorderThickness="0,0,0,1" Padding="24,14,24,10">
             <StackPanel Spacing="8">
                 <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="16">
                     <StackPanel Spacing="2">
-                        <Button Content="◀ Verkopen" Command="{Binding TerugNaarVerkopenCommand}"
-                                Background="Transparent" Padding="0" Foreground="{DynamicResource TextSecondary}"/>
                         <TextBlock Text="{Binding Titel}" Classes="h1" TextTrimming="CharacterEllipsis"/>
                         <WrapPanel>
                             <TextBlock Text="{Binding KlantRegel}" Classes="body" Foreground="{DynamicResource TextSecondary}"
@@ -185,7 +187,7 @@
         </Border>
 
         <!-- ── Stappenbalk ── -->
-        <Border Grid.Row="1" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}"
+        <Border Grid.Row="2" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}"
                 BorderThickness="0,0,0,1" Padding="24,8">
             <ItemsControl ItemsSource="{Binding Stappen}">
                 <ItemsControl.ItemsPanel>
@@ -218,7 +220,7 @@
         </Border>
 
         <!-- ── Stapinhoud ── -->
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="24,16" Spacing="12">
                 <Border Classes="kaart" IsVisible="{Binding IsTerugGekeken}" MaxWidth="1100" HorizontalAlignment="Left"
                         Background="{DynamicResource InfoBg}" BorderBrush="{DynamicResource InfoBorder}" Padding="12,8">
@@ -415,7 +417,7 @@
         </ScrollViewer>
 
         <!-- ── Voetbalk ── -->
-        <Border Grid.Row="3" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}"
+        <Border Grid.Row="4" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}"
                 BorderThickness="0,1,0,0" Padding="24,10">
             <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="12">
                 <Button Content="◀ Vorige stap" Command="{Binding VorigeStapCommand}" IsEnabled="{Binding KanVorigeStap}"
