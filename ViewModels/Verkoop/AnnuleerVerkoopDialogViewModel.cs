@@ -15,7 +15,7 @@ public partial class AnnuleerVerkoopDialogViewModel : ObservableObject
 {
     public AnnuleerVerkoopDialogViewModel(int verkoopNummer, decimal ontvangen, string? bestelbonNummer)
     {
-        Titel = $"Verkoop {verkoopNummer} annuleren?";
+        Titel = $"Verkoop {VerkoopNummer.Tekst(verkoopNummer, bestelbonNummer)} annuleren?";
         Ontvangen = ontvangen;
         BestelbonTekst = bestelbonNummer is null
             ? "geen bestelbon met nummer"

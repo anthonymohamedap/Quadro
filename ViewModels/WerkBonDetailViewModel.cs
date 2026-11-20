@@ -234,7 +234,7 @@ namespace QuadroApp.ViewModels
                 .FirstOrDefaultAsync(f => f.WerkBonId == _werkBonId);
 
             // Kop-labels
-            KopTitel = $"Werkbon {wb.Offerte?.OfferteNummer ?? wb.Id}";   // werkbon = verkoopnummer
+            KopTitel = $"Werkbon {VerkoopNummer.Tekst(wb.Offerte?.OfferteNummer ?? 0, Bestelbon)}";   // één nummer per verkoop
             KlantNaam = wb.Offerte?.Klant is { } k ? $"{k.Voornaam} {k.Achternaam}".Trim() : "—";
             TotaalLabel = wb.TotaalPrijsIncl.ToString("C2", new System.Globalization.CultureInfo("nl-BE"));
             AangemaaktLabel = $"Aangemaakt {wb.AangemaaktOp:dd/MM/yyyy}";

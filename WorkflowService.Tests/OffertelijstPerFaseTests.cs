@@ -117,7 +117,7 @@ public class OffertelijstPerFaseTests
     {
         var wb = Regel(426, "Tom Jacobs", OfferteStatus.InProductie, WerkBonStatus.InUitvoering)
             with { WerkBonStatus = WerkBonStatus.InUitvoering, AantalTaken = 2, AantalBesteldOfKlaar = 1 };
-        Assert.Equal("Werkbon 426 · In uitvoering · 2 taken · 1/2 besteld", wb.WerkbonInfo);
+        Assert.Equal("Werkbon voorlopig · 426 · In uitvoering · 2 taken · 1/2 besteld", wb.WerkbonInfo);
         Assert.Equal("—", wb.BestelbonKolomTekst);
 
         var offerte = Regel(427, "An Mertens", OfferteStatus.Concept) with { HeeftVoorlopigeBon = true };
@@ -143,7 +143,7 @@ public class OffertelijstPerFaseTests
         }
 
         var regel = Assert.Single(await new VerkoopOverzichtService(scope.Factory).GetOverzichtAsync());
-        Assert.Equal("Werkbon 426 · In uitvoering · 2 taken · 1/2 besteld", regel.WerkbonInfo);
+        Assert.Equal("Werkbon voorlopig · 426 · In uitvoering · 2 taken · 1/2 besteld", regel.WerkbonInfo);
     }
 
     private sealed class OpnameNavigatie : QuadroApp.Service.Interfaces.IOfferteNavigationService

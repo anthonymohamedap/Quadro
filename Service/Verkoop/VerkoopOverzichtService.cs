@@ -63,7 +63,7 @@ namespace QuadroApp.Service.Verkoop
             get
             {
                 if (WerkBonStatus is not { } st || Fase is VerkoopFase.Geannuleerd) return "";
-                var delen = new List<string> { $"Werkbon {OfferteNummer}", st.Label() };
+                var delen = new List<string> { $"Werkbon {NummerTekst}", st.Label() };
                 delen.Add(AantalTaken == 1 ? "1 taak" : $"{AantalTaken} taken");
                 if (AantalTaken > 0)
                     delen.Add($"{AantalBesteldOfKlaar}/{AantalTaken} besteld");
@@ -76,10 +76,11 @@ namespace QuadroApp.Service.Verkoop
         /// <summary>Openstaand bedrag (0 als alles betaald is).</summary>
         public decimal NogTeBetalen => Stap.NogTeBetalen;
 
-        /// <summary>US-86 — tweede regel op het beginscherm: "Offerte 421 · Bestelbon 2026-23".</summary>
-        public string BonTekst => string.IsNullOrWhiteSpace(BestelbonNummer)
-            ? $"Offerte {OfferteNummer}"
-            : $"Offerte {OfferteNummer} · Bestelbon {BestelbonNummer}";
+        /// <summary>Het ene nummer van deze verkoop: "2026-23", of "voorlopig · 421" zolang er geen bestelbonnummer is.</summary>
+        public string NummerTekst => VerkoopNummer.Tekst(OfferteNummer, BestelbonNummer);
+
+        /// <summary>US-86 — tweede regel op het beginscherm: "Verkoop 2026-23" of "Verkoop voorlopig · 421".</summary>
+        public string BonTekst => $"Verkoop {NummerTekst}";
 
         /// <summary>US-86 — bedrag rechts op het beginscherm.</summary>
         public string NogTeBetalenTekst => NogTeBetalen > 0m ? $"nog € {NogTeBetalen:0.00}" : "betaald";

@@ -50,7 +50,7 @@ public class BestelbonVolgnummerTests
         Assert.True(bon.IsVoorlopig);
         Assert.Null(bon.VolgNr);
         Assert.Equal("V412", bon.BestelbonNummer);
-        Assert.Equal("voorlopig (offerte 412)", bon.NummerLabel);
+        Assert.Equal("voorlopig · 412", bon.NummerLabel);
     }
 
     [Fact]

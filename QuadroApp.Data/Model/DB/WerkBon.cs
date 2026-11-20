@@ -44,6 +44,17 @@ namespace QuadroApp.Model.DB
 
         // ── US-51: afgeleide weergave voor de werkbonnenlijst (niet in DB) ──────
         /// <summary>Aantal werktaken op deze werkbon.</summary>
+        /// <summary>Het nummer dat op het scherm staat (zie <see cref="VerkoopNummer"/>): het bestelbonnummer na het
+        /// akkoord, anders "voorlopig · 412". Wordt bij het laden gevuld (VerkoopNummers.VulAsync); zonder dat
+        /// valt het terug op "voorlopig · offertenummer".</summary>
+        [NotMapped]
+        public string VerkoopNummerTekst
+        {
+            get => _verkoopNummerTekst ?? VerkoopNummer.Tekst(Offerte?.OfferteNummer ?? 0, (string?)null);
+            set => _verkoopNummerTekst = value;
+        }
+        private string? _verkoopNummerTekst;
+
         [NotMapped]
         public int AantalTaken => Taken?.Count ?? 0;
 

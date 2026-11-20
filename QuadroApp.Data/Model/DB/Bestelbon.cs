@@ -41,10 +41,10 @@ public class Bestelbon
     [NotMapped]
     public bool IsVoorlopig => VolgNr is null;
 
-    /// <summary>Wat de gebruiker en de klant zien: "2026-19", of "voorlopig (offerte 412)".</summary>
+    /// <summary>Wat de gebruiker en de klant zien: "2026-19", of "voorlopig · 412" (zie <see cref="VerkoopNummer"/>).</summary>
     [NotMapped]
     public string NummerLabel => IsVoorlopig
-        ? $"voorlopig (offerte {BestelbonNummer.TrimStart('V')})"
+        ? VerkoopNummer.Tekst(int.TryParse(BestelbonNummer.TrimStart('V'), out var nr) ? nr : 0, (string?)null)
         : BestelbonNummer;
 
     [MaxLength(20)]
