@@ -256,13 +256,22 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
     {
         if (SelectedOfferte is null) return;
 
+        // Lopende verkoop (werkbon, productie, klaar of afgehaald maar nog niet betaald): eerst annuleren.
+        if (!QuadroApp.Service.OfferteArchiefService.MagNaarArchief(SelectedOfferte.Fase))
+        {
+            await _dialogs.ShowErrorAsync("Niet naar archief",
+                $"Verkoop {SelectedOfferte.NummerTekst} loopt nog. {QuadroApp.Service.OfferteArchiefService.EerstAnnulerenMelding}\n\n" +
+                "Naar archief kan enkel bij een open offerte (nog geen werkbon), een geannuleerde of een afgeronde verkoop.");
+            return;
+        }
+
         var klantNaam = !string.IsNullOrWhiteSpace(SelectedOfferte.KlantNaam)
             ? SelectedOfferte.KlantNaam
-            : $"offerte #{SelectedOfferte.OfferteNummer}";
+            : $"verkoop {SelectedOfferte.NummerTekst}";
 
         var ok = await _dialogs.ConfirmAsync(
             "Offerte naar archief",
-            $"'{klantNaam}' (#{SelectedOfferte.OfferteNummer}) verplaatsen naar het archief? " +
+            $"'{klantNaam}' ({SelectedOfferte.NummerTekst}) verplaatsen naar het archief? " +
             $"De offerte verdwijnt uit de actieve lijst maar blijft volledig herstelbaar via Archief.");
         if (!ok) return;
 
@@ -270,7 +279,7 @@ public partial class OffertesLijstViewModel : ObservableObject, IAsyncInitializa
         try
         {
             await _archiefService.ArchiveerAsync(SelectedOfferte.OfferteId);
-            _toast.Success($"Offerte #{SelectedOfferte.OfferteNummer} gearchiveerd.");
+            _toast.Success($"Verkoop {SelectedOfferte.NummerTekst} gearchiveerd.");
             IsBusy = false;   // anders slaat LoadAsync het herladen over (het scherm staat nog op 'bezig')
             await LoadAsync();
         }

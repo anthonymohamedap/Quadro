@@ -256,11 +256,14 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
         }
     }
 
+    /// <summary>Het ene nummer van deze verkoop: bestelbonnummer na het akkoord, anders "voorlopig · 412".</summary>
+    private string Nr => VerkoopNummer.Tekst(_offerte?.OfferteNummer ?? 0, _bestelbon);
+
     private void VulKop()
     {
         var o = _offerte!;
         var k = o.Klant;
-        Titel = $"Verkoop {o.OfferteNummer} · {k?.VolledigeNaam ?? "zonder klant"}";
+        Titel = $"Verkoop {Nr} · {k?.VolledigeNaam ?? "zonder klant"}";
         KlantRegel = KlantRegelTekst(k, _regel!.AfhaalDatum);
         StatusTekst = _regel.FaseTekst;
         TotaalTekst = $"€ {o.TotaalInclBtw:#,##0.00}";
@@ -291,15 +294,16 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
     }
 
     /// <summary>US-90 AC 2 — Offerte, Werkbon, Bestelbon, Voorschot; gestreept zolang ze niet bestaan.</summary>
-    public static IReadOnlyList<DossierChip> BouwChips(int nummer, bool heeftWerkBon, Bestelbon? bestelbon, decimal voorschot)
+    public static IReadOnlyList<DossierChip> BouwChips(int offerteNummer, bool heeftWerkBon, Bestelbon? bestelbon, decimal voorschot)
     {
+        var nummer = VerkoopNummer.Tekst(offerteNummer, bestelbon);   // één nummer voor de hele verkoop
         return new[]
         {
             new DossierChip($"Offerte {nummer}", true),
             new DossierChip($"Werkbon {nummer}", heeftWerkBon),
             bestelbon is null
                 ? new DossierChip("Bestelbon", false)
-                : new DossierChip(bestelbon.VolgNr is null ? "Bestelbon voorlopig" : $"Bestelbon {bestelbon.BestelbonNummer}", true),
+                : new DossierChip(bestelbon.VolgNr is null ? "Bestelbon voorlopig" : $"Bestelbon {nummer}", true),
             voorschot > 0m
                 ? new DossierChip($"Voorschot € {voorschot:#,##0.00}", true)
                 : new DossierChip("Voorschot", false)
@@ -351,7 +355,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
         {
             case VerkoopStap.Offerte:
                 await LaadStap1Async();
-                Gegevens.Add(new("Offerte", $"{o.OfferteNummer} · {o.Status.Label()} · {o.Datum:dd/MM/yyyy}"));
+                Gegevens.Add(new("Offerte", $"{Nr} · {o.Status.Label()} · {o.Datum:dd/MM/yyyy}"));
                 Gegevens.Add(new("Inlijstingen", o.Regels.Count == 1 ? "1 inlijsting" : $"{o.Regels.Count} inlijstingen"));
                 Gegevens.Add(new("Totaal incl.", $"€ {o.TotaalInclBtw:#,##0.00}"));
                 Gegevens.Add(new("Voorschot", o.VoorschotBedrag > 0m ? $"€ {o.VoorschotBedrag:#,##0.00}" : "geen"));
@@ -368,7 +372,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
                     Gegevens.Add(new("Werkbon", "nog niet aangemaakt"));
                     break;
                 }
-                Gegevens.Add(new("Werkbon", $"{o.OfferteNummer} · {wb.Status.Label()} · aangemaakt {wb.AangemaaktOp:dd/MM/yyyy}"));
+                Gegevens.Add(new("Werkbon", $"{Nr} · {wb.Status.Label()} · aangemaakt {wb.AangemaaktOp:dd/MM/yyyy}"));
                 Gegevens.Add(new("Taken", PlanningTekst(wb)));
                 if (wb.AantalTaken > 0)
                     Gegevens.Add(new("Bestellen", wb.BestelVoortgangLabel));
@@ -393,7 +397,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
                 Gegevens.Add(new("Ontvangen", $"€ {_ontvangen:#,##0.00}"));
                 Gegevens.Add(new("Nog te betalen", $"€ {Math.Max(0m, _regel!.NogTeBetalen):#,##0.00}"));
                 if (wb is not null)
-                    Gegevens.Add(new("Werkbon", $"{o.OfferteNummer} · {wb.Status.Label()}"));
+                    Gegevens.Add(new("Werkbon", $"{Nr} · {wb.Status.Label()}"));
                 ToontBestelbonKnop = _bestelbon is not null;
                 ToontWerkbonKnoppen = wb is not null;
                 break;
@@ -516,7 +520,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
                     break;
                 case { Huidig: VerkoopStap.InProductie }:
                     if (!await _dialogs.ConfirmAsync("Klaar om af te halen?",
-                            "De werkbon gaat naar \"Klaar om af te halen\": gereserveerde stukken worden verbruikt en de bestelbon wordt aangemaakt of bijgewerkt (zoals nu)."))
+                            "De werkbon gaat naar \"Klaar om af te halen\": gereserveerde stukken worden verbruikt en de bestelbon wordt aangemaakt of bijgewerkt."))
                         return;
                     var nr = await _dossier.MeldKlaarAsync(OfferteId);
                     _toast.Success(string.IsNullOrWhiteSpace(nr) ? "Klaar om af te halen." : $"Klaar om af te halen. Bestelbon {nr}.");
@@ -736,7 +740,7 @@ public partial class VerkoopDossierViewModel : ObservableObject, IParameterRecei
         try
         {
             await _dossier.AnnuleerAsync(OfferteId, vm.ToOpdracht());
-            _toast.Success($"Verkoop {_offerte.OfferteNummer} is geannuleerd.");
+            _toast.Success($"Verkoop {Nr} is geannuleerd.");
             await LaadAsync(naarHuidigeStap: true);
         }
         catch (Exception ex)

@@ -39,8 +39,24 @@ namespace QuadroApp.Service
 
         // ─── ArchiveerAsync ──────────────────────────────────────────────────
 
+        /// <summary>Melding als een lopende verkoop naar het archief zou gaan.</summary>
+        public const string EerstAnnulerenMelding = "Annuleer deze verkoop eerst in het dossier.";
+
+        /// <summary>
+        /// Mag deze verkoop naar het archief? Enkel open offertes (nog geen werkbon), geannuleerde en afgeronde
+        /// verkopen (afspraak 19/11/2026). Bij een lopende verkoop zouden de voorraadreservaties blijven hangen,
+        /// verdwijnen werkbon en planning zonder momentopname en blijft de bestelbon achter zonder offerte;
+        /// annuleren in het dossier ruimt dat wel netjes op.
+        /// </summary>
+        public static bool MagNaarArchief(Verkoop.VerkoopFase fase) =>
+            fase is Verkoop.VerkoopFase.OpenOffertes or Verkoop.VerkoopFase.Geannuleerd or Verkoop.VerkoopFase.Afgerond;
+
         public async Task<OfferteArchief> ArchiveerAsync(int offerteId, string? reden = null)
         {
+            var regel = await new Verkoop.VerkoopOverzichtService(_factory).GetRegelAsync(offerteId);
+            if (regel is not null && !MagNaarArchief(regel.Fase))
+                throw new InvalidOperationException(EerstAnnulerenMelding);
+
             await using var db = await _factory.CreateDbContextAsync();
             return await db.ExecuteWithRetryAsync(async () =>
             {

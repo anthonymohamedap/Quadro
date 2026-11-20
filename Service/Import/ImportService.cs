@@ -38,6 +38,7 @@ public sealed class ImportService : IImportService
 
         await using var db = await _dbFactory.CreateDbContextAsync(ct);
         var rawRows = await _parser.ReadSheetAsync(stream, map.EntityName, ct);
+        var getalGrenzen = GetalGrenzen(db, typeof(T));
 
         foreach (var raw in rawRows)
         {
@@ -84,6 +85,9 @@ public sealed class ImportService : IImportService
                     });
                 }
             }
+
+            if (rowResult.Parsed is not null)
+                ControleerGetalGrenzen(rowResult.Parsed, getalGrenzen, rowNumber, rowResult.Issues);
 
             await validator.ValidateAsync(rowResult, db, ct);
             rows.Add(rowResult);
@@ -166,26 +170,96 @@ public sealed class ImportService : IImportService
         catch (OperationCanceledException)
         {
             await tx.RollbackAsync(CancellationToken.None);
-            session.Status = "Cancelled";
-            session.ErrorMessage = "Operation cancelled.";
-            session.FinishedAt = DateTime.UtcNow;
-            await db.SaveChangesAsync(CancellationToken.None);
-            _logger.LogWarning("Commit cancelled SessionId={SessionId}", session.Id);
+            _logger.LogWarning("Commit cancelled for {EntityName}", entityName);
+            await LogMisluktAsync(session, "Cancelled", "Operation cancelled.");
             throw;
         }
         catch (Exception ex)
         {
             await tx.RollbackAsync(CancellationToken.None);
-            session.Status = "Failed";
-            session.ErrorMessage = ex.ToString();
-            session.FinishedAt = DateTime.UtcNow;
-            await db.SaveChangesAsync(CancellationToken.None);
-            _logger.LogError(ex, "Commit failed SessionId={SessionId}", session.Id);
+            _logger.LogError(ex, "Commit failed for {EntityName}", entityName);
+            // De sessie zelf is mee teruggedraaid. Vroeger werd ze daarna nog bijgewerkt, wat op
+            // PostgreSQL een "gelijktijdig gewijzigd"-fout gaf die de echte oorzaak verborg.
+            // Nu: een nieuwe sessie met status Failed, en de oorspronkelijke fout gaat door.
+            await LogMisluktAsync(session, "Failed", ex.GetBaseException().Message);
             throw;
         }
         });
     }
 
+
+    /// <summary>Bewaart een mislukte import in het importlogboek; mag zelf nooit de echte fout verbergen.</summary>
+    private async Task LogMisluktAsync(ImportSession sessie, string status, string melding)
+    {
+        try
+        {
+            await using var db = await _dbFactory.CreateDbContextAsync();
+            db.Set<ImportSession>().Add(new ImportSession
+            {
+                StartedAt = sessie.StartedAt,
+                FinishedAt = DateTime.UtcNow,
+                EntityName = sessie.EntityName,
+                FileName = sessie.FileName,
+                TotalRows = sessie.TotalRows,
+                ValidRows = sessie.ValidRows,
+                InvalidRows = sessie.InvalidRows,
+                Status = status,
+                ErrorMessage = melding
+            });
+            await db.SaveChangesAsync();
+        }
+        catch (Exception logFout)
+        {
+            _logger.LogWarning(logFout, "Mislukte import kon niet in het importlogboek bewaard worden.");
+        }
+    }
+
+    /// <summary>
+    /// Grootste waarde per decimaal veld, afgeleid uit de precisie in het model (bv. numeric(10,2) → 99.999.999,99).
+    /// PostgreSQL weigert een groter getal ("numeric field overflow") en dan faalt de hele import; SQLite
+    /// controleert dat niet. Daarom wordt het per rij nagekeken in het voorbeeld.
+    /// </summary>
+    public static IReadOnlyList<(System.Reflection.PropertyInfo Eigenschap, decimal Max)> GetalGrenzen(AppDbContext db, Type type)
+    {
+        var et = db.Model.FindEntityType(type);
+        if (et is null) return Array.Empty<(System.Reflection.PropertyInfo, decimal)>();
+        var lijst = new List<(System.Reflection.PropertyInfo, decimal)>();
+        foreach (var p in et.GetProperties())
+        {
+            if (p.PropertyInfo is null || (p.ClrType != typeof(decimal) && p.ClrType != typeof(decimal?))) continue;
+            var precisie = p.GetPrecision();
+            if (precisie is null) continue;
+            var schaal = p.GetScale() ?? 0;
+            var max = Pow10(precisie.Value - schaal) - Pow10(-schaal);
+            lijst.Add((p.PropertyInfo, max));
+        }
+        return lijst;
+
+        static decimal Pow10(int n)
+        {
+            var r = 1m;
+            if (n >= 0) for (var i = 0; i < n; i++) r *= 10m;
+            else for (var i = 0; i < -n; i++) r /= 10m;
+            return r;
+        }
+    }
+
+    public static void ControleerGetalGrenzen(object item, IReadOnlyList<(System.Reflection.PropertyInfo Eigenschap, decimal Max)> grenzen,
+        int rowNumber, List<ImportRowIssue> issues)
+    {
+        foreach (var (eigenschap, max) in grenzen)
+        {
+            if (eigenschap.GetValue(item) is not decimal waarde || Math.Abs(waarde) <= max) continue;
+            issues.Add(new ImportRowIssue
+            {
+                RowNumber = rowNumber,
+                ColumnName = eigenschap.Name,
+                Message = $"Getal te groot voor dit veld (hoogstens {max.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("nl-BE"))}).",
+                Severity = Severity.Error,
+                RawValue = waarde.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            });
+        }
+    }
 
     private static async Task EnsureImportAuditTablesAsync(AppDbContext db, CancellationToken ct)
     {
