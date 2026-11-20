@@ -31,10 +31,20 @@ Bekende valkuilen bij het renderen:
 - Vóór push: `dotnet build Quadro.sln` en `dotnet test WorkflowService.Tests/WorkflowService.Tests.csproj` groen, en `dotnet list Quadro.sln package --vulnerable --include-transitive` zonder kwetsbare pakketten (CI faalt anders).
 - Databasewijziging: altijd een EF-migratie voor **SQLite én Npgsql** via `.\Scripts\add-migration.ps1 <Naam>` (of de twee `dotnet ef migrations add`-commando's uit dat script). Bij een pure datamigratie herschikt EF soms de snapshot zonder echte wijziging: die herordening terugdraaien. Datamigratie altijd met een migratietest (zie `BetaalwijzeTests`).
 
+## Team (agents)
+
+- `ui-implementer` (skill `project-ui`): views, QuadroTheme, converters, rendertool. `features-implementer` (skill `project-features`): ViewModels, services, data/migraties, tests.
+- Werk dat beide raakt (VM-properties/commands waaraan views binden) eerst afspreken in `.claude/team/contract.md`.
+- Kleine wijzigingen gewoon zelf doen, zonder agent (zie de kostenregels in `~/.claude/CLAUDE.md`).
+
+Voorbeeldopdrachten
+- ui-implementer: "Toon in Views/Bestelbon/BestelbonBetalingen.axaml het bedrag 'Nog te betalen' in rood (Danger) als het niet nul is. Render daarna het scenario met bestelbon en betalingen."
+
 ## Woorden (afgesproken met Veerle)
 
-- **Offerte**: de prijsberekening, met offertenummer (412).
-- **Bestelbon**: wat de klant krijgt; vóór het akkoord *voorlopig* (geen volgnummer), daarna 2026-19. Nooit "factuur" op het scherm (US-99).
+- **Eén nummer per verkoop** (Anthony 20/11): achter de schermen blijven offertenummer (412) en bestelbonnummer (2026-19) apart, maar op scherm en papier staat één nummer: `voorlopig · 412` tot het akkoord, daarna het bestelbonnummer (2026-19) voor offerte, werkbon én bestelbon. Altijd via `VerkoopNummer.Tekst` / `WerkBon.VerkoopNummerTekst`, nooit zelf `OfferteNummer` tonen.
+- **Offerte**: de prijsberekening (intern offertenummer 412).
+- **Bestelbon**: wat de klant krijgt; vóór het akkoord *voorlopig* (geen volgnummer), daarna 2026-19. Nooit "factuur" op het scherm voor de bestelbon zelf (US-99).
 - **Werkbon**: de bon voor het atelier. Ontstaat als de klant akkoord gaat ("Bevestigen → Werkbon"); stap 2 in de stappenbalk heet "Werkbon"; de werkbon staat in het verkoopdossier (US-95: geen apart menu "Werkbonnen" meer).
 - **Bestelling**: enkel nog een bestelling bij de leverancier (lijst bestellen). Niet gebruiken voor een bevestigde offerte.
 - Betaalwijzen: Bancontact, Cash, Credit card, Overschrijving.
