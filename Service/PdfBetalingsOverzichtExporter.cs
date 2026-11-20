@@ -120,6 +120,7 @@ public sealed class PdfBetalingsOverzichtExporter
                 c.ConstantColumn(62); // bon
                 foreach (var _ in Kolommen) c.RelativeColumn();
                 c.ConstantColumn(34); // jaar
+                c.ConstantColumn(44); // factuur extern
             });
 
             table.Header(h =>
@@ -129,6 +130,7 @@ public sealed class PdfBetalingsOverzichtExporter
                 foreach (var k in Kolommen)
                     h.Cell().Element(KopCel).AlignRight().Text(k.Kop);
                 h.Cell().Element(KopCel).AlignRight().Text("jaar");
+                h.Cell().Element(KopCel).AlignCenter().Text("factuur");
             });
 
             foreach (var dag in o.Dagen)
@@ -140,6 +142,7 @@ public sealed class PdfBetalingsOverzichtExporter
                     foreach (var k in Kolommen)
                         table.Cell().Element(Cel).AlignRight().Text(r.Betaalwijze == k.Wijze ? Bedrag(r.Bedrag) : "");
                     table.Cell().Element(Cel).AlignRight().Text(r.Jaar?.ToString(CultureInfo.InvariantCulture) ?? "");
+                    table.Cell().Element(Cel).AlignCenter().Text(r.HeeftExterneFactuur ? "ja" : "").SemiBold();
                 }
 
                 // "totaal"-regel per dag: dagtotaal vet links, subtotalen per betaalwijze.
@@ -148,6 +151,7 @@ public sealed class PdfBetalingsOverzichtExporter
                 foreach (var k in Kolommen)
                     table.Cell().Element(TotaalCel).AlignRight().Text(LeegAlsNul(dag.Voor(k.Wijze)));
                 table.Cell().Element(TotaalCel).Text("");
+                table.Cell().Element(TotaalCel).AlignRight().Text(LeegAlsNul(dag.MetExterneFactuur)).Italic();
             }
 
             TekenEindtotalen(table, o, eersteKolomLabel: Bedrag(o.Totaal), tweedeKolomLabel: "eindtotaal", extraKolom: true);
@@ -167,6 +171,7 @@ public sealed class PdfBetalingsOverzichtExporter
                 c.ConstantColumn(34); // dag
                 foreach (var _ in Kolommen) c.RelativeColumn();
                 c.RelativeColumn();    // totaal
+                c.RelativeColumn();    // waarvan factuur extern
             });
 
             table.Header(h =>
@@ -176,6 +181,7 @@ public sealed class PdfBetalingsOverzichtExporter
                 foreach (var k in Kolommen)
                     h.Cell().Element(KopCel).AlignRight().Text(k.Kop);
                 h.Cell().Element(KopCel).AlignRight().Text("totaal");
+                h.Cell().Element(KopCel).AlignRight().Text("w.v. factuur");
             });
 
             foreach (var dag in o.Dagen)
@@ -185,6 +191,7 @@ public sealed class PdfBetalingsOverzichtExporter
                 foreach (var k in Kolommen)
                     table.Cell().Element(Cel).AlignRight().Text(LeegAlsNul(dag.Voor(k.Wijze)));
                 table.Cell().Element(Cel).AlignRight().Text(Bedrag(dag.Totaal)).SemiBold();
+                table.Cell().Element(Cel).AlignRight().Text(LeegAlsNul(dag.MetExterneFactuur));
             }
 
             TekenEindtotalen(table, o, eersteKolomLabel: "", tweedeKolomLabel: "totaal", extraKolom: false);
@@ -200,10 +207,14 @@ public sealed class PdfBetalingsOverzichtExporter
         foreach (var k in Kolommen)
             table.Cell().Element(EindCel).AlignRight().Text(Bedrag(o.Voor(k.Wijze))).SemiBold();
         table.Cell().Element(EindCel).AlignRight().Text(extraKolom ? "" : Bedrag(o.Totaal)).Bold();
+        table.Cell().Element(EindCel).AlignRight().Text(Bedrag(o.MetExterneFactuur)).SemiBold();
 
-        var aantalKolommen = (uint)(2 + Kolommen.Length + 1);
+        var aantalKolommen = (uint)(2 + Kolommen.Length + 2);
         table.Cell().ColumnSpan(aantalKolommen).PaddingTop(8).AlignRight()
             .Text($"Totaal ontvangen: € {Bedrag(o.Totaal)}").Bold().FontSize(11);
+        // Bestelbonnen met een factuur in het externe systeem: zitten al in het totaal, niet dubbel tellen.
+        table.Cell().ColumnSpan(aantalKolommen).AlignRight()
+            .Text($"waarvan al gefactureerd in het externe systeem: € {Bedrag(o.MetExterneFactuur)} ({o.AantalMetExterneFactuur} ontvangsten)").FontSize(9);
     }
 
     // ── Celstijlen ──

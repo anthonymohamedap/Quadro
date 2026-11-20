@@ -82,6 +82,40 @@ static class Schermen
             await p.LaadAsync();
         }),
         ["dossier-2-maand"] = f => DossierAsync(f, 412, daarna: vm => vm.Planner!.ToonMaandCommand.ExecuteAsync(null)),
+        ["betalingen-factuur"] = async f =>
+        {
+            // Overzicht betalingen: bestelbon 2026-23 heeft al een factuur in het externe systeem.
+            await TestGegevens.SeedVandaagAsync(f);
+            await using (var db = await f.CreateDbContextAsync())
+                await db.Bestelbonnen.Where(b => b.BestelbonNummer == "2026-23")
+                    .ExecuteUpdateAsync(s => s.SetProperty(b => b.HeeftExterneFactuur, true));
+            var vm = new OverzichtBetalingenViewModel(
+                new QuadroApp.Service.BetalingsOverzichtService(f), new TestNavigationService(), new TestToastService(), new TestPathOpener());
+            await vm.InitializeAsync();
+            vm.GeselecteerdeDag = vm.Dagen.OrderByDescending(d => d.MetExterneFactuur).FirstOrDefault();
+            return new OverzichtBetalingenView { DataContext = vm };
+        },
+        ["betalingen-factuur-pdf"] = async f =>
+        {
+            // Afdruk "Per dag (detail)" met bestelbon 2026-23 al gefactureerd in het externe systeem.
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+            await TestGegevens.SeedVandaagAsync(f);
+            await using (var db = await f.CreateDbContextAsync())
+                await db.Bestelbonnen.Where(b => b.BestelbonNummer == "2026-23")
+                    .ExecuteUpdateAsync(s => s.SetProperty(b => b.HeeftExterneFactuur, true));
+            var o = await new QuadroApp.Service.BetalingsOverzichtService(f)
+                .GetOverzichtAsync(new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1), DateTime.Today);
+            var pad = new QuadroApp.Service.PdfBetalingsOverzichtExporter().ExportDetail(o);
+            return new TextBlock { Text = Path.GetFullPath(pad) };
+        },
+        ["dossier-5-factuur"] = async f =>
+        {
+            await TestGegevens.SeedVandaagAsync(f);
+            await using (var db = await f.CreateDbContextAsync())
+                await db.Bestelbonnen.Where(b => b.BestelbonNummer == "2026-23")
+                    .ExecuteUpdateAsync(s => s.SetProperty(b => b.HeeftExterneFactuur, true));
+            return await DossierAsync(f, 423);
+        },
         ["planning-dagdetail"] = f => PlanningDetailVensterAsync(f, week: false),
         ["planning-weekdetail"] = f => PlanningDetailVensterAsync(f, week: true),
         ["dossier-2-gepland"] = f => DossierAsync(f, 412, daarna: async vm =>

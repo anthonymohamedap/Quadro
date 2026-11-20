@@ -229,6 +229,9 @@ namespace QuadroApp.Migrations.Npgsql.Migrations
                     b.Property<DateTime?>("GeplandeDatum")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("HeeftExterneFactuur")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsBtwVrijgesteld")
                         .HasColumnType("boolean");
 

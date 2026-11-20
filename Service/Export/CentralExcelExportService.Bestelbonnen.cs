@@ -31,6 +31,7 @@ public sealed partial class CentralExcelExportService
                 Col("bestelbonDatum", "Besteldatum", "Basis", row => FormatDate(((Bestelbon)row).BestelbonDatum)),
                 Col("vervalDatum", "Vervaldatum", "Basis", row => FormatDate(((Bestelbon)row).VervalDatum)),
                 Col("status", "Status", "Basis", row => ((Bestelbon)row).Status.Label()),
+                Col("factuurExtern", "Factuur extern systeem", "Basis", row => ((Bestelbon)row).HeeftExterneFactuur ? "Ja" : "Nee"),
                 Col("subtotaalExcl", "Subtotaal excl. btw", "Financieel", row => ((Bestelbon)row).TotaalExclBtw),
                 Col("btwBedrag", "Btw-bedrag", "Financieel", row => ((Bestelbon)row).TotaalBtw),
                 Col("totaalIncl", "Totaal incl. btw", "Financieel", row => ((Bestelbon)row).TotaalInclBtw),

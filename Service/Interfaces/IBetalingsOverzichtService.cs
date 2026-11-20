@@ -36,6 +36,13 @@ public sealed record BetalingsOverzichtRegel(
 
     public string BetaalwijzeLabel => Betaalwijze.Label();
 
+    /// <summary>De bestelbon van deze ontvangst heeft al een factuur in het externe systeem (vinkje op de bestelbon).
+    /// Telt gewoon mee in de dagtotalen; dient enkel om te zien wat daar al zit.</summary>
+    public bool HeeftExterneFactuur { get; init; }
+
+    /// <summary>Korte tekst voor scherm en afdruk: "factuur" of leeg.</summary>
+    public string FactuurLabel => HeeftExterneFactuur ? "factuur" : "";
+
     public decimal Bancontact => Betaalwijze == Betaalwijze.Bancontact ? Bedrag : 0m;
     public decimal Cash => Betaalwijze == Betaalwijze.Cash ? Bedrag : 0m;
     public decimal CreditCard => Betaalwijze == Betaalwijze.CreditCard ? Bedrag : 0m;
@@ -57,9 +64,26 @@ public abstract class BetaalwijzeTotalen
     {
         _perBetaalwijze = KolomVolgorde.ToDictionary(b => b, _ => 0m);
         foreach (var r in regels)
+        {
             _perBetaalwijze[r.Betaalwijze] = _perBetaalwijze.GetValueOrDefault(r.Betaalwijze) + r.Bedrag;
+            if (r.HeeftExterneFactuur)
+            {
+                MetExterneFactuur += r.Bedrag;
+                AantalMetExterneFactuur++;
+            }
+        }
         Totaal = _perBetaalwijze.Values.Sum();
     }
+
+    /// <summary>Deel van het totaal waarvoor al een factuur in het externe systeem bestaat (zit al in het totaal).</summary>
+    public decimal MetExterneFactuur { get; }
+    public int AantalMetExterneFactuur { get; }
+    public bool HeeftExterneFacturen => AantalMetExterneFactuur > 0;
+
+    /// <summary>"waarvan € 120,00 al gefactureerd (extern, 2)" — leeg als er geen zijn.</summary>
+    public string ExterneFactuurTekst => HeeftExterneFacturen
+        ? $"waarvan € {MetExterneFactuur:#,##0.00} al gefactureerd (extern, {AantalMetExterneFactuur})"
+        : "";
 
     public decimal Voor(Betaalwijze betaalwijze) => _perBetaalwijze.GetValueOrDefault(betaalwijze);
 

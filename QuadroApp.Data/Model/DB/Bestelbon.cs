@@ -70,6 +70,11 @@ public class Bestelbon
     [MaxLength(2000)]
     public string? Opmerking { get; set; }
 
+    /// <summary>Voor deze bestelbon is al een factuur gemaakt in het externe (boekhoud)systeem. Enkel een
+    /// vlag zodat Kurt in de dagontvangsten ziet wat daar al zit (niets dubbel tellen); bedragen en
+    /// dagtotalen in Quadro veranderen er niet door.</summary>
+    public bool HeeftExterneFactuur { get; set; }
+
     [MaxLength(10)]
     public string? AangenomenDoorInitialen { get; set; }
 
