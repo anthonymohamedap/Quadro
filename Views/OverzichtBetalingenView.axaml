@@ -54,7 +54,7 @@
                 <Grid RowDefinitions="Auto,*,Auto">
                     <Border Background="{DynamicResource SurfaceHeader}" Padding="10,6"
                             BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="0,0,0,1">
-                        <Grid ColumnDefinitions="1.2*,0.6*,1*,1*,1*,1*,1.2*" ColumnSpacing="10">
+                        <Grid ColumnDefinitions="1.2*,0.6*,1*,1*,1*,1*,1.2*,1.2*" ColumnSpacing="10">
                             <TextBlock Text="Datum" Classes="label"/>
                             <TextBlock Grid.Column="1" Text="Dag" Classes="label"/>
                             <TextBlock Grid.Column="2" Text="Bancontact" Classes="label" HorizontalAlignment="Right"/>
@@ -62,6 +62,9 @@
                             <TextBlock Grid.Column="4" Text="Credit card" Classes="label" HorizontalAlignment="Right"/>
                             <TextBlock Grid.Column="5" Text="Overschrijving" Classes="label" HorizontalAlignment="Right"/>
                             <TextBlock Grid.Column="6" Text="Totaal" Classes="label" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="7" Text="waarvan al factuur (extern)" Classes="label" HorizontalAlignment="Right"
+                                       TextWrapping="Wrap" TextAlignment="Right" Foreground="{DynamicResource InfoText}"
+                                       ToolTip.Tip="Deel van het totaal waarvoor de bestelbon al een factuur heeft in het externe systeem. Zit al in het totaal."/>
                         </Grid>
                     </Border>
 
@@ -73,7 +76,7 @@
                              ScrollViewer.VerticalScrollBarVisibility="Auto">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="si:BetalingsOverzichtDag">
-                                <Grid ColumnDefinitions="1.2*,0.6*,1*,1*,1*,1*,1.2*" ColumnSpacing="10" Margin="0,2">
+                                <Grid ColumnDefinitions="1.2*,0.6*,1*,1*,1*,1*,1.2*,1.2*" ColumnSpacing="10" Margin="0,2">
                                     <TextBlock Text="{Binding Datum, StringFormat='{}{0:dd/MM/yyyy}'}"/>
                                     <TextBlock Grid.Column="1" Text="{Binding DagNaam}"/>
                                     <TextBlock Grid.Column="2" Text="{Binding Bancontact, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
@@ -81,6 +84,9 @@
                                     <TextBlock Grid.Column="4" Text="{Binding CreditCard, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
                                     <TextBlock Grid.Column="5" Text="{Binding Overschrijving, StringFormat='{}{0:#,##0.00;-#,##0.00;#}'}" HorizontalAlignment="Right"/>
                                     <TextBlock Grid.Column="6" Text="{Binding Totaal, StringFormat='{}€ {0:#,##0.00}'}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="7" Text="{Binding MetExterneFactuur, StringFormat='{}€ {0:#,##0.00;-#,##0.00;#}'}"
+                                               Foreground="{DynamicResource InfoText}" FontWeight="SemiBold" HorizontalAlignment="Right"
+                                               IsVisible="{Binding HeeftExterneFacturen}"/>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -89,13 +95,15 @@
                     <!-- Totalen van de periode -->
                     <Border Grid.Row="2" Background="{DynamicResource SurfaceHeader}" Padding="10,8"
                             BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="0,1,0,0">
-                        <Grid ColumnDefinitions="1.2*,0.6*,1*,1*,1*,1*,1.2*" ColumnSpacing="10">
+                        <Grid ColumnDefinitions="1.2*,0.6*,1*,1*,1*,1*,1.2*,1.2*" ColumnSpacing="10">
                             <TextBlock Text="Totaal" FontWeight="Bold"/>
                             <TextBlock Grid.Column="2" Text="{Binding Overzicht.Bancontact, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
                             <TextBlock Grid.Column="3" Text="{Binding Overzicht.Cash, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
                             <TextBlock Grid.Column="4" Text="{Binding Overzicht.CreditCard, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
                             <TextBlock Grid.Column="5" Text="{Binding Overzicht.Overschrijving, StringFormat='{}{0:#,##0.00}', FallbackValue=''}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
                             <TextBlock Grid.Column="6" Text="{Binding Overzicht.Totaal, StringFormat='{}€ {0:#,##0.00}', FallbackValue=''}" FontWeight="Bold" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="7" Text="{Binding Overzicht.MetExterneFactuur, StringFormat='{}€ {0:#,##0.00}', FallbackValue=''}"
+                                       Foreground="{DynamicResource InfoText}" FontWeight="Bold" HorizontalAlignment="Right"/>
                         </Grid>
                     </Border>
                 </Grid>
@@ -112,24 +120,32 @@
                     IsVisible="{Binding HeeftGeselecteerdeDag}">
                 <Grid RowDefinitions="Auto,Auto,*" RowSpacing="6">
                     <TextBlock Text="{Binding GeselecteerdeDag.Datum, StringFormat='Detail van {0:dddd dd/MM/yyyy}', FallbackValue=''}" Classes="h3"/>
-                    <Grid Grid.Row="1" ColumnDefinitions="1*,1.2*,2.5*,1.2*,1*" ColumnSpacing="10">
+                    <Grid Grid.Row="1" ColumnDefinitions="1*,1.2*,2.5*,1.2*,1*,0.9*" ColumnSpacing="10">
                         <TextBlock Text="Bon" Classes="label"/>
                         <TextBlock Grid.Column="1" Text="Soort" Classes="label"/>
                         <TextBlock Grid.Column="2" Text="Omschrijving" Classes="label"/>
                         <TextBlock Grid.Column="3" Text="Betaalwijze" Classes="label"/>
                         <TextBlock Grid.Column="4" Text="Bedrag" Classes="label" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="5" Text="Factuur" Classes="label" HorizontalAlignment="Center"/>
                     </Grid>
                     <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding DetailRegels}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="si:BetalingsOverzichtRegel">
-                                    <Grid ColumnDefinitions="1*,1.2*,2.5*,1.2*,1*" ColumnSpacing="10" Margin="0,2">
+                                    <Grid ColumnDefinitions="1*,1.2*,2.5*,1.2*,1*,0.9*" ColumnSpacing="10" Margin="0,2">
                                         <TextBlock Text="{Binding Bon}" TextTrimming="CharacterEllipsis"/>
                                         <TextBlock Grid.Column="1" Text="{Binding SoortLabel}"/>
                                         <TextBlock Grid.Column="2" Text="{Binding Omschrijving}" TextTrimming="CharacterEllipsis"
                                                    ToolTip.Tip="{Binding Omschrijving}"/>
                                         <TextBlock Grid.Column="3" Text="{Binding BetaalwijzeLabel}"/>
                                         <TextBlock Grid.Column="4" Text="{Binding Bedrag, StringFormat='{}€ {0:#,##0.00}'}" HorizontalAlignment="Right"/>
+                                        <!-- Bestelbon heeft al een factuur in het externe systeem: niet dubbel tellen -->
+                                        <Border Grid.Column="5" HorizontalAlignment="Center" IsVisible="{Binding HeeftExterneFactuur}"
+                                                Background="{DynamicResource InfoBg}" BorderBrush="{DynamicResource InfoBorder}" BorderThickness="1"
+                                                CornerRadius="8" Padding="8,1"
+                                                ToolTip.Tip="Voor deze bestelbon is al een factuur gemaakt in het externe systeem.">
+                                            <TextBlock Text="✓ factuur" FontWeight="SemiBold" Foreground="{DynamicResource InfoText}"/>
+                                        </Border>
                                     </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>

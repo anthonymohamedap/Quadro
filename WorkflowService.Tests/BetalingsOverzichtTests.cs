@@ -100,13 +100,53 @@ public class BetalingsOverzichtTests
 
         Assert.All(d.Regels.Where(r => r.Betaalwijze != Betaalwijze.CreditCard && r.Soort != OntvangstSoort.Winkelverkoop),
             r => { Assert.Equal("2026-012", r.Bon); Assert.Equal(2026, r.Jaar); });
-        Assert.Equal("offerte 42", d.Regels.Single(r => r.Betaalwijze == Betaalwijze.CreditCard).Bon);
+        Assert.Equal("voorlopig · 42", d.Regels.Single(r => r.Betaalwijze == Betaalwijze.CreditCard).Bon);
         Assert.Equal(string.Empty, d.Regels.Single(r => r.Soort == OntvangstSoort.Winkelverkoop).Bon);
 
         Assert.Equal(103.50m, overzicht.Cash);
         Assert.Equal(200m, overzicht.Bancontact);
         Assert.Equal(50m, overzicht.CreditCard);
         Assert.Equal(353.50m, overzicht.Totaal);
+    }
+
+    [Fact]
+    public async Task Externe_factuur_wordt_getoond_maar_verandert_de_dagtotalen_niet()
+    {
+        await using var scope = await DbFactoryBuilder.CreateSqliteAsync();
+        var dag = new DateTime(2026, 9, 15);
+
+        await using (var db = await scope.Factory.CreateDbContextAsync())
+        {
+            var metFactuur = new Offerte { Datum = dag, OfferteNummer = 51, Klant = new Klant { Voornaam = "Fien", Achternaam = "Factuur" }, TotaalInclBtw = 300m };
+            var zonder = new Offerte { Datum = dag, OfferteNummer = 52, Klant = new Klant { Voornaam = "Gert", Achternaam = "Gewoon" }, TotaalInclBtw = 80m };
+            db.Offertes.AddRange(metFactuur, zonder);
+            await db.SaveChangesAsync();
+
+            var bonF = new Bestelbon { OfferteId = metFactuur.Id, Jaar = 2026, VolgNr = 20, BestelbonNummer = "2026-20", KlantNaam = "Fien Factuur", TotaalInclBtw = 300m, HeeftExterneFactuur = true };
+            var bonZ = new Bestelbon { OfferteId = zonder.Id, Jaar = 2026, VolgNr = 21, BestelbonNummer = "2026-21", KlantNaam = "Gert Gewoon", TotaalInclBtw = 80m };
+            db.Bestelbonnen.AddRange(bonF, bonZ);
+            await db.SaveChangesAsync();
+
+            db.Ontvangsten.AddRange(
+                // Voorschot enkel aan de offerte → de vlag komt van de bestelbon van die offerte.
+                new Ontvangst { Soort = OntvangstSoort.Voorschot, OfferteId = metFactuur.Id, Datum = dag, Betaalwijze = Betaalwijze.Cash, BedragIncl = 100m },
+                new Ontvangst { Soort = OntvangstSoort.Betaling, BestelbonId = bonF.Id, OfferteId = metFactuur.Id, Datum = dag, Betaalwijze = Betaalwijze.Bancontact, BedragIncl = 200m },
+                new Ontvangst { Soort = OntvangstSoort.Betaling, BestelbonId = bonZ.Id, OfferteId = zonder.Id, Datum = dag, Betaalwijze = Betaalwijze.Bancontact, BedragIncl = 80m });
+            await db.SaveChangesAsync();
+        }
+
+        var overzicht = await new BetalingsOverzichtService(scope.Factory)
+            .GetOverzichtAsync(new DateTime(2026, 9, 1), new DateTime(2026, 9, 30));
+        var d = Assert.Single(overzicht.Dagen);
+
+        Assert.All(d.Regels.Where(r => r.Bon == "2026-20"), r => Assert.True(r.HeeftExterneFactuur));
+        Assert.False(d.Regels.Single(r => r.Bon == "2026-21").HeeftExterneFactuur);
+
+        Assert.Equal(380m, d.Totaal);                 // dagtotaal blijft alles
+        Assert.Equal(300m, d.MetExterneFactuur);      // waarvan al een factuur
+        Assert.Equal(2, d.AantalMetExterneFactuur);
+        Assert.Equal(300m, overzicht.MetExterneFactuur);
+        Assert.Equal(380m, overzicht.Totaal);
     }
 
     [Fact]

@@ -416,6 +416,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             .OrderBy(t => t.GeplandVan)
             .ToListAsync();
 
+        await QuadroApp.Service.Verkoop.VerkoopNummers.VulAsync(db, taken.Select(t => t.WerkBon));
         TakenVanDag = new ObservableCollection<WerkTaak>(taken);
 
         // US-49 Fase C — dag-workload samenvatting.
@@ -611,6 +612,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             .OrderBy(t => t.GeplandVan)
             .ToListAsync();
 
+        await QuadroApp.Service.Verkoop.VerkoopNummers.VulAsync(db, taken.Select(t => t.WerkBon));
         WeekRows.Clear();
 
         foreach (var t in taken)
@@ -618,7 +620,7 @@ public partial class PlanningCalendarViewModel : AsyncViewModelBase
             var r = t.OfferteRegel;
             WeekRows.Add(new WeekRow
             {
-                BonNr = t.WerkBon?.Offerte?.OfferteNummer ?? t.WerkBonId,   // werkbon = verkoopnummer
+                BonNr = t.WerkBon?.VerkoopNummerTekst ?? "",   // één nummer per verkoop
                 DuurMin = t.DuurMinuten,
                 Datum = t.GeplandVan.Date,
                 KlantNaam = t.WerkBon?.Offerte?.Klant?.Achternaam ?? "",

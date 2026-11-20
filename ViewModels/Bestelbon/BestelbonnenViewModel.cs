@@ -96,12 +96,40 @@ public partial class BestelbonnenViewModel : AsyncViewModelBase, IAsyncInitializ
         VervalDatum = new DateTimeOffset(value.VervalDatum);
         Opmerking = value.Opmerking;
         AangenomenDoorInitialen = value.AangenomenDoorInitialen;
+        _laadtFactuur = true;
+        HeeftExterneFactuur = value.HeeftExterneFactuur;
+        _laadtFactuur = false;
+        OnPropertyChanged(nameof(KanExterneFactuur));
 
         foreach (var l in value.Lijnen.OrderBy(x => x.Sortering))
             Lijnen.Add(l);
 
         OnPropertyChanged(nameof(IsDraft));
         RunAsync(LaadBetalingenAsync);   // US-70
+    }
+
+    // ── Factuur in het externe systeem: enkel een vlag voor Overzicht betalingen (bedragen ongewijzigd) ──
+    [ObservableProperty] private bool heeftExterneFactuur;
+    private bool _laadtFactuur;
+
+    /// <summary>Enkel een definitieve bon (met volgnummer) kan een factuur hebben; ook na betaling aan te passen.</summary>
+    public bool KanExterneFactuur => GeselecteerdeBestelbon is { Id: > 0, IsVoorlopig: false };
+
+    partial void OnHeeftExterneFactuurChanged(bool value)
+    {
+        if (_laadtFactuur || GeselecteerdeBestelbon is not { Id: > 0 } bon || bon.HeeftExterneFactuur == value) return;
+        RunAsync(() => ZetExterneFactuurAsync(bon, value));
+    }
+
+    private async Task ZetExterneFactuurAsync(Bestelbon bon, bool value)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        await db.Bestelbonnen.Where(b => b.Id == bon.Id)
+            .ExecuteUpdateAsync(s => s.SetProperty(b => b.HeeftExterneFactuur, value));
+        bon.HeeftExterneFactuur = value;
+        _toast.Success(value
+            ? $"Bestelbon {bon.NummerLabel}: factuur in het externe systeem aangevinkt."
+            : $"Bestelbon {bon.NummerLabel}: vinkje factuur weggehaald.");
     }
 
     // ── US-70: betalingen op de bestelbon (vooraf, bij afhalen of achteraf; meerdere mogelijk) ──

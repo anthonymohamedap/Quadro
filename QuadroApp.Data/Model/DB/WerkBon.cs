@@ -35,10 +35,26 @@ namespace QuadroApp.Model.DB
 
         [Timestamp] public byte[]? RowVersion { get; set; }
 
+        /// <summary>A-04 — versie van de rij op PostgreSQL (systeemkolom xmin), om gelijktijdig wijzigen te
+        /// merken. Een gewone eigenschap (geen shadow) zodat ze meereist met een kopie die later bewaard wordt.
+        /// Op SQLite niet gebruikt (daar dient RowVersion).</summary>
+        public uint PgVersie { get; set; }
+
         public ICollection<WerkTaak> Taken { get; set; } = new List<WerkTaak>();
 
         // ── US-51: afgeleide weergave voor de werkbonnenlijst (niet in DB) ──────
         /// <summary>Aantal werktaken op deze werkbon.</summary>
+        /// <summary>Het nummer dat op het scherm staat (zie <see cref="VerkoopNummer"/>): het bestelbonnummer na het
+        /// akkoord, anders "voorlopig · 412". Wordt bij het laden gevuld (VerkoopNummers.VulAsync); zonder dat
+        /// valt het terug op "voorlopig · offertenummer".</summary>
+        [NotMapped]
+        public string VerkoopNummerTekst
+        {
+            get => _verkoopNummerTekst ?? VerkoopNummer.Tekst(Offerte?.OfferteNummer ?? 0, (string?)null);
+            set => _verkoopNummerTekst = value;
+        }
+        private string? _verkoopNummerTekst;
+
         [NotMapped]
         public int AantalTaken => Taken?.Count ?? 0;
 

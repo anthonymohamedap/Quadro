@@ -48,6 +48,7 @@ public sealed class BetalingsOverzichtService : IBetalingsOverzichtService
                 o.OfferteId,
                 BestelbonNummer = o.Bestelbon != null ? o.Bestelbon.BestelbonNummer : null,
                 BestelbonJaar = o.Bestelbon != null ? (int?)o.Bestelbon.Jaar : null,
+                BestelbonFactuur = o.Bestelbon != null && o.Bestelbon.HeeftExterneFactuur,
                 OfferteNummer = o.Offerte != null ? (int?)o.Offerte.OfferteNummer : null
             })
             .ToListAsync();
@@ -59,26 +60,28 @@ public sealed class BetalingsOverzichtService : IBetalingsOverzichtService
             .Distinct()
             .ToList();
 
-        var bonPerOfferte = new Dictionary<int, (string Nummer, int Jaar)>();
+        var bonPerOfferte = new Dictionary<int, (string Nummer, int Jaar, bool Factuur)>();
         if (offerteIdsZonderBon.Count > 0)
         {
             var bons = await db.Bestelbonnen.AsNoTracking()
                 .Where(f => f.OfferteId.HasValue && offerteIdsZonderBon.Contains(f.OfferteId.Value))
-                .Select(f => new { OfferteId = f.OfferteId!.Value, f.BestelbonNummer, f.Jaar })
+                .Select(f => new { OfferteId = f.OfferteId!.Value, f.BestelbonNummer, f.Jaar, f.HeeftExterneFactuur })
                 .ToListAsync();
             foreach (var b in bons)
-                bonPerOfferte[b.OfferteId] = (b.BestelbonNummer, b.Jaar);
+                bonPerOfferte[b.OfferteId] = (b.BestelbonNummer, b.Jaar, b.HeeftExterneFactuur);
         }
 
         var regels = ontvangsten.Select(o =>
         {
             string bon = string.Empty;
             int? jaar = null;
+            bool factuur = false;   // bestelbon heeft al een factuur in het externe systeem
 
             if (o.BestelbonNummer is not null)
             {
                 bon = o.BestelbonNummer;
                 jaar = o.BestelbonJaar;
+                factuur = o.BestelbonFactuur;
             }
             else if (o.OfferteId is int offerteId)
             {
@@ -86,15 +89,17 @@ public sealed class BetalingsOverzichtService : IBetalingsOverzichtService
                 {
                     bon = b.Nummer;
                     jaar = b.Jaar;
+                    factuur = b.Factuur;
                 }
                 else if (o.OfferteNummer is int nr && nr > 0)
                 {
-                    bon = $"offerte {nr}";
+                    bon = VerkoopNummer.Tekst(nr, (string?)null);   // "voorlopig · 412"
                 }
             }
 
             return new BetalingsOverzichtRegel(
-                o.Id, o.Datum, o.Soort, o.Betaalwijze, o.BedragIncl, bon, jaar, o.Omschrijving);
+                o.Id, o.Datum, o.Soort, o.Betaalwijze, o.BedragIncl, bon, jaar, o.Omschrijving)
+            { HeeftExterneFactuur = factuur };
         });
 
         return BetalingsOverzicht.Bouw(vanaf, tot.Date, regels);

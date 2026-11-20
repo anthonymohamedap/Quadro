@@ -41,10 +41,10 @@ public class Bestelbon
     [NotMapped]
     public bool IsVoorlopig => VolgNr is null;
 
-    /// <summary>Wat de gebruiker en de klant zien: "2026-19", of "voorlopig (offerte 412)".</summary>
+    /// <summary>Wat de gebruiker en de klant zien: "2026-19", of "voorlopig · 412" (zie <see cref="VerkoopNummer"/>).</summary>
     [NotMapped]
     public string NummerLabel => IsVoorlopig
-        ? $"voorlopig (offerte {BestelbonNummer.TrimStart('V')})"
+        ? VerkoopNummer.Tekst(int.TryParse(BestelbonNummer.TrimStart('V'), out var nr) ? nr : 0, (string?)null)
         : BestelbonNummer;
 
     [MaxLength(20)]
@@ -69,6 +69,11 @@ public class Bestelbon
 
     [MaxLength(2000)]
     public string? Opmerking { get; set; }
+
+    /// <summary>Voor deze bestelbon is al een factuur gemaakt in het externe (boekhoud)systeem. Enkel een
+    /// vlag zodat Kurt in de dagontvangsten ziet wat daar al zit (niets dubbel tellen); bedragen en
+    /// dagtotalen in Quadro veranderen er niet door.</summary>
+    public bool HeeftExterneFactuur { get; set; }
 
     [MaxLength(10)]
     public string? AangenomenDoorInitialen { get; set; }
@@ -127,6 +132,11 @@ public class Bestelbon
     public DateTime? BijgewerktOp { get; set; }
 
     [Timestamp] public byte[]? RowVersion { get; set; }
+
+    /// <summary>A-04 — versie van de rij op PostgreSQL (systeemkolom xmin), om gelijktijdig wijzigen te
+    /// merken. Een gewone eigenschap (geen shadow) zodat ze meereist met een kopie die later bewaard wordt.
+    /// Op SQLite niet gebruikt (daar dient RowVersion).</summary>
+    public uint PgVersie { get; set; }
 
     public ICollection<BestelbonLijn> Lijnen { get; set; } = new List<BestelbonLijn>();
 }
