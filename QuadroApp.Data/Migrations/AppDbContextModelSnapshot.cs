@@ -214,6 +214,9 @@ namespace QuadroApp.Migrations
                     b.Property<DateTime?>("GeplandeDatum")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("HeeftExterneFactuur")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsBtwVrijgesteld")
                         .HasColumnType("INTEGER");
 
