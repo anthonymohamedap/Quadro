@@ -229,7 +229,8 @@
 							<TextBlock Grid.Row="0" Grid.Column="0" Text="Afgesproken prijs (incl. BTW)" VerticalAlignment="Center" MaxWidth="220" TextWrapping="Wrap"/>
 							<TextBox Grid.Row="0"
                                      Grid.Column="1"
-                                     Text="{Binding SelectedRegelAfgesprokenPrijs, Mode=TwoWay}"/>
+                                     Watermark="leeg = berekende prijs"
+                                     Text="{Binding SelectedRegelAfgesprokenPrijs, Mode=TwoWay, UpdateSourceTrigger=LostFocus, Converter={x:Static conv:LeegIsNullDecimalConverter.Instance}}"/>
 							<!-- US-63: korting in % op DEZE inlijsting (los van de korting op het offertetotaal).
 							     Telt niet mee als er een afgesproken prijs is ingevuld. -->
 							<TextBlock Grid.Row="1" Grid.Column="0" Text="Korting op deze inlijsting (%)" VerticalAlignment="Center" MaxWidth="220" TextWrapping="Wrap"/>
