@@ -8,7 +8,7 @@
     x:DataType="vm:BestelbonnenViewModel">
     <!-- US-93: besteldatum, vervaldatum, opmerking, initialen. Uit BestelbonnenView gehaald (inhoud ongewijzigd), ook gebruikt in stap 4/5
          van het verkoopdossier. DataContext = BestelbonnenViewModel. -->
-          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
             <TextBlock Text="Besteldatum" VerticalAlignment="Center"/>
             <DatePicker Grid.Column="1" SelectedDate="{Binding BestelbonDatum, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
 
@@ -20,5 +20,13 @@
 
             <TextBlock Grid.Row="3" Text="Initialen" VerticalAlignment="Center"/>
             <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding AangenomenDoorInitialen, Mode=TwoWay}" IsEnabled="{Binding IsDraft}"/>
+
+            <!-- Vinkje: factuur al gemaakt in het externe systeem. Altijd aan te passen (ook na betaling), wordt meteen
+                 bewaard; enkel voor een definitieve bon (met nummer). Toont zich in Overzicht betalingen. -->
+            <TextBlock Grid.Row="4" Text="Factuur" VerticalAlignment="Center"/>
+            <CheckBox Grid.Row="4" Grid.Column="1" Content="Factuur gemaakt in het externe systeem"
+                      IsChecked="{Binding HeeftExterneFactuur, Mode=TwoWay}"
+                      IsEnabled="{Binding KanExterneFactuur}"
+                      ToolTip.Tip="Enkel om te zien wat al gefactureerd is (niets dubbel). Bedragen veranderen niet."/>
           </Grid>
 </UserControl>
