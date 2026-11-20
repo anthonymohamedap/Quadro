@@ -82,6 +82,8 @@ static class Schermen
             await p.LaadAsync();
         }),
         ["dossier-2-maand"] = f => DossierAsync(f, 412, daarna: vm => vm.Planner!.ToonMaandCommand.ExecuteAsync(null)),
+        ["planning-dagdetail"] = f => PlanningDetailVensterAsync(f, week: false),
+        ["planning-weekdetail"] = f => PlanningDetailVensterAsync(f, week: true),
         ["dossier-2-gepland"] = f => DossierAsync(f, 412, daarna: async vm =>
         {
             var p = vm.Planner!;
@@ -211,6 +213,9 @@ static class Schermen
         ["dossier-2-gepland"] = (1440, 1500),
         ["dossier-2-delen"] = (1440, 1500),
         ["bestelbon-voorbeeld"] = (860, 620),
+        ["dossier-2-maand"] = (1440, 1300),
+        ["planning-dagdetail"] = (560, 640),
+        ["planning-weekdetail"] = (560, 640),
         ["startklaar"] = (820, 680),
         ["startklaar-klaar"] = (820, 680),
     };
@@ -408,6 +413,28 @@ static class Schermen
         var vm = new PlanningPaginaViewModel(f, new WerkBonWorkflowService(f, wf), toast, wf, new TestNavigationService());
         await vm.InitializeAsync();
         return new QuadroApp.Views.Planning.PlanningPaginaView { DataContext = vm };
+    }
+
+    /// <summary>Planning: knoppen "Dagdetail" / "Weekdetail" openen een venster. Werkbon 412 wordt op een dag gepland die gekozen is.</summary>
+    static async Task<Control> PlanningDetailVensterAsync(IDbContextFactory<AppDbContext> f, bool week)
+    {
+        var toast = new TestToastService();
+        var wf = new QuadroApp.Service.WorkflowService(f, NullLogger<QuadroApp.Service.WorkflowService>.Instance, toast);
+        await using var db = await f.CreateDbContextAsync();
+        var wbId = await db.WerkBonnen.Where(w => w.Offerte.OfferteNummer == 412).Select(w => w.Id).SingleAsync();
+        var vm = new PlanningPaginaViewModel(f, new WerkBonWorkflowService(f, wf), toast, wf, new TestNavigationService()) { WerkBonId = wbId };
+        await vm.InitializeAsync();
+        var p = vm.Planner;
+        var dag = p.Dagen.First(d => d.KanPlannen && d.Datum > DateTime.Today.AddDays(4));
+        p.KiesDagCommand.Execute(dag);
+        p.Regels.First().IsSelected = true;
+        await p.PlanOpDagCommand.ExecuteAsync(null);
+        await Task.Delay(800);
+
+        Control inhoud = week
+            ? new QuadroApp.Views.Planning.PlanningWeekDetail()
+            : new StackPanel { Spacing = 16, Children = { new QuadroApp.Views.Planning.PlanningDagDetails(), new QuadroApp.Views.Planning.PlanningBlokkeren() } };
+        return new QuadroApp.Views.Planning.PlanningDetailVenster(week ? "Weekdetail" : "Dagdetail", inhoud, p.Kalender);
     }
 
     /// <summary>"Bestelbon bekijken": het voorbeeldvenster; de PDF opent pas met de knop «PDF openen».</summary>

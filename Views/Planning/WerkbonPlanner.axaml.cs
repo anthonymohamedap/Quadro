@@ -27,11 +27,38 @@ public partial class WerkbonPlanner : UserControl
         if (DataContext is not WerkbonPlannerViewModel vm) return;
         vm.Kalender.ShowTijdDialogAsync = async dialogVm =>
         {
-            if (TopLevel.GetTopLevel(this) is not Window owner) return false;
+            // Herplannen kan ook vanuit het dagdetail-venster: dan dat venster als eigenaar, zodat de dialoog ervoor komt.
+            Window? owner = _dagVenster is { IsActive: true } ? _dagVenster : TopLevel.GetTopLevel(this) as Window;
+            if (owner is null) return false;
             var dialog = new PlanningTijdDialog { DataContext = dialogVm };
             dialogVm.RequestClose = ok => dialog.Close(ok);
             return await dialog.ShowDialog<bool>(owner);
         };
+    }
+
+    private PlanningDetailVenster? _dagVenster;
+    private PlanningDetailVenster? _weekVenster;
+
+    private void Dagdetail_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        => _dagVenster = ToonVenster(_dagVenster, "Dagdetail", () =>
+            new StackPanel { Spacing = 16, Children = { new PlanningDagDetails(), new PlanningBlokkeren() } });
+
+    private void Weekdetail_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        => _weekVenster = ToonVenster(_weekVenster, "Weekdetail", () => new PlanningWeekDetail());
+
+    /// <summary>Opent het venster (niet modaal, volgt de gekozen dag) of brengt het naar voren als het al open is.</summary>
+    private PlanningDetailVenster? ToonVenster(PlanningDetailVenster? bestaand, string titel, Func<Control> maakInhoud)
+    {
+        if (bestaand is { IsVisible: true })
+        {
+            bestaand.Activate();
+            return bestaand;
+        }
+        if (DataContext is not WerkbonPlannerViewModel vm || TopLevel.GetTopLevel(this) is not Window owner) return null;
+
+        var venster = new PlanningDetailVenster(titel, maakInhoud(), vm.Kalender);
+        venster.Show(owner);
+        return venster;
     }
 
     private async void Regel_PointerPressed(object? sender, PointerPressedEventArgs e)
