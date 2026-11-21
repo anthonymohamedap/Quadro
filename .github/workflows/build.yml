@@ -90,6 +90,29 @@ jobs:
           -p:Version=${{ steps.ver.outputs.VERSION }}
           -o publish/
 
+      # ── 5b. Serveradres meegeven (koppelen bij de eerste start) ───────────────
+      # Repo-secret QUADRO_SERVER_CONNECTION, bv.
+      #   Host=xxx.scw.cloud;Port=5432;Database=quadrodb;Username=quadro;Password=__SECRET__;SSL Mode=Require
+      # wordt appsettings.json naast de app. Op een nieuwe laptop vraagt de app dan enkel het wachtwoord
+      # (KoppelWindow). Bestaande installaties merken niets: hun appsettings.json in de data-map wint.
+      # Het ECHTE wachtwoord mag hier nooit in: de release is publiek. Zonder __SECRET__ stopt de build.
+      - name: Serveradres meegeven
+        shell: bash
+        env:
+          CS: ${{ secrets.QUADRO_SERVER_CONNECTION }}
+        run: |
+          if [ -z "$CS" ]; then
+            echo "Geen QUADRO_SERVER_CONNECTION: installer zonder serveradres (koppelen met de hand)."
+            exit 0
+          fi
+          if ! printf '%s' "$CS" | grep -q 'Password=__SECRET__'; then
+            echo "::error::QUADRO_SERVER_CONNECTION moet Password=__SECRET__ bevatten, nooit het echte wachtwoord (de release is publiek)."
+            exit 1
+          fi
+          CS_JSON=$(printf '%s' "$CS" | sed 's/\\/\\\\/g; s/"/\\"/g')
+          printf '{ "ConnectionStrings": { "Default": "%s" } }\n' "$CS_JSON" > publish/appsettings.json
+          echo "appsettings.json met serveradres toegevoegd."
+
       # ── 6. Install vpk CLI ────────────────────────────────────────────────────
       - name: Install vpk
         run: dotnet tool install -g vpk
