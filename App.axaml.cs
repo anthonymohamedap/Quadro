@@ -97,6 +97,38 @@ public partial class App : Application
             (b, _) => CrashContext.NoteerActie(BeschrijfKnop(b)),
             Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
 
+        // Eerste start op een nieuwe laptop: de installer kent het serveradres (Password=__SECRET__),
+        // maar het databasewachtwoord staat nog niet op deze laptop → eerst het koppelscherm.
+        // Na een geslaagde koppeling start de app gewoon verder.
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime koppelDesktop
+            && MoetKoppelen(out var csMetPlaceholder))
+        {
+            var koppelVm = new KoppelViewModel(csMetPlaceholder, GetDataDirectory());
+            var koppelVenster = new QuadroApp.Views.KoppelWindow { DataContext = koppelVm };
+            koppelVm.Gekoppeld = () =>
+            {
+                StartApp(naKoppelen: true);
+                koppelVenster.Close();
+            };
+            koppelDesktop.MainWindow = koppelVenster;
+            base.OnFrameworkInitializationCompleted();
+            return;
+        }
+
+        StartApp(naKoppelen: false);
+        base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>Postgres-verbinding met een wachtwoord dat nog niet op deze laptop staat.</summary>
+    private static bool MoetKoppelen(out string connectionString)
+    {
+        connectionString = GetConnectionString();
+        return IsPostgresConnectionString(connectionString) && SecretStore.HasUnresolvedPlaceholder(connectionString);
+    }
+
+    /// <summary>Services, hoofdvenster, database en updatecontrole (de gewone opstart).</summary>
+    private void StartApp(bool naKoppelen)
+    {
         // ==============================
         // 2️⃣ DEPENDENCY INJECTION
         // ==============================
@@ -300,9 +332,8 @@ public partial class App : Application
             QuadroApp.Views.DatumKiezerTekst.Registreer();  // "dag/maand/jaar" i.p.v. "day/month/year"
             QuadroApp.Views.GetalInvoerFout.Registreer(this); // leeg/fout getal: duidelijke tekst i.p.v. InvalidCastException
             desktop.MainWindow = new MainWindow { DataContext = mainVm };
+            if (naKoppelen) desktop.MainWindow.Show();   // na het koppelscherm: zelf tonen
         }
-
-        base.OnFrameworkInitializationCompleted();
 
         // ==============================
         // 7️⃣ DATABASE INITIALIZATION — runs in background after window is visible.

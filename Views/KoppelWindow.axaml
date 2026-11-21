@@ -1,0 +1,59 @@
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:QuadroApp.ViewModels"
+    x:Class="QuadroApp.Views.KoppelWindow"
+    x:DataType="vm:KoppelViewModel"
+    Title="QuadroApp – koppelen"
+    Width="560"
+    SizeToContent="Height"
+    CanResize="False"
+    WindowStartupLocation="CenterScreen"
+    Background="{DynamicResource SurfaceMuted}">
+
+    <!-- Eerste start op een nieuwe laptop: enkel het databasewachtwoord vragen, verbinding testen en bewaren.
+         Het serveradres komt uit de installer (appsettings.json met Password=__SECRET__). -->
+    <StackPanel>
+        <Border Background="{DynamicResource BrandDark}" Height="70" Padding="20,0">
+            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <Ellipse Width="35" Height="35" Fill="{DynamicResource BrandYellow}"/>
+                <TextBlock Text="QUADRO" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextOnDark}" VerticalAlignment="Center"/>
+                <TextBlock Text="KOPPELEN" FontSize="13" Foreground="{DynamicResource TextMutedOnDark}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <StackPanel Margin="24" Spacing="14">
+            <TextBlock Text="Koppel deze laptop met jullie gegevens" Classes="h2"/>
+            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
+                       Text="Dit moet één keer op deze laptop. Typ het wachtwoord van de database (niet jullie gewone wachtwoord). Anthony heeft het."/>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Wachtwoord van de database" Classes="label"/>
+                <TextBox x:Name="WachtwoordVak" PasswordChar="●" RevealPassword="False"
+                         Text="{Binding Wachtwoord, Mode=TwoWay}" IsEnabled="{Binding !IsBezig}">
+                    <TextBox.KeyBindings>
+                        <KeyBinding Gesture="Enter" Command="{Binding KoppelenCommand}"/>
+                    </TextBox.KeyBindings>
+                </TextBox>
+            </StackPanel>
+
+            <Border Background="{DynamicResource DangerBg}" BorderBrush="{DynamicResource Danger}" BorderThickness="1"
+                    CornerRadius="8" Padding="12,8"
+                    IsVisible="{Binding Foutmelding, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <TextBlock Text="{Binding Foutmelding}" TextWrapping="Wrap" Foreground="{DynamicResource Danger}" FontWeight="SemiBold"/>
+            </Border>
+
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock VerticalAlignment="Center" Classes="caption" Foreground="{DynamicResource TextSecondary}"
+                           TextTrimming="CharacterEllipsis" Text="{Binding Server, StringFormat='Server: {0}'}"/>
+                <Button Grid.Column="1" Classes="AccentBtn" CornerRadius="8" Padding="18,8"
+                        Command="{Binding KoppelenCommand}">
+                    <Panel>
+                        <TextBlock Text="Koppelen" FontWeight="SemiBold" IsVisible="{Binding !IsBezig}"/>
+                        <TextBlock Text="Bezig met verbinden…" FontWeight="SemiBold" IsVisible="{Binding IsBezig}"/>
+                    </Panel>
+                </Button>
+            </Grid>
+        </StackPanel>
+    </StackPanel>
+</Window>
