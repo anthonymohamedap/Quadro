@@ -116,6 +116,16 @@ static class Schermen
                     .ExecuteUpdateAsync(s => s.SetProperty(b => b.HeeftExterneFactuur, true));
             return await DossierAsync(f, 423);
         },
+        ["koppelen"] = _ => Task.FromResult<Control>(KoppelVenster(fout: false)),
+        ["koppelen-fout"] = async _ =>
+        {
+            var venster = KoppelVenster(fout: true);
+            var vm = (KoppelViewModel)venster.DataContext!;
+            vm.Wachtwoord = "fout";
+            await vm.KoppelenCommand.ExecuteAsync(null);
+            vm.Wachtwoord = "••••";
+            return venster;
+        },
         ["planning-dagdetail"] = f => PlanningDetailVensterAsync(f, week: false),
         ["planning-weekdetail"] = f => PlanningDetailVensterAsync(f, week: true),
         ["dossier-2-gepland"] = f => DossierAsync(f, 412, daarna: async vm =>
@@ -249,6 +259,8 @@ static class Schermen
         ["bestelbon-voorbeeld"] = (860, 620),
         ["dossier-2-maand"] = (1440, 1300),
         ["planning-dagdetail"] = (560, 640),
+        ["koppelen"] = (560, 380),
+        ["koppelen-fout"] = (560, 440),
         ["planning-weekdetail"] = (560, 640),
         ["startklaar"] = (820, 680),
         ["startklaar-klaar"] = (820, 680),
@@ -447,6 +459,18 @@ static class Schermen
         var vm = new PlanningPaginaViewModel(f, new WerkBonWorkflowService(f, wf), toast, wf, new TestNavigationService());
         await vm.InitializeAsync();
         return new QuadroApp.Views.Planning.PlanningPaginaView { DataContext = vm };
+    }
+
+    /// <summary>Eerste start op een nieuwe laptop: koppelscherm (verbinding wordt hier niet echt gemaakt).</summary>
+    static Window KoppelVenster(bool fout)
+    {
+        var map = Path.Combine(Path.GetTempPath(), "QuadroKoppelRender");
+        var vm = new KoppelViewModel(
+            "Host=quadro-db.fr-par.scw.cloud;Port=5432;Database=quadrodb;Username=quadro;Password=__SECRET__", map,
+            (_, _) => fout
+                ? throw new Npgsql.PostgresException("password authentication failed", "FATAL", "FATAL", "28P01")
+                : Task.CompletedTask);
+        return new QuadroApp.Views.KoppelWindow { DataContext = vm };
     }
 
     /// <summary>Planning: knoppen "Dagdetail" / "Weekdetail" openen een venster. Werkbon 412 wordt op een dag gepland die gekozen is.</summary>
