@@ -4,7 +4,7 @@
 //
 // Zonder scenario's worden ze allemaal gerenderd. Een nieuw scherm toevoegen = een scenario
 // toevoegen aan `Scenarios` hieronder (seed wat het scherm nodig heeft, bouw de ViewModel op
-// zoals de app, en roep Schermen.RenderAsync aan). Zie CLAUDE.md.
+// zoals de app, en roep Schermen.RenderAsync aan).
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;

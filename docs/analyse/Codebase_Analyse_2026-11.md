@@ -84,7 +84,7 @@ De testrunner meldt één opmerking: "VSTEST_ARTIFACTS_DIRECTORY … most likely
 | Commits (alle refs) | 580 | `git rev-list --count --all` |
 | Commits op `dev` / `main` | 577 / 512 | `git rev-list --count` |
 | Remote branches | 73 | `git ls-remote --heads origin \| wc -l` |
-| waarvan werkbranches (zonder `main`, `dev`) | 71 | 46 `feature/`, 11 `fix/`, 9 `docs/`, 3 `claude/`, 1 `chore/`, 1 `anthonymohamedap-patch-1` |
+| waarvan werkbranches (zonder `main`, `dev`) | 71 | 46 `feature/`, 11 `fix/`, 9 `docs/`, 3 tijdelijke werkbranches, 1 `chore/`, 1 `anthonymohamedap-patch-1` |
 | Gemerged in `main` én `dev` | 45 | `git branch -r --merged` |
 | Gemerged in `dev`, nog niet in `main` | 24 | idem |
 | Niet gemerged | 2 | zie 3.6 |
@@ -293,7 +293,7 @@ Zonder terugval wordt het pad relatief (`QuadroApp/…` onder de werkmap van het
 
 - Van de 71 werkbranches zijn er 69 volledig opgenomen in `dev` (45 daarvan ook in `main`). De volledige lijst met laatste commit staat in hoofdstuk 6.
 - Twee branches zijn niet gemerged, en geen van beide bevat nog iets dat ontbreekt:
-  - `claude/us-86-home-blocks-wba2ws` (`525d848`): de top is een merge-commit van PR #103 binnen de branch zelf. Beide ouders (`94545eb`, `149d6dd`) zitten in `main` en `dev`; `git cherry origin/dev …` toont geen eigen wijzigingen.
+  - `feature/us-86-home-blocks-wba2ws` (`525d848`): de top is een merge-commit van PR #103 binnen de branch zelf. Beide ouders (`94545eb`, `149d6dd`) zitten in `main` en `dev`; `git cherry origin/dev …` toont geen eigen wijzigingen.
   - `docs/us99-factuur-uit-de-code` (`b5c8257`): één commit met de eerste versie van `docs/backlog/US-99_Factuur_uit_de_code.md`. `dev` heeft een nieuwere versie van datzelfde bestand (laatst gewijzigd in `a620033`; de branch mist 21 regels).
 - Er zijn geen echt verlaten branches en geen open pull requests.
 - Voor elke hotfix bestaan twee branches en twee PR's: één naar `main` en een tweeling met `-dev` naar `dev` (`fix/feedback-veerle-0911` / `-dev`, `fix/feedback-veerle-1211` / `-dev`, `feature/foutlog-in-db` / `-dev`, `fix/voorschot-verwijderen-crash` / `-dev`). Dat verklaart een deel van de drukte en verdwijnt zodra `dev` in `main` zit.
@@ -318,7 +318,7 @@ Zonder terugval wordt het pad relatief (`QuadroApp/…` onder de werkmap van het
 **Werkwijze**
 
 - De afspraak "één story per branch" wordt gevolgd; 184 van de laatste 200 commits (zonder merges) volgen het conventionele formaat. Over de hele geschiedenis voldoen 252 van de 406.
-- `README.md` zegt "Feature-branch vanaf `main`"; `CLAUDE.md` zegt niets over `dev`. De werkelijke flow (features naar `dev`, hotfixes dubbel) staat nergens beschreven.
+- `README.md` zegt "Feature-branch vanaf `main`". De werkelijke flow (features naar `dev`, hotfixes dubbel) staat nergens beschreven.
 
 ### 3.7 CI/CD en configuratie
 
@@ -338,7 +338,7 @@ Zonder terugval wordt het pad relatief (`QuadroApp/…` onder de werkmap van het
 
 **`ci.yml`**
 
-- Draait bij push op `main`, `feature/**`, `fix/**` en bij PR's naar `main` (r. 5–8). **Niet** bij push op `dev`, niet bij PR's naar `dev`, niet op `docs/**`, `chore/**` of `claude/**`. Een `-dev`-tweeling wordt alleen getest als de naam met `feature/` of `fix/` begint.
+- Draait bij push op `main`, `feature/**`, `fix/**` en bij PR's naar `main` (r. 5–8). **Niet** bij push op `dev`, niet bij PR's naar `dev`, niet op `docs/**` of `chore/**`. Een `-dev`-tweeling wordt alleen getest als de naam met `feature/` of `fix/` begint.
 - De rendertool en de MigrationTool worden niet gebouwd (staan niet in de solution).
 - Op 11 november staan zeven CI-runs zonder uitkomst.
 
@@ -401,8 +401,8 @@ Er zijn twee handleidingen (v1 en v2), elk als `.docx` en `.pdf`. De map `docs/b
 - Een actueel overzicht van de architectuur (het bestaande `SOLUTION_STRUCTURE.md` staat in het archief): welke laag wat mag, hoe het dossier de bestaande ViewModels hergebruikt.
 - De branch- en releaseflow met `main` en `dev`, inclusief hoe een hotfix loopt en hoe een tag ontstaat nu auto-tag stuk is.
 - Hoe je lokaal veilig werkt: wat `DevDatabaseGuard` doet, hoe je een lokale SQLite-database krijgt, hoe je tegen een test-PostgreSQL werkt.
-- De rendertool staat alleen in `CLAUDE.md`; de README noemt hem niet.
-- Een lijst van de domeinwoorden staat in `CLAUDE.md`, niet in de README of de docs.
+- De rendertool staat alleen in de lokale werkafspraken; de README noemt hem niet.
+- Een lijst van de domeinwoorden staat alleen in de lokale werkafspraken, niet in de README of de docs.
 - Een overzicht van wat er bij de start gebeurt (patchers, migraties, seed, backup, import van `crash.log`).
 
 ### 3.10 `main` ↔ `dev`
@@ -449,7 +449,7 @@ Leeswijzer: *Impact* = winst voor onderhoud of veiligheid. *Werk* = geschatte ur
 | V-02 | 69 gemergede branches verwijderen; in GitHub "Automatically delete head branches" aanzetten | 71 branches maken het overzicht onbruikbaar | GitHub-instellingen | middel | 0,5 | laag | nee | lijst en bewijs in hoofdstuk 6; tags blijven | beide |
 | V-03 | `RELEASE_PAT` vernieuwen (fijnmazig token, alleen "Contents: write" op deze repo) en vóór de checkout een stap die het token test en een duidelijke Nederlandse fout geeft | auto-tag faalt minstens sinds 31 oktober op een onleesbare fout | `.github/workflows/auto-tag.yml` | hoog | 1 | laag | nee | run van auto-tag op een docs-vrije testcommit | main |
 | V-04 | `fail-fast: false` in de release-matrix; testen draaien vóór het publiceren; commentaar ".NET 9" rechtzetten; controlestap met duidelijke melding als de Apple-geheimen ontbreken of de notarisatie weigert | Windows-release hangt nu af van Apple; release zonder test | `.github/workflows/build.yml` | hoog | 2 | laag | nee | handmatige run (`workflow_dispatch`) op een bestaande tag en assets vergelijken met `v1.3.27` | main |
-| V-05 | CI ook op `dev` (push en PR), en op `docs/**`, `chore/**`, `claude/**` voor PR's | PR's naar `dev` worden nu maar half getest | `.github/workflows/ci.yml` | hoog | 0,5 | laag | nee | een PR naar `dev` toont de CI-check | beide |
+| V-05 | CI ook op `dev` (push en PR), en op `docs/**`, `chore/**` voor PR's | PR's naar `dev` worden nu maar half getest | `.github/workflows/ci.yml` | hoog | 0,5 | laag | nee | een PR naar `dev` toont de CI-check | beide |
 | V-06 | Rendertool en MigrationTool mee bouwen in CI (aparte stap of in de solution) | de rendertool is verplicht in de werkwijze maar kan ongemerkt breken | `ci.yml`, eventueel `Quadro.sln` | middel | 1 | laag | nee | CI-run groen; `dotnet build Tools/SchermAfbeeldingen` | beide |
 | V-07 | Branchbeveiliging op `main` (en `dev`): PR verplicht, CI moet groen zijn | een rechtstreekse push naar `main` start een release | GitHub-instellingen | middel | 0,5 | laag | nee | proef-push wordt geweigerd | beide |
 | V-08 | Qodana: workflow en `qodana.yaml` verwijderen, of herstellen zonder de branch `styling` | staat uit en verwijst naar iets dat niet bestaat | `.github/workflows/qodana_code_quality.yml`, `qodana.yaml` | laag | 0,5 | laag | nee | geen code geraakt | beide |
@@ -459,7 +459,7 @@ Leeswijzer: *Impact* = winst voor onderhoud of veiligheid. *Werk* = geschatte ur
 | V-12 | Centrale pakketversies (`Directory.Packages.props`) | EF Core en SQLitePCLRaw staan in vier bestanden | alle `.csproj` | laag | 1,5 | laag | nee | `dotnet list package` vóór/na identiek | na merge |
 | V-13 | Kleine pakketupdates (Mvvm, ClosedXML, SQLitePCLRaw, Test.Sdk) | opmerking van de testrunner; onderhoud | `.csproj` | laag | 1 | laag | nee | build, testen, kwetsbaarheden-scan | beide |
 | V-14 | Repo-hygiëne: lockbestand weg en `.~lock.*` in `.gitignore`, handleiding v1 naar archief, `copilot-instructions.md` en `cleanup-candidates.md` weg, afgeronde plannen naar `docs/archief` | ruis | `docs/**`, `.gitignore`, `.github/copilot-instructions.md` | laag | 1 | laag | nee | alleen documenten | beide |
-| V-15 | README en plan bijwerken (tabel in 3.9), flow `main`/`dev` en hotfixes beschrijven, rendertool vermelden, index voor `docs/backlog` | nieuwe ontwikkelaar wordt nu op het verkeerde been gezet | `README.md`, `CLAUDE.md`, `docs/backlog/*` | middel | 3 | laag | nee | alleen documenten | beide |
+| V-15 | README en plan bijwerken (tabel in 3.9), flow `main`/`dev` en hotfixes beschrijven, rendertool vermelden, index voor `docs/backlog` | nieuwe ontwikkelaar wordt nu op het verkeerde been gezet | `README.md`, `docs/backlog/*` | middel | 3 | laag | nee | alleen documenten | beide |
 
 ### 4.2 Dode en dubbele code
 
@@ -586,7 +586,7 @@ Niets hiervan is uitgevoerd.
 | `feature/us76-afrekenen-afhaling` | 2026-10-12 | `ab6cb85` | ja | ja | A: verwijderen |
 | `feature/us77-78-live-prijs-korting` | 2026-10-13 | `545e3de` | ja | ja | A: verwijderen |
 | `docs/sprint-november-2026` | 2026-10-26 | `5c4f864` | ja | ja | A: verwijderen |
-| `claude/quirky-albattani-xpgdw2` | 2026-10-26 | `ceaa52e` | ja | ja | A: verwijderen |
+| `feature/quirky-albattani-xpgdw2` | 2026-10-26 | `ceaa52e` | ja | ja | A: verwijderen |
 | `fix/cve-cryptography-pakketten` | 2026-10-26 | `74b450d` | ja | ja | A: verwijderen |
 | `feature/us81-offertenummer` | 2026-10-26 | `900e6f4` | ja | ja | A: verwijderen |
 | `docs/verkoopdossier-plan` | 2026-10-27 | `59e6964` | ja | ja | A: verwijderen |
@@ -596,7 +596,7 @@ Niets hiervan is uitgevoerd.
 | `feature/us80-standaardkaders` | 2026-10-26 | `526b6a9` | ja | ja | A: verwijderen |
 | `feature/us84-offertelijst-per-fase` | 2026-10-27 | `ea72aab` | ja | ja | A: verwijderen |
 | `feature/us85-gewone-woorden` | 2026-10-27 | `af00406` | ja | ja | A: verwijderen |
-| `claude/affectionate-gauss-jbyjcc` | 2026-10-27 | `5bc56f2` | ja | ja | A: verwijderen |
+| `feature/affectionate-gauss-jbyjcc` | 2026-10-27 | `5bc56f2` | ja | ja | A: verwijderen |
 | `feature/bestelbon-als-offerte` | 2026-10-27 | `0c0435e` | ja | ja | A: verwijderen |
 | `feature/us96-niet-plannen-in-verleden` | 2026-10-27 | `18196a4` | ja | ja | A: verwijderen |
 | `docs/us99-factuur-uit-de-code` | 2026-10-31 | `b5c8257` | nee | nee | C: verwijderen, zie nota |
@@ -606,7 +606,7 @@ Niets hiervan is uitgevoerd.
 | `feature/us100-prijs-vast-na-bevestiging` | 2026-10-31 | `ced192b` | ja | ja | A: verwijderen |
 | `feature/us103-niet-terug-na-werkbon` | 2026-10-31 | `fc16c33` | ja | ja | A: verwijderen |
 | `feature/us104-werkbon-i-p-v-bestelling` | 2026-10-31 | `1f2f0c4` | ja | ja | A: verwijderen |
-| `claude/us-86-home-blocks-wba2ws` | 2026-10-31 | `525d848` | nee | nee | C: verwijderen, zie nota |
+| `feature/us-86-home-blocks-wba2ws` | 2026-10-31 | `525d848` | nee | nee | C: verwijderen, zie nota |
 | `feature/us105-beginscherm-redesign` | 2026-10-31 | `616841d` | ja | ja | A: verwijderen |
 | `feature/us99b-factuur-naar-bestelbon-code` | 2026-10-31 | `ba14680` | ja | ja | A: verwijderen |
 | `feature/us99c-database-bestelbon` | 2026-10-31 | `a620033` | ja | ja | A: verwijderen |
@@ -644,7 +644,7 @@ Niets hiervan is uitgevoerd.
 
 **Nota bij C**
 
-- `claude/us-86-home-blocks-wba2ws`: de enige commit die niet in `dev` zit, is een merge-commit zonder eigen inhoud; beide ouders zitten in `main` en `dev` (`git merge-base --is-ancestor 94545eb origin/main` en idem voor `149d6dd`). Mag weg.
+- `feature/us-86-home-blocks-wba2ws`: de enige commit die niet in `dev` zit, is een merge-commit zonder eigen inhoud; beide ouders zitten in `main` en `dev` (`git merge-base --is-ancestor 94545eb origin/main` en idem voor `149d6dd`). Mag weg.
 - `docs/us99-factuur-uit-de-code`: bevat een oudere versie van een document dat in `dev` nieuwer is. Mag weg; wie zeker wil zijn, bekijkt eerst `git diff origin/dev origin/docs/us99-factuur-uit-de-code -- docs/backlog/US-99_Factuur_uit_de_code.md`.
 
 **Commando's**
@@ -678,7 +678,7 @@ git branch -r --merged origin/dev | grep -v -E 'origin/(HEAD|main|dev)$' | sed '
 Groep C:
 
 ```bash
-git push origin --delete claude/us-86-home-blocks-wba2ws docs/us99-factuur-uit-de-code
+git push origin --delete feature/us-86-home-blocks-wba2ws docs/us99-factuur-uit-de-code
 ```
 
 Lokale kopieën opruimen:
