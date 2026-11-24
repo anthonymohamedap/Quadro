@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Hulpprogramma (niet in Quadro.sln): rendert schermen van de app buiten beeld naar PNG,
-       met testgegevens, zodat elke UI-wijziging visueel nagekeken kan worden. Zie CLAUDE.md. -->
+       met testgegevens, zodat elke UI-wijziging visueel nagekeken kan worden. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
