@@ -53,7 +53,7 @@ Openen in Rider of Visual Studio kan via `Quadro.sln`. De app maakt bij de eerst
    ```powershell
    dotnet run --project Tools/SchermAfbeeldingen -- <uitvoermap> [scenario ...]
    ```
-   Zie `CLAUDE.md` voor de scenario's en valkuilen.
+   De scenario's staan in `Tools/SchermAfbeeldingen/Program.cs`.
 5. Push → CI draait build/test/security-scan → PR → merge
 
 ## Mappenstructuur
